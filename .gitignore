@@ -1,0 +1,14 @@
+# Devenv
+.devenv
+.direnv
+.pre-commit-config.yaml
+
+# Terragrunt
+.terragrunt-cache
+.terragrunt-stack
+
+# OpenTofu/Terraform
+.terraform
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
