@@ -8,3 +8,44 @@ variable "timezone" {
   default     = "Europe/Brussels"
   description = "The timezone to set on the device"
 }
+
+variable "ntp_servers" {
+  type        = list(string)
+  default     = ["time.cloudflare.com"]
+  description = "List of NTP servers to use."
+}
+
+variable "certificate_common_name" {
+  type        = string
+  description = "CN for the device certificate."
+}
+
+variable "certificate_country" {
+  type        = string
+  default     = "BE"
+  description = "Country code for the device certificate."
+}
+
+variable "certificate_locality" {
+  type        = string
+  default     = "BRU"
+  description = "Locality for the device certificate."
+}
+
+variable "certificate_organization" {
+  type        = string
+  default     = "kidibox.net"
+  description = "Organization for the device certificate."
+}
+
+variable "certificate_unit" {
+  type        = string
+  default     = "home"
+  description = "Organizational unit for the device certificate."
+}
+
+variable "mac_server_interfaces" {
+  type        = string
+  default     = "all"
+  description = "Interface list to allow MAC server access on."
+}

@@ -30,7 +30,7 @@
         {
           devenv.shells.default = {
             packages = with pkgs; [
-              # opentofu
+              sops
               tofu-ls
               terragrunt
             ];

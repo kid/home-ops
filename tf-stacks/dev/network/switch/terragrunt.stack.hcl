@@ -1,5 +1,7 @@
 locals {
-  units_path = find_in_parent_folders("tf-catalog/modules")
+  units_path = find_in_parent_folders("tf-catalog/units")
+  bootstrap = tobool(get_env("BOOTSTRAP", "false"))
+  scheme = local.bootstrap ? "http" : "https"
 }
 
 unit "base" {
@@ -7,8 +9,9 @@ unit "base" {
   path = "base"
 
   values = {
-    ros_hostname = "http://10.0.10.192"
-      hostname = "switch",
-
+    ip_address = "10.0.10.192"
+    hostname = "switch",
+    # certificate_common_name = "10.0.10.192"
+    # certificate_unit = "lab"
   }
 }

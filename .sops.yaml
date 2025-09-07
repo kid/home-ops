@@ -1,0 +1,14 @@
+keys:
+  - &kid-nixos age1al0ky9grzp5uf4k5cc2wn7gyfdd4g2twjyvpqa35vd4cprnujpssdvzf7r
+
+defaults: &defaults
+  key_groups:
+    - age:
+        - *kid-nixos
+
+creation_rules:
+  - <<: *defaults
+
+stores:
+  yaml:
+    indent: 2

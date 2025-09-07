@@ -1,19 +1,14 @@
 locals {
-  provider_values = {
-    ros_hostname = "http://10.0.10.191"
-  }
-
-  units_path = find_in_parent_folders("tf-catalog/modules")
+  units_path = find_in_parent_folders("tf-catalog/units")
+  ip_address = "10.0.10.191"
 }
 
 unit "base" {
   source = "${local.units_path}/ros/base"
   path = "base"
 
-  values = merge(
-    local.provider_values,
-    {
-      hostname = "router",
-    }
-  )
+  values = {
+    ip_address = local.ip_address
+    hostname = "router",
+  }
 }
