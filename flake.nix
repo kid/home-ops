@@ -46,11 +46,6 @@
                 package = pkgs.opentofu;
               };
             };
-
-            services.minio = {
-              enable = true;
-              buckets = [ "tfstate" ];
-            };
           };
         };
     };
