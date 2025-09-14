@@ -21,7 +21,7 @@ inputs = merge(
   include.root.inputs,
   include.provider_ros.inputs,
   {
-    ros_hostname = "${local.scheme}://${values.ip_address}",
+    ros_endpoint = "${local.scheme}://${values.ip_address}",
 
     certificate_common_name = values.ip_address,
   },

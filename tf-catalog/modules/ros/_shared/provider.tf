@@ -1,6 +1,6 @@
-variable "ros_hostname" {
+variable "ros_endpoint" {
   type        = string
-  description = "The hostname or IP address of the MikroTik device."
+  description = "The URL of the MikroTik device."
 }
 
 variable "ros_username" {
@@ -21,7 +21,7 @@ variable "ros_insecure" {
 }
 
 provider "routeros" {
-  hosturl  = var.ros_hostname
+  hosturl  = var.ros_endpoint
   username = var.ros_username
   password = var.ros_password
   insecure = var.ros_insecure
