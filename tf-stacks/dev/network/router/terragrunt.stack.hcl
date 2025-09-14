@@ -10,5 +10,10 @@ unit "base" {
   values = {
     ip_address = local.ip_address
     hostname = "router",
+
+    ethernet_interfaces = {
+      ether1 = { comment = "uplink", bridge_port = false }
+      ether2 = { comment = "oom", bridge_port = true }
+    }
   }
 }

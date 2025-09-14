@@ -49,3 +49,27 @@ variable "mac_server_interfaces" {
   default     = "all"
   description = "Interface list to allow MAC server access on."
 }
+
+variable "ethernet_interfaces" {
+  type = map(object({
+    comment     = optional(string, "")
+    bridge_port = optional(bool, true)
+
+    tagged   = optional(list(string))
+    untagged = optional(string)
+  }))
+  default     = {}
+  description = "Map of ethernet interfaces to configure"
+}
+
+variable "bridge_name" {
+  type = string
+  default = "bridge"
+  description = "Name of the main bridge interface"
+}
+
+variable "bridge_comment" {
+  type = string
+  default = ""
+  description = "Comment for the bridge interface"
+}
