@@ -5,7 +5,7 @@ locals {
 generate "provider-ros" {
   path = "provider-ros.tf"
   if_exists = "overwrite_terragrunt"
-  contents = file("provider.tf")
+  contents = file("provider-ros.tf")
 }
 
 inputs = local.ros.inputs

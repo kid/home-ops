@@ -9,7 +9,7 @@ include "root" {
 }
 
 include "provider_ros" {
-  path = "${get_repo_root()}/tf-catalog/modules/ros/_shared/provider.hcl"
+  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-ros.hcl"
   expose = true
 }
 
