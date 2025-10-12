@@ -1,6 +1,6 @@
 locals {
-  enabled_services = ["api-ssl", "www-ssl", "ssh", "winbox"]
-  ssl_services     = ["api-ssl", "www-ssl"]
+  enabled_services = ["www-ssl", "ssh", "winbox"]
+  ssl_services     = ["www-ssl"]
 }
 
 data "routeros_ip_services" "all" {

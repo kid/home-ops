@@ -1,15 +1,10 @@
-locals {
-  bootstrap = tobool(get_env("BOOTSTRAP", "false"))
-  scheme = local.bootstrap ? "http" : "https"
-}
-
 include "root" {
   path = find_in_parent_folders("root.hcl")
   expose = true
 }
 
-include "provider_ros" {
-  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-ros.hcl"
+include "provider_routeros" {
+  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
   expose = true
 }
 
@@ -17,13 +12,17 @@ terraform {
   source = "${get_repo_root()}/tf-catalog/modules/ros//base"
 }
 
+dependency "lab" {
+  config_path = values.lab_path
+}
+
 inputs = merge(
   include.root.inputs,
-  include.provider_ros.inputs,
   {
-    ros_endpoint = "${local.scheme}://${values.ip_address}",
+    routeros_endpoint = run_cmd("./get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[values.hostname]),
+    certificate_alt_names = ["IP:${dependency.lab.outputs.oob_ips[values.hostname]}"],
 
-    certificate_common_name = values.ip_address,
+    oob_mgmt_ip_address = "${dependency.lab.outputs.oob_ips[values.hostname]}/24"
   },
   values
 )

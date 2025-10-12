@@ -1,0 +1,62 @@
+# Start SSH session
+spawn ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -o "LogLevel=ERROR" admin@${ip}
+
+set timeout 10
+set password_changed 0
+
+# Handle login and possible password prompt
+expect {
+  -re "assword: " {
+    # Sending blank password for first login
+    send "admin\r"
+    exp_continue
+  }
+  -re "Do you want to see the software license?" {
+    # Respond "n" to skip the license
+    send "n\r"
+    exp_continue
+  }
+  -re "new password> " {
+    if { $password_changed == 0 } {
+      # If a new password prompt is encountered, set the new password
+      send "admin\r"
+      expect -re "repeat new password> "
+      send "admin\r"
+      set password_changed 1
+    }
+    exp_continue
+  }
+  "] > " {
+    # Already logged in, no password change required, proceed with the next steps
+  }
+  timeout {
+    exp_continue
+  }
+}
+
+sleep 1
+send "/ip/service/set www disabled=no\r"
+expect {
+  "] > " { }
+  -re ".+" { exp_continue }
+}
+
+sleep 1
+send "/ip/address/add interface=ether1 address=${oob_ip}\r"
+expect {
+  "] > " { }
+  -re ".+" { exp_continue }
+}
+
+sleep 1
+send "/ip/dhcp-client/remove \[find\]\r"
+expect {
+  "] > " { }
+  -re ".+" { exp_continue }
+}
+
+sleep 3
+
+# Exit the session
+send "quit\r"
+expect eof

@@ -16,12 +16,14 @@
         inputs.devenv.flakeModule
         inputs.treefmt-nix.flakeModule
       ];
+
       systems = [
         "x86_64-linux"
         "aarch64-linux"
         "aarch64-darwin"
         "x86_64-darwin"
       ];
+
       perSystem =
         {
           pkgs,
@@ -30,6 +32,7 @@
         {
           devenv.shells.default = {
             packages = with pkgs; [
+              expect
               sops
               tofu-ls
               terragrunt
@@ -37,10 +40,6 @@
 
             languages = {
               nix.enable = true;
-              # go = {
-              #   enable = true;
-              #   package = pkgs.go_1_24;
-              # };
               terraform = {
                 enable = true;
                 package = pkgs.opentofu;

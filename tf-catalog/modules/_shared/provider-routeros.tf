@@ -1,28 +1,30 @@
-variable "ros_endpoint" {
+variable "routeros_endpoint" {
   type        = string
   description = "The URL of the MikroTik device."
 }
 
-variable "ros_username" {
+variable "routeros_username" {
   type        = string
   description = "The username for accessing the MikroTik device."
 }
 
-variable "ros_password" {
+variable "routeros_password" {
   type        = string
   sensitive   = true
   description = "The password for accessing the MikroTik device."
 }
 
-variable "ros_insecure" {
+variable "routeros_insecure" {
   type        = bool
   default     = false
   description = "Whether to skip TLS certificate verification when connecting to the MikroTik device."
 }
 
 provider "routeros" {
-  hosturl  = var.ros_endpoint
-  username = var.ros_username
-  password = var.ros_password
-  insecure = var.ros_insecure
+  hosturl  = var.routeros_endpoint
+  username = var.routeros_username
+  password = var.routeros_password
+  insecure = var.routeros_insecure
+
+  suppress_syso_del_warn = true
 }
