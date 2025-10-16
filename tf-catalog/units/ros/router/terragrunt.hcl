@@ -9,7 +9,7 @@ include "provider_routeros" {
 }
 
 terraform {
-  source = "${get_repo_root()}/tf-catalog/modules/ros//base"
+  source = "${get_repo_root()}/tf-catalog//units/ros/router"
 }
 
 dependency "lab" {
@@ -23,13 +23,14 @@ dependency "lab" {
   }
 }
 
+dependencies {
+  paths = ["../base"]
+}
+
 inputs = merge(
   include.root.inputs,
   {
-    routeros_endpoint = run_cmd("./get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[values.hostname]),
-    certificate_alt_names = ["IP:${dependency.lab.outputs.oob_ips[values.hostname]}"],
-
-    oob_mgmt_ip_address = "${dependency.lab.outputs.oob_ips[values.hostname]}/24"
+    routeros_endpoint = "https://${dependency.lab.outputs.oob_ips[values.hostname]}",
   },
   values
 )

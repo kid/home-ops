@@ -107,7 +107,7 @@ variable "ethernet_interfaces" {
     l2mtu       = optional(number, 1514)
 
     # VLAN configuration
-    tagged   = optional(list(string))
+    tagged   = optional(list(string), [])
     untagged = optional(string)
   }))
   default     = {}
@@ -124,11 +124,11 @@ variable "vlans" {
     vlan_id      = number
     cidr_network = string
     cidr_prefix  = number
-    mtu = optional(number, 1500)
-    # gateway      = string
-    # dhcp_pool    = list(string)
-    # dhcp_servers = list(string)
-    # domain       = string
+    mtu          = optional(number, 1500)
+    gateway      = string
+    dhcp_pool    = list(string)
+    dns_servers = list(string)
+    domain       = string
   }))
   default = {}
 }

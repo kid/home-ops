@@ -1,6 +1,7 @@
 variable "devices" {
   type = list(object({
     name = string
+    type = string
     interfaces = list(object({
       type   = string # wan or port
       target = optional(string)
@@ -21,4 +22,17 @@ variable "oob_network" {
 variable "oob_prefix" {
   type    = number
   default = 24
+}
+
+variable "ssh_username" {
+  type = string
+}
+
+variable "ssh_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "ssh_keys" {
+  type = list(string)
 }

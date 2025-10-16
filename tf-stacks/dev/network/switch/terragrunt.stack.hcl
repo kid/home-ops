@@ -14,7 +14,7 @@ unit "base" {
 
     ethernet_interfaces = {
       ether1 = { comment = "oom", bridge_port = false }
-      ether2 = { comment = "router", bridge_port = true, vlan_tagged = [local.vlans.Management.name] }
+      ether2 = { comment = "router", bridge_port = true, tagged = [local.vlans.Management.name] }
     }
 
     oob_mgmt_interface = "ether1"

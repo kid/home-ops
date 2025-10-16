@@ -8,6 +8,10 @@ locals {
       vlan_id = 199
       cidr_network = "10.199.0.0"
       cidr_prefix = 16
+      domain = "mgmt.lab.kidibox.net"
+      gateway = "10.199.0.1"
+      dns_servers = ["10.199.0.0"]
+      dhcp_pool = ["10.199.255.200-10.199.255.255"]
     }
   }
 }

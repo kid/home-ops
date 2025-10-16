@@ -1,37 +1,11 @@
-locals {
-  tags = ["terraform", "routeros", "lab"]
-
-  vm_id_start = 10991
-
-  oob_cidr = "${var.oob_network}/${var.oob_prefix}"
-
-  devices_vm_ids  = { for idx, item in var.devices : item.name => idx + local.vm_id_start }
-  devices_oob_ips = { for idx, item in var.devices : item.name => cidrhost(local.oob_cidr, idx + 2) }
-
-  devices_interfaces_generated = {
-    for _, device in var.devices : device.name =>
-    [
-      for _, ifce in device.interfaces : {
-        vlan_id = ifce.type == "wan" ? 10 : null
-        bridge  = ifce.type == "wan" ? "vmbr0" : ifce.type == "port" ? proxmox_virtual_environment_network_linux_bridge.ports[join("-", sort([device.name, ifce.target]))].name : null
-      }
-    ]
-  }
-
-  bridges = distinct(flatten([
-    for _, device in var.devices : [
-      for _, ifce in device.interfaces : join("-", sort([device.name, ifce.target])) if ifce.type == "port"
-    ]
-  ]))
-}
-
-resource "proxmox_virtual_environment_download_file" "chr" {
-  content_type            = "iso"
+resource "proxmox_virtual_environment_download_file" "images" {
+  for_each                = local.images
   datastore_id            = "local"
   node_name               = "pve1"
-  url                     = "https://download.mikrotik.com/routeros/${var.routeros_version}/chr-${var.routeros_version}.img.zip"
-  file_name               = "chr-${var.routeros_version}.img"
-  decompression_algorithm = "gz"
+  url                     = each.value.url
+  content_type            = try(each.value.type, null)
+  file_name               = try(each.value.file_name, null)
+  decompression_algorithm = try(each.value.decompression_algorithm, null)
   overwrite               = false
 }
 
@@ -42,7 +16,8 @@ resource "proxmox_virtual_environment_network_linux_bridge" "ports" {
 }
 
 resource "proxmox_virtual_environment_vm" "devices" {
-  for_each = { for idx, item in var.devices : item.name => item }
+  depends_on = [proxmox_virtual_environment_network_linux_bridge.ports]
+  for_each   = { for idx, item in var.devices : item.name => item if item.type == "chr" }
 
   vm_id = local.devices_vm_ids[each.key]
   name  = "lab-${each.key}"
@@ -59,23 +34,16 @@ resource "proxmox_virtual_environment_vm" "devices" {
 
   disk {
     datastore_id = "local-zfs"
-    file_id      = proxmox_virtual_environment_download_file.chr.id
+    file_id      = proxmox_virtual_environment_download_file.images[each.value.type].id
     file_format  = "raw"
-    interface    = "scsi0"
+    interface    = "virtio0"
     size         = 10
     iothread     = true
-    ssd          = true
     discard      = "on"
   }
 
-  # OOB Management
-  network_device {
-    bridge  = "vmbr0"
-    vlan_id = 1991
-  }
-
   dynamic "network_device" {
-    for_each = local.devices_interfaces_generated[each.key]
+    for_each = try(local.devices_interfaces_generated[each.key], {})
     iterator = ifce
 
     content {
@@ -86,7 +54,7 @@ resource "proxmox_virtual_environment_vm" "devices" {
 }
 
 resource "terraform_data" "initial_provisioning" {
-  for_each = { for idx, item in var.devices : item.name => item }
+  for_each = { for idx, item in var.devices : item.name => item if item.type == "chr" }
 
   provisioner "local-exec" {
     interpreter = ["expect", "-c"]

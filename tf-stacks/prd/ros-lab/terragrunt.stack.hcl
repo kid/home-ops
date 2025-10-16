@@ -11,17 +11,33 @@ unit "ros-lab" {
     devices = [
       { 
         name = "router"
+        type = "chr"
         interfaces = [
+          { type = "oob" },
           { type = "wan" },
-          { type = "port", target = "switch" }
+          { type = "port", target = "switch" },
+          { type = "port", target = "vm1" },
         ]
       },
       { 
         name = "switch"
+        type = "chr"
         interfaces = [
-          { type = "port", target = "router" }
+          { type = "oob" },
+          { type = "port", target = "router" },
         ]
       },
+      {
+        name = "vm1"
+        type = "debian"
+        interfaces = [
+          { type = "port", target = "router" },
+        ]
+      }
     ]
+
+    ssh_username = "kid"
+    ssh_password = "foobar"
+    ssh_keys = [file("~/.ssh/id_ed25519.pub")]
   }
 }
