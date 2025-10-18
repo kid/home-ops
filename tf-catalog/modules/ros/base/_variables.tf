@@ -135,16 +135,22 @@ variable "vlans" {
 
 # }}}
 
-# DHCP Clients interfaces {{{
+# IP Configuration {{{
 
 variable "dhcp_clients" {
   description = "List of interfaces to create DHCP client on"
-  type        = list(object({
-    interface = string
+  type = list(object({
+    interface    = string
     use_peer_dns = optional(bool, true)
     use_peer_ntp = optional(bool, true)
   }))
-  default     = []
+  default = []
+}
+
+variable "ip_addresses" {
+  description = "List of IP addresses to assign to interfaces"
+  type        = map(string)
+  default     = {}
 }
 
 # }}}

@@ -2,13 +2,6 @@ locals {
   cidr = "${var.cidr_network}/${var.cidr_prefix}"
 }
 
-resource "routeros_ip_address" "self" {
-  comment = "${var.interface_name} IP Address"
-  interface = var.interface_name 
-  address = "${cidrhost(local.cidr, 1)}/${var.cidr_prefix}"
-  network = cidrhost(local.cidr, 0)
-}
-
 resource "routeros_ip_pool" "self" {
   comment = "${var.interface_name} DHCP Pool"
   name    = "${var.interface_name}-dhcp-pool"

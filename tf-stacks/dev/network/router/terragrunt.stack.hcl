@@ -3,6 +3,8 @@ locals {
   env_config = read_terragrunt_config(find_in_parent_folders("env.hcl"))
   vlans = local.env_config.locals.vlans
   lab_path = "../../../../../prd/ros-lab/.terragrunt-stack/ros-lab"
+
+  mgmt_cidr = "${local.vlans.Management.cidr_network}/${local.vlans.Management.cidr_prefix}"
 }
 
 unit "base" {
@@ -21,6 +23,10 @@ unit "base" {
     oob_mgmt_interface = "ether1"
 
     dhcp_clients = [{ interface = "ether2" }]
+
+    ip_addresses = {
+      "${local.vlans.Management.name}" = "${cidrhost(local.vlans.Management.cidr_prefix)}"
+    }
   }
 }
 
