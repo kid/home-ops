@@ -19,6 +19,8 @@ unit "base" {
     }
 
     oob_mgmt_interface = "ether1"
+
+    dhcp_clients = [{ interface = "ether2" }]
   }
 }
 

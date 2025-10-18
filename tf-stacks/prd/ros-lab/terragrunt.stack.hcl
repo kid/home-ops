@@ -7,7 +7,7 @@ unit "ros-lab" {
   path = "ros-lab"
 
   values = {
-    routeros_version = "7.20"
+    routeros_version = "7.20.1"
     devices = [
       { 
         name = "router"

@@ -10,6 +10,11 @@ include "provider_routeros" {
 
 terraform {
   source = "${get_repo_root()}/tf-catalog/modules/ros//base"
+
+  before_hook "pre_destroy" {
+    commands = ["destroy"]
+    execute = ["./hook_pre_destroy.sh"]
+  }
 }
 
 dependency "lab" {

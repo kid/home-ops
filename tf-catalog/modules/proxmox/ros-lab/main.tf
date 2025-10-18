@@ -10,9 +10,10 @@ resource "proxmox_virtual_environment_download_file" "images" {
 }
 
 resource "proxmox_virtual_environment_network_linux_bridge" "ports" {
-  for_each  = { for idx, bridge in local.bridges : bridge => { name = bridge, idx = idx } }
-  node_name = "pve1"
-  name      = format("vmbr1991%02d", each.value.idx)
+  for_each    = { for idx, bridge in local.bridges : bridge => { name = bridge, idx = idx } }
+  node_name   = "pve1"
+  name        = format("vmbr1991%02d", each.value.idx)
+  vlan_aware = false
 }
 
 resource "proxmox_virtual_environment_vm" "devices" {
@@ -54,7 +55,7 @@ resource "proxmox_virtual_environment_vm" "devices" {
 }
 
 resource "terraform_data" "initial_provisioning" {
-  for_each = { for idx, item in var.devices : item.name => item if item.type == "chr" }
+  for_each = { for _, item in var.devices : item.name => item if item.type == "chr" }
 
   provisioner "local-exec" {
     interpreter = ["expect", "-c"]
@@ -67,4 +68,13 @@ resource "terraform_data" "initial_provisioning" {
 
 output "oob_ips" {
   value = local.devices_oob_ips
+}
+
+output "device_mac_addresses" {
+  value = {
+    for _, device in var.devices : device.name => {
+      for iface_idx, iface_name in proxmox_virtual_environment_vm.devices[device.name].network_interface_names : iface_name =>
+      proxmox_virtual_environment_vm.devices[device.name].mac_addresses[iface_idx]
+    } if device.type == "chr"
+  }
 }

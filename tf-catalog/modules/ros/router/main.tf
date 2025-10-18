@@ -8,5 +8,9 @@ module "dhcp-server" {
   dhcp_ranges    = each.value.dhcp_pool
   dns_servers    = each.value.dns_servers
   domain         = each.value.domain
-  # static_leases  = each.value.static_leases
+  static_leases = { for idx, lease in var.static_leases : lease.address => {
+    mac  = lease.mac
+    name = lease.name
+    } if lease.vlan == each.value.name
+  }
 }

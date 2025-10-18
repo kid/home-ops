@@ -18,3 +18,13 @@ variable "vlans" {
 }
 
 # }}}
+
+variable "static_leases" {
+  type = list(object({
+    name    = string
+    vlan    = string
+    mac     = string
+    address = string
+  }))
+  default = []
+}

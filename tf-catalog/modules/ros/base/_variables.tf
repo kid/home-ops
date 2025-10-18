@@ -104,7 +104,7 @@ variable "ethernet_interfaces" {
     comment     = optional(string, "")
     bridge_port = optional(bool, true)
     mtu         = optional(number, 1500)
-    l2mtu       = optional(number, 1514)
+    l2mtu       = optional(number, 1518)
 
     # VLAN configuration
     tagged   = optional(list(string), [])
@@ -127,10 +127,24 @@ variable "vlans" {
     mtu          = optional(number, 1500)
     gateway      = string
     dhcp_pool    = list(string)
-    dns_servers = list(string)
+    dns_servers  = list(string)
     domain       = string
   }))
   default = {}
+}
+
+# }}}
+
+# DHCP Clients interfaces {{{
+
+variable "dhcp_clients" {
+  description = "List of interfaces to create DHCP client on"
+  type        = list(object({
+    interface = string
+    use_peer_dns = optional(bool, true)
+    use_peer_ntp = optional(bool, true)
+  }))
+  default     = []
 }
 
 # }}}
