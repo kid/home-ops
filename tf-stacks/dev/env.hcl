@@ -2,6 +2,34 @@ locals {
   certificate_unit = "lab"
   environment = "dev"
 
+  devices = [
+    { 
+      name = "router"
+      type = "chr"
+      interfaces = [
+        { type = "oob" },
+        { type = "wan" },
+        { type = "port", target = "switch" },
+        { type = "port", target = "vm1" },
+      ]
+    },
+    { 
+      name = "switch"
+      type = "chr"
+      interfaces = [
+        { type = "oob" },
+        { type = "port", target = "router" },
+      ]
+    },
+    {
+      name = "vm1"
+      type = "debian"
+      interfaces = [
+        { type = "port", target = "router" },
+      ]
+    }
+  ]
+
   vlans = {
     Management = {
       name = "Management"
