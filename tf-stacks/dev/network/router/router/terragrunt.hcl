@@ -21,7 +21,7 @@ dependencies {
 }
 
 dependency "lab" {
-  config_path = "../../lab"
+  config_path = "../../../lab"
 
   mock_outputs = {
     oob_ips = { 
