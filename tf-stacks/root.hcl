@@ -11,7 +11,7 @@ locals {
 }
 
 inputs = merge(
-  local.env_config.locals,
+  local.env_config.inputs,
   local.stack_config.locals,
   local.routeros_inputs,
   local.proxmox_inputs,

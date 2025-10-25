@@ -65,11 +65,3 @@ resource "routeros_interface_bridge_vlan" "bridge_vlans" {
   tagged   = each.value.tagged
   untagged = each.value.untagged
 }
-
-output "debug" {
-  value = {
-    bridge_vlan_assignments = local.bridge_vlan_assignments
-    vlan_assignments        = local.vlan_assignments
-    final_bridge_vlans      = local.final_bridge_vlans
-  }
-}

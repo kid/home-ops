@@ -154,3 +154,22 @@ variable "ip_addresses" {
 }
 
 # }}}
+
+# Users configuration {{{
+
+variable "users" {
+  type = map(object({
+    group   = string
+    comment = optional(string)
+    keys    = optional(list(string), [])
+  }))
+  default = {}
+}
+
+variable "passwords" {
+  type      = map(string)
+  sensitive = true
+  default   = {}
+}
+
+# }}}
