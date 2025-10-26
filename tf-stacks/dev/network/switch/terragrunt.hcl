@@ -1,16 +1,16 @@
 locals {
-  hostname = "switch"
-  vlans = include.root.locals.env_config.locals.vlans
+  hostname  = "switch"
+  vlans     = include.root.locals.env_config.locals.vlans
   mgmt_cidr = "${local.vlans.Management.cidr_network}/${local.vlans.Management.cidr_prefix}"
 }
 
 include "root" {
-  path = find_in_parent_folders("root.hcl")
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 include "provider_routeros" {
-  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
+  path   = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
   expose = true
 }
 
@@ -25,14 +25,14 @@ terraform {
 
 dependencies {
   paths = ["../router"]
-} 
+}
 
 dependency "lab" {
   config_path = "../../lab"
 
   mock_outputs = {
-    oob_ips = { 
-      router = "" 
+    oob_ips = {
+      router = ""
       switch = ""
     }
   }
@@ -41,7 +41,7 @@ dependency "lab" {
 inputs = merge(
   include.root.inputs,
   {
-    routeros_endpoint = run_cmd("../get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[local.hostname]),
+    routeros_endpoint     = run_cmd("../get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[local.hostname]),
     certificate_alt_names = ["IP:${dependency.lab.outputs.oob_ips[local.hostname]}"],
 
     oob_mgmt_ip_address = "${dependency.lab.outputs.oob_ips[local.hostname]}/24"

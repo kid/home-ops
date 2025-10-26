@@ -3,11 +3,11 @@ locals {
 
   cloudflare = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/cloudflare.sops.yaml"))
 
-  env_config = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  env_config   = read_terragrunt_config(find_in_parent_folders("env.hcl"))
   stack_config = try(read_terragrunt_config(find_in_parent_folders("stack.hcl")), { locals = {} })
 
   routeros_inputs = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml")), {})
-  proxmox_inputs = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/proxmox.sops.yaml")), { })
+  proxmox_inputs  = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/proxmox.sops.yaml")), {})
 }
 
 inputs = merge(
@@ -39,18 +39,18 @@ remote_state {
     encrypt = true
 
     # Force path-style URLs for Cloudflare R2 compatibility
-    use_path_style                = true
-    
-    
+    use_path_style = true
+
+
     # Enable S3 locking (instead of DynamoDB)
     use_lockfile = true
-    
+
     # Skip AWS-specific validations for Cloudflare R2
     skip_credentials_validation = true
     skip_metadata_api_check     = true
     skip_region_validation      = true
     skip_requesting_account_id  = true
-    
+
     # Additional S3-compatible storage compatibility flags
     skip_s3_checksum             = true
     disable_aws_client_checksums = true

@@ -1,16 +1,16 @@
 locals {
-  vlans = include.root.locals.env_config.locals.vlans
+  vlans      = include.root.locals.env_config.locals.vlans
   vlans_cidr = include.root.locals.env_config.locals.vlans_cidr
-  hostname = "router"
+  hostname   = "router"
 }
 
 include "root" {
-  path = find_in_parent_folders("root.hcl")
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 include "provider_routeros" {
-  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
+  path   = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
   expose = true
 }
 
@@ -27,8 +27,8 @@ dependency "lab" {
   config_path = "../../lab"
 
   mock_outputs = {
-    oob_ips = { 
-      router = "" 
+    oob_ips = {
+      router = ""
       switch = ""
     }
   }
@@ -37,7 +37,7 @@ dependency "lab" {
 inputs = merge(
   include.root.inputs,
   {
-    routeros_endpoint = run_cmd("../get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[local.hostname]),
+    routeros_endpoint     = run_cmd("../get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[local.hostname]),
     certificate_alt_names = ["IP:${dependency.lab.outputs.oob_ips[local.hostname]}"],
 
     oob_mgmt_ip_address = "${dependency.lab.outputs.oob_ips[local.hostname]}/24"
@@ -54,8 +54,8 @@ inputs = merge(
 
     dhcp_clients = [{ interface = "ether2" }]
 
-    ip_addresses = { for key, vlan in local.vlans : 
-      local.vlans[key].name => "${cidrhost(local.vlans_cidr[key], 1)}/${local.vlans.Management.cidr_prefix}" 
+    ip_addresses = { for key, vlan in local.vlans :
+      local.vlans[key].name => "${cidrhost(local.vlans_cidr[key], 1)}/${local.vlans.Management.cidr_prefix}"
     }
   },
 )

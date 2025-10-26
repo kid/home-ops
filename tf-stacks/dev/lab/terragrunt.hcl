@@ -3,7 +3,7 @@ locals {
 }
 
 include "root" {
-  path = find_in_parent_folders("root.hcl")
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
@@ -24,8 +24,8 @@ inputs = merge(
   local.routeros_inputs["rb5009"],
   {
     routeros_version = "7.20.1"
-    ssh_username = "kid"
-    ssh_password = "foobar"
-    ssh_keys = [file("~/.ssh/id_ed25519.pub")]
+    ssh_username     = "kid"
+    ssh_password     = "foobar"
+    ssh_keys         = [file("~/.ssh/id_ed25519.pub")]
   },
 )

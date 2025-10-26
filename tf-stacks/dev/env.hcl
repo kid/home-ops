@@ -4,7 +4,7 @@ locals {
   environment = "dev"
 
   devices = [
-    { 
+    {
       name = "router"
       type = "chr"
       interfaces = [
@@ -14,7 +14,7 @@ locals {
         { type = "port", target = "vm1" },
       ]
     },
-    { 
+    {
       name = "switch"
       type = "chr"
       interfaces = [
@@ -33,28 +33,28 @@ locals {
 
   vlans = {
     Management = {
-      name = "Management"
-      vlan_id = 99
+      name         = "Management"
+      vlan_id      = 99
       cidr_network = "10.227.0.0"
-      cidr_prefix = 16
-      domain = "mgmt.lab.kidibox.net"
+      cidr_prefix  = 16
+      domain       = "mgmt.lab.kidibox.net"
     }
     Trusted = {
-      name = "Trusted"
-      vlan_id = 100
+      name         = "Trusted"
+      vlan_id      = 100
       cidr_network = "10.128.100.0"
-      cidr_prefix = 24
-      domain = "trusted.lab.kidibox.net"
-    } 
+      cidr_prefix  = 24
+      domain       = "trusted.lab.kidibox.net"
+    }
   }
 
-  vlans_cidr = { for key, vlan in local.vlans :  key => "${vlan.cidr_network}/${vlan.cidr_prefix}" }
+  vlans_cidr = { for key, vlan in local.vlans : key => "${vlan.cidr_network}/${vlan.cidr_prefix}" }
 
-  users = { for name, user in local.routeros_secrets.users : 
-    name => { 
+  users = { for name, user in local.routeros_secrets.users :
+    name => {
       group = user.group
       keys  = user.ssh_keys
-    } 
+    }
   }
 
   passwords = { for name, user in local.routeros_secrets.users : name => user.password }
@@ -63,8 +63,8 @@ locals {
 inputs = {
   certificate_unit = "lab"
 
-  devices = local.devices
-  vlans = local.vlans
-  users = local.users
+  devices   = local.devices
+  vlans     = local.vlans
+  users     = local.users
   passwords = local.passwords
 }

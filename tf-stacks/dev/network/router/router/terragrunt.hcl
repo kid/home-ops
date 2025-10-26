@@ -3,12 +3,12 @@ locals {
 }
 
 include "root" {
-  path = find_in_parent_folders("root.hcl")
+  path   = find_in_parent_folders("root.hcl")
   expose = true
 }
 
 include "provider_routeros" {
-  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
+  path   = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
   expose = true
 }
 
@@ -24,8 +24,8 @@ dependency "lab" {
   config_path = "../../../lab"
 
   mock_outputs = {
-    oob_ips = { 
-      router = "" 
+    oob_ips = {
+      router = ""
       switch = ""
     }
   }
