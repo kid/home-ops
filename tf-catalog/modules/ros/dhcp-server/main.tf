@@ -1,19 +1,27 @@
+data "routeros_ip_addresses" "self" {
+  filter = {
+    interface = var.interface_name
+  }
+}
+
 locals {
-  cidr = "${var.cidr_network}/${var.cidr_prefix}"
+  cidr          = "${var.cidr_network}/${var.cidr_prefix}"
+  interface_ip  = split("/", data.routeros_ip_addresses.self.addresses[0].address)[0]
+  default_range = "${cidrhost(local.cidr, 200)}-${cidrhost(local.cidr, 254)}"
 }
 
 resource "routeros_ip_pool" "self" {
   comment = "${var.interface_name} DHCP Pool"
   name    = "${var.interface_name}-dhcp-pool"
-  ranges  = var.dhcp_ranges
+  ranges  = coalesce(var.dhcp_ranges, [local.default_range])
 }
 
 resource "routeros_ip_dhcp_server_network" "self" {
   comment    = "${var.interface_name} DHCP Network"
   address    = local.cidr
   domain     = var.domain
-  gateway    = var.gateway
-  dns_server = var.dns_servers
+  gateway    = coalesce(var.gateway, local.interface_ip)
+  dns_server = coalesce(var.dns_servers, [local.interface_ip])
 }
 
 resource "routeros_ip_dhcp_server" "self" {

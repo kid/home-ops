@@ -15,16 +15,19 @@ variable "cidr_prefix" {
 variable "gateway" {
   description = "Gateway IP address for the network"
   type        = string
+  default     = null
 }
 
 variable "dhcp_ranges" {
   description = "List of IP ranges for DHCP pool (e.g., [\"192.168.1.100-192.168.1.200\"])"
   type        = list(string)
+  default     = null
 }
 
 variable "dns_servers" {
   description = "List of DNS servers to provide via DHCP"
   type        = list(string)
+  default     = null
 }
 
 variable "domain" {
