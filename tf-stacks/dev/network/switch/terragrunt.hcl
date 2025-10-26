@@ -18,7 +18,7 @@ terraform {
 
   before_hook "pre_destroy" {
     commands = ["destroy"]
-    execute  = ["../hook_pre_destroy.sh"]
+    execute  = [find_in_parent_folders("hook_pre_destroy.sh")]
   }
 }
 
