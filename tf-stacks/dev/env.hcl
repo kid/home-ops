@@ -2,6 +2,11 @@ locals {
   routeros_secrets = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/routeros.sops.yaml"))
 
   environment = "dev"
+  tld         = "${local.environment}.kidibox.net"
+
+  env_cidr         = cidrsubnet("10.0.0.0/8", 1, 1)
+  env_cidr_network = split("/", local.env_cidr)
+  env_cidr_prefix  = tonumber(split("/", local.env_cidr)[1])
 
   devices = [
     {
@@ -31,24 +36,19 @@ locals {
     }
   ]
 
-  vlans = {
-    Management = {
-      name         = "Management"
-      vlan_id      = 99
-      cidr_network = "10.227.0.0"
-      cidr_prefix  = 16
-      domain       = "mgmt.lab.kidibox.net"
-    }
-    Trusted = {
-      name         = "Trusted"
-      vlan_id      = 100
-      cidr_network = "10.128.100.0"
-      cidr_prefix  = 24
-      domain       = "trusted.lab.kidibox.net"
+  vlans_tmp = [
+    { id = 99, name = "Management", prefix = 16, domain = "mgmt.${local.tld}" },
+    { id = 100, name = "Trusted", domain = "trusted.${local.tld}" },
+  ]
+
+  vlans = { for _, vlan in local.vlans_tmp :
+    vlan.name => {
+      name    = vlan.name
+      domain  = vlan.domain
+      vlan_id = vlan.id
+      cidr    = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.id)
     }
   }
-
-  vlans_cidr = { for key, vlan in local.vlans : key => "${vlan.cidr_network}/${vlan.cidr_prefix}" }
 
   users = { for name, user in local.routeros_secrets.users :
     name => {

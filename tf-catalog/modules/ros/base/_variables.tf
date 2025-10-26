@@ -120,11 +120,9 @@ variable "ethernet_interfaces" {
 
 variable "vlans" {
   type = map(object({
-    name         = string
-    vlan_id      = number
-    cidr_network = string
-    cidr_prefix  = number
-    mtu          = optional(number, 1500)
+    name    = string
+    vlan_id = number
+    mtu     = optional(number, 1500)
   }))
   default = {}
 }

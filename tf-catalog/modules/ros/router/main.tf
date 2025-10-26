@@ -2,8 +2,7 @@ module "dhcp-server" {
   for_each       = var.vlans
   source         = "../../../modules/ros/dhcp-server"
   interface_name = each.value.name
-  cidr_network   = each.value.cidr_network
-  cidr_prefix    = each.value.cidr_prefix
+  cidr           = each.value.cidr
   gateway        = each.value.gateway
   dhcp_ranges    = each.value.dhcp_pool
   dns_servers    = each.value.dns_servers

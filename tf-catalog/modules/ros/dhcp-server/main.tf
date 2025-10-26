@@ -5,9 +5,8 @@ data "routeros_ip_addresses" "self" {
 }
 
 locals {
-  cidr          = "${var.cidr_network}/${var.cidr_prefix}"
   interface_ip  = split("/", data.routeros_ip_addresses.self.addresses[0].address)[0]
-  default_range = "${cidrhost(local.cidr, 200)}-${cidrhost(local.cidr, 254)}"
+  default_range = "${cidrhost(var.cidr, 200)}-${cidrhost(var.cidr, 254)}"
 }
 
 resource "routeros_ip_pool" "self" {
@@ -18,7 +17,7 @@ resource "routeros_ip_pool" "self" {
 
 resource "routeros_ip_dhcp_server_network" "self" {
   comment    = "${var.interface_name} DHCP Network"
-  address    = local.cidr
+  address    = var.cidr
   domain     = var.domain
   gateway    = coalesce(var.gateway, local.interface_ip)
   dns_server = coalesce(var.dns_servers, [local.interface_ip])

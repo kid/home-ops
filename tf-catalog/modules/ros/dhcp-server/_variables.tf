@@ -3,13 +3,9 @@ variable "interface_name" {
   type        = string
 }
 
-variable "cidr_network" {
-  description = "Network address in CIDR notation (e.g., 192.168.1.0)"
+variable "cidr" {
+  description = "Network in CIDR notation (e.g., 192.168.1.0/24)"
   type        = string
-}
-
-variable "cidr_prefix" {
-  type = number
 }
 
 variable "gateway" {

@@ -1,7 +1,7 @@
 locals {
-  vlans      = include.root.locals.env_config.locals.vlans
-  vlans_cidr = include.root.locals.env_config.locals.vlans_cidr
-  hostname   = "router"
+  hostname     = "router"
+  vlans        = include.root.locals.env_config.locals.vlans
+  vlans_prefix = { for name, vlan in local.vlans : name => tonumber(split("/", vlan.cidr)[1]) }
 }
 
 include "root" {
@@ -55,7 +55,7 @@ inputs = merge(
     dhcp_clients = [{ interface = "ether2" }]
 
     ip_addresses = { for key, vlan in local.vlans :
-      local.vlans[key].name => "${cidrhost(local.vlans_cidr[key], 1)}/${local.vlans.Management.cidr_prefix}"
+      key => "${cidrhost(local.vlans[key].cidr, 1)}/${local.vlans_prefix[key]}"
     }
   },
 )

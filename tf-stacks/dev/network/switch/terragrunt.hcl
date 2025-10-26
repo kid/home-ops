@@ -1,7 +1,6 @@
 locals {
-  hostname  = "switch"
-  vlans     = include.root.locals.env_config.locals.vlans
-  mgmt_cidr = "${local.vlans.Management.cidr_network}/${local.vlans.Management.cidr_prefix}"
+  hostname = "switch"
+  vlans    = include.root.locals.env_config.locals.vlans
 }
 
 include "root" {
