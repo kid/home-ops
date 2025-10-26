@@ -35,5 +35,6 @@ inputs = merge(
   include.root.inputs,
   {
     routeros_endpoint = "https://${dependency.lab.outputs.oob_ips[local.hostname]}",
+    wan_interface     = "ether2"
   },
 )

@@ -1,5 +1,15 @@
 # vim: foldmethod=marker foldmarker={{{,}}}
 
+variable "wan_interface" {
+  type = string
+}
+
+variable "bridge_name" {
+  type        = string
+  default     = "bridge"
+  description = "Name of the main bridge interface"
+}
+
 # VLAN Configuration {{{
 
 variable "vlans" {
