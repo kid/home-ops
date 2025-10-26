@@ -14,6 +14,6 @@ resource "routeros_interface_bridge_port" "ethernet_ports" {
 
   # If untagged VLAN is specified, find its VLAN ID
   pvid = (each.value.untagged != null && each.value.untagged != "") ? (
-    first([for k, v in var.vlans : v.vlan_id if v.name == each.value.untagged])
+    [for k, v in var.vlans : v.vlan_id if v.name == each.value.untagged][0]
   ) : null
 }
