@@ -16,7 +16,7 @@ locals {
         { type = "oob" },
         { type = "wan" },
         { type = "port", target = "switch" },
-        { type = "port", target = "vm1" },
+        { type = "port", target = "client1" },
       ]
     },
     {
@@ -28,17 +28,27 @@ locals {
       ]
     },
     {
-      name = "vm1"
-      type = "debian"
+      name = "client1"
+      type = "chr"
       interfaces = [
+        { type = "oob" },
         { type = "port", target = "router" },
       ]
     }
   ]
 
   vlans_tmp = [
-    { id = 99, name = "Management", prefix = 16, domain = "mgmt.${local.tld}" },
-    { id = 100, name = "Trusted", domain = "trusted.${local.tld}" },
+    {
+      id     = 99
+      prefix = 16
+      name   = "Management"
+      domain = "mgmt.${local.tld}"
+    },
+    {
+      id     = 100
+      name   = "Trusted"
+      domain = "trusted.${local.tld}"
+    },
   ]
 
   vlans = { for _, vlan in local.vlans_tmp :

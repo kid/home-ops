@@ -10,9 +10,9 @@ resource "proxmox_virtual_environment_download_file" "images" {
 }
 
 resource "proxmox_virtual_environment_network_linux_bridge" "ports" {
-  for_each    = { for idx, bridge in local.bridges : bridge => { name = bridge, idx = idx } }
-  node_name   = "pve1"
-  name        = format("vmbr1991%02d", each.value.idx)
+  for_each   = { for idx, bridge in local.bridges : bridge => { name = bridge, idx = idx } }
+  node_name  = "pve1"
+  name       = format("lab%02d", each.value.idx)
   vlan_aware = false
 }
 
