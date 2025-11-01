@@ -18,6 +18,13 @@ dependencies {
 
 dependency "lab" {
   config_path = "../../../lab"
+
+  mock_outputs = {
+    oob_ips = {
+      router = ""
+      switch = ""
+    }
+  }
 }
 
 locals {
