@@ -45,9 +45,29 @@ locals {
       domain  = "mgmt.${local.tld}"
     },
     {
+      vlan_id = 10
+      name    = "Servers"
+      domain  = "srv.${local.tld}"
+    },
+    {
+      vlan_id = 20
+      name    = "Storage"
+      domain  = "storage.${local.tld}"
+      mtu     = 9000
+    },
+    {
       vlan_id = 100
-      name    = "Trusted"
-      domain  = "trusted.${local.tld}"
+      name    = "Lan"
+      domain  = "lan.${local.tld}"
+    },
+    {
+      vlan_id = 101
+      name    = "Wlan"
+      domain  = "wlan.${local.tld}"
+    },    {
+      vlan_id = 110
+      name    = "Guest"
+      domain  = "guest.${local.tld}"
     },
   ]
 

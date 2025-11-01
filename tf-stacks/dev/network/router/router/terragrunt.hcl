@@ -36,8 +36,8 @@ inputs = merge(
       "${local.vlans.Management.name}" = [
         { action = "accept", dst_interface_list = "WAN", comment = "Allow WAN from Management" },
       ]
-      "${local.vlans.Trusted.name}" = [
-        { action = "accept", dst_interface_list = "WAN", comment = "Allow WAN from Trusted" },
+      "${local.vlans.Lan.name}" = [
+        { action = "accept", dst_interface_list = "WAN", comment = "Allow WAN from Lan" },
         { action = "accept", dst_interface = local.vlans.Management.name, comment = "Allow access to Management from Trusted" },
       ]
     }

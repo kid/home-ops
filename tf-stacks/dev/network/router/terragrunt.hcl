@@ -48,7 +48,7 @@ inputs = merge(
       ether1 = { comment = "oom", bridge_port = false }
       ether2 = { comment = "wan", bridge_port = false }
       ether3 = { comment = "switch", bridge_port = true, tagged = [local.vlans.Management.name] }
-      ether4 = { comment = "client1", bridge_port = true, untagged = local.vlans.Trusted.name }
+      ether4 = { comment = "client1", bridge_port = true, untagged = local.vlans.Lan.name }
     }
 
     oob_mgmt_interface = "ether1"
