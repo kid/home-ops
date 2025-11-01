@@ -39,3 +39,7 @@ resource "routeros_ip_dhcp_server_lease" "self" {
   mac_address = each.value.mac
   comment     = each.value.name
 }
+
+output "gateway" {
+  value = routeros_ip_dhcp_server_network.self.gateway
+}

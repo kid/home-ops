@@ -78,25 +78,28 @@ locals {
           protocol = "icmp"
         },
         {
-          comment  = "Allow DNS over TCP from ${vlan.name}"
-          chain    = "input-${vlan.name}"
-          action   = "accept"
-          protocol = "tcp"
-          port     = 53
+          comment     = "Allow DNS over TCP from ${vlan.name}"
+          chain       = "input-${vlan.name}"
+          action      = "accept"
+          protocol    = "tcp"
+          port        = 53
+          dst_address = module.dhcp_server[vlan.name].gateway
         },
         {
-          comment  = "Allow DNS over UDP from ${vlan.name}"
-          chain    = "input-${vlan.name}"
-          action   = "accept"
-          protocol = "udp"
-          port     = 53
+          comment     = "Allow DNS over UDP from ${vlan.name}"
+          chain       = "input-${vlan.name}"
+          action      = "accept"
+          protocol    = "udp"
+          port        = 53
+          dst_address = module.dhcp_server[vlan.name].gateway
         },
         {
-          comment  = "Allow DHCP on ${vlan.name}"
-          chain    = "input-${vlan.name}"
-          action   = "accept"
-          protocol = "udp"
-          dst_port = 67
+          comment     = "Allow DHCP on ${vlan.name}"
+          chain       = "input-${vlan.name}"
+          action      = "accept"
+          protocol    = "udp"
+          dst_port    = 67
+          dst_address = module.dhcp_server[vlan.name].gateway
         },
       ],
       [for _, rule in lookup(var.vlans_input_rules, vlan.name, []) : merge(rule, { chain = "input-${vlan.name}" })],

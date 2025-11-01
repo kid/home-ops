@@ -1,4 +1,4 @@
-module "dhcp-server" {
+module "dhcp_server" {
   for_each       = var.vlans
   source         = "../../../modules/ros/dhcp-server"
   interface_name = each.value.name
