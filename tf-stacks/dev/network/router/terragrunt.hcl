@@ -55,8 +55,10 @@ inputs = merge(
 
     dhcp_clients = [{ interface = "ether2" }]
 
-    ip_addresses = { for key, vlan in local.vlans :
+    ip_addresses = {
+      for key, vlan in local.vlans :
       key => "${cidrhost(local.vlans[key].cidr, 1)}/${local.vlans_prefix[key]}"
+      if lookup(vlan, "routed", true)
     }
   },
 )

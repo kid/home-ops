@@ -77,6 +77,8 @@ locals {
           action   = "accept"
           protocol = "icmp"
         },
+      ],
+      contains(keys(var.dhcp_servers), vlan.name) ? [
         {
           comment     = "Allow DNS over TCP from ${vlan.name}"
           chain       = "input-${vlan.name}"
@@ -101,7 +103,7 @@ locals {
           dst_port    = 67
           dst_address = module.dhcp_server[vlan.name].gateway
         },
-      ],
+      ] : [],
       [for _, rule in lookup(var.vlans_input_rules, vlan.name, []) : merge(rule, { chain = "input-${vlan.name}" })],
       [for _, rule in lookup(var.vlans_forward_rules, vlan.name, []) : merge(rule, { chain = "forward-${vlan.name}" })],
     ]

@@ -56,15 +56,22 @@ locals {
       mtu     = 9000
     },
     {
+      vlan_id = 40
+      name    = "Talos"
+      domain  = "talos.${local.tld}"
+    },
+    {
+      vlan_id = 42
+      name    = "TalosSvc"
+      domain  = "talos-svc.${local.tld}"
+      dhc    = false
+    },
+    {
       vlan_id = 100
       name    = "Lan"
       domain  = "lan.${local.tld}"
     },
     {
-      vlan_id = 101
-      name    = "Wlan"
-      domain  = "wlan.${local.tld}"
-    },    {
       vlan_id = 110
       name    = "Guest"
       domain  = "guest.${local.tld}"

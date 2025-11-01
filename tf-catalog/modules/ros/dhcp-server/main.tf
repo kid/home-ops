@@ -1,3 +1,4 @@
+# FIXME: Avoid data source here
 data "routeros_ip_addresses" "self" {
   filter = {
     interface = var.interface_name
@@ -33,9 +34,9 @@ resource "routeros_ip_dhcp_server" "self" {
 }
 
 resource "routeros_ip_dhcp_server_lease" "self" {
-  for_each    = var.static_leases
+  for_each    = { for _, lease in var.static_leases : lease.mac => lease }
   server      = routeros_ip_dhcp_server.self.name
-  address     = each.key
+  address     = each.value.address
   mac_address = each.value.mac
   comment     = each.value.name
 }

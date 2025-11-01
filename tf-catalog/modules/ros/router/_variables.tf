@@ -35,8 +35,8 @@ variable "vlans_input_rules" {
   type = map(list(object({
     comment            = string
     action             = string
-    dst_interface      = optional(string)
-    dst_interface_list = optional(string)
+    out_interface      = optional(string)
+    out_interface_list = optional(string)
   })))
   default = {}
 }
@@ -45,22 +45,37 @@ variable "vlans_forward_rules" {
   type = map(list(object({
     comment            = string
     action             = string
-    dst_interface      = optional(string)
-    dst_interface_list = optional(string)
+    out_interface      = optional(string)
+    out_interface_list = optional(string)
   })))
   default = {}
 }
 
 # }}}
 
-variable "static_leases" {
-  type = list(object({
+variable "dhcp_servers" {
+  type = map(object({
+    cidr        = string
+    domain      = string
+    gateway     = optional(string)
+    dhcp_pool   = optional(list(string))
+    dns_servers = optional(list(string))
+    static_leases = optional(list(object({
+      name    = string
+      mac     = string
+      address = string
+    })))
+  }))
+  default = {}
+}
+
+variable "dhcp_static_leases" {
+  type = map(list(object({
     name    = string
-    vlan    = string
     mac     = string
     address = string
-  }))
-  default = []
+  })))
+  default = {}
 }
 
 # DNS Configuration {{{
