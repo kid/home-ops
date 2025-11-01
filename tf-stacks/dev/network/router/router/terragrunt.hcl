@@ -34,7 +34,8 @@ dependency "lab" {
 inputs = merge(
   include.root.inputs,
   {
-    routeros_endpoint = "https://${dependency.lab.outputs.oob_ips[local.hostname]}",
-    wan_interface     = "ether2"
+    routeros_endpoint    = "https://${dependency.lab.outputs.oob_ips[local.hostname]}",
+    wan_interface        = "ether2"
+    dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]
   },
 )

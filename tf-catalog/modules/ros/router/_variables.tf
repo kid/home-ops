@@ -37,3 +37,20 @@ variable "static_leases" {
   }))
   default = []
 }
+
+# DNS Configuration {{{
+
+variable "dns_upstream_servers" {
+  type = list(string)
+}
+
+variable "dns_static_records" {
+  type = map(object({
+    type    = string
+    address = string
+    comment = optional(string)
+  }))
+  default = {}
+}
+
+# }}}
