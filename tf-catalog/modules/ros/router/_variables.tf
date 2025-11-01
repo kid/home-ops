@@ -1,5 +1,10 @@
 # vim: foldmethod=marker foldmarker={{{,}}}
 
+variable "oob_mgmt_interface" {
+  type        = string
+  description = "The interface to use for out of band management"
+}
+
 variable "wan_interface" {
   type = string
 }
@@ -23,6 +28,26 @@ variable "vlans" {
     dhcp_pool   = optional(list(string))
     dns_servers = optional(list(string))
   }))
+  default = {}
+}
+
+variable "vlans_input_rules" {
+  type = map(list(object({
+    comment            = string
+    action             = string
+    dst_interface      = optional(string)
+    dst_interface_list = optional(string)
+  })))
+  default = {}
+}
+
+variable "vlans_forward_rules" {
+  type = map(list(object({
+    comment            = string
+    action             = string
+    dst_interface      = optional(string)
+    dst_interface_list = optional(string)
+  })))
   default = {}
 }
 

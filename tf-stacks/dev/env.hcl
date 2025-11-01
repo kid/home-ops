@@ -39,25 +39,22 @@ locals {
 
   vlans_tmp = [
     {
-      id     = 99
-      prefix = 16
-      name   = "Management"
-      domain = "mgmt.${local.tld}"
+      vlan_id = 99
+      prefix  = 16
+      name    = "Management"
+      domain  = "mgmt.${local.tld}"
     },
     {
-      id     = 100
-      name   = "Trusted"
-      domain = "trusted.${local.tld}"
+      vlan_id = 100
+      name    = "Trusted"
+      domain  = "trusted.${local.tld}"
     },
   ]
 
   vlans = { for _, vlan in local.vlans_tmp :
-    vlan.name => {
-      name    = vlan.name
-      domain  = vlan.domain
-      vlan_id = vlan.id
-      cidr    = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.id)
-    }
+    vlan.name => merge(vlan, {
+      cidr = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id)
+    })
   }
 
   users = { for name, user in local.routeros_secrets.users :
@@ -71,7 +68,8 @@ locals {
 }
 
 inputs = {
-  certificate_unit = "lab"
+  certificate_unit   = "lab"
+  oob_mgmt_interface = "ether1"
 
   devices   = local.devices
   vlans     = local.vlans

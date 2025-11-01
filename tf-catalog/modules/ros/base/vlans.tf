@@ -21,15 +21,16 @@ locals {
   ])
 
   # Construct the final bridge_vlans data structure
-  vlan_assignments = { for vlan_name, _ in { for k, v in var.vlans : v.name => v } : vlan_name => {
-    tagged = distinct([
-      for assignment in local.bridge_vlan_assignments :
-      assignment.iface if assignment.vlan_name == vlan_name && assignment.type == "tagged"
-    ]),
-    untagged = distinct([
-      for assignment in local.bridge_vlan_assignments :
-      assignment.iface if assignment.vlan_name == vlan_name && assignment.type == "untagged"
-    ])
+  vlan_assignments = {
+    for vlan_name, _ in { for k, v in var.vlans : v.name => v } : vlan_name => {
+      tagged = distinct([
+        for assignment in local.bridge_vlan_assignments :
+        assignment.iface if assignment.vlan_name == vlan_name && assignment.type == "tagged"
+      ]),
+      untagged = distinct([
+        for assignment in local.bridge_vlan_assignments :
+        assignment.iface if assignment.vlan_name == vlan_name && assignment.type == "untagged"
+      ])
     }
   }
 
