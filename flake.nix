@@ -32,6 +32,7 @@
         {
           devenv.shells.default = {
             packages = with pkgs; [
+              just
               expect
               sops
               tofu-ls
@@ -45,6 +46,10 @@
                 package = pkgs.opentofu;
               };
             };
+
+            scripts.ssh.exec = ''
+              ${pkgs.openssh}/bin/ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" "$@"
+            '';
           };
         };
     };
