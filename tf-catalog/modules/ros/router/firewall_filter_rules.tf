@@ -19,13 +19,6 @@ locals {
         in_interface = vlan.name
       }
     ],
-    [
-      {
-        comment = "drop everything else",
-        action  = "drop",
-        log     = true
-      }
-    ],
   )
 
   forward_rules = concat(
@@ -33,7 +26,7 @@ locals {
       {
         action           = "fasttrack-connection"
         connection_state = "established,related"
-        hw_offload       = true
+        # hw_offload       = true
       },
       {
         id               = "accept established,related,untracked"
@@ -59,12 +52,6 @@ locals {
         action           = "drop",
         src_address_list = "no_forward_ipv4"
       },
-      {
-        comment          = "Drop bad forward IPs"
-        action           = "drop",
-        src_address_list = "no_forward_ipv4"
-      },
-      { action = "drop", log = true },
     ],
   )
 
@@ -72,10 +59,11 @@ locals {
     for _, vlan in var.vlans : [
       [
         {
-          comment  = "Allow ICMP from ${vlan.name}"
-          chain    = "input-${vlan.name}"
-          action   = "accept"
-          protocol = "icmp"
+          comment     = "Allow ICMP from ${vlan.name}"
+          chain       = "input-${vlan.name}"
+          action      = "accept"
+          protocol    = "icmp"
+          dst_address = module.dhcp_server[vlan.name].gateway
         },
       ],
       contains(keys(var.dhcp_servers), vlan.name) ? [
@@ -155,7 +143,26 @@ resource "routeros_ip_firewall_filter" "rules" {
   }
 }
 
+# NOTE: drop rules are created after everytying, otherwise the connection could be dropped during the initial apply
+resource "routeros_ip_firewall_filter" "default_drop_forward" {
+  depends_on = [routeros_ip_firewall_filter.rules]
+  chain      = "forward"
+  action     = "drop"
+}
+
+resource "routeros_ip_firewall_filter" "default_drop_input" {
+  depends_on = [routeros_ip_firewall_filter.rules]
+  chain      = "input"
+  action     = "drop"
+}
+
 resource "routeros_move_items" "firewall_rules" {
   resource_path = "/ip/firewall/filter"
-  sequence      = [for idx, _ in local.rules_map : routeros_ip_firewall_filter.rules[idx].id]
+  sequence = concat(
+    [for idx, _ in local.rules_map : routeros_ip_firewall_filter.rules[idx].id],
+    [
+      routeros_ip_firewall_filter.default_drop_forward.id,
+      routeros_ip_firewall_filter.default_drop_input.id,
+    ],
+  )
 }

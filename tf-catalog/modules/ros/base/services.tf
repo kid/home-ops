@@ -19,7 +19,7 @@ resource "routeros_ip_service" "all" {
 }
 
 resource "routeros_ip_ssh_server" "self" {
-  strong_crypto               = true
-  always_allow_password_login = false
-  host_key_type               = "ed25519"
+  strong_crypto = true
+  # always_allow_password_login = false
+  host_key_type = "ed25519"
 }

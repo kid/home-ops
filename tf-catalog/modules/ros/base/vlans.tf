@@ -1,3 +1,5 @@
+# TODO: the management vlan should be created by this module, and not provided as input
+
 locals {
   bridge_vlan_assignments = flatten([
     # Tagged interfaces

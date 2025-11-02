@@ -52,6 +52,10 @@ resource "proxmox_virtual_environment_vm" "devices" {
       vlan_id = ifce.value["vlan_id"]
     }
   }
+
+  lifecycle {
+    ignore_changes = [disk[0].file_id]
+  }
 }
 
 resource "terraform_data" "initial_provisioning" {
@@ -77,4 +81,21 @@ output "device_mac_addresses" {
       proxmox_virtual_environment_vm.devices[device.name].mac_addresses[iface_idx]
     } if device.type == "chr"
   }
+}
+
+import {
+  to = proxmox_virtual_environment_vm.devices["router"]
+  id = "pve1/10991"
+}
+import {
+  to = proxmox_virtual_environment_vm.devices["switch"]
+  id = "pve1/10992"
+}
+import {
+  to = proxmox_virtual_environment_vm.devices["trusted1"]
+  id = "pve1/10993"
+}
+import {
+  to = proxmox_virtual_environment_vm.devices["guest1"]
+  id = "pve1/10994"
 }

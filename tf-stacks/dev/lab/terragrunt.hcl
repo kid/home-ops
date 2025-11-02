@@ -23,7 +23,7 @@ inputs = merge(
   include.root.inputs,
   local.routeros_inputs["rb5009"],
   {
-    routeros_version = "7.20.2"
+    routeros_version = "7.21beta5"
     ssh_username     = "kid"
     ssh_password     = "foobar"
     ssh_keys         = [file("~/.ssh/id_ed25519.pub")]

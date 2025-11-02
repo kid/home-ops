@@ -16,7 +16,8 @@ locals {
         { type = "oob" },
         { type = "wan" },
         { type = "port", target = "switch" },
-        { type = "port", target = "client1" },
+        { type = "port", target = "trusted1" },
+        { type = "port", target = "guest1" },
       ]
     },
     {
@@ -28,7 +29,15 @@ locals {
       ]
     },
     {
-      name = "client1"
+      name = "trusted1"
+      type = "chr"
+      interfaces = [
+        { type = "oob" },
+        { type = "port", target = "router" },
+      ]
+    },
+    {
+      name = "guest1"
       type = "chr"
       interfaces = [
         { type = "oob" },
@@ -68,8 +77,8 @@ locals {
     },
     {
       vlan_id = 100
-      name    = "Lan"
-      domain  = "lan.${local.tld}"
+      name    = "Trusted"
+      domain  = "trusted.${local.tld}"
     },
     {
       vlan_id = 110

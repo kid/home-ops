@@ -1,9 +1,3 @@
-locals {
-  hostname     = "router"
-  vlans        = include.root.locals.env_config.locals.vlans
-  vlans_prefix = { for name, vlan in local.vlans : name => tonumber(split("/", vlan.cidr)[1]) }
-}
-
 include "root" {
   path   = find_in_parent_folders("root.hcl")
   expose = true
@@ -15,12 +9,11 @@ include "provider_routeros" {
 }
 
 terraform {
-  source = "${get_repo_root()}/tf-catalog/modules/ros//base"
+  source = "${get_repo_root()}/tf-catalog//modules/ros/router"
+}
 
-  before_hook "pre_destroy" {
-    commands = ["destroy"]
-    execute  = [find_in_parent_folders("hook_pre_destroy.sh")]
-  }
+dependencies {
+  paths = ["base"]
 }
 
 dependency "lab" {
@@ -34,31 +27,49 @@ dependency "lab" {
   }
 }
 
+locals {
+  hostname = "router"
+  vlans    = include.root.locals.env_config.locals.vlans
+}
+
 inputs = merge(
   include.root.inputs,
   {
-    routeros_endpoint     = run_cmd("../get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[local.hostname]),
-    certificate_alt_names = ["IP:${dependency.lab.outputs.oob_ips[local.hostname]}"],
+    routeros_endpoint    = "https://${dependency.lab.outputs.oob_ips[local.hostname]}",
+    wan_interface        = "ether2"
+    dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]
 
-    oob_mgmt_ip_address = "${dependency.lab.outputs.oob_ips[local.hostname]}/24"
-
-    hostname = local.hostname
-
-    ethernet_interfaces = {
-      ether1 = { comment = "oom", bridge_port = false }
-      ether2 = { comment = "wan", bridge_port = false }
-      ether3 = { comment = "switch", bridge_port = true, tagged = [local.vlans.Management.name] }
-      ether4 = { comment = "client1", bridge_port = true, untagged = local.vlans.Lan.name }
+    dhcp_servers = {
+      for name, vlan in local.vlans : name => vlan if lookup(vlan, "dhcp", true)
     }
 
-    oob_mgmt_interface = "ether1"
+    dhcp_static_leases = {
+      "${local.vlans.Management.name}" = [
+        {
+          mac     = dependency.lab.outputs.device_mac_addresses.switch["ether2"]
+          name    = "switch"
+          address = cidrhost(local.vlans.Management.cidr, 2)
+        }
+      ]
+    }
 
-    dhcp_clients = [{ interface = "ether2" }]
+    vlans_input_rules = {
+      "${local.vlans.Trusted.name}" = [
+        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), comment = "Allow access to Management from Trusted" },
+      ]
+    }
 
-    ip_addresses = {
-      for key, vlan in local.vlans :
-      key => "${cidrhost(local.vlans[key].cidr, 1)}/${local.vlans_prefix[key]}"
-      if lookup(vlan, "routed", true)
+    vlans_forward_rules = {
+      "${local.vlans.Management.name}" = [
+        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Management" },
+      ]
+      "${local.vlans.Trusted.name}" = [
+        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Trusted" },
+        { action = "accept", out_interface = local.vlans.Management.name, comment = "Allow access to Management from Trusted" },
+      ]
+      "${local.vlans.Guest.name}" = [
+        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Trusted" },
+      ]
     }
   },
 )
