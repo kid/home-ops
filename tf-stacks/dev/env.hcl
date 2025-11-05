@@ -73,7 +73,7 @@ locals {
       vlan_id = 42
       name    = "TalosSvc"
       domain  = "talos-svc.${local.tld}"
-      dhc    = false
+      dhcp    = false
     },
     {
       vlan_id = 100

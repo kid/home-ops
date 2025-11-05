@@ -57,16 +57,15 @@ locals {
 
   vlans_rules = flatten([
     for _, vlan in var.vlans : [
-      [
+      contains(keys(var.dhcp_servers), vlan.name) ? [
         {
+          # FIXME: this should not be dependent on DHCP, but on existence of IP address on VLAN
           comment     = "Allow ICMP from ${vlan.name}"
           chain       = "input-${vlan.name}"
           action      = "accept"
           protocol    = "icmp"
           dst_address = module.dhcp_server[vlan.name].gateway
         },
-      ],
-      contains(keys(var.dhcp_servers), vlan.name) ? [
         {
           comment     = "Allow DNS over TCP from ${vlan.name}"
           chain       = "input-${vlan.name}"
