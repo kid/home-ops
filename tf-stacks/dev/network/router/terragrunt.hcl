@@ -28,8 +28,10 @@ dependency "lab" {
 }
 
 locals {
-  hostname = "router"
-  vlans    = include.root.locals.env_config.locals.vlans
+  hostname        = "router"
+  management_vlan = include.root.locals.env_config.locals.management_vlan
+  vlans           = include.root.locals.env_config.locals.vlans
+  all_vlans       = include.root.locals.env_config.locals.all_vlans
 }
 
 inputs = merge(
@@ -40,32 +42,35 @@ inputs = merge(
     dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]
 
     dhcp_servers = {
-      for name, vlan in local.vlans : name => vlan if lookup(vlan, "dhcp", true)
+      for name, vlan in local.all_vlans : name => vlan if lookup(vlan, "dhcp", true)
     }
 
     dhcp_static_leases = {
-      "${local.vlans.Management.name}" = [
+      "${local.management_vlan.name}" = [
         {
           mac     = dependency.lab.outputs.device_mac_addresses.switch["ether2"]
           name    = "switch"
-          address = cidrhost(local.vlans.Management.cidr, 2)
+          address = cidrhost(local.management_vlan.cidr, 2)
         }
       ]
     }
 
+    management_vlan = local.management_vlan
+    vlans           = local.vlans
+
     vlans_input_rules = {
       "${local.vlans.Trusted.name}" = [
-        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), comment = "Allow access to Management from Trusted" },
+        { action = "accept", dst_address = cidrhost(local.management_vlan.cidr, 1), comment = "Allow access to Management from Trusted" },
       ]
     }
 
     vlans_forward_rules = {
-      "${local.vlans.Management.name}" = [
+      "${local.management_vlan.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Management" },
       ]
       "${local.vlans.Trusted.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Trusted" },
-        { action = "accept", out_interface = local.vlans.Management.name, comment = "Allow access to Management from Trusted" },
+        { action = "accept", out_interface = local.management_vlan.name, comment = "Allow access to Management from Trusted" },
       ]
       "${local.vlans.Guest.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Trusted" },

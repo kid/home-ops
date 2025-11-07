@@ -33,8 +33,8 @@ dependency "lab" {
 }
 
 locals {
-  hostname = "switch"
-  vlans    = include.root.locals.env_config.locals.vlans
+  hostname        = "switch"
+  management_vlan = include.root.locals.env_config.locals.management_vlan
 }
 
 inputs = merge(
@@ -49,11 +49,11 @@ inputs = merge(
 
     ethernet_interfaces = {
       ether1 = { comment = "oom", bridge_port = false }
-      ether2 = { comment = "router", bridge_port = true, tagged = [local.vlans.Management.name] }
+      ether2 = { comment = "router", bridge_port = true, tagged = [local.management_vlan.name] }
     }
 
     oob_mgmt_interface = "ether1"
 
-    dhcp_clients = [{ interface = local.vlans.Management.name }]
+    dhcp_clients = [{ interface = local.management_vlan.name }]
   },
 )

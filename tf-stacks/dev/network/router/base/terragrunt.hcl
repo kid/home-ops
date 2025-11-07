@@ -1,9 +1,3 @@
-locals {
-  hostname     = "router"
-  vlans        = include.root.locals.env_config.locals.vlans
-  vlans_prefix = { for name, vlan in local.vlans : name => tonumber(split("/", vlan.cidr)[1]) }
-}
-
 include "root" {
   path   = find_in_parent_folders("root.hcl")
   expose = true
@@ -34,6 +28,21 @@ dependency "lab" {
   }
 }
 
+locals {
+  hostname = "router"
+
+  management_cidr   = include.root.locals.env_config.locals.management_vlan.cidr
+  management_prefix = split("/", local.management_cidr)[1]
+  management_vlan = merge(include.root.locals.env_config.locals.management_vlan, {
+    ip_address = "${cidrhost(local.management_cidr, 1)}/${local.management_prefix}"
+  })
+
+  vlans = {
+    for name, vlan in include.root.locals.env_config.locals.vlans :
+    name => merge({ ip_address = "${cidrhost(vlan.cidr, 1)}/${vlan.prefix}" }, vlan)
+  }
+}
+
 inputs = merge(
   include.root.inputs,
   {
@@ -44,10 +53,13 @@ inputs = merge(
 
     hostname = local.hostname
 
+    management_vlan = local.management_vlan
+    vlans           = local.vlans
+
     ethernet_interfaces = {
       ether1 = { comment = "oom", bridge_port = false }
       ether2 = { comment = "wan", bridge_port = false }
-      ether3 = { comment = "switch", bridge_port = true, tagged = [local.vlans.Management.name] }
+      ether3 = { comment = "switch", bridge_port = true, tagged = [local.management_vlan.name] }
       ether4 = { comment = "trusted1", bridge_port = true, untagged = local.vlans.Trusted.name }
       ether5 = { comment = "guest1", bridge_port = true, untagged = local.vlans.Guest.name }
     }
@@ -55,11 +67,5 @@ inputs = merge(
     oob_mgmt_interface = "ether1"
 
     dhcp_clients = [{ interface = "ether2" }]
-
-    ip_addresses = {
-      for key, vlan in local.vlans :
-      key => "${cidrhost(local.vlans[key].cidr, 1)}/${local.vlans_prefix[key]}"
-      if lookup(vlan, "routed", true)
-    }
   },
 )
