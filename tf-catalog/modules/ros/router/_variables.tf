@@ -1,12 +1,12 @@
 # vim: foldmethod=marker foldmarker={{{,}}}
 
-variable "oob_mgmt_interface" {
+variable "mgmt_interface_list" {
   type        = string
-  description = "The interface to use for out of band management"
+  description = "The management interface list"
 }
 
-variable "wan_interface" {
-  type = string
+variable "wan_interface_list" {
+  type    = string
 }
 
 variable "bridge_name" {

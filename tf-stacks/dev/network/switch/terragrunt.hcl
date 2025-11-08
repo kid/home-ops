@@ -34,7 +34,9 @@ dependency "lab" {
 
 locals {
   hostname        = "switch"
-  management_vlan = include.root.locals.env_config.locals.management_vlan
+  interface_lists = include.root.locals.env_config.locals.interface_lists
+  vlans           = include.root.locals.env_config.locals.vlans
+  all_vlans       = keys(local.vlans)
 }
 
 inputs = merge(
@@ -43,17 +45,15 @@ inputs = merge(
     routeros_endpoint     = run_cmd("../get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[local.hostname]),
     certificate_alt_names = ["IP:${dependency.lab.outputs.oob_ips[local.hostname]}"],
 
-    oob_mgmt_ip_address = "${dependency.lab.outputs.oob_ips[local.hostname]}/24"
-
     hostname = local.hostname
 
     ethernet_interfaces = {
-      ether1 = { comment = "oom", bridge_port = false }
-      ether2 = { comment = "router", bridge_port = true, tagged = [local.management_vlan.name] }
+      ether1 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT], ip_address = "${dependency.lab.outputs.oob_ips[local.hostname]}/24" }
+      ether2 = { comment = "router", bridge_port = true, tagged = local.all_vlans }
+      ether3 = { comment = "trusted2", bridge_port = true, untagged = local.vlans.Trusted.name }
+      ether4 = { comment = "guest2", bridge_port = true, untagged = local.vlans.Guest.name }
     }
 
-    oob_mgmt_interface = "ether1"
-
-    dhcp_clients = [{ interface = local.management_vlan.name }]
+    dhcp_clients = [{ interface = local.vlans.Management.name }]
   },
 )

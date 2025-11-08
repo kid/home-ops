@@ -57,20 +57,10 @@ variable "certificate_unit" {
 
 # Management settings {{{
 
-variable "mac_server_interfaces" {
+variable "mgmt_interface_list" {
   type        = string
-  default     = "all"
-  description = "Interface list to allow MAC server access on."
-}
-
-variable "oob_mgmt_interface" {
-  type        = string
-  description = "The interface to use for out of band management"
-}
-
-variable "oob_mgmt_ip_address" {
-  type        = string
-  description = "The ip address to use for out of band management"
+  description = "The management interface list name"
+  default     = "ALL"
 }
 
 # }}}
@@ -101,10 +91,12 @@ variable "bridge_mtu" {
 
 variable "ethernet_interfaces" {
   type = map(object({
-    comment     = optional(string, "")
-    bridge_port = optional(bool, true)
-    mtu         = optional(number, 1500)
-    l2mtu       = optional(number, 1518)
+    comment         = optional(string, "")
+    bridge_port     = optional(bool, true)
+    mtu             = optional(number, 1500)
+    l2mtu           = optional(number, 1518)
+    ip_address      = optional(string, null)
+    interface_lists = optional(list(string), [])
 
     # VLAN configuration
     tagged   = optional(list(string), [])
@@ -120,9 +112,11 @@ variable "ethernet_interfaces" {
 
 variable "vlans" {
   type = map(object({
-    name    = string
-    vlan_id = number
-    mtu     = optional(number, 1500)
+    name            = string
+    vlan_id         = number
+    ip_address      = optional(string, null)
+    mtu             = optional(number, 1500)
+    interface_lists = optional(list(string), [])
   }))
   default = {}
 }
@@ -139,12 +133,6 @@ variable "dhcp_clients" {
     use_peer_ntp = optional(bool, true)
   }))
   default = []
-}
-
-variable "ip_addresses" {
-  description = "List of IP addresses to assign to interfaces"
-  type        = map(string)
-  default     = {}
 }
 
 # }}}

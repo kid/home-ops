@@ -6,9 +6,9 @@ locals {
         connection_state = "established,related,untracked"
       },
       {
-        comment      = "Allow everything on OOB Port"
-        action       = "accept"
-        in_interface = var.oob_mgmt_interface
+        comment           = "Allow everything on management interfaces"
+        action            = "accept"
+        in_interface_list = var.mgmt_interface_list
       },
     ],
     [
@@ -38,6 +38,11 @@ locals {
         action           = "drop"
         connection_state = "invalid"
       },
+      {
+        comment           = "Allow everything on management interfaces"
+        action            = "accept"
+        in_interface_list = var.mgmt_interface_list
+      }
     ],
     [
       for idx, vlan in var.vlans : {
@@ -108,13 +113,8 @@ locals {
 }
 
 resource "routeros_ip_firewall_filter" "rules" {
-  depends_on = [
-    routeros_interface_list.lan,
-    routeros_interface_list.wan,
-    routeros_ip_firewall_addr_list.no_forward_ipv4,
-  ]
-
-  for_each = local.rules_map
+  depends_on = [routeros_ip_firewall_addr_list.no_forward_ipv4]
+  for_each   = local.rules_map
 
   chain  = each.value.chain
   action = each.value.action

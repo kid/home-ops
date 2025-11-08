@@ -26,6 +26,8 @@ locals {
       interfaces = [
         { type = "oob" },
         { type = "port", target = "router" },
+        { type = "port", target = "trusted2" },
+        { type = "port", target = "guest2" },
       ]
     },
     {
@@ -43,15 +45,37 @@ locals {
         { type = "oob" },
         { type = "port", target = "router" },
       ]
+    },
+    {
+      name = "trusted2"
+      type = "chr"
+      interfaces = [
+        { type = "oob" },
+        { type = "port", target = "switch" },
+      ]
+    },
+    {
+      name = "guest2"
+      type = "chr"
+      interfaces = [
+        { type = "oob" },
+        { type = "port", target = "switch" },
+      ]
     }
   ]
 
-  vlans_tmp = [
+  interface_lists = {
+    MANAGEMENT = "MANAGEMENT"
+    WAN        = "WAN"
+  }
+
+  vlans_array = [
     {
-      vlan_id = 99
-      prefix  = 16
-      name    = "Management"
-      domain  = "mgmt.${local.tld}"
+      vlan_id         = 99
+      prefix          = 16
+      name            = "Management"
+      domain          = "mgmt.${local.tld}"
+      interface_lists = [local.interface_lists.MANAGEMENT]
     },
     {
       vlan_id = 10
@@ -87,9 +111,10 @@ locals {
     },
   ]
 
-  vlans = { for _, vlan in local.vlans_tmp :
+  vlans = { for _, vlan in local.vlans_array :
     vlan.name => merge(vlan, {
-      cidr = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id)
+      prefix = try(vlan.prefix, 24)
+      cidr   = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id)
     })
   }
 
@@ -104,8 +129,10 @@ locals {
 }
 
 inputs = {
-  certificate_unit   = "lab"
-  oob_mgmt_interface = "ether1"
+  certificate_unit = "lab"
+
+  wan_interface_list  = local.interface_lists.WAN
+  mgmt_interface_list = local.interface_lists.MANAGEMENT
 
   devices   = local.devices
   vlans     = local.vlans

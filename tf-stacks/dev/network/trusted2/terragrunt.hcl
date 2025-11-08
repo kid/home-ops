@@ -33,15 +33,14 @@ dependency "lab" {
 }
 
 locals {
-  hostname        = "trusted1"
+  hostname        = "trusted2"
   interface_lists = include.root.locals.env_config.locals.interface_lists
 }
 
 inputs = merge(
   include.root.inputs,
   {
-    hostname = local.hostname
-
+    hostname              = local.hostname
     routeros_endpoint     = run_cmd("../get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[local.hostname]),
     certificate_alt_names = ["IP:${dependency.lab.outputs.oob_ips[local.hostname]}"],
 

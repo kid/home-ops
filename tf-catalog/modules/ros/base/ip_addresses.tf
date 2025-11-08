@@ -1,8 +1,17 @@
-resource "routeros_ip_address" "self" {
-  depends_on = [routeros_interface_vlan.vlans]
-  for_each   = var.ip_addresses
-  comment    = "${each.key} IP Address"
-  interface  = each.key
-  address    = each.value
-  network    = cidrhost(each.value, 0)
+resource "routeros_ip_address" "vlans" {
+  for_each  = { for k, v in var.vlans : k => v if v.ip_address != null }
+  interface = routeros_interface_vlan.vlans[each.key].name
+  address   = each.value.ip_address
+}
+
+resource "routeros_ip_address" "ethernet" {
+  for_each  = { for k, v in var.ethernet_interfaces : k => v if v.ip_address != null }
+  interface = routeros_interface_ethernet.ethernet[each.key].name
+  address   = each.value.ip_address
+}
+
+# TODO: should be templated from the unit / stack or executed as a hook?
+import {
+  to = routeros_ip_address.ethernet["ether1"]
+  id = "*2"
 }
