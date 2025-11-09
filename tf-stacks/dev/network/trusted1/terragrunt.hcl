@@ -38,11 +38,12 @@ locals {
 }
 
 inputs = merge(
-  include.root.inputs,
+  include.root.locals.routeros_inputs,
+  include.root.locals.env_config.inputs,
   {
     hostname = local.hostname
 
-    routeros_endpoint     = run_cmd("../get_ros_endpoint.sh", dependency.lab.outputs.oob_ips[local.hostname]),
+    routeros_endpoint     = dependency.lab.outputs.oob_ips[local.hostname],
     certificate_alt_names = ["IP:${dependency.lab.outputs.oob_ips[local.hostname]}"],
 
     ethernet_interfaces = {

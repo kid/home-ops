@@ -3,19 +3,19 @@ locals {
 
   cloudflare = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/cloudflare.sops.yaml"))
 
-  env_config   = read_terragrunt_config(find_in_parent_folders("env.hcl"))
-  stack_config = try(read_terragrunt_config(find_in_parent_folders("stack.hcl")), { locals = {} })
+  env_config      = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  network_condfig = try(read_terragrunt_config(find_in_parent_folders("network.hcl")), { locals = {} })
 
   routeros_inputs = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml")), {})
   proxmox_inputs  = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/proxmox.sops.yaml")), {})
+
+  hostname = try(regex("${local.environment}/network/(?P<hostname>\\w*)", path_relative_to_include()).hostname, null)
 }
 
-inputs = merge(
-  local.env_config.inputs,
-  local.stack_config.locals,
-  local.routeros_inputs,
-  local.proxmox_inputs,
-)
+# inputs = merge(
+#   local.env_config.inputs,
+#   local.routeros_inputs,
+# )
 
 remote_state {
   backend = "s3"

@@ -28,12 +28,14 @@ dependency "lab" {
 }
 
 locals {
-  hostname = "router"
-  vlans    = include.root.locals.env_config.locals.vlans
+  hostname        = "router"
+  interface_lists = include.root.locals.env_config.locals.interface_lists
+  vlans           = include.root.locals.env_config.locals.vlans
 }
 
 inputs = merge(
-  include.root.inputs,
+  include.root.locals.routeros_inputs,
+  include.root.locals.env_config.inputs,
   {
     routeros_endpoint    = "https://${dependency.lab.outputs.oob_ips[local.hostname]}",
     dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]

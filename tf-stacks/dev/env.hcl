@@ -111,14 +111,16 @@ locals {
     },
   ]
 
-  vlans = { for _, vlan in local.vlans_array :
+  vlans = {
+    for _, vlan in local.vlans_array :
     vlan.name => merge(vlan, {
       prefix = try(vlan.prefix, 24)
       cidr   = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id)
     })
   }
 
-  users = { for name, user in local.routeros_secrets.users :
+  users = {
+    for name, user in local.routeros_secrets.users :
     name => {
       group = user.group
       keys  = user.ssh_keys
@@ -131,8 +133,8 @@ locals {
 inputs = {
   certificate_unit = "lab"
 
-  wan_interface_list  = local.interface_lists.WAN
   mgmt_interface_list = local.interface_lists.MANAGEMENT
+  wan_interface_list  = local.interface_lists.WAN
 
   devices   = local.devices
   vlans     = local.vlans

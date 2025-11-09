@@ -20,12 +20,14 @@ terraform {
 }
 
 inputs = merge(
-  include.root.inputs,
+  # include.root.inputs,
+  include.root.locals.proxmox_inputs,
   local.routeros_inputs["rb5009"],
   {
     routeros_version = "7.21beta5"
     ssh_username     = "kid"
     ssh_password     = "foobar"
     ssh_keys         = [file("~/.ssh/id_ed25519.pub")]
+    devices          = include.root.locals.env_config.locals.devices,
   },
 )

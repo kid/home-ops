@@ -1,3 +1,7 @@
+data "external" "endpoint" {
+  program = ["bash", "${path.module}/get_ros_endpoint.sh", var.routeros_endpoint]
+}
+
 variable "routeros_endpoint" {
   type        = string
   description = "The URL of the MikroTik device."
@@ -21,7 +25,7 @@ variable "routeros_insecure" {
 }
 
 provider "routeros" {
-  hosturl  = var.routeros_endpoint
+  hosturl  = data.external.endpoint.result["endpoint"]
   username = var.routeros_username
   password = var.routeros_password
   insecure = var.routeros_insecure
