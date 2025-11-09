@@ -17,16 +17,12 @@ dependencies {
 }
 
 locals {
-  hostname        = "trusted2"
   interface_lists = include.root.locals.env_config.locals.interface_lists
 }
 
 inputs = merge(
-  include.root.locals.routeros_inputs,
-  include.root.locals.env_config.inputs,
+  include.root.locals.base_inputs,
   {
-    hostname = local.hostname
-
     ethernet_interfaces = {
       ether1 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT] }
     }

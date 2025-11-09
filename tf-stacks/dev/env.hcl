@@ -73,13 +73,3 @@ locals {
 
   passwords = { for name, user in local.routeros_secrets.users : name => user.password }
 }
-
-inputs = {
-  certificate_unit = "lab"
-
-  mgmt_interface_list = local.interface_lists.MANAGEMENT
-  wan_interface_list  = local.interface_lists.WAN
-  vlans               = local.vlans
-  users               = local.users
-  passwords           = local.passwords
-}

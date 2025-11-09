@@ -25,7 +25,6 @@ variable "ntp_servers" {
 
 variable "certificate_alt_names" {
   type        = list(string)
-  default     = []
   description = "Alternative names for the device certificate."
 }
 

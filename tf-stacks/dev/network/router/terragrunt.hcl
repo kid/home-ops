@@ -20,12 +20,11 @@ locals {
   hostname        = "router"
   interface_lists = include.root.locals.env_config.locals.interface_lists
   vlans           = include.root.locals.env_config.locals.vlans
-  devices         = include.root.locals.devices.devices_map
+  # devices         = include.root.locals.devices.devices_map
 }
 
 inputs = merge(
   include.root.locals.routeros_inputs,
-  include.root.locals.env_config.inputs,
   {
     dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]
 
@@ -33,16 +32,8 @@ inputs = merge(
       for name, vlan in local.vlans : name => vlan if lookup(vlan, "dhcp", true)
     }
 
-    dhcp_static_leases = {
-      "${local.vlans.Management.name}" = [
-        {
-          # Broken, not choosing correct, Management vlan has a different mac
-          mac     = [for _, ifce in local.devices.switch.interfaces : ifce.mac_address if ifce.name == "ether2"][0]
-          name    = "switch"
-          address = cidrhost(local.vlans.Management.cidr, 2)
-        }
-      ]
-    }
+    mgmt_interface_list = local.interface_lists.MANAGEMENT
+    wan_interface_list  = local.interface_lists.WAN
 
     vlans = local.vlans
 

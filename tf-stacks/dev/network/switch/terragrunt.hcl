@@ -17,25 +17,19 @@ dependencies {
 }
 
 locals {
-  hostname        = "switch"
   interface_lists = include.root.locals.env_config.locals.interface_lists
-  vlans           = include.root.locals.env_config.locals.vlans
+  vlans           = include.root.locals.base_inputs.vlans
   all_vlans       = keys(local.vlans)
 }
 
 inputs = merge(
-  include.root.locals.routeros_inputs,
-  include.root.locals.env_config.inputs,
+  include.root.locals.base_inputs,
   {
-    hostname = local.hostname
-
     ethernet_interfaces = {
       ether1 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT] }
       ether2 = { comment = "router", bridge_port = true, tagged = local.all_vlans }
       ether3 = { comment = "trusted2", bridge_port = true, untagged = local.vlans.Trusted.name }
       ether4 = { comment = "guest2", bridge_port = true, untagged = local.vlans.Guest.name }
     }
-
-    dhcp_clients = [{ interface = local.vlans.Management.name }]
   },
 )

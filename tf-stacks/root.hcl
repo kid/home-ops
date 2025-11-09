@@ -7,22 +7,21 @@ locals {
   env_config     = read_terragrunt_config(find_in_parent_folders("env.hcl"))
   network_config = try(read_terragrunt_config(find_in_parent_folders("network.hcl")), { locals = {} })
 
-
   hostname = try(regex("${local.environment}/network/(?P<hostname>\\w*)", path_relative_to_include()).hostname, null)
 
-  devices = read_terragrunt_config(find_in_parent_folders("lab/devices.hcl")).locals
-  routeros_inputs = try(merge(
-    yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml")),
-    {
-      routeros_endpoint = [for _, ifce in local.devices.devices_map[local.hostname].interfaces : ifce.ip_address if ifce.type == "oob"][0]
-    },
-  ), {})
-}
+  # devices = read_terragrunt_config(find_in_parent_folders("lab/devices.hcl")).locals
 
-# inputs = merge(
-#   local.env_config.inputs,
-#   local.routeros_inputs,
-# )
+  base_cfg = try(read_terragrunt_config(find_in_parent_folders("base.hcl")).locals, {})
+
+  base_inputs = merge(
+    try(local.base_cfg.per_device_inputs[local.hostname], {}),
+  )
+
+  routeros_inputs = merge(
+    { routeros_endpoint = try(local.base_inputs.routeros_endpoint, null) },
+    try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml")), {}),
+  )
+}
 
 remote_state {
   backend = "s3"

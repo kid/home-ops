@@ -16,31 +16,21 @@ dependencies {
 }
 
 locals {
-  hostname        = include.root.locals.hostname
   interface_lists = include.root.locals.env_config.locals.interface_lists
 
-  vlans = {
-    for name, vlan in include.root.locals.env_config.locals.vlans :
-    name => merge({ ip_address = "${cidrhost(vlan.cidr, 1)}/${vlan.prefix}" }, vlan)
-  }
-
+  vlans     = include.root.locals.base_inputs.vlans
   all_vlans = keys(local.vlans)
 }
 
 inputs = merge(
-  include.root.locals.routeros_inputs,
-  include.root.locals.env_config.inputs,
+  include.root.locals.base_inputs,
   {
-    hostname = include.root.locals.hostname
-
-    vlans = local.vlans
-
     ethernet_interfaces = {
       ether1 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT] }
       ether2 = { comment = "wan", bridge_port = false, interface_lists = [local.interface_lists.WAN] }
-      ether3 = { comment = "switch", bridge_port = true, tagged = local.all_vlans }
-      ether4 = { comment = "trusted1", bridge_port = true, untagged = local.vlans.Trusted.name }
-      ether5 = { comment = "guest1", bridge_port = true, untagged = local.vlans.Guest.name }
+      ether3 = { comment = "switch", tagged = local.all_vlans }
+      ether4 = { comment = "trusted1", untagged = local.vlans.Trusted.name }
+      ether5 = { comment = "guest1", untagged = local.vlans.Guest.name }
     }
 
     dhcp_clients = [{ interface = "ether2" }]

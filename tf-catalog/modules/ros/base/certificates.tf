@@ -11,7 +11,7 @@ resource "routeros_system_certificate" "local-root-cert" {
 resource "routeros_system_certificate" "webfig" {
   name             = "webfig-${timestamp()}"
   common_name      = "webfig"
-  subject_alt_name = join(",", concat(["DNS:${var.hostname}"], var.certificate_alt_names))
+  subject_alt_name = join(",", var.certificate_alt_names)
   country          = var.certificate_country
   locality         = var.certificate_locality
   organization     = var.certificate_organization
