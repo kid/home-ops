@@ -16,28 +16,17 @@ dependencies {
   paths = ["base"]
 }
 
-dependency "lab" {
-  config_path = "../../lab"
-
-  mock_outputs = {
-    oob_ips = {
-      router = ""
-      switch = ""
-    }
-  }
-}
-
 locals {
   hostname        = "router"
   interface_lists = include.root.locals.env_config.locals.interface_lists
   vlans           = include.root.locals.env_config.locals.vlans
+  devices         = include.root.locals.devices.devices_map
 }
 
 inputs = merge(
   include.root.locals.routeros_inputs,
   include.root.locals.env_config.inputs,
   {
-    routeros_endpoint    = "https://${dependency.lab.outputs.oob_ips[local.hostname]}",
     dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]
 
     dhcp_servers = {
@@ -47,7 +36,8 @@ inputs = merge(
     dhcp_static_leases = {
       "${local.vlans.Management.name}" = [
         {
-          mac     = dependency.lab.outputs.device_mac_addresses.switch["ether2"]
+          # Broken, not choosing correct, Management vlan has a different mac
+          mac     = [for _, ifce in local.devices.switch.interfaces : ifce.mac_address if ifce.name == "ether2"][0]
           name    = "switch"
           address = cidrhost(local.vlans.Management.cidr, 2)
         }

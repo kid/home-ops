@@ -9,9 +9,3 @@ resource "routeros_ip_address" "ethernet" {
   interface = routeros_interface_ethernet.ethernet[each.key].name
   address   = each.value.ip_address
 }
-
-# TODO: should be templated from the unit / stack or executed as a hook?
-import {
-  to = routeros_ip_address.ethernet["ether1"]
-  id = "*2"
-}

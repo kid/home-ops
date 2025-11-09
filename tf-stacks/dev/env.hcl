@@ -8,62 +8,6 @@ locals {
   env_cidr_network = split("/", local.env_cidr)
   env_cidr_prefix  = tonumber(split("/", local.env_cidr)[1])
 
-  devices = [
-    {
-      name = "router"
-      type = "chr"
-      interfaces = [
-        { type = "oob" },
-        { type = "wan" },
-        { type = "port", target = "switch" },
-        { type = "port", target = "trusted1" },
-        { type = "port", target = "guest1" },
-      ]
-    },
-    {
-      name = "switch"
-      type = "chr"
-      interfaces = [
-        { type = "oob" },
-        { type = "port", target = "router" },
-        { type = "port", target = "trusted2" },
-        { type = "port", target = "guest2" },
-      ]
-    },
-    {
-      name = "trusted1"
-      type = "chr"
-      interfaces = [
-        { type = "oob" },
-        { type = "port", target = "router" },
-      ]
-    },
-    {
-      name = "guest1"
-      type = "chr"
-      interfaces = [
-        { type = "oob" },
-        { type = "port", target = "router" },
-      ]
-    },
-    {
-      name = "trusted2"
-      type = "chr"
-      interfaces = [
-        { type = "oob" },
-        { type = "port", target = "switch" },
-      ]
-    },
-    {
-      name = "guest2"
-      type = "chr"
-      interfaces = [
-        { type = "oob" },
-        { type = "port", target = "switch" },
-      ]
-    }
-  ]
-
   interface_lists = {
     MANAGEMENT = "MANAGEMENT"
     WAN        = "WAN"
@@ -135,9 +79,7 @@ inputs = {
 
   mgmt_interface_list = local.interface_lists.MANAGEMENT
   wan_interface_list  = local.interface_lists.WAN
-
-  devices   = local.devices
-  vlans     = local.vlans
-  users     = local.users
-  passwords = local.passwords
+  vlans               = local.vlans
+  users               = local.users
+  passwords           = local.passwords
 }

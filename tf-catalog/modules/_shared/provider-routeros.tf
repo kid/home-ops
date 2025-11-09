@@ -1,4 +1,5 @@
 data "external" "endpoint" {
+  # Terragrunt's genreate won't set execute flag, so we explicitely use bash here
   program = ["bash", "${path.module}/get_ros_endpoint.sh", var.routeros_endpoint]
 }
 
@@ -29,6 +30,4 @@ provider "routeros" {
   username = var.routeros_username
   password = var.routeros_password
   insecure = var.routeros_insecure
-
-  suppress_syso_del_warn = true
 }

@@ -1,8 +1,22 @@
+data "routeros_interfaces" "self" {}
+
+locals {
+  interfaces_mac_addresses = [
+    for _, ifce in data.routeros_interfaces.self.interfaces :
+    ifce.mac_address
+    if try(var.ethernet_interfaces[ifce.default_name].bridge_port, false)
+  ]
+}
+
 resource "routeros_interface_bridge" "bridge" {
   name           = var.bridge_name
   comment        = var.bridge_comment
   mtu            = var.bridge_mtu
   vlan_filtering = true
+
+  # Force admin mac to the first bridge port, otherwise it depends on the order terraform created the ports
+  auto_mac       = length(local.interfaces_mac_addresses) == 0
+  admin_mac      = try(local.interfaces_mac_addresses[0], null)
 }
 
 resource "routeros_interface_bridge_port" "ethernet_ports" {

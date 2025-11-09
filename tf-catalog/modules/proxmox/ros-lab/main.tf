@@ -16,9 +16,26 @@ resource "proxmox_virtual_environment_network_linux_bridge" "ports" {
   vlan_aware = false
 }
 
+resource "routeros_ip_dhcp_server_lease" "leases" {
+  for_each = merge([
+    for _, dev in var.devices : {
+      for _, ifce in dev.interfaces :
+      format("%s_%s", dev.name, ifce.name) => ifce
+      if ifce.ip_address != null
+    }
+  ]...)
+
+  mac_address = each.value.mac_address
+  address     = each.value.ip_address
+}
+
 resource "proxmox_virtual_environment_vm" "devices" {
-  depends_on = [proxmox_virtual_environment_network_linux_bridge.ports]
-  for_each   = { for idx, item in var.devices : item.name => item if item.type == "chr" }
+  depends_on = [
+    proxmox_virtual_environment_network_linux_bridge.ports,
+    routeros_ip_dhcp_server_lease.leases,
+  ]
+
+  for_each = { for idx, item in var.devices : item.name => item if item.type == "chr" }
 
   vm_id = local.devices_vm_ids[each.key]
   name  = "lab-${each.key}"
@@ -48,54 +65,20 @@ resource "proxmox_virtual_environment_vm" "devices" {
     iterator = ifce
 
     content {
-      bridge  = ifce.value["bridge"]
-      vlan_id = ifce.value["vlan_id"]
+      bridge      = ifce.value["bridge"]
+      vlan_id     = ifce.value["vlan_id"]
+      mac_address = ifce.value["mac_address"]
     }
   }
 
   lifecycle {
     ignore_changes = [disk[0].file_id]
   }
-}
-
-resource "terraform_data" "initial_provisioning" {
-  for_each = { for _, item in var.devices : item.name => item if item.type == "chr" }
 
   provisioner "local-exec" {
     interpreter = ["expect", "-c"]
     command = templatefile("./ros-setup.exp", {
-      ip     = proxmox_virtual_environment_vm.devices[each.key].ipv4_addresses[0][0]
-      oob_ip = "${local.devices_oob_ips[each.key]}/${var.oob_prefix}"
+      ip = [for _, ifce in each.value.interfaces : ifce.ip_address if ifce.type == "oob"][0]
     })
   }
-}
-
-output "oob_ips" {
-  value = local.devices_oob_ips
-}
-
-output "device_mac_addresses" {
-  value = {
-    for _, device in var.devices : device.name => {
-      for iface_idx, iface_name in proxmox_virtual_environment_vm.devices[device.name].network_interface_names : iface_name =>
-      proxmox_virtual_environment_vm.devices[device.name].mac_addresses[iface_idx]
-    } if device.type == "chr"
-  }
-}
-
-import {
-  to = proxmox_virtual_environment_vm.devices["router"]
-  id = "pve1/10991"
-}
-import {
-  to = proxmox_virtual_environment_vm.devices["switch"]
-  id = "pve1/10992"
-}
-import {
-  to = proxmox_virtual_environment_vm.devices["trusted1"]
-  id = "pve1/10993"
-}
-import {
-  to = proxmox_virtual_environment_vm.devices["guest1"]
-  id = "pve1/10994"
 }

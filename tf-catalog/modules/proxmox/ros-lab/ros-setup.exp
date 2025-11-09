@@ -42,14 +42,7 @@ expect {
 }
 
 sleep 1
-send "/ip/address/add interface=ether1 address=${oob_ip}\r"
-expect {
-  "] > " { }
-  -re ".+" { exp_continue }
-}
-
-sleep 1
-send "/ip/dhcp-client/remove \[find\]\r"
+send "/ip/dhcp-client/set \[find\] add-default-route=no\r"
 expect {
   "] > " { }
   -re ".+" { exp_continue }

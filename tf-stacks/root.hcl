@@ -1,15 +1,22 @@
 locals {
   environment = local.env_config.locals.environment
 
-  cloudflare = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/cloudflare.sops.yaml"))
+  cloudflare     = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/cloudflare.sops.yaml"))
+  proxmox_inputs = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/proxmox.sops.yaml")), {})
 
-  env_config      = read_terragrunt_config(find_in_parent_folders("env.hcl"))
-  network_condfig = try(read_terragrunt_config(find_in_parent_folders("network.hcl")), { locals = {} })
+  env_config     = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  network_config = try(read_terragrunt_config(find_in_parent_folders("network.hcl")), { locals = {} })
 
-  routeros_inputs = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml")), {})
-  proxmox_inputs  = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/proxmox.sops.yaml")), {})
 
   hostname = try(regex("${local.environment}/network/(?P<hostname>\\w*)", path_relative_to_include()).hostname, null)
+
+  devices = read_terragrunt_config(find_in_parent_folders("lab/devices.hcl")).locals
+  routeros_inputs = try(merge(
+    yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml")),
+    {
+      routeros_endpoint = [for _, ifce in local.devices.devices_map[local.hostname].interfaces : ifce.ip_address if ifce.type == "oob"][0]
+    },
+  ), {})
 }
 
 # inputs = merge(

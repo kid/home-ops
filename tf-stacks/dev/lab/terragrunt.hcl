@@ -1,5 +1,6 @@
 locals {
   routeros_inputs = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/prd/routeros.sops.yaml"))
+  devices         = read_terragrunt_config("./devices.hcl").locals.devices
 }
 
 include "root" {
@@ -20,14 +21,10 @@ terraform {
 }
 
 inputs = merge(
-  # include.root.inputs,
   include.root.locals.proxmox_inputs,
   local.routeros_inputs["rb5009"],
   {
     routeros_version = "7.21beta5"
-    ssh_username     = "kid"
-    ssh_password     = "foobar"
-    ssh_keys         = [file("~/.ssh/id_ed25519.pub")]
-    devices          = include.root.locals.env_config.locals.devices,
+    devices          = local.devices
   },
 )
