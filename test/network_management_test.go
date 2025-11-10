@@ -10,18 +10,19 @@ import (
 func TestSsh(t *testing.T) {
 	t.Parallel()
 
+	// FIXME: need a fix from terratest...
 	// terraformLab := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 	// 	TerraformDir:    "../tf-stacks/dev/lab",
 	// 	TerraformBinary: "terragrunt",
 	// })
 	// oob_ips := terraform.OutputMap(t, terraformLab, "oob_ips")
 	oob_ips := map[string]string{
-		"guest1":   "192.168.89.5",
-		"guest2":   "192.168.89.7",
 		"router":   "192.168.89.2",
 		"switch":   "192.168.89.3",
 		"trusted1": "192.168.89.4",
 		"trusted2": "192.168.89.6",
+		"guest1":   "192.168.89.5",
+		"guest2":   "192.168.89.7",
 	}
 
 	test_structure.RunTestStage(t, "setup", func() {
@@ -71,7 +72,8 @@ func makeTrustedNetworkTest(hostname string) func(*testing.T) {
 			{
 				name:  "Can resolve on the internet",
 				check: func(t *testing.T) { CanPing(t, host, "google.com") },
-			}}
+			},
+		}
 
 		for _, tt := range tc {
 			t.Run(tt.name, func(t *testing.T) {
