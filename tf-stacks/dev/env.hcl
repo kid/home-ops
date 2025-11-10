@@ -1,6 +1,4 @@
 locals {
-  routeros_secrets = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/routeros.sops.yaml"))
-
   environment = "dev"
   tld         = "${local.environment}.kidibox.net"
 
@@ -62,14 +60,4 @@ locals {
       cidr   = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id)
     })
   }
-
-  users = {
-    for name, user in local.routeros_secrets.users :
-    name => {
-      group = user.group
-      keys  = user.ssh_keys
-    }
-  }
-
-  passwords = { for name, user in local.routeros_secrets.users : name => user.password }
 }

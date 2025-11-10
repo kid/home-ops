@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-# Read input JSON (from OpenTofu)
-# eval "$(jq -r '@sh "endpoint=\(.ENDPOINT)"')"
 ENDPOINT="$1"
 
 # If ENDPOINT already includes a scheme (e.g., http:// or https://), return it as-is
