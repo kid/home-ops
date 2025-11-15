@@ -1,15 +1,23 @@
 locals {
-  users     = yamldecode(data.sops_file.routeros_secrets.raw).users
+  groups    = try(yamldecode(data.sops_file.routeros_secrets.raw).groups, {})
+  users     = try(yamldecode(data.sops_file.routeros_secrets.raw).users, {})
   usernames = nonsensitive(toset(keys(local.users)))
 }
 
-resource "routeros_system_user" "users" {
-  for_each = local.usernames
+resource "routeros_system_user_group" "groups" {
+  for_each = nonsensitive(toset(keys(local.groups)))
   name     = each.key
-  password = try(local.users[each.key].password, null)
-  group    = nonsensitive(try(local.users[each.key].group, "full"))
-  comment  = nonsensitive(try(local.users[each.key].comment, null))
-  disabled = nonsensitive(try(local.users[each.key].disabled, false))
+  policy   = nonsensitive(try(local.groups[each.key].policies, []))
+}
+
+resource "routeros_system_user" "users" {
+  depends_on = [routeros_system_user_group.groups]
+  for_each   = local.usernames
+  name       = each.key
+  password   = try(local.users[each.key].password, null)
+  group      = nonsensitive(try(local.users[each.key].group, "full"))
+  comment    = nonsensitive(try(local.users[each.key].comment, null))
+  disabled   = nonsensitive(try(local.users[each.key].disabled, false))
 }
 
 resource "routeros_system_user_sshkeys" "users_keys" {
