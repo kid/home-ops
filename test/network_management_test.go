@@ -3,12 +3,36 @@ package test
 import (
 	"testing"
 
+	"github.com/getsops/sops/v3/decrypt"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	yaml "gopkg.in/yaml.v3"
 )
+
+type RouterosUser struct {
+	Password string `yaml:"password"`
+}
+
+type RouterosSecrets struct {
+	Username string                  `yaml:"routeros_username"`
+	Users    map[string]RouterosUser `yaml:"users"`
+}
 
 func TestSsh(t *testing.T) {
 	t.Parallel()
+
+	plaintext, err := decrypt.File("../secrets/dev/routeros.sops.yaml", "yaml")
+	if err != nil {
+		t.Fatalf("failed to decode secret file: %v", err)
+	}
+
+	var secrets RouterosSecrets
+	if err := yaml.Unmarshal(plaintext, &secrets); err != nil {
+		t.Fatalf("failed to parsed decrypted secrets: %v", err)
+	}
+
+	ssh_username := secrets.Username
+	ssh_password := secrets.Users[ssh_username].Password
 
 	// FIXME: need a fix from terratest...
 	// terraformLab := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
@@ -25,33 +49,31 @@ func TestSsh(t *testing.T) {
 		"guest2":   "192.168.89.7",
 	}
 
-	test_structure.RunTestStage(t, "setup", func() {
-		router := ssh.Host{
-			Hostname:    oob_ips["router"],
-			SshUserName: "admin",
-			Password:    "admin",
+	mkHost := func(hostname string) ssh.Host {
+		return ssh.Host{
+			Hostname:    oob_ips[hostname],
+			SshUserName: ssh_username,
+			Password:    ssh_password,
 		}
+	}
+
+	test_structure.RunTestStage(t, "setup", func() {
+		router := mkHost("router")
 
 		// Cleanup connection tracking on the router
 		RunSshCommand(t, router, "/ip/firewall/connection/remove [find]")
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
-		t.Run("trusted1", makeTrustedNetworkTest(oob_ips["trusted1"]))
-		t.Run("trusted2", makeTrustedNetworkTest(oob_ips["trusted2"]))
-		t.Run("guest1", makeGuestNetworkTest(oob_ips["guest1"]))
-		t.Run("guest2", makeGuestNetworkTest(oob_ips["guest2"]))
+		t.Run("trusted1", makeTrustedNetworkTest(mkHost("trusted1")))
+		t.Run("trusted2", makeTrustedNetworkTest(mkHost("trusted2")))
+		t.Run("guest1", makeGuestNetworkTest(mkHost("guest1")))
+		t.Run("guest2", makeGuestNetworkTest(mkHost("guest2")))
 	})
 }
 
-func makeTrustedNetworkTest(hostname string) func(*testing.T) {
+func makeTrustedNetworkTest(host ssh.Host) func(*testing.T) {
 	return func(t *testing.T) {
-		host := ssh.Host{
-			Hostname:    hostname,
-			SshUserName: "admin",
-			Password:    "admin",
-		}
-
 		type checkFunc func(t *testing.T) error
 		tc := [...]struct {
 			name  string
@@ -83,14 +105,8 @@ func makeTrustedNetworkTest(hostname string) func(*testing.T) {
 	}
 }
 
-func makeGuestNetworkTest(hostname string) func(*testing.T) {
+func makeGuestNetworkTest(host ssh.Host) func(*testing.T) {
 	return func(t *testing.T) {
-		host := ssh.Host{
-			Hostname:    hostname,
-			SshUserName: "admin",
-			Password:    "admin",
-		}
-
 		type checkFunc func(t *testing.T) error
 		tc := [...]struct {
 			name  string
