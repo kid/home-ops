@@ -90,6 +90,7 @@ variable "bridge_mtu" {
 
 variable "ethernet_interfaces" {
   type = map(object({
+    name            = optional(string, "")
     comment         = optional(string, "")
     bridge_port     = optional(bool, true)
     mtu             = optional(number, 1500)
