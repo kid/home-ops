@@ -35,16 +35,13 @@
               just
               expect
               sops
+              opentofu
               tofu-ls
               terragrunt
             ];
 
             languages = {
               nix.enable = true;
-              terraform = {
-                enable = true;
-                package = pkgs.opentofu;
-              };
             };
 
             scripts.ssh.exec = ''

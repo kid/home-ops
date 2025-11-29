@@ -1,5 +1,5 @@
 generate "provider_proxmox" {
-  path      = "provider_proxmox.tf"
+  path      = "provider_proxmox.tofu"
   if_exists = "overwrite_terragrunt"
-  contents  = file("provider-proxmox.tf")
+  contents  = file("provider-proxmox.tofu")
 }
