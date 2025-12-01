@@ -15,8 +15,8 @@ resource "routeros_interface_bridge" "bridge" {
   vlan_filtering = true
 
   # Force admin mac to the first bridge port, otherwise it depends on the order terraform created the ports
-  auto_mac       = length(local.interfaces_mac_addresses) == 0
-  admin_mac      = try(local.interfaces_mac_addresses[0], null)
+  auto_mac  = length(local.interfaces_mac_addresses) == 0
+  admin_mac = try(local.interfaces_mac_addresses[0], null)
 }
 
 resource "routeros_interface_bridge_port" "ethernet_ports" {

@@ -6,7 +6,7 @@ variable "mgmt_interface_list" {
 }
 
 variable "wan_interface_list" {
-  type    = string
+  type = string
 }
 
 variable "bridge_name" {
