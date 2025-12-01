@@ -1,0 +1,23 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended",
+    "docker:enableMajor",
+  ],
+  ignorePaths: [
+    ".archived/**/*",
+    ".github/go\\.mod",
+    "**/.dagger/go\\.mod",
+    "**/*.sops.*",
+  ],
+  flux: {
+    fileMatch: [
+      "clusters/.+\\.yaml$",
+    ]
+  },
+  kubernetes: {
+    fileMatch: [
+      "(^|/)clusters/.+\\.ya?ml(?:\\.j2)?$",
+    ],
+  },
+}
