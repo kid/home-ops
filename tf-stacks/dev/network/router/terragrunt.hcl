@@ -10,6 +10,7 @@ include "provider_routeros" {
 
 terraform {
   source = "${get_repo_root()}/tf-catalog//modules/ros/router"
+  copy_terraform_lock_file = false
 }
 
 dependencies {
