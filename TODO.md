@@ -1,0 +1,2 @@
+- TODO: WIFI unsolicited 802.11v
+- TODO: read usernames & credentials using sops inside of opentofu

@@ -4,57 +4,36 @@ include "root" {
 }
 
 include "provider_routeros" {
-  path   = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-  expose = true
+  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
 }
 
 terraform {
-  source = "${get_repo_root()}/tf-catalog//modules/ros/router"
+  source = "${get_repo_root()}/tf-catalog/modules/ros//base"
   copy_terraform_lock_file = false
 }
 
 dependencies {
-  paths = ["base"]
+  paths = ["../../lab"]
 }
 
 locals {
-  hostname        = "router"
   interface_lists = include.root.locals.env_config.locals.interface_lists
-  vlans           = include.root.locals.env_config.locals.vlans
-  # devices         = include.root.locals.devices.devices_map
+
+  vlans     = include.root.locals.base_inputs.vlans
+  all_vlans = keys(local.vlans)
 }
 
 inputs = merge(
-  include.root.locals.routeros_inputs,
+  include.root.locals.base_inputs,
   {
-    dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]
-
-    dhcp_servers = {
-      for name, vlan in local.vlans : name => vlan if lookup(vlan, "dhcp", true)
+    ethernet_interfaces = {
+      ether1 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT] }
+      ether2 = { comment = "wan", bridge_port = false, interface_lists = [local.interface_lists.WAN] }
+      ether3 = { comment = "switch", tagged = local.all_vlans }
+      ether4 = { comment = "trusted1", untagged = local.vlans.Trusted.name }
+      ether5 = { comment = "guest1", untagged = local.vlans.Guest.name }
     }
 
-    mgmt_interface_list = local.interface_lists.MANAGEMENT
-    wan_interface_list  = local.interface_lists.WAN
-
-    vlans = local.vlans
-
-    vlans_input_rules = {
-      "${local.vlans.Trusted.name}" = [
-        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), comment = "Allow access to Management from Trusted" },
-      ]
-    }
-
-    vlans_forward_rules = {
-      "${local.vlans.Management.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Management" },
-      ]
-      "${local.vlans.Trusted.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Trusted" },
-        { action = "accept", out_interface = local.vlans.Management.name, comment = "Allow access to Management from Trusted" },
-      ]
-      "${local.vlans.Guest.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Guest" },
-      ]
-    }
+    dhcp_clients = [{ interface = "ether2" }]
   },
 )
