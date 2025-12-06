@@ -16,7 +16,7 @@ include "provider_routeros" {
 }
 
 terraform {
-  source = "${get_repo_root()}/tf-catalog/modules/proxmox//ros-lab"
+  source                   = "${get_repo_root()}/tf-catalog/modules/proxmox//ros-lab"
   copy_terraform_lock_file = false
 }
 
