@@ -35,7 +35,7 @@
               ];
             };
           };
-          devShells.default = pkgs.mkShellNoCC {
+          devShells.default = pkgs.mkShell {
             packages = with pkgs; [
               just
               expect
