@@ -18,6 +18,10 @@ resource "routeros_system_user" "users" {
   group      = nonsensitive(try(local.users[each.key].group, "full"))
   comment    = nonsensitive(try(local.users[each.key].comment, null))
   disabled   = nonsensitive(try(local.users[each.key].disabled, false))
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "routeros_system_user_sshkeys" "users_keys" {
@@ -34,5 +38,5 @@ resource "routeros_system_user_sshkeys" "users_keys" {
 import {
   for_each = setintersection(local.usernames, ["admin"])
   to       = routeros_system_user.users[each.key]
-  id       = "*1"
+  id       = "name=admin"
 }
