@@ -1,5 +1,9 @@
+default:
+  just --list
+
 destroy:
   #!/usr/bin/env bash
+  set -euo pipefail
   terragrunt --working-dir tf-stacks/dev run --all --queue-exclude-dir lab -- destroy
   regex="proxmox_virtual_environment_vm.devices|routeros_ip_dhcp_server_lease.leases"
   for item in $(terragrunt --working-dir tf-stacks/dev/lab state list); do
