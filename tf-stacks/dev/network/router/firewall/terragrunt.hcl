@@ -20,17 +20,13 @@ dependencies {
 locals {
   hostname        = "router"
   interface_lists = include.root.locals.env_config.locals.interface_lists
-  vlans           = include.root.locals.env_config.locals.vlans
+  vlans           = include.root.locals.base_inputs.vlans
 }
 
 inputs = merge(
   include.root.locals.routeros_inputs,
   {
     dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]
-
-    dhcp_servers = {
-      for name, vlan in local.vlans : name => vlan if lookup(vlan, "dhcp", true)
-    }
 
     mgmt_interface_list = local.interface_lists.MANAGEMENT
     wan_interface_list  = local.interface_lists.WAN

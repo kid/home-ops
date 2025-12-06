@@ -11,7 +11,6 @@ variable "cidr" {
 variable "gateway" {
   description = "Gateway IP address for the network"
   type        = string
-  default     = null
 }
 
 variable "dhcp_ranges" {

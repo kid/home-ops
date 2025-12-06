@@ -62,14 +62,13 @@ locals {
 
   vlans_rules = flatten([
     for _, vlan in var.vlans : [
-      contains(keys(var.dhcp_servers), vlan.name) ? [
+      (vlan.ip_address != null && vlan.ip_address != "") ? [
         {
-          # FIXME: this should not be dependent on DHCP, but on existence of IP address on VLAN
           comment     = "Allow ICMP from ${vlan.name}"
           chain       = "input-${vlan.name}"
           action      = "accept"
           protocol    = "icmp"
-          dst_address = module.dhcp_server[vlan.name].gateway
+          dst_address = split("/", vlan.ip_address)[0]
         },
         {
           comment     = "Allow DNS over TCP from ${vlan.name}"
@@ -77,7 +76,7 @@ locals {
           action      = "accept"
           protocol    = "tcp"
           port        = 53
-          dst_address = module.dhcp_server[vlan.name].gateway
+          dst_address = split("/", vlan.ip_address)[0]
         },
         {
           comment     = "Allow DNS over UDP from ${vlan.name}"
@@ -85,7 +84,7 @@ locals {
           action      = "accept"
           protocol    = "udp"
           port        = 53
-          dst_address = module.dhcp_server[vlan.name].gateway
+          dst_address = split("/", vlan.ip_address)[0]
         },
         {
           comment     = "Allow DHCP on ${vlan.name}"
@@ -93,7 +92,7 @@ locals {
           action      = "accept"
           protocol    = "udp"
           dst_port    = 67
-          dst_address = module.dhcp_server[vlan.name].gateway
+          dst_address = split("/", vlan.ip_address)[0]
         },
       ] : [],
       [for _, rule in lookup(var.vlans_input_rules, vlan.name, []) : merge(rule, { chain = "input-${vlan.name}" })],

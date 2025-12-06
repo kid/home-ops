@@ -35,5 +35,8 @@ inputs = merge(
     }
 
     dhcp_clients = [{ interface = "ether2" }]
+    dhcp_servers = {
+      for name, vlan in local.vlans : name => vlan if lookup(vlan, "dhcp", true)
+    }
   },
 )

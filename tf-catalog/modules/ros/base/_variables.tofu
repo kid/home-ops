@@ -136,3 +136,32 @@ variable "dhcp_clients" {
 }
 
 # }}}
+
+# DHCP Configuration {{{
+
+variable "dhcp_servers" {
+  type = map(object({
+    cidr        = string
+    domain      = string
+    gateway     = optional(string)
+    dhcp_pool   = optional(list(string))
+    dns_servers = optional(list(string))
+    static_leases = optional(list(object({
+      name    = string
+      mac     = string
+      address = string
+    })))
+  }))
+  default = {}
+}
+
+variable "dhcp_static_leases" {
+  type = map(list(object({
+    name    = string
+    mac     = string
+    address = string
+  })))
+  default = {}
+}
+
+# }}}

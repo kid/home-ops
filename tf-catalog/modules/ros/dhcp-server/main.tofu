@@ -1,12 +1,4 @@
-# FIXME: Avoid data source here
-data "routeros_ip_addresses" "self" {
-  filter = {
-    interface = var.interface_name
-  }
-}
-
 locals {
-  interface_ip  = split("/", data.routeros_ip_addresses.self.addresses[0].address)[0]
   default_range = "${cidrhost(var.cidr, 200)}-${cidrhost(var.cidr, 254)}"
 }
 
@@ -20,8 +12,8 @@ resource "routeros_ip_dhcp_server_network" "self" {
   comment    = "${var.interface_name} DHCP Network"
   address    = var.cidr
   domain     = var.domain
-  gateway    = coalesce(var.gateway, local.interface_ip)
-  dns_server = coalesce(var.dns_servers, [local.interface_ip])
+  gateway    = var.gateway
+  dns_server = coalesce(var.dns_servers, [var.gateway])
 }
 
 resource "routeros_ip_dhcp_server" "self" {
@@ -39,8 +31,4 @@ resource "routeros_ip_dhcp_server_lease" "self" {
   address     = each.value.address
   mac_address = each.value.mac
   comment     = each.value.name
-}
-
-output "gateway" {
-  value = routeros_ip_dhcp_server_network.self.gateway
 }
