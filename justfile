@@ -1,4 +1,4 @@
-terragrunt_args := "--strict-mode --non-interactive --experiment=filter-flag"
+terragrunt_args := "--non-interactive"
 
 # Displayt he available commands
 default:
@@ -6,11 +6,11 @@ default:
 
 # Run the given command against the lab stack
 lab *command:
-  terragrunt {{terragrunt_args}} --working-dir "tf-stacks/dev" run --all --queue-exclude-dir "lab" -- {{command}}
+  terragrunt {{terragrunt_args}} --working-dir "tf-stacks/dev" run --all --queue-include-dir "lab" -- {{command}}
 
 # Run the given command against the all the network stacks
-network *command:
-  terragrunt {{terragrunt_args}} --working-dir "tf-stacks/dev" run --all --queue-exclude-dir "lab" -- {{command}}
+network command *flags:
+  terragrunt {{terragrunt_args}} --working-dir "tf-stacks/dev" run --all --queue-exclude-dir "lab" {{flags}} -- {{command}}
 
 # Deoploy the lab and run bootstrap the network stack
 bootstrap: (lab "apply")
