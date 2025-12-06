@@ -1,10 +1,12 @@
 keys:
-  - &kid-nixos age1al0ky9grzp5uf4k5cc2wn7gyfdd4g2twjyvpqa35vd4cprnujpssdvzf7r
+  - &kid-vulkan ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan
+  - &kid-fw13 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13
 
 defaults: &defaults
   key_groups:
     - age:
-        - *kid-nixos
+        - *kid-vulkan
+        - *kid-fw13
 
 creation_rules:
   - <<: *defaults
