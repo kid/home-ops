@@ -59,7 +59,7 @@ variable "certificate_unit" {
 variable "mgmt_interface_list" {
   type        = string
   description = "The management interface list name"
-  default     = "ALL"
+  default     = "all"
 }
 
 # }}}
