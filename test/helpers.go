@@ -2,12 +2,12 @@ package test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/stretchr/testify/assert"
 )
 
 func RunSshCommand(t *testing.T, host ssh.Host, command string) string {
@@ -19,13 +19,8 @@ func RunSshCommand(t *testing.T, host ssh.Host, command string) string {
 func CanPing(t *testing.T, host ssh.Host, target string) {
 	retry.DoWithTimeout(t, fmt.Sprintf("ping %s", target), 10*time.Second, func() (string, error) {
 		text, err := ssh.CheckSshCommandE(t, host, fmt.Sprintf("/ping %s count=1", target))
-		if err != nil {
-			return "", err
-		}
-
-		if !strings.Contains(text, "sent=1 received=1 packet-loss=0%") {
-			return "", fmt.Errorf("Expected ping to succeed but it failed: %s", text)
-		}
+		assert.NoError(t, err)
+		assert.Contains(t, text, "sent=1 received=1 packet-loss=0%", "Expected ping to succeed")
 
 		return "", nil
 	})
@@ -34,13 +29,8 @@ func CanPing(t *testing.T, host ssh.Host, target string) {
 func CanNotPing(t *testing.T, host ssh.Host, target string) {
 	retry.DoWithTimeout(t, fmt.Sprintf("ping %s", target), 10*time.Second, func() (string, error) {
 		text, err := ssh.CheckSshCommandE(t, host, fmt.Sprintf("/ping %s count=1", target))
-		if err != nil {
-			return "", err
-		}
-
-		if !strings.Contains(text, "sent=1 received=0 packet-loss=100%") {
-			return "", fmt.Errorf("Expected ping to fail but it succeeded: %s", text)
-		}
+		assert.NoError(t, err)
+		assert.Contains(t, text, "sent=1 received=0 packet-loss=100%", "Expected ping to fail")
 
 		return "", nil
 	})
