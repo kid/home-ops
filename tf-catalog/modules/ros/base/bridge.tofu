@@ -9,10 +9,11 @@ locals {
 }
 
 resource "routeros_interface_bridge" "bridge" {
-  name           = var.bridge_name
-  comment        = var.bridge_comment
-  mtu            = var.bridge_mtu
-  vlan_filtering = true
+  name              = var.bridge_name
+  comment           = var.bridge_comment
+  mtu               = var.bridge_mtu
+  vlan_filtering    = true
+  ingress_filtering = true
 
   # Force admin mac to the first bridge port, otherwise it depends on the order terraform created the ports
   auto_mac  = length(local.interfaces_mac_addresses) == 0
