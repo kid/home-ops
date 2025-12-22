@@ -20,7 +20,6 @@ terraform {
 locals {
   interface_lists = include.root.locals.env_config.locals.interface_lists
   vlans           = include.root.locals.base_inputs.vlans
-  # all_vlans       = keys(local.vlans)
 }
 
 inputs = merge(
@@ -46,6 +45,8 @@ inputs = merge(
 
     ethernet_interfaces = {
       ether17 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT], ip_address = "192.168.88.1/24" }
+      ether1 = { tagged = [local.vlans.Management.vlan_id], untagged = 100 }
+      ether2 = { tagged = [local.vlans.Management.vlan_id] }
     }
 
     dhcp_servers = {

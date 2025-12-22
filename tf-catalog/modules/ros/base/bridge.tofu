@@ -26,9 +26,9 @@ resource "routeros_interface_bridge_port" "ethernet_ports" {
   bridge    = routeros_interface_bridge.bridge.name
   interface = each.key
   comment   = each.value.comment
+  pvid      = each.value.untagged
 
-  # If untagged VLAN is specified, find its VLAN ID
-  pvid = (each.value.untagged != null && each.value.untagged != "") ? (
-    [for k, v in var.vlans : v.vlan_id if v.name == each.value.untagged][0]
-  ) : null
+  frame_types = each.value.untagged != null && length(each.value.tagged) > 0 ? "admit-all" : (
+    each.value.untagged != null ? "admit-only-untagged-and-priority-tagged" : "admit-only-vlan-tagged"
+  )
 }

@@ -99,8 +99,8 @@ variable "ethernet_interfaces" {
     interface_lists = optional(list(string), [])
 
     # VLAN configuration
-    tagged   = optional(list(string), [])
-    untagged = optional(string)
+    tagged   = optional(list(number), [])
+    untagged = optional(number)
   }))
   default     = {}
   description = "Map of ethernet interfaces to configure"
