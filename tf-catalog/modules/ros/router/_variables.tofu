@@ -32,6 +32,10 @@ variable "vlans_input_rules" {
     action             = string
     out_interface      = optional(string)
     out_interface_list = optional(string)
+    src_address        = optional(string)
+    src_address_list   = optional(string)
+    dst_address        = optional(string)
+    dst_address_list   = optional(string)
   })))
   default = {}
 }
