@@ -4,6 +4,10 @@ locals {
 
   vlans = local.env_cfg.vlans
 
+  shared_inputs = {
+    mgmt_interface_list = local.env_cfg.interface_lists.MANAGEMENT
+  }
+
   devices_augmented = [
     for dev_idx, dev in local.devices_cfg.devices : merge({
       hostname          = dev.name

@@ -18,9 +18,8 @@ dependencies {
 
 locals {
   interface_lists = include.root.locals.env_config.locals.interface_lists
-
-  vlans     = include.root.locals.base_inputs.vlans
-  all_vlans = keys(local.vlans)
+  vlans           = include.root.locals.base_inputs.vlans
+  all_vlans       = keys(local.vlans)
 }
 
 inputs = merge(

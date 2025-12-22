@@ -12,10 +12,11 @@ locals {
   base_cfg = try(read_terragrunt_config(find_in_parent_folders("base.hcl")).locals, {})
 
   base_inputs = merge(
-    try(local.base_cfg.per_device_inputs[local.hostname], {}),
     {
       routeros_secrets_path = "${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml"
-    }
+    },
+    try(local.base_cfg.shared_inputs, {}),
+    try(local.base_cfg.per_device_inputs[local.hostname], {}),
   )
 
   routeros_inputs = {
