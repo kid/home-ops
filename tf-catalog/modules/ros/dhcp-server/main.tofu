@@ -13,7 +13,7 @@ resource "routeros_ip_dhcp_server_network" "self" {
   address    = var.cidr
   domain     = var.domain
   gateway    = var.gateway
-  dns_server = coalesce(var.dns_servers, [var.gateway])
+  dns_server = var.dns_servers
 }
 
 resource "routeros_ip_dhcp_server" "self" {

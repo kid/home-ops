@@ -28,6 +28,7 @@ variable "dns_servers" {
 variable "domain" {
   description = "Domain name to provide via DHCP"
   type        = string
+  default     = null
 }
 
 variable "static_leases" {

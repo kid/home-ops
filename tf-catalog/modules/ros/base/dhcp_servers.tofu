@@ -3,7 +3,7 @@ module "dhcp_server" {
   source         = "../dhcp-server"
   interface_name = each.key
   cidr           = each.value.cidr
-  gateway        = coalesce(each.value.gateway, split("/", var.vlans[each.key].ip_address)[0])
+  gateway        = each.value.gateway
   dhcp_ranges    = each.value.dhcp_pool
   dns_servers    = each.value.dns_servers
   domain         = each.value.domain

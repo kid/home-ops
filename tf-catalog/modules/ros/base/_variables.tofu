@@ -142,7 +142,7 @@ variable "dhcp_clients" {
 variable "dhcp_servers" {
   type = map(object({
     cidr        = string
-    domain      = string
+    domain      = optional(string)
     gateway     = optional(string)
     dhcp_pool   = optional(list(string))
     dns_servers = optional(list(string))
