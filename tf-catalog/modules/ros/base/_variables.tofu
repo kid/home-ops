@@ -80,7 +80,7 @@ variable "bridge_comment" {
 
 variable "bridge_mtu" {
   type        = number
-  default     = 1514
+  default     = null
   description = "MTU for the bridge interface"
 }
 
