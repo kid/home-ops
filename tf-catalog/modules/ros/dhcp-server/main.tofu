@@ -14,6 +14,7 @@ resource "routeros_ip_dhcp_server_network" "self" {
   domain     = var.domain
   gateway    = var.gateway
   dns_server = var.dns_servers
+  dns_none   = length(var.dns_servers) == 0
 }
 
 resource "routeros_ip_dhcp_server" "self" {
