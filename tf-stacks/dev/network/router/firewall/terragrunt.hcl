@@ -9,7 +9,7 @@ include "provider_routeros" {
 }
 
 terraform {
-  source                   = "${get_repo_root()}/tf-catalog//modules/ros/router"
+  source                   = "${get_repo_root()}/tf-catalog//modules/ros/firewall"
   copy_terraform_lock_file = false
 }
 
@@ -18,7 +18,6 @@ dependencies {
 }
 
 locals {
-  hostname        = "router"
   interface_lists = include.root.locals.env_config.locals.interface_lists
   vlans           = include.root.locals.base_inputs.vlans
 }
@@ -26,8 +25,6 @@ locals {
 inputs = merge(
   include.root.locals.routeros_inputs,
   {
-    dns_upstream_servers = ["1.1.1.1", "8.8.8.8"]
-
     mgmt_interface_list = local.interface_lists.MANAGEMENT
     wan_interface_list  = local.interface_lists.WAN
 
