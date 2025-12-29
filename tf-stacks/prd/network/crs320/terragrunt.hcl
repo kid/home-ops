@@ -38,6 +38,7 @@ inputs = merge(
     ]
 
     vlans = {
+      Management = local.vlans.Management
       # Management = merge(local.vlans.Management, {
       #   ip_address = "${cidrhost(local.vlans.Management.cidr, 2)}/${local.vlans.Management.prefix}"
       # })
@@ -51,6 +52,7 @@ inputs = merge(
 
     ip_addresses = {
       ether17 = "192.168.88.1/24"
+      "${local.vlans.Management.name}" = "${cidrhost(local.vlans.Management.cidr, 2)}/${local.vlans.Management.prefix}"
     }
 
     dhcp_servers = {

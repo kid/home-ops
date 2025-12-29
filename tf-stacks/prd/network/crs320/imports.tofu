@@ -20,17 +20,12 @@ import {
   id = "."
 }
 
-# import {
-#   to = routeros_interface_vlan.vlans["Management"]
-#   id = "name=vlan-mgmt"
-# }
-
 import {
-  to = routeros_interface_ethernet.ethernet["ether17"]
-  id = "name=ether17"
+  to = routeros_interface_vlan.vlans["Management"]
+  id = "name=vlan-mgmt"
 }
 
-# import {
-#   to = routeros_ip_address.addresses["ether17"]
-#   id = "address=192.168.88.1/24"
-# }
+import {
+  to = routeros_interface_list_member.lists_members["MANAGEMENT-Management"]
+  id = "*4"
+}
