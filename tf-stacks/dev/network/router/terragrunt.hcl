@@ -36,8 +36,8 @@ inputs = merge(
     dhcp_clients = [{ interface = "ether2" }]
     dhcp_servers = {
       for name, vlan in local.vlans : name => merge(vlan, {
-        gateway     = split("/", vlan.ip_address)[0]
-        dns_servers = [split("/", vlan.ip_address)[0]]
+        gateway     = cidrhost(vlan.cidr, 1)
+        dns_servers = [cidrhost(vlan.cidr, 1)]
       }) if lookup(vlan, "dhcp", true)
     }
   },

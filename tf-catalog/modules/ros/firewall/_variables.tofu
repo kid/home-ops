@@ -17,9 +17,8 @@ variable "wan_interface_list" {
 
 variable "vlans" {
   type = map(object({
-    name       = string
-    vlan_id    = number
-    ip_address = optional(string, null)
+    name    = string
+    vlan_id = number
   }))
   default = {}
 }

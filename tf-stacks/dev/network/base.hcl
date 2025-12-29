@@ -15,11 +15,15 @@ locals {
       vlans = {
         for vlan_name, vlan in local.vlans : vlan_name => merge(
           vlan,
-          (dev.name == "router" || vlan_name == local.vlans.Management.name) ? {
-            ip_address = "${cidrhost(vlan.cidr, dev_idx + 1)}/${vlan.prefix}"
-          } : {},
+          # (dev.name == "router" || vlan_name == local.vlans.Management.name) ? {
+          #   ip_address = "${cidrhost(vlan.cidr, dev_idx + 1)}/${vlan.prefix}"
+          # } : {},
         )
         if !startswith(dev.name, "client") && !startswith(dev.name, "trusted")
+      }
+      ip_addresses = startswith(dev.name, "client") || startswith(dev.name, "trusted") ? {} : {
+        for _, vlan in local.vlans : vlan.name => "${cidrhost(vlan.cidr, dev_idx + 1)}/${vlan.prefix}"
+        if dev.name == "router" || vlan.name == local.vlans.Management.name
       }
     })
   ]
@@ -34,7 +38,7 @@ locals {
         certificate_unit = local.env_cfg.environment
         certificate_alt_names = concat(
           formatlist("DNS:%s", compact([dev.hostname, try("${dev.hostname}.${dev.vlans.Management.domain}", null)])),
-          formatlist("IP:%s", compact([dev.routeros_endpoint, try(split("/", dev.vlans.Management.ip_address)[0], null)])),
+          formatlist("IP:%s", compact([dev.routeros_endpoint, try(split("/", dev.ip_addresses[local.vlans.Management.name])[0], null)])),
         )
       }
     )

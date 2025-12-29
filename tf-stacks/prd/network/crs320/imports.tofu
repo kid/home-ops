@@ -30,7 +30,7 @@ import {
   id = "name=ether17"
 }
 
-import {
-  to = routeros_ip_address.ethernet["ether17"]
-  id = "address=192.168.88.1/24"
-}
+# import {
+#   to = routeros_ip_address.addresses["ether17"]
+#   id = "address=192.168.88.1/24"
+# }

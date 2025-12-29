@@ -44,9 +44,13 @@ inputs = merge(
     }
 
     ethernet_interfaces = {
-      ether17 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT], ip_address = "192.168.88.1/24" }
-      ether1 = { tagged = [local.vlans.Management.vlan_id], untagged = 100 }
-      ether2 = { tagged = [local.vlans.Management.vlan_id] }
+      ether17 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT] }
+      # ether1 = { tagged = [local.vlans.Management.vlan_id], untagged = 100 }
+      # ether2 = { tagged = [local.vlans.Management.vlan_id] }
+    }
+
+    ip_addresses = {
+      ether17 = "192.168.88.1/24"
     }
 
     dhcp_servers = {

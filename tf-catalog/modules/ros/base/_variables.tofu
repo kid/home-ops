@@ -95,7 +95,6 @@ variable "ethernet_interfaces" {
     bridge_port     = optional(bool, true)
     mtu             = optional(number, 1500)
     l2mtu           = optional(number, 1518)
-    ip_address      = optional(string, null)
     interface_lists = optional(list(string), [])
 
     # VLAN configuration
@@ -114,7 +113,6 @@ variable "vlans" {
   type = map(object({
     name            = string
     vlan_id         = number
-    ip_address      = optional(string, null)
     mtu             = optional(number, 1500)
     interface_lists = optional(list(string), [])
   }))
@@ -124,6 +122,12 @@ variable "vlans" {
 # }}}
 
 # IP Configuration {{{
+
+variable "ip_addresses" {
+  description = "Map of interface names to IP addresses"
+  type        = map(string)
+  default     = {}
+}
 
 variable "dhcp_clients" {
   description = "List of interfaces to create DHCP client on"

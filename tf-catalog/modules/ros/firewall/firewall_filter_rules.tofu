@@ -1,4 +1,10 @@
+data "routeros_ip_addresses" "current" {}
+
 locals {
+  static_addresses = {
+    for _, addr in data.routeros_ip_addresses.current.addresses : addr.actual_interface => addr.address if addr.dynamic == false
+  }
+
   input_rules = concat(
     [
       {
@@ -62,13 +68,13 @@ locals {
 
   vlans_rules = flatten([
     for _, vlan in var.vlans : [
-      (vlan.ip_address != null && vlan.ip_address != "") ? [
+      contains(keys(local.static_addresses), vlan.name) ? [
         {
           comment     = "Allow ICMP from ${vlan.name}"
           chain       = "input-${vlan.name}"
           action      = "accept"
           protocol    = "icmp"
-          dst_address = split("/", vlan.ip_address)[0]
+          dst_address = split("/", local.static_addresses[vlan.name])[0]
         },
         {
           comment     = "Allow DNS over TCP from ${vlan.name}"
@@ -76,7 +82,7 @@ locals {
           action      = "accept"
           protocol    = "tcp"
           port        = 53
-          dst_address = split("/", vlan.ip_address)[0]
+          dst_address = split("/", local.static_addresses[vlan.name])[0]
         },
         {
           comment     = "Allow DNS over UDP from ${vlan.name}"
@@ -84,7 +90,7 @@ locals {
           action      = "accept"
           protocol    = "udp"
           port        = 53
-          dst_address = split("/", vlan.ip_address)[0]
+          dst_address = split("/", local.static_addresses[vlan.name])[0]
         },
         {
           comment     = "Allow DHCP on ${vlan.name}"
@@ -92,7 +98,7 @@ locals {
           action      = "accept"
           protocol    = "udp"
           dst_port    = 67
-          dst_address = split("/", vlan.ip_address)[0]
+          dst_address = split("/", local.static_addresses[vlan.name])[0]
         },
       ] : [],
       [for _, rule in lookup(var.vlans_input_rules, vlan.name, []) : merge(rule, { chain = "input-${vlan.name}" })],
