@@ -33,38 +33,3 @@ resource "routeros_interface_bridge_vlan" "bridge_vlans" {
   tagged   = concat([routeros_interface_bridge.bridge.name], each.value.tagged)
   untagged = each.value.untagged
 }
-
-moved {
-  from = routeros_interface_bridge_vlan.bridge_vlans["Management"]
-  to   = routeros_interface_bridge_vlan.bridge_vlans["99"]
-}
-
-moved {
-  from = routeros_interface_bridge_vlan.bridge_vlans["Servers"]
-  to   = routeros_interface_bridge_vlan.bridge_vlans["10"]
-}
-
-moved {
-  from = routeros_interface_bridge_vlan.bridge_vlans["Talos"]
-  to   = routeros_interface_bridge_vlan.bridge_vlans["40"]
-}
-
-moved {
-  from = routeros_interface_bridge_vlan.bridge_vlans["TalosSvc"]
-  to   = routeros_interface_bridge_vlan.bridge_vlans["42"]
-}
-
-moved {
-  from = routeros_interface_bridge_vlan.bridge_vlans["Storage"]
-  to   = routeros_interface_bridge_vlan.bridge_vlans["20"]
-}
-
-moved {
-  from = routeros_interface_bridge_vlan.bridge_vlans["Trusted"]
-  to   = routeros_interface_bridge_vlan.bridge_vlans["100"]
-}
-
-moved {
-  from = routeros_interface_bridge_vlan.bridge_vlans["Guest"]
-  to   = routeros_interface_bridge_vlan.bridge_vlans["110"]
-}
