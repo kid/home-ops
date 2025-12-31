@@ -1,12 +1,29 @@
+resource "routeros_wifi_channel" "channel_6" {
+  name      = "channel-6"
+  width     = "20mhz"
+  frequency = ["2437"]
+}
+
+resource "routeros_wifi_channel" "channel_11" {
+  name      = "channel-11"
+  width     = "20mhz"
+  frequency = ["2462"]
+}
+
 resource "routeros_wifi_channel" "capxr0" {
   name              = "capxr0"
-  frequency         = ["2437", "5500-5720"]
+  width             = "20/40/80mhz"
+  frequency         = ["5500-5720"]
   skip_dfs_channels = "10min-cac"
+  # deprioritize_unii_3_4 = true
 }
 
 resource "routeros_wifi_channel" "capxr1" {
-  name      = "capxr1"
-  frequency = ["2462", "5180-5340"]
+  name              = "capxr1"
+  width             = "20/40/80mhz"
+  frequency         = ["5180-5340"]
+  skip_dfs_channels = "10min-cac"
+  # deprioritize_unii_3_4 = true
 }
 
 resource "routeros_wifi_security" "wpa2" {
@@ -22,16 +39,90 @@ resource "routeros_wifi_security" "wpa2" {
   passphrase            = data.sops_file.routeros_secrets.data["wifi.Wayland"]
 }
 
+resource "routeros_wifi_datapath" "default" {
+  name   = "default"
+  bridge = "bridge1"
+}
+
+resource "routeros_wifi_datapath" "lan" {
+  name    = "lan"
+  bridge  = "bridge1"
+  vlan_id = 100
+}
+
 resource "routeros_wifi_configuration" "capxr0-2g" {
-  name                  = "capxr0-2g"
-  ssid                  = "Weyland"
-  country               = "Belgium"
-  multicast_enhance     = "enabled"
-  deprioritize_unii_3_4 = true
+  name              = "capxr0-2g"
+  ssid              = "Weyland"
+  country           = "Belgium"
+  multicast_enhance = "enabled"
+  dtim_period       = 4
+
+  channel = {
+    config = routeros_wifi_channel.channel_6.name
+  }
+
+  datapath = {
+    config = routeros_wifi_datapath.lan.name
+  }
+
+  security = {
+    config = routeros_wifi_security.wpa2.name
+  }
+}
+
+resource "routeros_wifi_configuration" "capxr0-5g" {
+  name              = "capxr0-5g"
+  ssid              = "Weyland"
+  country           = "Belgium"
+  multicast_enhance = "enabled"
+  dtim_period       = 4
 
   channel = {
     config = "capxr0"
-    width  = "20mhz"
+  }
+
+  datapath = {
+    config = routeros_wifi_datapath.lan.name
+  }
+
+  security = {
+    config = routeros_wifi_security.wpa2.name
+  }
+}
+
+resource "routeros_wifi_configuration" "capxr1-2g" {
+  name              = "capxr1-2g"
+  ssid              = "Weyland"
+  country           = "Belgium"
+  multicast_enhance = "enabled"
+  dtim_period       = 4
+
+  channel = {
+    config = routeros_wifi_channel.channel_11.name
+  }
+
+  datapath = {
+    config = routeros_wifi_datapath.lan.name
+  }
+
+  security = {
+    config = routeros_wifi_security.wpa2.name
+  }
+}
+
+resource "routeros_wifi_configuration" "capxr1-5g" {
+  name              = "capxr1-5g"
+  ssid              = "Weyland"
+  country           = "Belgium"
+  multicast_enhance = "enabled"
+  dtim_period       = 4
+
+  channel = {
+    config = "capxr1"
+  }
+
+  datapath = {
+    config = routeros_wifi_datapath.lan.name
   }
 
   security = {

@@ -14,6 +14,26 @@ import {
 }
 
 import {
+  to = routeros_wifi_datapath.lan
+  id = "name=lan"
+}
+
+import {
   to = routeros_wifi_configuration.capxr0-2g
   id = "name=capxr0-2g"
+}
+
+import {
+  to = routeros_wifi_configuration.capxr0-5g
+  id = "name=capxr0-5g"
+}
+
+import {
+  to = routeros_wifi_configuration.capxr1-2g
+  id = "name=capxr1-2g"
+}
+
+import {
+  to = routeros_wifi_configuration.capxr1-5g
+  id = "name=capxr1-5g"
 }
