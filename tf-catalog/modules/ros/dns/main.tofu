@@ -13,4 +13,5 @@ resource "routeros_ip_dns_record" "static" {
   address  = each.value.address
   comment  = each.value.comment
   type     = each.value.type
+  disabled = each.value.disabled
 }

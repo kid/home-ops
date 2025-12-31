@@ -25,18 +25,16 @@ inputs = merge(
 
     dns_upstream_servers = ["9.9.9.9", "1.1.1.1"]
     dns_static_records = {
-      "pve0.kidibox.net" = { address = "10.0.10.10" }
-      "pve1.kidibox.net" = { address = "10.0.10.11" }
-      "ha.kidibox.net" = { address = "10.0.10.101" }
-
+      "pve0.kidibox.net"              = { address = "10.0.10.10" }
+      "pve1.kidibox.net"              = { address = "10.0.10.11" }
+      "ha.kidibox.net"                = { address = "10.0.10.101" }
       "doorbell.iot.home.kidibox.net" = { address = "10.0.101.100" }
-
-      "plex.kidibox.net" = { address = "10.0.30.100" }
-      "prowlarr.kidibox.net" = { address = "10.0.30.110" }
-      # "radarr.kidibox.net" = { address = "10.0.30.120" }
-      # "sonarr.kidibox.net" = { address = "10.0.30.130" }
-      # "animarr.kidibox.net" = { address = "10.0.30.140" }
-      "sabnzbd.kidibox.net" = { address = "10.0.30.150" }
+      "plex.kidibox.net"              = { address = "10.0.30.100" }
+      "prowlarr.kidibox.net"          = { address = "10.0.30.110" }
+      "radarr.kidibox.net"            = { address = "10.0.30.120", disabled = true }
+      "sonarr.kidibox.net"            = { address = "10.0.30.130", disabled = true }
+      "animarr.kidibox.net"           = { address = "10.0.30.140", disabled = true }
+      "sabnzbd.kidibox.net"           = { address = "10.0.30.150" }
     }
   },
 )

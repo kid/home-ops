@@ -6,9 +6,10 @@ variable "dns_upstream_servers" {
 
 variable "dns_static_records" {
   type = map(object({
-    address = string
-    type    = optional(string, "A")
-    comment = optional(string)
+    address  = string
+    type     = optional(string, "A")
+    comment  = optional(string)
+    disabled = optional(bool, false)
   }))
   default = {}
 }
