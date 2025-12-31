@@ -23,7 +23,7 @@ inputs = merge(
     hostname          = "rb5009"
     routeros_endpoint = "10.99.0.1"
 
-    bridge_name = "bridge1"
+    bridge_name   = "bridge1"
     wan_interface = "ether8"
 
     limit_tx = "18M"

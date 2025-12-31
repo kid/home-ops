@@ -1,6 +1,6 @@
 locals {
   environment = "prd"
-  tld         = "kidibox.net"
+  tld         = "home.kidibox.net"
 
   env_cidr         = cidrsubnet("10.0.0.0/8", 1, 0)
   env_cidr_network = split("/", local.env_cidr)
@@ -31,6 +31,11 @@ locals {
       mtu     = 9000
     },
     {
+      vlan_id = 30
+      name    = "Media"
+      domain  = "media.${local.tld}"
+    },
+    {
       vlan_id = 40
       name    = "Talos"
       domain  = "talos.${local.tld}"
@@ -43,13 +48,22 @@ locals {
     # },
     {
       vlan_id = 100
-      name    = "Trusted"
-      domain  = "trusted.${local.tld}"
+      name    = "Lan"
+      domain  = "lan.${local.tld}"
     },
     {
-      vlan_id = 110
-      name    = "Guest"
-      domain  = "guest.${local.tld}"
+      vlan_id = 101
+      name    = "Iot"
+      domain  = "iot.${local.tld}"
+    },
+    # {
+    #   vlan_id = 110
+    #   name    = "Guest"
+    #   domain  = "guest.${local.tld}"
+    # },
+    {
+      vlan_id = 1991
+      name    = "RosLab"
     },
   ]
 
