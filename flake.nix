@@ -46,6 +46,9 @@
 
               nil
               nixd
+              gptfdisk
+              e2fsprogs
+              unzip
             ];
 
             inputsFrom = [ config.treefmt.build.devShell ];
