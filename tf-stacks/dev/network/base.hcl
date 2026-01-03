@@ -5,6 +5,7 @@ locals {
   vlans = local.env_cfg.vlans
 
   shared_inputs = {
+    bridge_name = "bridge1"
     mgmt_interface_list = local.env_cfg.interface_lists.MANAGEMENT
   }
 

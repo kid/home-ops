@@ -29,8 +29,6 @@ inputs = merge(
     hostname          = "crs320"
     routeros_endpoint = "10.99.0.2"
 
-    bridge_name = "bridge1"
-
     certificate_alt_names = [
       "DNS:crs320",
       "DNS:crs320.kidibox.net",

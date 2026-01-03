@@ -68,7 +68,6 @@ variable "mgmt_interface_list" {
 
 variable "bridge_name" {
   type        = string
-  default     = "bridge"
   description = "Name of the main bridge interface"
 }
 

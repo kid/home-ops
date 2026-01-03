@@ -65,7 +65,7 @@ resource "routeros_wifi_steering" "default" {
 
 resource "routeros_wifi_datapath" "default" {
   name   = "default"
-  bridge = "bridge1"
+  bridge = var.bridge_name
 }
 
 resource "routeros_wifi_datapath" "lan" {
