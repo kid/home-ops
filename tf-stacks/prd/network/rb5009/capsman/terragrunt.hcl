@@ -13,10 +13,16 @@ terraform {
   copy_terraform_lock_file = false
 }
 
+locals {
+  vlans = include.root.locals.base_inputs.vlans
+}
+
 inputs = merge(
   include.root.locals.base_inputs,
   {
-    hostname          = "rb5009"
-    routeros_endpoint = "10.99.0.1"
+    hostname           = "rb5009"
+    routeros_endpoint  = "10.99.0.1"
+    capsman_interfaces = ["adm"]
+    # capsman_interfaces = [vlans.Management.name]
   },
 )

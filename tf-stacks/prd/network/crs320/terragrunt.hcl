@@ -97,11 +97,11 @@ inputs = merge(
         ]
       }
       ether10 = {
-        comment = "doorbell"
+        comment  = "doorbell"
         untagged = local.vlans.Iot.vlan_id
       }
       ether11 = {
-        comment = "petdoor"
+        comment  = "petdoor"
         untagged = local.vlans.Iot.vlan_id
       }
       ether14 = {
