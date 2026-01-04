@@ -13,6 +13,10 @@ terraform {
   copy_terraform_lock_file = false
 }
 
+dependencies {
+  paths = [".."]
+}
+
 locals {
   interface_lists = include.root.locals.env_config.locals.interface_lists
 }
@@ -28,13 +32,13 @@ inputs = merge(
       "pve0.kidibox.net"              = { address = "10.0.10.10" }
       "pve1.kidibox.net"              = { address = "10.0.10.11" }
       "ha.kidibox.net"                = { address = "10.0.10.101" }
-      "doorbell.iot.home.kidibox.net" = { address = "10.0.101.100" }
       "plex.kidibox.net"              = { address = "10.0.30.100" }
       "prowlarr.kidibox.net"          = { address = "10.0.30.110" }
       "radarr.kidibox.net"            = { address = "10.0.30.120", disabled = true }
       "sonarr.kidibox.net"            = { address = "10.0.30.130", disabled = true }
       "animarr.kidibox.net"           = { address = "10.0.30.140", disabled = true }
       "sabnzbd.kidibox.net"           = { address = "10.0.30.150" }
+      "doorbell.iot.home.kidibox.net" = { address = "10.0.101.100" }
     }
   },
 )

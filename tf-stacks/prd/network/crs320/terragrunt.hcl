@@ -13,13 +13,13 @@ terraform {
   copy_terraform_lock_file = false
 }
 
-# dependencies {
-#   paths = ["../router"]
-# }
+dependencies {
+  paths = ["../rb5009"]
+}
 
 locals {
   interface_lists = include.root.locals.env_config.locals.interface_lists
-  vlans           = include.root.locals.base_inputs.vlans
+  vlans           = include.root.locals.env_config.locals.vlans
   all_vlans       = [for vlan in local.vlans : vlan.vlan_id]
 }
 
@@ -48,27 +48,14 @@ inputs = merge(
       sfp-sfpplus3 = {
         comment = "pve0"
         tagged  = local.all_vlans
-        # tagged = [
-        #   # local.vlans.Servers.vlan_id,
-        #   local.vlans.Media.vlan_id,
-        #   local.vlans.Lan.vlan_id,
-        #   local.vlans.Iot.vlan_id,
-        # ]
       }
       sfp-sfpplus4 = {
-        comment  = "pve1"
-        untagged = local.vlans.Servers.vlan_id
-        # tagged   = local.all_vlans
-        tagged = [
-          # local.vlans.Servers.vlan_id,
-          local.vlans.Media.vlan_id,
-          local.vlans.Lan.vlan_id,
-          local.vlans.Iot.vlan_id,
-        ]
+        comment = "pve1"
+        tagged  = local.all_vlans
       }
       ether1 = {
         command  = "vulkan"
-        untagged = local.vlans.Lan.vlan_id
+        untagged = local.vlans.Trusted.vlan_id
         tagged = [
           local.vlans.Management.vlan_id,
           local.vlans.RosLab.vlan_id,
@@ -82,7 +69,7 @@ inputs = merge(
         comment = "capxr1"
         tagged = [
           local.vlans.Management.vlan_id,
-          local.vlans.Lan.vlan_id,
+          local.vlans.Trusted.vlan_id,
           local.vlans.Iot.vlan_id,
         ]
       }
@@ -90,7 +77,7 @@ inputs = merge(
         comment = "capxr0"
         tagged = [
           local.vlans.Management.vlan_id,
-          local.vlans.Lan.vlan_id,
+          local.vlans.Trusted.vlan_id,
           local.vlans.Iot.vlan_id,
         ]
       }

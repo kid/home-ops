@@ -31,6 +31,14 @@ lab-reset: clear-network-state
     fi
   done
 
+clear-stack-state stack:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mapfile -t items < <(terragrunt --working-dir "tf-stacks/{{stack}}" state list)
+  if [[ ${#items[@]} -gt 0 ]]; then
+    echo terragrunt --working-dir "tf-stacks/{{stack}}" state rm "${items[@]}"
+  fi
+
 # Reset the terraform state on all network stacks
 clear-network-state:
   #!/usr/bin/env bash

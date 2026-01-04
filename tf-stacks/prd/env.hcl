@@ -48,7 +48,7 @@ locals {
     # },
     {
       vlan_id = 100
-      name    = "Lan"
+      name    = "Trusted"
       domain  = "lan.${local.tld}"
     },
     {
@@ -62,8 +62,9 @@ locals {
     #   domain  = "guest.${local.tld}"
     # },
     {
-      vlan_id = 1991
-      name    = "RosLab"
+      vlan_id     = 1991
+      name        = "RosLab"
+      dhcp_routed = false
     },
   ]
 
