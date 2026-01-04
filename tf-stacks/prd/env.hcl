@@ -48,14 +48,15 @@ locals {
     # },
     {
       vlan_id = 50
-      name = "IotLocal"
+      name    = "IotLocal"
       domain  = "iot-local.${local.tld}"
     },
     {
       vlan_id = 51
-      name = "IotInternet"
+      name    = "IotInternet"
       domain  = "iot-internet.${local.tld}"
-    },    {
+    },
+    {
       vlan_id = 100
       name    = "Trusted"
       domain  = "lan.${local.tld}"

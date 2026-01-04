@@ -175,6 +175,11 @@ inputs = merge(
           mac     = "00:06:78:40:24:0a"
           address = cidrhost(local.vlans.IotLocal.cidr, 21)
         },
+        {
+          name    = "Somfy Box"
+          mac     = "88:12:ac:04:36:44"
+          address = cidrhost(local.vlans.IotLocal.cidr, 30)
+        }
       ]
       "${local.vlans.IotInternet.name}" = [
         {
