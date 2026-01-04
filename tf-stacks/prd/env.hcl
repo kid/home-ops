@@ -65,6 +65,7 @@ locals {
       vlan_id     = 1991
       name        = "RosLab"
       dhcp_routed = false
+      cidr        = "192.168.89.0/24"
     },
   ]
 
@@ -72,7 +73,7 @@ locals {
     for _, vlan in local.vlans_array :
     vlan.name => merge(vlan, {
       prefix = try(vlan.prefix, 24)
-      cidr   = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id)
+      cidr   = lookup(vlan, "cidr", cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id))
     })
   }
 }

@@ -18,12 +18,13 @@ resource "routeros_ip_dhcp_server_network" "self" {
 }
 
 resource "routeros_ip_dhcp_server" "self" {
-  comment            = "${var.interface_name} DHCP Server"
-  name               = var.interface_name
-  interface          = var.interface_name
-  address_pool       = routeros_ip_pool.self.name
-  client_mac_limit   = 1
-  conflict_detection = false
+  comment                   = "${var.interface_name} DHCP Server"
+  name                      = var.interface_name
+  interface                 = var.interface_name
+  address_pool              = routeros_ip_pool.self.name
+  client_mac_limit          = 1
+  conflict_detection        = false
+  dynamic_lease_identifiers = "client-mac,client-id"
 }
 
 resource "routeros_ip_dhcp_server_lease" "self" {

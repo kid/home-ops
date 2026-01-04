@@ -36,7 +36,7 @@ clear-stack-state stack:
   set -euo pipefail
   mapfile -t items < <(terragrunt --working-dir "tf-stacks/{{stack}}" state list)
   if [[ ${#items[@]} -gt 0 ]]; then
-    echo terragrunt --working-dir "tf-stacks/{{stack}}" state rm "${items[@]}"
+    terragrunt --working-dir "tf-stacks/{{stack}}" state rm "${items[@]}"
   fi
 
 # Reset the terraform state on all network stacks

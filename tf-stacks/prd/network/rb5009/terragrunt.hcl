@@ -48,16 +48,21 @@ inputs = merge(
       "${local.wan_port}" = { comment = "wan", bridge_port = false, interface_lists = [local.interface_lists.WAN] }
     }
 
-    ip_addresses = {
-      "${local.oob_port}"              = "192.168.88.1/24"
-      "${local.vlans.Management.name}" = "${cidrhost(local.vlans.Management.cidr, 1)}/${local.vlans.Management.prefix}"
-    }
+    ip_addresses = merge(
+      {
+        "${local.oob_port}" = "192.168.88.1/24"
+        "${local.wan_port}" = "192.168.100.2/24"
+      },
+      {
+        for _, vlan in local.vlans : vlan.name => "${cidrhost(vlan.cidr, 1)}/${vlan.prefix}"
+      }
+    )
 
     dhcp_clients = [{ interface = local.wan_port }]
     dhcp_servers = merge(
       {
         "${local.oob_port}" = {
-          cidr        = "192.168.88.1/24"
+          cidr        = "192.168.88.0/24"
           gateway     = null
           dns_servers = []
         }
@@ -70,7 +75,7 @@ inputs = merge(
       },
     )
 
-    static_leases = {
+    dhcp_static_leases = {
       "${local.vlans.Management.name}" = [
         {
           name    = "crs320"
@@ -122,32 +127,32 @@ inputs = merge(
           address = cidrhost(local.vlans.Media.cidr, 11)
         },
         {
-          nane    = "truenas"
+          name    = "truenas"
           mac     = "bc:24:11:9f:50:bf"
           address = cidrhost(local.vlans.Media.cidr, 126)
         },
       ]
       "${local.vlans.Trusted.name}" = [
-        {
-          name    = "dreame_vacuum_r2465a"
-          mac     = "70:c9:32:4e:21:7d"
-          address = cidrhost(local.vlans.Trusted.cidr, 104)
-        },
+        # {
+        #   name    = "dreame_vacuum_r2465a"
+        #   mac     = "70:c9:32:4e:21:7d"
+        #   address = cidrhost(local.vlans.Trusted.cidr, 104)
+        # },
         {
           name    = "litters camera"
           mac     = "e0:01:c7:e4:e0:f3"
           address = cidrhost(local.vlans.Trusted.cidr, 105)
         },
-        {
-          name    = "everything-presence-lite-2237c4"
-          mac     = "08:d1:f9:22:37:c4"
-          address = cidrhost(local.vlans.Trusted.cidr, 106)
-        },
-        {
-          name    = "everything-presence-lite-2237c4"
-          mac     = "08:d1:f9:22:37:c4"
-          address = cidrhost(local.vlans.Trusted.cidr, 107)
-        },
+        # {
+        #   name    = "everything-presence-lite-2237c4"
+        #   mac     = "08:d1:f9:22:37:c4"
+        #   address = cidrhost(local.vlans.Trusted.cidr, 106)
+        # },
+        # {
+        #   name    = "everything-presence-lite-2237c4"
+        #   mac     = "08:d1:f9:22:37:c4"
+        #   address = cidrhost(local.vlans.Trusted.cidr, 107)
+        # },
         {
           name    = "everything-presence-lite-20b1c4"
           mac     = "08:d1:f9:20:b1:c4"

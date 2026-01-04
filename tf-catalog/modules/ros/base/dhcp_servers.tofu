@@ -1,4 +1,5 @@
 module "dhcp_server" {
+  depends_on     = [routeros_ip_address.addresses]
   for_each       = var.dhcp_servers
   source         = "../dhcp-server"
   interface_name = each.key
