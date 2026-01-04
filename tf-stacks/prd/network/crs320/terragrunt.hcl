@@ -67,27 +67,19 @@ inputs = merge(
       }
       ether7 = {
         comment = "capxr1"
-        tagged = [
-          local.vlans.Management.vlan_id,
-          local.vlans.Trusted.vlan_id,
-          local.vlans.Iot.vlan_id,
-        ]
+        tagged  = local.all_vlans
       }
       ether9 = {
         comment = "capxr0"
-        tagged = [
-          local.vlans.Management.vlan_id,
-          local.vlans.Trusted.vlan_id,
-          local.vlans.Iot.vlan_id,
-        ]
+        tagged  = local.all_vlans
       }
       ether10 = {
         comment  = "doorbell"
-        untagged = local.vlans.Iot.vlan_id
+        untagged = local.vlans.IotLocal.vlan_id
       }
       ether11 = {
         comment  = "petdoor"
-        untagged = local.vlans.Iot.vlan_id
+        untagged = local.vlans.IotInternet.vlan_id
       }
       ether14 = {
         comment  = "pve0-ipmi"

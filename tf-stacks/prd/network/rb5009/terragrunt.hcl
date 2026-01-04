@@ -134,16 +134,6 @@ inputs = merge(
       ]
       "${local.vlans.Trusted.name}" = [
         # {
-        #   name    = "dreame_vacuum_r2465a"
-        #   mac     = "70:c9:32:4e:21:7d"
-        #   address = cidrhost(local.vlans.Trusted.cidr, 104)
-        # },
-        {
-          name    = "litters camera"
-          mac     = "e0:01:c7:e4:e0:f3"
-          address = cidrhost(local.vlans.Trusted.cidr, 105)
-        },
-        # {
         #   name    = "everything-presence-lite-2237c4"
         #   mac     = "08:d1:f9:22:37:c4"
         #   address = cidrhost(local.vlans.Trusted.cidr, 106)
@@ -159,31 +149,43 @@ inputs = merge(
           address = cidrhost(local.vlans.Trusted.cidr, 108)
         },
         {
-          name    = "LGwebOSTV"
-          mac     = "f0:86:20:10:84:18"
-          address = cidrhost(local.vlans.Trusted.cidr, 112)
-        },
-        {
-          name    = "denon"
-          mac     = "00:06:78:40:24:0a"
-          address = cidrhost(local.vlans.Trusted.cidr, 119)
-        },
-        {
           name    = "prtsrv"
           mac     = "bc:24:11:42:5b:fc"
           address = cidrhost(local.vlans.Trusted.cidr, 137)
         },
-        {
-          name    = "roborock-vacuum-a38"
-          mac     = "b0:4a:39:98:1c:cb"
-          address = cidrhost(local.vlans.Trusted.cidr, 241)
-        },
       ]
-      "${local.vlans.Iot.name}" = [
+      "${local.vlans.IotLocal.name}" = [
         {
           name    = "doorbell"
           mac     = "ec:71:db:26:a9:37"
-          address = cidrhost(local.vlans.Iot.cidr, 100)
+          address = cidrhost(local.vlans.IotLocal.cidr, 10)
+        },
+        {
+          name    = "litters camera"
+          mac     = "e0:01:c7:e4:e0:f3"
+          address = cidrhost(local.vlans.IotLocal.cidr, 11)
+        },
+        {
+          name    = "LGwebOSTV"
+          mac     = "f0:86:20:10:84:18"
+          address = cidrhost(local.vlans.IotLocal.cidr, 20)
+        },
+        {
+          name    = "denon"
+          mac     = "00:06:78:40:24:0a"
+          address = cidrhost(local.vlans.IotLocal.cidr, 21)
+        },
+      ]
+      "${local.vlans.IotInternet.name}" = [
+        {
+          name    = "roborock-vacuum-a38"
+          mac     = "b0:4a:39:98:1c:cb"
+          address = cidrhost(local.vlans.IotInternet.cidr, 30)
+        },
+        {
+          name    = "dreame_vacuum_r2465a"
+          mac     = "70:c9:32:4e:21:7d"
+          address = cidrhost(local.vlans.IotInternet.cidr, 31)
         },
       ]
     }

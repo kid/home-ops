@@ -45,16 +45,25 @@ resource "routeros_wifi_channel" "capxr1" {
 }
 
 resource "routeros_wifi_security" "wpa2" {
-  name                  = "wpa2"
-  authentication_types  = ["wpa2-psk"]
-  encryption            = ["ccmp"]
-  ft                    = true
-  ft_over_ds            = true
-  ft_preserve_vlanid    = true
-  disable_pmkid         = true
-  connect_priority      = "0/1"
-  management_protection = "allowed"
-  passphrase            = data.sops_file.routeros_secrets.data["wifi.Wayland"]
+  depends_on             = [routeros_wifi_security_multi_passphrase.groups]
+  name                   = "wpa2"
+  authentication_types   = ["wpa2-psk"]
+  encryption             = ["ccmp"]
+  ft                     = true
+  ft_over_ds             = true
+  ft_preserve_vlanid     = true
+  disable_pmkid          = true
+  connect_priority       = "0/1"
+  management_protection  = "allowed"
+  multi_passphrase_group = data.sops_file.routeros_secrets.data["wifi.ssid"]
+}
+
+resource "routeros_wifi_security_multi_passphrase" "groups" {
+  for_each   = var.passphrase_groups
+  group      = data.sops_file.routeros_secrets.data["wifi.ssid"]
+  vlan_id    = each.value.vlan_id
+  isolation  = lookup(each.value, "isolated", false)
+  passphrase = data.sops_file.routeros_secrets.data["wifi.passphrases.${each.key}"]
 }
 
 resource "routeros_wifi_steering" "default" {
@@ -76,7 +85,7 @@ resource "routeros_wifi_datapath" "lan" {
 
 resource "routeros_wifi_configuration" "capxr0-2g" {
   name              = "capxr0-2g"
-  ssid              = "Weyland"
+  ssid              = data.sops_file.routeros_secrets.data["wifi.ssid"]
   country           = "Belgium"
   multicast_enhance = "enabled"
   dtim_period       = 4
@@ -86,7 +95,7 @@ resource "routeros_wifi_configuration" "capxr0-2g" {
   }
 
   datapath = {
-    config = routeros_wifi_datapath.lan.name
+    config = routeros_wifi_datapath.default.name
   }
 
   security = {
@@ -100,7 +109,7 @@ resource "routeros_wifi_configuration" "capxr0-2g" {
 
 resource "routeros_wifi_configuration" "capxr1-2g" {
   name              = "capxr1-2g"
-  ssid              = "Weyland"
+  ssid              = data.sops_file.routeros_secrets.data["wifi.ssid"]
   country           = "Belgium"
   multicast_enhance = "enabled"
   dtim_period       = 4
@@ -110,7 +119,7 @@ resource "routeros_wifi_configuration" "capxr1-2g" {
   }
 
   datapath = {
-    config = routeros_wifi_datapath.lan.name
+    config = routeros_wifi_datapath.default.name
   }
 
   security = {
@@ -124,7 +133,7 @@ resource "routeros_wifi_configuration" "capxr1-2g" {
 
 resource "routeros_wifi_configuration" "capxr0-5g" {
   name              = "capxr0-5g"
-  ssid              = "Weyland"
+  ssid              = data.sops_file.routeros_secrets.data["wifi.ssid"]
   country           = "Belgium"
   multicast_enhance = "enabled"
   dtim_period       = 4
@@ -135,7 +144,7 @@ resource "routeros_wifi_configuration" "capxr0-5g" {
   }
 
   datapath = {
-    config = routeros_wifi_datapath.lan.name
+    config = routeros_wifi_datapath.default.name
   }
 
   security = {
@@ -149,7 +158,7 @@ resource "routeros_wifi_configuration" "capxr0-5g" {
 
 resource "routeros_wifi_configuration" "capxr1-5g" {
   name              = "capxr1-5g"
-  ssid              = "Weyland"
+  ssid              = data.sops_file.routeros_secrets.data["wifi.ssid"]
   country           = "Belgium"
   multicast_enhance = "enabled"
   dtim_period       = 4
@@ -160,7 +169,7 @@ resource "routeros_wifi_configuration" "capxr1-5g" {
   }
 
   datapath = {
-    config = routeros_wifi_datapath.lan.name
+    config = routeros_wifi_datapath.default.name
   }
 
   security = {

@@ -50,12 +50,15 @@ inputs = merge(
       "${local.vlans.Media.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
       ]
+      "${local.vlans.IotInternet.name}" = [
+        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
+      ]
       "${local.vlans.Trusted.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
         { action = "accept", out_interface = local.vlans.Management.name, comment = "Allow access to Management" },
         { action = "accept", out_interface_list = "all", comment = "Allow access to all vlans" },
       ]
-      "${local.vlans.Iot.name}" = [
+      "${local.vlans.Guest.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
       ]
       "${local.vlans.RosLab.name}" = [

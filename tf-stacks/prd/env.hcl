@@ -47,13 +47,22 @@ locals {
     #   dhcp    = false
     # },
     {
+      vlan_id = 50
+      name = "IotLocal"
+      domain  = "iot-local.${local.tld}"
+    },
+    {
+      vlan_id = 51
+      name = "IotInternet"
+      domain  = "iot-internet.${local.tld}"
+    },    {
       vlan_id = 100
       name    = "Trusted"
       domain  = "lan.${local.tld}"
     },
     {
       vlan_id = 101
-      name    = "Iot"
+      name    = "Guest"
       domain  = "iot.${local.tld}"
     },
     # {
