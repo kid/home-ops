@@ -133,16 +133,6 @@ inputs = merge(
         },
       ]
       "${local.vlans.Trusted.name}" = [
-        # {
-        #   name    = "everything-presence-lite-2237c4"
-        #   mac     = "08:d1:f9:22:37:c4"
-        #   address = cidrhost(local.vlans.Trusted.cidr, 106)
-        # },
-        # {
-        #   name    = "everything-presence-lite-2237c4"
-        #   mac     = "08:d1:f9:22:37:c4"
-        #   address = cidrhost(local.vlans.Trusted.cidr, 107)
-        # },
         {
           name    = "everything-presence-lite-20b1c4"
           mac     = "08:d1:f9:20:b1:c4"
@@ -152,6 +142,11 @@ inputs = merge(
           name    = "prtsrv"
           mac     = "bc:24:11:42:5b:fc"
           address = cidrhost(local.vlans.Trusted.cidr, 137)
+        },
+        {
+          name    = "shield"
+          mac     = "48:b0:2d:18:ec:cd"
+          address = cidrhost(local.vlans.Trusted.cidr, 212)
         },
       ]
       "${local.vlans.IotLocal.name}" = [
@@ -179,7 +174,7 @@ inputs = merge(
           name    = "Somfy Box"
           mac     = "88:12:ac:04:36:44"
           address = cidrhost(local.vlans.IotLocal.cidr, 30)
-        }
+        },
       ]
       "${local.vlans.IotInternet.name}" = [
         {
