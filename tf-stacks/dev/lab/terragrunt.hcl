@@ -25,7 +25,7 @@ inputs = merge(
   {
     routeros_endpoint     = "https://10.99.0.1"
     routeros_secrets_path = "${get_repo_root()}/secrets/prd/routeros.sops.yaml"
-    routeros_version      = "7.20.6"
+    routeros_version      = "7.21rc4"
     devices               = local.devices
   },
 )
