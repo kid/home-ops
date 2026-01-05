@@ -6,6 +6,8 @@ locals {
   env_cidr_network = split("/", local.env_cidr)
   env_cidr_prefix  = tonumber(split("/", local.env_cidr)[1])
 
+  dns_upstream_servers = ["9.9.9.9", "149.112.112.112"]
+
   interface_lists = {
     MANAGEMENT = "MANAGEMENT"
     WAN        = "WAN"
@@ -47,14 +49,16 @@ locals {
     #   dhcp    = false
     # },
     {
-      vlan_id = 50
-      name    = "IotLocal"
-      domain  = "iot-local.${local.tld}"
+      vlan_id          = 50
+      name             = "IotLocal"
+      domain           = "iot-local.${local.tld}"
+      dhcp_dns_servers = local.dns_upstream_servers
     },
     {
-      vlan_id = 51
-      name    = "IotInternet"
-      domain  = "iot-internet.${local.tld}"
+      vlan_id          = 51
+      name             = "IotInternet"
+      domain           = "iot-internet.${local.tld}"
+      dhcp_dns_servers = local.dns_upstream_servers
     },
     {
       vlan_id = 100
@@ -62,9 +66,10 @@ locals {
       domain  = "lan.${local.tld}"
     },
     {
-      vlan_id = 101
-      name    = "Guest"
-      domain  = "iot.${local.tld}"
+      vlan_id          = 101
+      name             = "Guest"
+      domain           = "iot.${local.tld}"
+      dhcp_dns_servers = local.dns_upstream_servers
     },
     # {
     #   vlan_id = 110
@@ -72,10 +77,11 @@ locals {
     #   domain  = "guest.${local.tld}"
     # },
     {
-      vlan_id     = 1991
-      name        = "RosLab"
-      dhcp_routed = false
-      cidr        = "192.168.89.0/24"
+      vlan_id          = 1991
+      name             = "RosLab"
+      cidr             = "192.168.89.0/24"
+      dhcp_gateway     = "0.0.0.0"
+      dhcp_dns_servers = []
     },
   ]
 

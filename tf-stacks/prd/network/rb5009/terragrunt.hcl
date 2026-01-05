@@ -69,8 +69,8 @@ inputs = merge(
       },
       {
         for name, vlan in local.vlans : name => merge(vlan, {
-          gateway     = lookup(vlan, "dhcp_routed", true) ? cidrhost(vlan.cidr, 1) : null
-          dns_servers = lookup(vlan, "dhcp_routed", true) ? [cidrhost(vlan.cidr, 1)] : []
+          gateway     = lookup(vlan, "dhcp_gateway", cidrhost(vlan.cidr, 1))
+          dns_servers = lookup(vlan, "dhcp_dns_servers", [cidrhost(vlan.cidr, 1)])
         }) if lookup(vlan, "dhcp", true)
       },
     )

@@ -27,7 +27,6 @@ inputs = merge(
     hostname          = "rb5009"
     routeros_endpoint = "10.99.0.1"
 
-    dns_upstream_servers = ["9.9.9.9", "1.1.1.1"]
     dns_static_records = {
       "pve0.kidibox.net"              = { address = "10.0.10.10" }
       "pve1.kidibox.net"              = { address = "10.0.10.11" }
