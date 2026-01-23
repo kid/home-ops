@@ -52,7 +52,6 @@ locals {
       vlan_id          = 50
       name             = "IotLocal"
       domain           = "iot-local.${local.tld}"
-      dhcp_dns_servers = local.dns_upstream_servers
     },
     {
       vlan_id          = 51
