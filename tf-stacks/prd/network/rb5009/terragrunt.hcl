@@ -33,6 +33,8 @@ inputs = merge(
       "IP:192.168.88.1",
     ]
 
+    ntp_server_enabled = true
+
     vlans = local.vlans
 
     ethernet_interfaces = {

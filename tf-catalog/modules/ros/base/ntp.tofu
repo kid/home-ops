@@ -1,5 +1,5 @@
 resource "routeros_system_ntp_server" "server" {
-  enabled = false
+  enabled = var.ntp_server_enabled
 }
 
 resource "routeros_system_ntp_client" "client" {

@@ -19,6 +19,12 @@ variable "ntp_servers" {
   description = "List of NTP servers to use."
 }
 
+variable "ntp_server_enabled" {
+  type        = bool
+  default     = false
+  description = "Whether to enable NTP server functionality"
+}
+
 # }}}
 
 # Certificate details {{{
