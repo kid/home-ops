@@ -34,6 +34,9 @@ inputs = merge(
       "${local.vlans.Trusted.name}" = [
         { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), comment = "Allow access to Management from Trusted" },
       ]
+      "${local.vlans.IotLocal.name}" = [
+        { action = "accept", dst_address = cidrhost(local.vlans.IotLocal.cidr, 1), comment = "Allow access to NTP from IotLocal", dst_port = 123, protocol = "udp" },
+      ]
     }
 
     vlans_forward_rules = {
@@ -50,6 +53,9 @@ inputs = merge(
       "${local.vlans.Media.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
         { action = "accept", dst_address = "10.0.10.101", src_address = "10.0.30.11", comment = "Allow cloudflared access to HomeAssistant" },
+      ]
+      "${local.vlans.IotLocal.name}" = [
+        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN", disabled = true },
       ]
       "${local.vlans.IotInternet.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },

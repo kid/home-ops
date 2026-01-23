@@ -27,12 +27,16 @@ variable "vlans_input_rules" {
   type = map(list(object({
     comment            = string
     action             = string
+    disabled           = optional(bool)
+    protocol           = optional(string)
     out_interface      = optional(string)
     out_interface_list = optional(string)
     src_address        = optional(string)
     src_address_list   = optional(string)
+    src_port           = optional(string)
     dst_address        = optional(string)
     dst_address_list   = optional(string)
+    dst_port           = optional(string)
   })))
   default = {}
 }
@@ -41,12 +45,16 @@ variable "vlans_forward_rules" {
   type = map(list(object({
     comment            = string
     action             = string
+    disabled           = optional(bool)
+    protocol           = optional(string)
     out_interface      = optional(string)
     out_interface_list = optional(string)
     src_address        = optional(string)
     src_address_list   = optional(string)
+    src_port           = optional(string)
     dst_address        = optional(string)
     dst_address_list   = optional(string)
+    dst_port           = optional(string)
   })))
   default = {}
 }
