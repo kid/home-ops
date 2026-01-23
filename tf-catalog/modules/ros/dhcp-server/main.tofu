@@ -25,6 +25,7 @@ resource "routeros_ip_dhcp_server" "self" {
   client_mac_limit          = 1
   conflict_detection        = false
   dynamic_lease_identifiers = "client-mac,client-id"
+  lease_time                = "1d"
 }
 
 resource "routeros_ip_dhcp_server_lease" "self" {
