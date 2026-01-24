@@ -18,3 +18,10 @@ patches:
         path: /data
         value:
           kustomize.buildOptions: --enable-helm
+          resource.exclusions: |
+            - apiGroups:
+                - cilium.io
+              kinds:
+                - CiliumIdentity
+              clusters:
+                - "*"
