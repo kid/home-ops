@@ -43,9 +43,13 @@ inputs = merge(
       "${local.vlans.Trusted.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Trusted" },
         { action = "accept", out_interface = local.vlans.Management.name, comment = "Allow access to Management from Trusted" },
+        { action = "accept", out_interface_list = "all", comment = "Allow access to all vlans" },
       ]
       "${local.vlans.Guest.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Guest" },
+      ]
+      "${local.vlans.Talos.name}" = [
+        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Talos" },
       ]
     }
   },

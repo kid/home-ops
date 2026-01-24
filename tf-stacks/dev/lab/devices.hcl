@@ -15,6 +15,7 @@ locals {
         { type = "port", target = "switch" },
         { type = "port", target = "trusted1" },
         { type = "port", target = "guest1" },
+        { type = "trunk" },
       ]
     },
     {

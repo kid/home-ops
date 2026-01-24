@@ -4,7 +4,7 @@ variable "devices" {
     type = string
     interfaces = list(object({
       name        = string
-      type        = string # oob / port / wan
+      type        = string # oob / port / wan / trunk
       mac_address = string
       ip_address  = optional(string)
       target      = optional(string)

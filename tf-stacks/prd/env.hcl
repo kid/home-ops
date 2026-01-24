@@ -49,9 +49,9 @@ locals {
     #   dhcp    = false
     # },
     {
-      vlan_id          = 50
-      name             = "IotLocal"
-      domain           = "iot-local.${local.tld}"
+      vlan_id = 50
+      name    = "IotLocal"
+      domain  = "iot-local.${local.tld}"
     },
     {
       vlan_id          = 51
@@ -76,6 +76,21 @@ locals {
     #   domain  = "guest.${local.tld}"
     # },
     {
+      vlan_id = 1040
+      name    = "LabTalos"
+      routed  = false
+    },
+    {
+      vlan_id = 1042
+      name    = "LabTalosSvc"
+      routed  = false
+    },
+    {
+      vlan_id = 1100
+      name    = "LabTrusted"
+      routed  = false
+    },
+    {
       vlan_id          = 1991
       name             = "RosLab"
       cidr             = "192.168.89.0/24"
@@ -84,11 +99,15 @@ locals {
     },
   ]
 
-  vlans = {
-    for _, vlan in local.vlans_array :
-    vlan.name => merge(vlan, {
-      prefix = try(vlan.prefix, 24)
-      cidr   = lookup(vlan, "cidr", cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id))
-    })
-  }
+  vlans = merge(
+    {
+      for _, vlan in local.vlans_array :
+      vlan.name => merge(vlan, {
+        prefix = try(vlan.prefix, 24)
+        cidr   = lookup(vlan, "cidr", cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id))
+      })
+      if lookup(vlan, "routed", true)
+    },
+    { for _, vlan in local.vlans_array : vlan.name => vlan if lookup(vlan, "routed", true) == false }
+  )
 }

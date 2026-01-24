@@ -60,6 +60,9 @@ inputs = merge(
         tagged = [
           local.vlans.Management.vlan_id,
           local.vlans.RosLab.vlan_id,
+          local.vlans.LabTalos.vlan_id,
+          local.vlans.LabTalosSvc.vlan_id,
+          local.vlans.LabTrusted.vlan_id,
         ]
       }
       ether2 = {

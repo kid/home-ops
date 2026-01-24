@@ -57,6 +57,7 @@ inputs = merge(
       },
       {
         for _, vlan in local.vlans : vlan.name => "${cidrhost(vlan.cidr, 1)}/${vlan.prefix}"
+        if lookup(vlan, "routed", true)
       }
     )
 
@@ -73,7 +74,7 @@ inputs = merge(
         for name, vlan in local.vlans : name => merge(vlan, {
           gateway     = lookup(vlan, "dhcp_gateway", cidrhost(vlan.cidr, 1))
           dns_servers = lookup(vlan, "dhcp_dns_servers", [cidrhost(vlan.cidr, 1)])
-        }) if lookup(vlan, "dhcp", true)
+        }) if lookup(vlan, "routed", true) && lookup(vlan, "dhcp", true)
       },
     )
 

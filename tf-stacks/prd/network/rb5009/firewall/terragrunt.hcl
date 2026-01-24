@@ -28,7 +28,7 @@ inputs = merge(
     hostname          = "rb5009"
     routeros_endpoint = "10.99.0.1"
 
-    vlans = local.vlans
+    vlans = { for name, vlan in local.vlans : name => vlan if lookup(vlan, "routed", true) }
 
     vlans_input_rules = {
       "${local.vlans.Trusted.name}" = [

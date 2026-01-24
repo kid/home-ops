@@ -13,8 +13,9 @@ locals {
           ifce.type == "oob" ? 1991 : null
         )
         bridge = ifce.type == "wan" ? "vmbr0" : (
-          ifce.type == "port" ? proxmox_virtual_environment_network_linux_bridge.ports[join("-", sort([device.name, ifce.target]))].name : (
-          ifce.type == "oob" ? "vmbr0" : null)
+          ifce.type == "trunk" ? "vmbr0" : (
+            ifce.type == "port" ? proxmox_virtual_environment_network_linux_bridge.ports[join("-", sort([device.name, ifce.target]))].name : (
+          ifce.type == "oob" ? "vmbr0" : null))
         )
       })
     ]

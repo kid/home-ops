@@ -2,6 +2,8 @@ locals {
   environment = "dev"
   tld         = "${local.environment}.kidibox.net"
 
+  vlan_prefix = 1000
+
   env_cidr         = cidrsubnet("10.0.0.0/8", 1, 1)
   env_cidr_network = split("/", local.env_cidr)
   env_cidr_prefix  = tonumber(split("/", local.env_cidr)[1])
@@ -56,8 +58,9 @@ locals {
   vlans = {
     for _, vlan in local.vlans_array :
     vlan.name => merge(vlan, {
-      prefix = try(vlan.prefix, 24)
-      cidr   = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id)
+      vlan_id = local.vlan_prefix + vlan.vlan_id
+      prefix  = try(vlan.prefix, 24)
+      cidr    = cidrsubnet(local.env_cidr, try(vlan.prefix, 24) - local.env_cidr_prefix, vlan.vlan_id)
     })
   }
 }
