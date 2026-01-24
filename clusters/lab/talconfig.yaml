@@ -1,0 +1,38 @@
+---
+clusterName: lab
+talosVersion: v1.12.2
+kubernetesVersion: v1.35.0
+endpoint: https://10.128.40.11:6443
+domain: lab.kidibox.net
+allowSchedulingOnMasters: true
+clusterPodNets:
+  - 172.16.0.0/16
+clusterSvcNets:
+  - 172.17.0.0/16
+cniConfig:
+  name: none
+
+# Proxmox + Cilium compatibility patches
+patches:
+  - |-
+    cluster:
+      proxy:
+        disabled: true
+    machine:
+      install:
+        # Image Factory installer with qemu-guest-agent extension
+        # Generated from: https://factory.talos.dev/?arch=amd64&bootloader=sd-boot&cmdline-set=true&extensions=-&extensions=siderolabs%2Fqemu-guest-agent&platform=nocloud&target=cloud&version=1.12.2
+        image: factory.talos.dev/installer/17bd088c71807ae797c16e85efb133b27814f1a333312bf597c3d4bc6f7c13d7:v1.12.2
+      kernel:
+        modules:
+          - name: br_netfilter
+            parameters:
+              - nf_conntrack_max=131072
+      sysctls:
+        net.core.bpf_jit_enable: "1"
+
+nodes:
+  - hostname: talos-lab-cp-0
+    ipAddress: 10.128.40.11
+    controlPlane: true
+    installDisk: /dev/vda

@@ -1,0 +1,75 @@
+---
+# Cilium Helm values for Talos + Proxmox
+# https://docs.cilium.io/en/stable/helm-reference/
+
+# Kube-proxy replacement mode
+kubeProxyReplacement: true
+k8sServiceHost: 127.0.0.1  # kubePrism address
+k8sServicePort: 7445       # kubePrism port
+
+# IPAM configuration
+ipam:
+  mode: kubernetes
+
+# Use Talos-compatible settings
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+
+# Hubble observability
+hubble:
+  enabled: false
+  relay:
+    enabled: false
+  ui:
+    enabled: false
+
+# Gateway API support
+gatewayAPI:
+  enabled: true
+  enableAlpn: true
+  enableAppProtocol: true
+
+# BGP Control Plane for LoadBalancer services
+bgpControlPlane:
+  enabled: true
+
+# L2 announcements (alternative to BGP for simple setups)
+l2announcements:
+  enabled: false
+
+# Operator settings
+operator:
+  replicas: 1  # Single replica for single-node cluster
+
+# Enable native routing (recommended for Talos)
+routingMode: native
+ipv4NativeRoutingCIDR: 172.16.0.0/16  # Match your pod CIDR
+
+# BPF settings
+bpf:
+  masquerade: true
+
+# Disable legacy iptables mode
+enableIPv4Masquerade: true
+enableIPv6Masquerade: false
