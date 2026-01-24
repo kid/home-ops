@@ -18,6 +18,8 @@ spec:
       namespace: argocd
       annotations:
         argocd.argoproj.io/compare-options: ServerSideDiff=true
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
     spec:
       project: default
       source:
@@ -34,3 +36,8 @@ spec:
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
+  templatePatch: |
+    {{- if .preserveResources }}
+    metadata:
+      finalizers: []
+    {{- end }}
