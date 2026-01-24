@@ -10,6 +10,8 @@ spec:
   allowFirstLastIPs: No
   blocks:
     - cidr: 10.128.42.0/24
+      start: 10.128.42.10
+      stop: 10.0.128.42.100
 ---
 # CiliumBGPPeerConfig - Configures BGP peer connection parameters
 apiVersion: cilium.io/v2alpha1
