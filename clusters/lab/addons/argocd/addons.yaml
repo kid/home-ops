@@ -21,7 +21,7 @@ spec:
       source:
         repoURL: https://github.com/kid/home-ops.git
         targetRevision: HEAD
-        path: '{{ index .path "path" | dir }}'
+        path: '{{ .path.path }}'
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ .namespace }}'
