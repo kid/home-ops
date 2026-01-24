@@ -2,20 +2,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argocd
+  name: addons
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/kid/home-ops.git
     targetRevision: HEAD
-    path: clusters/lab/addons/argocd
+    path: clusters/lab/addons
+    directory:
+      recurse: true
+      include: 'application.yaml'
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
