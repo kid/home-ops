@@ -21,7 +21,7 @@ spec:
       source:
         repoURL: https://github.com/kid/home-ops.git
         targetRevision: HEAD
-        path: '{{ .path.path | dir }}'
+        path: '{{ index .path "path" | dir }}'
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ .namespace }}'
@@ -29,4 +29,6 @@ spec:
         automated:
           prune: true
           selfHeal: true
-        syncOptions: '{{ .syncOptions | toJson }}'
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

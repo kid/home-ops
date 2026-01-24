@@ -1,5 +1,3 @@
 ---
 name: argocd
 namespace: argocd
-syncOptions:
-  - CreateNamespace=true
