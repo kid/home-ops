@@ -1,13 +1,6 @@
 ---
-# GatewayClass - Defines Cilium as the Gateway controller
-apiVersion: gateway.networking.k8s.io/v1
-kind: GatewayClass
-metadata:
-  name: cilium
-spec:
-  controllerName: io.cilium/gateway-controller
----
 # Gateway - HTTP/HTTPS ingress point exposed via BGP
+# GatewayClass "cilium" is created by the Cilium Helm chart
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
