@@ -30,6 +30,11 @@ patches:
               - nf_conntrack_max=131072
       sysctls:
         net.core.bpf_jit_enable: "1"
+      features:
+        hostDNS:
+          enabled: true
+          forwardKubeDNSToHost: false
+          resolveMemberNames: true
 
 nodes:
   - hostname: talos-lab-cp-0
