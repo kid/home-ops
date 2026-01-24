@@ -47,7 +47,8 @@ inputs = merge(
       }
       sfp-sfpplus3 = {
         comment = "pve0"
-        tagged  = local.all_vlans
+        # tagged  = local.all_vlans
+        untagged = local.vlans.Servers.vlan_id
       }
       sfp-sfpplus4 = {
         comment = "pve1"
