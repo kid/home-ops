@@ -50,6 +50,7 @@
               kubernetes-helm
               cilium-cli
               argocd
+              kustomize
               kubectx
 
               nil
