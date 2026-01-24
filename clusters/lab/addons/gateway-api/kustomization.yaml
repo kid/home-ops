@@ -3,6 +3,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  # Gateway API CRDs - standard channel (stable APIs only)
-  # Includes: GatewayClass, Gateway, HTTPRoute, ReferenceGrant
-  - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
+  # Gateway API CRDs - experimental channel (includes TLSRoute, TCPRoute, UDPRoute)
+  # Required by Cilium's Gateway API controller
+  - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/experimental-install.yaml
