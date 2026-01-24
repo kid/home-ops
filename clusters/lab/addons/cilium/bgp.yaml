@@ -1,0 +1,63 @@
+---
+# CiliumLoadBalancerIPPool - Defines IP ranges for LoadBalancer services
+# Uses the TalosSvc VLAN (10.128.42.0/24) which has no DHCP
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: lab-pool
+  namespace: kube-system
+spec:
+  blocks:
+    - cidr: 10.128.42.0/24
+---
+# CiliumBGPPeerConfig - Configures BGP peer connection parameters
+apiVersion: cilium.io/v2alpha1
+kind: CiliumBGPPeerConfig
+metadata:
+  name: router-peer
+  namespace: kube-system
+spec:
+  timers:
+    holdTimeSeconds: 90
+    keepAliveTimeSeconds: 30
+  gracefulRestart:
+    enabled: true
+    restartTimeSeconds: 120
+---
+# CiliumBGPAdvertisement - Configures what routes to advertise
+apiVersion: cilium.io/v2alpha1
+kind: CiliumBGPAdvertisement
+metadata:
+  name: lb-services
+  namespace: kube-system
+spec:
+  advertisements:
+    - advertisementType: Service
+      service:
+        addresses:
+          - LoadBalancerIP
+      selector:
+        matchExpressions:
+          - key: thisFakeSelector
+            operator: NotIn
+            values:
+              - neverMatch
+---
+# CiliumBGPClusterConfig - Configures BGP peering from cluster to router
+apiVersion: cilium.io/v2alpha1
+kind: CiliumBGPClusterConfig
+metadata:
+  name: lab-bgp
+spec:
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/control-plane: ""
+  bgpInstances:
+    - name: lab
+      localASN: 64513
+      peers:
+        - name: router
+          peerASN: 64512
+          peerAddress: 10.128.40.1
+          peerConfigRef:
+            name: router-peer

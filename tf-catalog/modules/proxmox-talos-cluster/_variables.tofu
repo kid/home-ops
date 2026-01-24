@@ -97,3 +97,31 @@ variable "tags" {
   description = "Tags to apply to the VMs"
   default     = ["terraform", "talos"]
 }
+
+# BGP Configuration {{{
+
+variable "bgp_enabled" {
+  type        = bool
+  description = "Enable BGP peering between RouterOS and Talos nodes"
+  default     = false
+}
+
+variable "bgp_local_asn" {
+  type        = number
+  description = "Local ASN for the RouterOS BGP instance"
+  default     = 64512
+}
+
+variable "bgp_remote_asn" {
+  type        = number
+  description = "Remote ASN for the Talos/Cilium BGP peers"
+  default     = 64513
+}
+
+variable "bgp_router_id" {
+  type        = string
+  description = "Router ID for BGP instance (typically router's IP on the Talos VLAN)"
+  default     = null
+}
+
+# }}}
