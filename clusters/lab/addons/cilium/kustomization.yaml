@@ -4,6 +4,7 @@ kind: Kustomization
 
 resources:
   - bgp.yaml
+  - gateway.yaml
 
 helmCharts:
   - name: cilium

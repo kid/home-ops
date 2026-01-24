@@ -18,6 +18,7 @@ spec:
       namespace: argocd
       annotations:
         argocd.argoproj.io/compare-options: ServerSideDiff=true
+        argocd.argoproj.io/sync-wave: '{{ default "0" .syncWave }}'
       finalizers:
         - resources-finalizer.argocd.argoproj.io
     spec:

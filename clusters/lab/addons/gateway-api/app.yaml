@@ -1,0 +1,4 @@
+---
+name: gateway-api
+namespace: kube-system
+syncWave: "-1"
