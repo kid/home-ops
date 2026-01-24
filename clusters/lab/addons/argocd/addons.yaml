@@ -11,7 +11,7 @@ spec:
         repoURL: https://github.com/kid/home-ops.git
         revision: HEAD
         files:
-          - path: clusters/lab/addons/*/config.yaml
+          - path: clusters/lab/addons/*/app.yaml
   template:
     metadata:
       name: '{{ .name }}'
