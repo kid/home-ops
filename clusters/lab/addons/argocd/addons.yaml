@@ -16,6 +16,8 @@ spec:
     metadata:
       name: '{{ .name }}'
       namespace: argocd
+      annotations:
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
     spec:
       project: default
       source:
