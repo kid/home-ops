@@ -44,6 +44,14 @@
               tofu-ls
               terragrunt
 
+              talhelper
+              talosctl
+              kubectl
+              kubernetes-helm
+              cilium-cli
+              argocd
+              kubectx
+
               nil
               nixd
             ];
