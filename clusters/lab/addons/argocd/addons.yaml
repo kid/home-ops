@@ -1,21 +1,32 @@
 ---
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
   name: addons
   namespace: argocd
 spec:
-  project: default
-  source:
-    repoURL: https://github.com/kid/home-ops.git
-    targetRevision: HEAD
-    path: clusters/lab/addons
-    directory:
-      recurse: true
-      include: '*/application.yaml'
-  destination:
-    server: https://kubernetes.default.svc
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/kid/home-ops.git
+        revision: HEAD
+        files:
+          - path: clusters/lab/addons/*/config.yaml
+  template:
+    metadata:
+      name: '{{ .name }}'
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/kid/home-ops.git
+        targetRevision: HEAD
+        path: '{{ .path.path | dir }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ .namespace }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions: '{{ .syncOptions | toJson }}'
