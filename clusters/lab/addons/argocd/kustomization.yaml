@@ -8,6 +8,7 @@ resources:
   - namespace.yaml
   - https://raw.githubusercontent.com/argoproj/argo-cd/v2.14.4/manifests/install.yaml
   - addons.yaml
+  - httproute.yaml
 
 patches:
   - target:
