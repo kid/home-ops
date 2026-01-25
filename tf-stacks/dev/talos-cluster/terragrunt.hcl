@@ -34,6 +34,7 @@ inputs = merge(
     nodes = {
       talos-lab-cp-0 = {
         ip_address = cidrhost(local.vlans.Talos.cidr, 11)
+        cpu_cores = 4
       }
     }
 
