@@ -42,12 +42,6 @@ locals {
       name    = "Talos"
       domain  = "talos.${local.tld}"
     },
-    # {
-    #   vlan_id = 42
-    #   name    = "TalosSvc"
-    #   domain  = "talos-svc.${local.tld}"
-    #   dhcp    = false
-    # },
     {
       vlan_id = 50
       name    = "IotLocal"

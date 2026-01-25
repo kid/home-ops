@@ -38,12 +38,6 @@ locals {
       domain  = "talos.${local.tld}"
     },
     {
-      vlan_id = 42
-      name    = "TalosSvc"
-      domain  = "talos-svc.${local.tld}"
-      dhcp    = false
-    },
-    {
       vlan_id = 100
       name    = "Trusted"
       domain  = "trusted.${local.tld}"

@@ -31,11 +31,7 @@ inputs = merge(
       ether3 = { comment = "switch", tagged = local.all_vlans }
       ether4 = { comment = "trusted1", untagged = local.vlans.Trusted.vlan_id }
       ether5 = { comment = "guest1", untagged = local.vlans.Guest.vlan_id }
-      ether6 = { tagged = [
-        local.vlans.Trusted.vlan_id,
-        local.vlans.Talos.vlan_id,
-        local.vlans.TalosSvc.vlan_id
-      ] }
+      ether6 = { tagged = [local.vlans.Trusted.vlan_id, local.vlans.Talos.vlan_id] }
     }
 
     dhcp_clients = [{ interface = "ether2" }]
