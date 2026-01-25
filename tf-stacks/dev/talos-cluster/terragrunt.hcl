@@ -39,8 +39,8 @@ inputs = merge(
 
     # BGP configuration for Cilium LoadBalancer services
     bgp_enabled    = true
-    bgp_local_asn  = 64512 # RouterOS ASN
-    bgp_remote_asn = 64513 # Cilium ASN
+    bgp_local_asn  = 64512                               # RouterOS ASN
+    bgp_remote_asn = 64513                               # Cilium ASN
     bgp_router_id  = cidrhost(local.vlans.Talos.cidr, 1) # Router's IP on Talos VLAN
   },
 )
