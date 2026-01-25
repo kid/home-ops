@@ -14,5 +14,5 @@ patches:
   - path: ./patches/argocd-cm.yaml
   - path: ./patches/argocd-repo-server.yaml
 
-generators:
-  - ./secret-generator.yaml
+# generators:
+#   - ./secret-generator.yaml
