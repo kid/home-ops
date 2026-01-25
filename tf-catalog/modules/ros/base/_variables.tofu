@@ -154,6 +154,7 @@ variable "dhcp_servers" {
     domain      = optional(string)
     gateway     = optional(string)
     dhcp_pool   = optional(list(string))
+    ntp_servers = optional(list(string))
     dns_servers = optional(list(string))
     static_leases = optional(list(object({
       name    = string

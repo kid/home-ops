@@ -35,7 +35,7 @@ inputs = merge(
         { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), comment = "Allow access to Management from Trusted" },
       ]
       "${local.vlans.Talos.name}" = [
-        { action = "accept", dst_port = "179", protocol = "tcp", comment = "Allow BGP from Talos" },
+        { action = "accept", dst_address = cidrhost(local.vlans.Talos.cidr, 1), dst_port = 179, protocol = "tcp", comment = "Allow BGP from Talos" },
       ]
     }
 

@@ -25,6 +25,8 @@ locals {
 inputs = merge(
   include.root.locals.base_inputs,
   {
+    ntp_server_enabled = true
+
     ethernet_interfaces = {
       ether1 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT] }
       ether2 = { comment = "wan", bridge_port = false, interface_lists = [local.interface_lists.WAN] }
@@ -38,6 +40,7 @@ inputs = merge(
     dhcp_servers = {
       for name, vlan in local.vlans : name => merge(vlan, {
         gateway     = cidrhost(vlan.cidr, 1)
+        ntp_servers = [cidrhost(vlan.cidr, 1)]
         dns_servers = [cidrhost(vlan.cidr, 1)]
       }) if lookup(vlan, "dhcp", true)
     }

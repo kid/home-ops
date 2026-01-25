@@ -34,9 +34,6 @@ inputs = merge(
       "${local.vlans.Trusted.name}" = [
         { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), comment = "Allow access to Management from Trusted" },
       ]
-      "${local.vlans.IotLocal.name}" = [
-        { action = "accept", dst_address = cidrhost(local.vlans.IotLocal.cidr, 1), comment = "Allow access to NTP from IotLocal", dst_port = 123, protocol = "udp" },
-      ]
     }
 
     vlans_forward_rules = {

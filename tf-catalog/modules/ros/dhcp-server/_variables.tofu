@@ -19,6 +19,12 @@ variable "dhcp_ranges" {
   default     = null
 }
 
+variable "ntp_servers" {
+  description = "List of NTP servers to provide via DHCP"
+  type        = list(string)
+  default     = null
+}
+
 variable "dns_servers" {
   description = "List of DNS servers to provide via DHCP"
   type        = list(string)

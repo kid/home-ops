@@ -100,6 +100,14 @@ locals {
           dst_port    = 67
           dst_address = split("/", local.static_addresses[vlan.name])[0]
         },
+        {
+          comment     = "Allow NTP on ${vlan.name}"
+          chain       = "input-${vlan.name}"
+          action      = "accept"
+          protocol    = "udp"
+          dst_port    = 123
+          dst_address = split("/", local.static_addresses[vlan.name])[0]
+        },
       ] : [],
       [for _, rule in lookup(var.vlans_input_rules, vlan.name, []) : merge(rule, { chain = "input-${vlan.name}" })],
       [for _, rule in lookup(var.vlans_forward_rules, vlan.name, []) : merge(rule, { chain = "forward-${vlan.name}" })],

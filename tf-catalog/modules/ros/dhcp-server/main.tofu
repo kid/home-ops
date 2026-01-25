@@ -13,6 +13,7 @@ resource "routeros_ip_dhcp_server_network" "self" {
   address    = var.cidr
   domain     = var.domain
   gateway    = var.gateway
+  ntp_server = var.ntp_servers
   dns_server = var.dns_servers
   dns_none   = length(var.dns_servers) == 0
 }
