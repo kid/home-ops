@@ -11,18 +11,8 @@ resources:
   - httproute.yaml
 
 patches:
-  - target:
-      kind: ConfigMap
-      name: argocd-cm
-    patch: |
-      - op: add
-        path: /data
-        value:
-          kustomize.buildOptions: --enable-helm
-          resource.exclusions: |
-            - apiGroups:
-                - cilium.io
-              kinds:
-                - CiliumIdentity
-              clusters:
-                - "*"
+  - path: ./patches/argocd-cm.yaml
+  - path: ./patches/argocd-repo-server.yaml
+
+generators:
+  - ./secret-generator.yaml

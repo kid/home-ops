@@ -39,6 +39,7 @@
             packages = with pkgs; [
               just
               expect
+              age
               sops
               opentofu
               tofu-ls
@@ -51,6 +52,7 @@
               cilium-cli
               argocd
               kustomize
+              kustomize-sops
               kubectx
 
               nil

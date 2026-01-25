@@ -9,6 +9,13 @@ defaults: &defaults
         - *kid-fw13
 
 creation_rules:
+  - path_regex: clusters/lab/.+.sops.ya?ml
+    unencrypted_regex: "^(apiVersion|metadata|kind|type)$"
+    key_groups:
+      - age:
+          - age146tlu0sxyhruen9k800szpfr0na5mrm3udl4qqkpx7lp7msw7fssz55qaj
+          - *kid-vulkan
+          - *kid-fw13
   - <<: *defaults
 
 stores:

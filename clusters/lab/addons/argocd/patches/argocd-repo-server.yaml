@@ -1,0 +1,57 @@
+# argo-cd-repo-server-ksops-patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+spec:
+  template:
+    spec:
+      # 1. Define an emptyDir volume which will hold the custom binaries
+      volumes:
+        - name: custom-tools
+          emptyDir: {}
+      # 2. Use an init container to download/copy custom binaries into the emptyDir
+      initContainers:
+        - name: install-ksops
+          image: alpine:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eux
+              apk add --no-cache ca-certificates curl tar
+              case "$(uname -m)" in
+                x86_64|amd64) ARCH="x86_64" ;;
+                aarch64|arm64) ARCH="arm64" ;;
+                *) echo "unsupported arch: $(uname -m)"; exit 1 ;;
+              esac
+              VERSION="v4.4.0"
+              VERSION_RAW="${VERSION#v}"
+              URL="https://github.com/viaduct-ai/kustomize-sops/releases/download/${VERSION}/ksops_${VERSION_RAW}_Linux_${ARCH}.tar.gz"
+              curl -fsSL -o ksops.tar.gz "${URL}"
+              tar -C /custom-tools -xzf ksops.tar.gz ksops
+              chmod +x /custom-tools/ksops
+          volumeMounts:
+            - mountPath: /custom-tools
+              name: custom-tools
+      # 3. Volume mount the custom binary to the bin directory (overriding the existing version)
+      containers:
+        - name: argocd-repo-server
+          volumeMounts:
+            - mountPath: /usr/local/bin/kustomize
+              name: custom-tools
+              subPath: kustomize
+            - mountPath: /usr/local/bin/ksops
+              name: custom-tools
+              subPath: ksops
+        ## If you use AWS or GCP KMS, don't forget to include the necessary credentials to decrypt the secrets!
+        # env:
+        #  - name: AWS_ACCESS_KEY_ID
+        #    valueFrom:
+        #      secretKeyRef:
+        #        name: argocd-aws-credentials
+        #        key: accesskey
+        #  - name: AWS_SECRET_ACCESS_KEY
+        #    valueFrom:
+        #      secretKeyRef:
+        #        name: argocd-aws-credentials
+        #        key: secretkey
