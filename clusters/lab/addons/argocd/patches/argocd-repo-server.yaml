@@ -10,6 +10,9 @@ spec:
       volumes:
         - name: custom-tools
           emptyDir: {}
+        - name: sops-age
+          secret:
+            secretName: sops-age-key
       # 2. Use an init container to download/copy custom binaries into the emptyDir
       initContainers:
         - name: install-ksops
@@ -26,6 +29,11 @@ spec:
       # 3. Volume mount the custom binary to the bin directory (overriding the existing version)
       containers:
         - name: argocd-repo-server
+          env:
+            - name: XDG_CONFIG_HOME
+              value: /.config
+            - name: SOPS_AGE_KEY_FILE
+              value: /.config/sops/age/keys.txt
           volumeMounts:
             - mountPath: /usr/local/bin/kustomize
               name: custom-tools
@@ -33,15 +41,6 @@ spec:
             - mountPath: /usr/local/bin/ksops
               name: custom-tools
               subPath: ksops
-        ## If you use AWS or GCP KMS, don't forget to include the necessary credentials to decrypt the secrets!
-        # env:
-        #  - name: AWS_ACCESS_KEY_ID
-        #    valueFrom:
-        #      secretKeyRef:
-        #        name: argocd-aws-credentials
-        #        key: accesskey
-        #  - name: AWS_SECRET_ACCESS_KEY
-        #    valueFrom:
-        #      secretKeyRef:
-        #        name: argocd-aws-credentials
-        #        key: secretkey
+            - mountPath: /.config/sops/age
+              name: sops-age
+              readOnly: true
