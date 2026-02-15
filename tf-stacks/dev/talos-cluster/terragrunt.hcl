@@ -43,5 +43,8 @@ inputs = merge(
     bgp_local_asn  = 64512                               # RouterOS ASN
     bgp_remote_asn = 64513                               # Cilium ASN
     bgp_router_id  = cidrhost(local.vlans.Talos.cidr, 1) # Router's IP on Talos VLAN
+
+    dhcp_server = local.vlans.Talos.name
+    dhcp_dns_zone = local.vlans.Talos.domain
   },
 )

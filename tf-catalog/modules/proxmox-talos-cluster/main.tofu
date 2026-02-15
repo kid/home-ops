@@ -114,12 +114,24 @@ resource "proxmox_virtual_environment_vm" "nodes" {
   }
 }
 
-# DHCP static leases on RouterOS
-resource "routeros_ip_dhcp_server_lease" "nodes" {
-  for_each = local.nodes
+# DHCP static leases and DNS records on RouterOS
+module "dhcp_leases" {
+  for_each    = local.nodes
+  source      = "../ros/dhcp-lease"
+  dhcp_server = var.dhcp_server
+  dns_zone    = var.dhcp_dns_zone
 
-  server      = var.dhcp_server
-  address     = each.value.ip_address
-  mac_address = macaddress.nodes[each.key].address
-  comment     = each.value.vm_name
+  lease = {
+    name    = each.value.vm_name
+    mac     = macaddress.nodes[each.key].address
+    address = each.value.ip_address
+    comment = each.value.vm_name
+  }
+
+  records = [
+    {
+      name    = each.value.vm_name
+      address = each.value.ip_address
+    }
+  ]
 }

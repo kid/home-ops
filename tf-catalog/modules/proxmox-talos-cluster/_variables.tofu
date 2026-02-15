@@ -76,6 +76,12 @@ variable "dhcp_server" {
   description = "RouterOS DHCP server name for static leases"
 }
 
+variable "dhcp_dns_zone" {
+  type        = string
+  description = "DNS zone to append to DHCP lease names"
+  default     = null
+}
+
 variable "vlan_id" {
   type        = number
   description = "VLAN ID for the network interface"
