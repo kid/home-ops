@@ -89,6 +89,7 @@ resource "routeros_wifi_configuration" "capxr0-2g" {
   country           = "Belgium"
   multicast_enhance = "enabled"
   dtim_period       = 4
+  tx_power          = 10
 
   channel = {
     config = routeros_wifi_channel.channel_6.name
@@ -113,6 +114,7 @@ resource "routeros_wifi_configuration" "capxr1-2g" {
   country           = "Belgium"
   multicast_enhance = "enabled"
   dtim_period       = 4
+  tx_power          = 10
 
   channel = {
     config = routeros_wifi_channel.channel_11.name
