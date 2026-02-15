@@ -183,6 +183,56 @@ resource "routeros_wifi_configuration" "capxr1-5g" {
   }
 }
 
+resource "routeros_wifi_configuration" "capxr0-5g-only" {
+  name              = "capxr0-5g-only"
+  ssid              = "${data.sops_file.routeros_secrets.data["wifi.ssid"]}-Ghz"
+  country           = "Belgium"
+  multicast_enhance = "enabled"
+  dtim_period       = 4
+  tx_power          = 23
+
+  channel = {
+    config = routeros_wifi_channel.U-NII-2C.name
+  }
+
+  datapath = {
+    config = routeros_wifi_datapath.default.name
+  }
+
+  security = {
+    config = routeros_wifi_security.wpa2.name
+  }
+
+  steering = {
+    config = routeros_wifi_steering.default.name
+  }
+}
+
+resource "routeros_wifi_configuration" "capxr1-5g-only" {
+  name              = "capxr1-5g-only"
+  ssid              = "${data.sops_file.routeros_secrets.data["wifi.ssid"]}-Ghz"
+  country           = "Belgium"
+  multicast_enhance = "enabled"
+  dtim_period       = 4
+  tx_power          = 23
+
+  channel = {
+    config = routeros_wifi_channel.U-NII-1.name
+  }
+
+  datapath = {
+    config = routeros_wifi_datapath.default.name
+  }
+
+  security = {
+    config = routeros_wifi_security.wpa2.name
+  }
+
+  steering = {
+    config = routeros_wifi_steering.default.name
+  }
+}
+
 resource "routeros_wifi_provisioning" "capxr0-2g" {
   identity_regexp      = "capxr0"
   name_format          = "wifi2g-%I"
@@ -197,6 +247,7 @@ resource "routeros_wifi_provisioning" "capxr0-5g" {
   action               = "create-dynamic-enabled"
   supported_bands      = ["5ghz-ax"]
   master_configuration = routeros_wifi_configuration.capxr0-5g.name
+  slave_configurations = [routeros_wifi_configuration.capxr0-5g-only.name]
 }
 
 resource "routeros_wifi_provisioning" "capxr1-2g" {
@@ -213,4 +264,15 @@ resource "routeros_wifi_provisioning" "capxr1-5g" {
   action               = "create-dynamic-enabled"
   supported_bands      = ["5ghz-ax"]
   master_configuration = routeros_wifi_configuration.capxr1-5g.name
+  slave_configurations = [routeros_wifi_configuration.capxr1-5g-only.name]
+}
+
+moved {
+  from = routeros_wifi_configuration.wifi-5g-only-capxr0
+  to   = routeros_wifi_configuration.capxr0-5g-only
+}
+
+moved {
+  from = routeros_wifi_configuration.wifi-5g-only-capxr1
+  to   = routeros_wifi_configuration.capxr1-5g-only
 }
