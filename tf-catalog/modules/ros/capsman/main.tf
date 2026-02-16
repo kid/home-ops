@@ -185,7 +185,7 @@ resource "routeros_wifi_configuration" "capxr1-5g" {
 
 resource "routeros_wifi_configuration" "capxr0-5g-only" {
   name              = "capxr0-5g-only"
-  ssid              = "${data.sops_file.routeros_secrets.data["wifi.ssid"]}-Ghz"
+  ssid              = "${data.sops_file.routeros_secrets.data["wifi.ssid"]}-5Ghz"
   country           = "Belgium"
   multicast_enhance = "enabled"
   dtim_period       = 4
@@ -210,7 +210,7 @@ resource "routeros_wifi_configuration" "capxr0-5g-only" {
 
 resource "routeros_wifi_configuration" "capxr1-5g-only" {
   name              = "capxr1-5g-only"
-  ssid              = "${data.sops_file.routeros_secrets.data["wifi.ssid"]}-Ghz"
+  ssid              = "${data.sops_file.routeros_secrets.data["wifi.ssid"]}-5Ghz"
   country           = "Belgium"
   multicast_enhance = "enabled"
   dtim_period       = 4
