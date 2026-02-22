@@ -1,3 +1,5 @@
+.env
+
 # Devenv
 .devenv
 .direnv
@@ -12,3 +14,7 @@
 *.tfstate
 *.tfstate.backup
 *.tfstate.lock.info
+
+# Talos / Kubernetes
+talosconfig
+kubeconfig

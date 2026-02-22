@@ -27,3 +27,6 @@ trim_trailing_whitespace = false
 
 [Dockerfile]
 indent_size = 4
+
+[{*.just,.justfile}]
+indent_size = 4

@@ -20,24 +20,47 @@
       ];
 
       perSystem =
-        { config, pkgs, ... }:
+        {
+          config,
+          pkgs,
+          ...
+        }:
         {
           treefmt = {
             flakeCheck = true;
+            settings.excludes = [
+              "*.sops.*"
+            ];
             programs = {
               nixfmt.enable = true;
               hclfmt.enable = true;
+              just.enable = true;
               terraform.enable = true;
               terraform.includes = [
                 "*.tofu"
                 "*.tfvars"
                 "*.tftest.hcl"
               ];
+              yamlfmt.enable = true;
+              yamlfmt.settings = {
+                formatter = {
+                  indent = 2;
+                  indentless_arrays = false;
+                  include_document_start = true;
+                  eof_newline = true;
+                  trim_trailing_blank_lines = true;
+                  retain_line_breaks_single = true;
+                };
+              };
             };
           };
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
+              watch
               just
+              yq
+              gum
+              minijinja
               expect
               age
               sops
@@ -50,10 +73,11 @@
               kubectl
               kubernetes-helm
               cilium-cli
-              argocd
               kustomize
               kustomize-sops
               kubectx
+              fluxcd-operator
+              fluxcd-operator-mcp
 
               nil
               nixd
