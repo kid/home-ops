@@ -51,6 +51,9 @@ inputs = merge(
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
         { action = "accept", dst_address = "10.0.10.101", src_address = "10.0.30.11", comment = "Allow cloudflared access to HomeAssistant" },
       ]
+      "${local.vlans.Talos.name}" = [
+        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
+      ]
       "${local.vlans.IotLocal.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN", disabled = true },
       ]

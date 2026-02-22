@@ -68,7 +68,7 @@ locals {
 
   vlans_rules = flatten([
     for _, vlan in var.vlans : [
-      contains(keys(local.static_addresses), vlan.name) ? [
+      contains(keys(var.vlans), vlan.name) ? [
         {
           comment     = "Allow ICMP from ${vlan.name}"
           chain       = "input-${vlan.name}"

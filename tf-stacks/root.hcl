@@ -42,7 +42,7 @@ remote_state {
     secret_key = "${local.cloudflare.r2_secret_key}"
 
     bucket  = "terragrunt"
-    key     = "home-ops/${path_relative_to_include()}/tofu.tfstate"
+    key     = "home-ops/${replace(path_relative_to_include(), ".terragrunt-stack/", "")}/tofu.tfstate"
     region  = "auto"
     encrypt = true
 
