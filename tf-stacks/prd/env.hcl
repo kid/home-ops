@@ -7,6 +7,7 @@ locals {
   env_cidr_prefix  = tonumber(split("/", local.env_cidr)[1])
 
   dns_upstream_servers = ["9.9.9.9", "149.112.112.112"]
+  ntp_upstream_servers = ["162.159.200.1", "162.159.200.123"]
 
   interface_lists = {
     MANAGEMENT = "MANAGEMENT"
@@ -52,6 +53,7 @@ locals {
       name             = "IotInternet"
       domain           = "iot-internet.${local.tld}"
       dhcp_dns_servers = local.dns_upstream_servers
+      dhcp_ntp_servers = local.ntp_upstream_servers
     },
     {
       vlan_id = 100
@@ -63,6 +65,7 @@ locals {
       name             = "Guest"
       domain           = "iot.${local.tld}"
       dhcp_dns_servers = local.dns_upstream_servers
+      dhcp_ntp_servers = local.ntp_upstream_servers
     },
     # {
     #   vlan_id = 110
