@@ -1,5 +1,5 @@
 locals {
-  infra_module_version   = "talos-infra-v1.0.0"
+  infra_module_version   = "talos-infra-v1.1.0"
   secrets_module_version = "talos-secrets-v1.0.1"
 
   vlan_id   = 40
@@ -9,7 +9,7 @@ locals {
 
   nodes = {
     for idx in range(1, 4) : "talos-cp-${idx}" => {
-      vm_id = local.vlan_id * 1000 + idx + 10
+      vm_id      = local.vlan_id * 1000 + idx + 10
       ip_address = "10.0.${local.vlan_id}.${idx + 10}"
       cpu_cores  = 4
     }
@@ -34,7 +34,7 @@ unit "infra" {
     op_item_routeros = "rb5009"
 
     cluster_name  = "prd"
-    talos_version = "v1.12.3"
+    talos_version = "v1.12.1"
 
     dhcp_server   = "Talos"
     dhcp_dns_zone = local.dhcp_dns_zone
