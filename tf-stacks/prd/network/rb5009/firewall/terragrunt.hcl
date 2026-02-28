@@ -53,6 +53,7 @@ inputs = merge(
       ]
       "${local.vlans.Talos.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
+        { action = "accept", dst_address = "10.0.42.0/24", comment = "Allow Traffic to load balancer ips" },
       ]
       "${local.vlans.IotLocal.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN", disabled = true },
