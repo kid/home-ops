@@ -76,8 +76,10 @@
               kustomize
               kustomize-sops
               kubectx
+              fluxcd
               fluxcd-operator
               fluxcd-operator-mcp
+              helmfile
 
               nil
               nixd
@@ -85,9 +87,6 @@
 
             inputsFrom = [ config.treefmt.build.devShell ];
 
-            shellHook = ''
-              alias ssh='ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no"'
-            '';
           };
         };
     };
