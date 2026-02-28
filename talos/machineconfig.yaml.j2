@@ -8,7 +8,7 @@ machine:
     key: op://home-ops/talos/MACHINE_CA_KEY
     {% endif %}
   kubelet:
-    image: ghcr.io/siderolabs/kubelet:v1.35.0
+    image: ghcr.io/siderolabs/kubelet:v1.35.2
     defaultRuntimeSeccompProfileEnabled: true
     disableManifestsDirectory: true
     nodeIP:
@@ -70,7 +70,7 @@ cluster:
       - "talos-cp-1.talos.home.kidibox.net"
       - "talos-cp-2.talos.home.kidibox.net"
       - "talos-cp-3.talos.home.kidibox.net"
-    image: registry.k8s.io/kube-apiserver:v1.35.0
+    image: registry.k8s.io/kube-apiserver:v1.35.2
     admissionControl:
       - name: PodSecurity
         configuration:
@@ -94,9 +94,9 @@ cluster:
       rules:
         - level: Metadata
   controllerManager:
-    image: registry.k8s.io/kube-controller-manager:v1.35.0
+    image: registry.k8s.io/kube-controller-manager:v1.35.2
   scheduler:
-    image: registry.k8s.io/kube-scheduler:v1.35.0
+    image: registry.k8s.io/kube-scheduler:v1.35.2
   proxy:
     disabled: true
   coreDNS:
