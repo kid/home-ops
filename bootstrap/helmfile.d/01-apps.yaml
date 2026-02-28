@@ -35,23 +35,12 @@ releases:
           - postsync
         showlogs: true
 
-  # - name: coredns
-  #   namespace: kube-system
-  #   chart: oci://ghcr.io/coredns/charts/coredns
-  #   version: 1.45.2
-  #   values:
-  #     - ./templates/values.yaml.gotmpl
-  #   needs:
-  #     - kube-system/cilium
-
   - name: cert-manager
     namespace: cert-manager
     chart: oci://quay.io/jetstack/charts/cert-manager
     version: v1.19.4
     values:
       - ./templates/values.yaml.gotmpl
-    # needs:
-    #   - kube-system/coredns
 
   - name: external-secrets
     namespace: external-secrets
