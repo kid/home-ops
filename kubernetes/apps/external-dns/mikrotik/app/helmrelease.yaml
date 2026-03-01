@@ -56,22 +56,22 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: mikrotik-credentials
-                key: endpoint
+                key: MIKROTIK_BASEURL
           - name: MIKROTIK_SKIP_TLS_VERIFY
             valueFrom:
               secretKeyRef:
                 name: mikrotik-credentials
-                key: insecure
+                key: MIKROTIK_SKIP_TLS_VERIFY
           - name: MIKROTIK_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: mikrotik-credentials
-                key: password
+                key: MIKROTIK_PASSWORD
           - name: MIKROTIK_USERNAME
             valueFrom:
               secretKeyRef:
                 name: mikrotik-credentials
-                key: username
+                key: MIKROTIK_PASSWORD
 
         resources:
           requests:
