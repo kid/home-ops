@@ -10,6 +10,7 @@ namespace: network-system
 resources:
   - ./namespace.yaml
   - ./cert-manager/ks.yaml
+  - ./certificates/ks.yaml
   - ./external-dns-cloudflare/ks.yaml
   - ./external-dns-mikrotik/ks.yaml
   - ./envoy-gateway/ks.yaml
