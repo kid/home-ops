@@ -35,21 +35,12 @@ releases:
           - postsync
         showlogs: true
 
-  - name: cert-manager
-    namespace: cert-manager
-    chart: oci://quay.io/jetstack/charts/cert-manager
-    version: v1.19.4
-    values:
-      - ./templates/values.yaml.gotmpl
-
   - name: external-secrets
     namespace: external-secrets
     chart: oci://ghcr.io/external-secrets/charts/external-secrets
     version: 2.0.1
     values:
       - ./templates/values.yaml.gotmpl
-    needs:
-      - cert-manager/cert-manager
     hooks:
       - # Wait for ExternalSecrets CRDs to be available
         command: bash

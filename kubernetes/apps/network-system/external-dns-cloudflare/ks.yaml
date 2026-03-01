@@ -4,13 +4,13 @@ kind: Kustomization
 metadata:
   name: external-dns-cloudflare
 spec:
-  targetNamespace: external-dns
+  targetNamespace: network-system
 
   interval: 10m
   prune: true
   wait: true
 
-  path: ./kubernetes/apps/external-dns/cloudflare/app
+  path: ./kubernetes/apps/network-system/external-dns-cloudflare/app
   sourceRef:
     kind: GitRepository
     name: flux-system

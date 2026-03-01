@@ -2,7 +2,7 @@
 # yaml-language-server: $schema=https://json.schemastore.org/kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: cert-manager
+namespace: network-system
 
 # components:
 #   - ../../components/alerts
@@ -10,3 +10,5 @@ namespace: cert-manager
 resources:
   - ./namespace.yaml
   - ./cert-manager/ks.yaml
+  - ./external-dns-cloudflare/ks.yaml
+  - ./external-dns-mikrotik/ks.yaml

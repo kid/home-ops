@@ -4,13 +4,13 @@ kind: Kustomization
 metadata:
   name: external-dns-mikrotik
 spec:
-  targetNamespace: external-dns
+  targetNamespace: network-system
 
   interval: 10m
   prune: true
   wait: true
 
-  path: ./kubernetes/apps/external-dns/mikrotik/app
+  path: ./kubernetes/apps/network-system/external-dns-mikrotik/app
   sourceRef:
     kind: GitRepository
     name: flux-system
