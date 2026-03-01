@@ -1,4 +1,0 @@
----
-name: cilium
-namespace: kube-system
-preserveResources: true
