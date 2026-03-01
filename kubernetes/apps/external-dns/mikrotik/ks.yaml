@@ -4,6 +4,8 @@ kind: Kustomization
 metadata:
   name: external-dns-mikrotik
 spec:
+  targetNamespace: external-dns
+
   interval: 10m
   prune: true
   wait: true
