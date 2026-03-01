@@ -30,13 +30,6 @@ spec:
     domainFilters: ["kidibox.net", "internal"]
     excludeDomains: []
 
-    resources:
-      requests:
-        cpu: 20m
-        memory: 128Mi
-      limits:
-        memory: 256Mi
-
     provider:
       name: webhook
       webhook:
@@ -51,27 +44,20 @@ spec:
 
           - name: MIKROTIK_DEFAULT_COMMENT
             value: "Managed by ExternalDNS"
-
           - name: MIKROTIK_BASEURL
             value: "https://10.99.0.1"
           - name: MIKROTIK_SKIP_TLS_VERIFY
             value: "true"
-
           - name: MIKROTIK_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: mikrotik-credentials
+                name: &secret mikrotik-credentials
                 key: password
-
           - name: MIKROTIK_USERNAME
             valueFrom:
               secretKeyRef:
-                name: mikrotik-credentials
+                name: *secret
                 key: username
 
-        resources:
-          requests:
-            cpu: 20m
-            memory: 32Mi
-          limits:
-            memory: 128Mi
+    podAnnotations:
+      secret.reloader.stakater.com/reload: *secret
