@@ -45,7 +45,7 @@ spec:
           tag: v1.5.13
         env:
           - name: LOG_FORMAT
-            value: json
+            value: text
           - name: LOG_LEVEL
             value: info
 
