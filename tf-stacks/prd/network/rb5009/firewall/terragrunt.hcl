@@ -34,6 +34,9 @@ inputs = merge(
       "${local.vlans.Trusted.name}" = [
         { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), comment = "Allow access to Management from Trusted" },
       ]
+      "${local.vlans.Talos.name}" = [
+        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), dst_port = 443, protocol = "tcp", comment = "Allow access to Management from Talos for external-dns" },
+      ]
     }
 
     vlans_forward_rules = {
