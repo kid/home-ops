@@ -16,7 +16,7 @@ apply-node node *args:
 
 apply-cluster:
     #!/usr/bin/env bash
-    for node in $(talosctl get members -o json | jq -rs '.[].node')
+    for node in $(terragrunt --working-dir "{{ justfile_dir() }}/tf-stacks/prd/talos" stack output --json infra.nodes | jq -r '.infra.nodes[].vm_name')
     do
         just talos apply-node "$node"
     done
