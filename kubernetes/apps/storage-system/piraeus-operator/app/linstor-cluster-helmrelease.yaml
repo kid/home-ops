@@ -22,6 +22,9 @@ spec:
       - name: zfs-pool
         storagePools:
           - name: zfs-data-virtio
+            source:
+              hostDevices:
+                - /dev/vdb
             zfsPool:
               zPool: data-virtio
       - name: talos-loader-override
