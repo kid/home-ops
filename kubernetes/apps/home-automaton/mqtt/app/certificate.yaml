@@ -1,0 +1,21 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/cert-manager.io/certificate_v1.json
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mqtt
+spec:
+  dnsNames:
+    - mqtt
+    - mqtt.home-automaton
+    - mqtt.home-automaton.svc
+    - mqtt.home-automaton.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: mqtt-ca
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: mqtt-tls
+  usages:
+    - server auth
