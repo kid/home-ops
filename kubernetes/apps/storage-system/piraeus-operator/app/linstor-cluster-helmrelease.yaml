@@ -13,14 +13,12 @@ spec:
       namespace: storage-system
   interval: 1h
   values:
-    linstorCluster:
-      linstorSatelliteConfigurations:
-        - name: zfs-pool
-          storagePools:
-            - name: zfs-data-virtio
-              zfsPool:
-                zPool: data-virtio
     linstorSatelliteConfigurations:
+      - name: zfs-pool
+        storagePools:
+          - name: zfs-data-virtio
+            zfsPool:
+              zPool: data-virtio
       - name: talos-loader-override
         podTemplate:
           spec:
