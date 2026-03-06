@@ -41,7 +41,7 @@ spec:
         statefulset:
           volumeClaimTemplates:
             - name: config
-              storageClass: local-pv
+              storageClass: linstor-zfs-virtio
               accessMode: ReadWriteOnce
               size: 1Gi
     defaultPodOptions:
