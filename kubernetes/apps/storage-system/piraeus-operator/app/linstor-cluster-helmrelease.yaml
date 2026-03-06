@@ -1,0 +1,60 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: linstor-cluster
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: linstor-cluster
+  dependsOn:
+    - name: piraeus-operator
+      namespace: storage-system
+  interval: 1h
+  values:
+    linstorCluster:
+      linstorSatelliteConfigurations:
+        - name: zfs-pool
+          storagePools:
+            - name: zfs-data-virtio
+              zfsPool:
+                zPool: data-virtio
+    linstorSatelliteConfigurations:
+      - name: talos-loader-override
+        podTemplate:
+          spec:
+            initContainers:
+              - name: drbd-shutdown-guard
+                $patch: delete
+              - name: drbd-module-loader
+                $patch: delete
+            volumes:
+              - name: run-systemd-system
+                $patch: delete
+              - name: run-drbd-shutdown-guard
+                $patch: delete
+              - name: systemd-bus-socket
+                $patch: delete
+              - name: lib-modules
+                $patch: delete
+              - name: usr-src
+                $patch: delete
+              - name: etc-lvm-backup
+                hostPath:
+                  path: /var/etc/lvm/backup
+                  type: DirectoryOrCreate
+              - name: etc-lvm-archive
+                hostPath:
+                  path: /var/etc/lvm/archive
+                  type: DirectoryOrCreate
+    storageClasses:
+      - name: linstor-zfs-virtio
+        annotations:
+          storageclass.kubernetes.io/is-default-class: "true"
+        allowVolumeExpansion: true
+        volumeBindingMode: WaitForFirstConsumer
+        reclaimPolicy: Delete
+        provisioner: linstor.csi.linbit.com
+        parameters:
+          linstor.csi.linbit.com/storagePool: zfs-data-virtio

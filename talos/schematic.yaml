@@ -1,5 +1,8 @@
 ---
 customization:
-  systemExtensions:
-    officialExtensions:
-      - siderolabs/qemu-guest-agent
+    systemExtensions:
+        officialExtensions:
+            - siderolabs/drbd
+            - siderolabs/qemu-guest-agent
+            - siderolabs/zfs
+    bootloader: sd-boot
