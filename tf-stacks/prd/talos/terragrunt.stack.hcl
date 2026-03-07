@@ -1,5 +1,5 @@
 locals {
-  infra_module_version   = "talos-infra-v1.1.0"
+  infra_module_version   = "talos-infra-v1.3.0"
   secrets_module_version = "talos-secrets-v1.0.1"
 
   vlan_id   = 40
@@ -12,6 +12,9 @@ locals {
       vm_id      = local.vlan_id * 1000 + idx + 10
       ip_address = "10.0.${local.vlan_id}.${idx + 10}"
       cpu_cores  = 4
+      pci_devices = [
+        { id = "0000:00:02.${idx}" },
+      ]
     }
   }
 
@@ -41,6 +44,10 @@ unit "infra" {
     vlan_id       = 40
 
     nodes = local.nodes
+
+    additional_disks = [
+      { size = 32 },
+    ]
 
     bgp_enabled    = true
     bgp_local_asn  = 64512
