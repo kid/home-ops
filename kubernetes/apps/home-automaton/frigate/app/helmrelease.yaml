@@ -31,6 +31,13 @@ spec:
             port: 5000
           rtsp:
             port: 8554
+    route:
+      app:
+        hostnames:
+          - frigate.kidibox.net
+        parentRefs:
+          - name: envoy-internal
+            namespace: network-system
     configMaps:
       config:
         data:
