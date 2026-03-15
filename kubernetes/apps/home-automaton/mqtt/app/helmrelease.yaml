@@ -61,8 +61,8 @@ spec:
       config:
         data:
           mosquitto.conf: |-
-            allow_anonymous false
             per_listener_settings true
+            allow_anonymous false
             listener 8883
             cafile /mosquitto/certs/ca.crt
             certfile /mosquitto/certs/tls.crt
