@@ -17,6 +17,9 @@ spec:
             image:
               repository: ghcr.io/blakeblackshear/frigate
               tag: 0.15.2
+            envFrom:
+              - secretRef:
+                  name: frigate-reolink-doorbell-secret
             resources:
               requests:
                 cpu: 100m
@@ -49,7 +52,22 @@ spec:
               tls_ca_certs: /mqtt-client/ca.crt
               tls_client_cert: /mqtt-client/tls.crt
               tls_client_key: /mqtt-client/tls.key
-            cameras: {}
+            go2rtc:
+              streams:
+                doorbell_main:
+                  - rtsp://{FRIGATE_REOLINK_USERNAME}:{FRIGATE_REOLINK_PASSWORD}@10.0.50.10:554/h264Preview_01_main
+                doorbell_sub:
+                  - rtsp://{FRIGATE_REOLINK_USERNAME}:{FRIGATE_REOLINK_PASSWORD}@10.0.50.10:554/h264Preview_01_sub
+            cameras:
+              doorbell:
+                ffmpeg:
+                  inputs:
+                    - path: rtsp://127.0.0.1:8554/doorbell_main
+                      input_args: preset-rtsp-restream
+                      roles: [record]
+                    - path: rtsp://127.0.0.1:8554/doorbell_sub
+                      input_args: preset-rtsp-restream
+                      roles: [detect]
     persistence:
       config:
         type: persistentVolumeClaim
