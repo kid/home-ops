@@ -56,11 +56,8 @@ spec:
       ui:
         enabled: false
 
-    # Gateway API support
-    gatewayAPI:
-      enabled: true
-      enableAlpn: true
-      enableAppProtocol: true
+    envoy:
+      enabled: false
 
     # BGP Control Plane for LoadBalancer services
     bgpControlPlane:
