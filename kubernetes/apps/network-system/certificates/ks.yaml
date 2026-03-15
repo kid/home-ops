@@ -6,7 +6,7 @@ metadata:
   name: certificates-import
 spec:
   dependsOn:
-    - name: cert-manager
+    - name: cert-manager-issuers
   interval: 1h
   path: ./kubernetes/apps/network-system/certificates/import
   prune: true
@@ -24,7 +24,7 @@ metadata:
   name: certificates-export
 spec:
   dependsOn:
-    - name: cert-manager
+    - name: cert-manager-issuers
     - name: certificates-import
   interval: 1h
   path: ./kubernetes/apps/network-system/certificates/export
