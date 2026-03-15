@@ -1,5 +1,5 @@
 locals {
-  infra_module_version   = "talos-infra-v1.3.0"
+  infra_module_version   = "talos-infra-v1.4.0"
   secrets_module_version = "talos-secrets-v1.0.1"
 
   vlan_id   = 40
@@ -12,6 +12,7 @@ locals {
       vm_id      = local.vlan_id * 1000 + idx + 10
       ip_address = "10.0.${local.vlan_id}.${idx + 10}"
       cpu_cores  = 4
+      memory     = 8192
       pci_devices = [
         { id = "0000:00:02.${idx}" },
       ]
@@ -37,7 +38,7 @@ unit "infra" {
     op_item_routeros = "rb5009"
 
     cluster_name  = "prd"
-    talos_version = "v1.12.1"
+    talos_version = "v1.12.5"
 
     dhcp_server   = "Talos"
     dhcp_dns_zone = local.dhcp_dns_zone
@@ -53,6 +54,8 @@ unit "infra" {
     bgp_local_asn  = 64512
     bgp_remote_asn = 64513
     bgp_router_id  = "10.0.40.1"
+
+    image_factory_schematic = yamldecode(file("${get_repo_root()}/talos/schematic.yaml"))
   }
 }
 
