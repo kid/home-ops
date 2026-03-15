@@ -77,4 +77,4 @@ spec:
         reclaimPolicy: Delete
         provisioner: linstor.csi.linbit.com
         parameters:
-          linstor.csi.linbit.com/storagePool: data-virtio
+          linstor.csi.linbit.com/storagePool: zfs-data-virtio
