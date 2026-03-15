@@ -97,8 +97,3 @@ spec:
         globalMounts:
           - path: /mqtt-client
             readOnly: true
-      dri:
-        type: hostPath
-        hostPath: /dev/dri
-        globalMounts:
-          - path: /dev/dri
