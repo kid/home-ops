@@ -52,8 +52,6 @@ spec:
               tls_ca_certs: /mqtt-client/ca.crt
               tls_client_cert: /mqtt-client/tls.crt
               tls_client_key: /mqtt-client/tls.key
-            ffmpeg:
-              hwaccel_args: preset-vaapi
             go2rtc:
               streams:
                 doorbell_main:
