@@ -5,9 +5,9 @@ kind: Kustomization
 resources:
   - ./ocirepository.yaml
   - ./helmrelease.yaml
-  # - ./externalsecret.yaml
+  - ./externalsecret.yaml
   # - ./grafanadashboard.yaml
-  # - ./httproute.yaml
+  - ./httproute.yaml
   # - ./podmonitor.yaml
   # - ./prometheusrule.yaml
-  # - ./receiver.yaml
+  - ./receiver.yaml
