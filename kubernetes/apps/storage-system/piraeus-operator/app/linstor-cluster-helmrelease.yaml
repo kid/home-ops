@@ -14,6 +14,20 @@ spec:
   interval: 1h
   values:
     linstorCluster:
+      controller:
+        podTemplate:
+          spec:
+            containers:
+              - name: linstor-controller
+                env:
+                  - name: JAVA_OPTS
+                    value: -Djdk.tls.acknowledgeCloseNotify=true -Xms256m -Xmx512m
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 512Mi
+                  limits:
+                    memory: 1Gi
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
