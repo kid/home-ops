@@ -1,0 +1,18 @@
+{
+  "name": "home-ops",
+  "engineVersion": "v0.20.3",
+  "toolchains": [
+    {
+      "name": "bootstrap",
+      "source": "dagger/bootstrap"
+    },
+    {
+      "name": "flux-local",
+      "source": "dagger/flux-local"
+    },
+    {
+      "name": "talos",
+      "source": "dagger/talos"
+    }
+  ]
+}

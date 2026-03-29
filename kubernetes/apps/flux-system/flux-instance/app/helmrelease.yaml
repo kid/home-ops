@@ -20,12 +20,12 @@ spec:
         - kustomize-controller
         - helm-controller
         - notification-controller
-      sync:
-        kind: GitRepository
-        url: https://github.com/kid/home-ops
-        ref: refs/heads/main
-        path: kubernetes/flux/cluster
-        interval: 1h
+      # sync:
+      #   kind: GitRepository
+      #   url: https://github.com/kid/home-ops
+      #   ref: refs/heads/main
+      #   path: kubernetes/flux/cluster
+      #   interval: 1h
       kustomize:
         patches:
           - # Increase the number of workers
@@ -70,6 +70,14 @@ spec:
             target:
               kind: Deployment
               name: kustomize-controller
+          - # Enable strict StrictPostBuildSubstitutions
+            patch: |-
+              - op: add
+                path: /spec/template/spec/containers/0/args/-
+                value: --feature-gates=StrictPostBuildSubstitutions=true
+            target:
+              kind: Deployment
+              name: kustomize-controller
           - # Enable Helm repositories caching
             patch: |-
               - op: add
@@ -81,6 +89,7 @@ spec:
               - op: add
                 path: /spec/template/spec/containers/0/args/-
                 value: --helm-cache-purge-interval=5m
+              - op: add
             target:
               kind: Deployment
               name: source-controller

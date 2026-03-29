@@ -1,0 +1,8 @@
+machine:
+  certSANs:
+    - metal.talos.internal
+cluster:
+  apiServer:
+    certSANs:
+      - metal.talos.internal
+

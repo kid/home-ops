@@ -9,4 +9,5 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./cilium/ks.yaml
+  - ./cilium/ks.app.yaml
+  - ./cilium/ks.resources.yaml

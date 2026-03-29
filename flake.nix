@@ -60,13 +60,15 @@
               just
               yq
               gum
-              minijinja
               expect
               age
               sops
               opentofu
               tofu-ls
               terragrunt
+
+              go
+              gotestsum
 
               talhelper
               talosctl

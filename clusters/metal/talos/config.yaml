@@ -1,0 +1,22 @@
+---
+
+clusterName: metal
+endpoint: https://10.0.40.200:6443
+
+talosVersion: v1.12.6
+kubernetesVersion: v1.35.0
+
+nodes:
+  - ipAddress: 10.0.40.200
+    hostname: talos0
+    role: controlplane
+    patches:
+      - ./nodes/talos0.yaml
+
+patches:
+  controlplane:
+    - ./patches/additional-sans.yaml
+    - ./patches/cilium.yaml
+    - ./patches/cluster-discovery.yaml
+    - ./patches/host-dns.yaml
+    - ./patches/schedule-on-controlplane.yaml

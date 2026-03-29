@@ -4,6 +4,7 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: frigate
+  namespace: home-automaton
 spec:
   dependsOn:
   - name: external-secrets

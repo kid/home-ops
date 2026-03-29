@@ -1,0 +1,14 @@
+---
+machine:
+  features:
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: true
+      resolveMemberNames: true
+---
+# https://github.com/siderolabs/talos/pull/9200#issuecomment-2805269653
+apiVersion: v1alpha1
+kind: LinkConfig
+name: lo
+addresses:
+  - address: 169.254.116.108/32

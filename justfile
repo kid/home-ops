@@ -4,7 +4,6 @@ set quiet := true
 set shell := ['bash', '-euo', 'pipefail', '-c']
 
 mod bootstrap "bootstrap"
-mod talos "talos"
 
 terragrunt_args := "--non-interactive"
 

@@ -1,0 +1,38 @@
+---
+machine:
+  type: controlplane
+  install:
+    disk: /home/nvme0
+    wipe: true
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+$patch: delete
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: talos0
+---
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: net0
+selector:
+  match: mac(link.permanent_addr) == "d0:50:99:fe:51:b5"
+---
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  minSize: 80GiB
+  maxSize: 80GiB
+  grow: false
+---
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: local-storage
+provisioning:
+  minSize: 120GiB
+  maxSize: 120GiB
+  grow: false
+  diskSelector:
+    match: "system_disk == true"
