@@ -24,7 +24,7 @@ spec:
             - alertmanager.${APP_DOMAIN}
           parentRefs:
             - name: envoy-internal
-              namespace: network
+              namespace: network-system
       alertmanagerSpec:
         alertmanagerConfiguration:
           name: alertmanager
@@ -50,7 +50,7 @@ spec:
             - prometheus.${APP_DOMAIN}
           parentRefs:
             - name: envoy-internal
-              namespace: network
+              namespace: network-system
       prometheusSpec:
         externalUrl: https://prometheus.${APP_DOMAIN}
         podMonitorSelectorNilUsesHelmValues: false
