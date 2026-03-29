@@ -28,7 +28,7 @@ spec:
     txtPrefix: k8s.prd.
 
     domainFilters: ["kidibox.net", "internal"]
-    excludeDomains: []
+    excludeDomains: ["external.kdibox.net"]
 
     provider:
       name: webhook
