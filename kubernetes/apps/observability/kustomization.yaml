@@ -8,9 +8,7 @@ components:
   - ../../components/cluster-values
   - ../../components/alerts
 
-# transformers:
-#   - ./namespace-transformer.yaml
-
 resources:
   - ./namespace.yaml
+  - ./grafana/ks.app.yaml
   - ./kube-prometheus-stack/ks.app.yaml
