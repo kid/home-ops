@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-values
+data:
+  APP_DOMAIN: ${APP_DOMAIN}
