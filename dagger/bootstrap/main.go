@@ -204,7 +204,7 @@ func (m *Bootstrap) Namespaces(
 	_, err := m.Container(kubeconfig).
 		WithFile("/manifests.yaml", manifests).
 		WithExec([]string{
-			"sh", "-ec", "yq -e 'select(.kind == \"Namespace\")' /manifests.yaml | kubectl apply --server-side --field-manager=bootstrap -f -",
+			"sh", "-ec", "yq -e 'select(.kind == \"Namespace\")' /manifests.yaml | kubectl apply --server-side --field-manager=bootstrap --force-conflicts -f -",
 		}).Sync(ctx)
 	return err
 }
@@ -223,7 +223,7 @@ func (m *Bootstrap) Crds(
 	_, err := m.Container(kubeconfig).
 		WithFile("/manifests.yaml", manifests).
 		WithExec([]string{
-			"sh", "-ec", "yq -e 'select(.kind == \"CustomResourceDefinition\")' /manifests.yaml | kubectl apply --server-side --field-manager=bootstrap -f -",
+			"sh", "-ec", "yq -e 'select(.kind == \"CustomResourceDefinition\")' /manifests.yaml | kubectl apply --server-side --field-manager=bootstrap --force-conflicts -f -",
 		}).Sync(ctx)
 	return err
 }
@@ -251,7 +251,7 @@ func (m *Bootstrap) Apply(
 
 	_, err := m.Container(kubeconfig).
 		WithMountedFile("/manifests.yaml", manifest).
-		WithExec([]string{"kubectl", "apply", "--server-side", "--field-manager=bootstrap", "-f", "/manifests.yaml", "--kubeconfig=/kubeconfig.yaml"}).
+		WithExec([]string{"kubectl", "apply", "--server-side", "--field-manager=bootstrap", "--force-conflicts", "-f", "/manifests.yaml", "--kubeconfig=/kubeconfig.yaml"}).
 		Sync(ctx)
 	if err != nil {
 		return fmt.Errorf("applying Flux resource %s/%s: %w", namespace, name, err)
