@@ -21,14 +21,14 @@ spec:
 
     policy: sync
 
-    sources: [gateway-httproute, service, crd]
+    sources: [gateway-httproute, service]
     managedRecordTypes: [A, CNAME]
 
     txtOwnerId: prd
     txtPrefix: k8s.prd.
 
     domainFilters: ["kidibox.net", "internal"]
-    excludeDomains: ["external.kdibox.net"]
+    excludeDomains: [""]
 
     provider:
       name: webhook
