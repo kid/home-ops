@@ -40,8 +40,8 @@ func (m *Bootstrap) All(
 	talosSecrets *dagger.Secret,
 ) error {
 	talos := dag.Talos(dagger.TalosOpts{
-		Configs: m.Source.Directory(fmt.Sprintf("clusters/%s/talos", m.Cluster)),
-		// Configs: talosConfigs,
+		// Configs: m.Source.Directory(fmt.Sprintf("clusters/%s/talos", m.Cluster)),
+		Configs: talosConfigs,
 		Secrets: talosSecrets,
 	})
 

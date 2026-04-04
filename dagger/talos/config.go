@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/talos/internal/dagger"
 	"fmt"
 	"path"
 	"strings"
@@ -9,25 +10,27 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type talosConfig struct {
+type TalosConfig struct {
 	ClusterName         string
 	ClusterEndpoint     string
+	Target              string
 	TalosVersion        string
 	ControlPlanePatches []string
-	Nodes               []talosNode
+	Nodes               []TalosNode
 }
 
-type talosNode struct {
+type TalosNode struct {
 	IPAddress string
 	Hostname  string
 	Role      string
 	Patches   []string
 }
 
-type talosConfigFile struct {
+type TalosConfigFile struct {
 	ClusterName  string `yaml:"clusterName"`
 	Endpoint     string `yaml:"endpoint"`
 	TalosVersion string `yaml:"talosVersion"`
+	Target       string `yaml:"target"`
 	Nodes        []struct {
 		IPAddress string   `yaml:"ipAddress"`
 		Hostname  string   `yaml:"hostname"`
@@ -39,15 +42,15 @@ type talosConfigFile struct {
 	} `yaml:"patches"`
 }
 
-func (m *Talos) loadConfig(ctx context.Context) (*talosConfig, error) {
+func loadConfig(ctx context.Context, configs *dagger.Directory) (*TalosConfig, error) {
 	const configPath = "config.yaml"
 
-	contents, err := m.Configs.File(configPath).Contents(ctx)
+	contents, err := configs.File(configPath).Contents(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read talos config file %q: %w", configPath, err)
 	}
 
-	var cfgFile talosConfigFile
+	var cfgFile TalosConfigFile
 	if err := yaml.Unmarshal([]byte(contents), &cfgFile); err != nil {
 		return nil, fmt.Errorf("failed to parse talos config file %q: %w", configPath, err)
 	}
@@ -60,12 +63,16 @@ func (m *Talos) loadConfig(ctx context.Context) (*talosConfig, error) {
 		return nil, fmt.Errorf("invalid talos config file %q: endpoint is required", configPath)
 	}
 
+	if strings.TrimSpace(cfgFile.Target) == "" {
+		return nil, fmt.Errorf("invalid talos config file %q: target is required", configPath)
+	}
+
 	controlPlanePatches, err := resolvePatches(path.Dir(configPath), cfgFile.Patches.ControlPlane)
 	if err != nil {
 		return nil, fmt.Errorf("invalid control-plane patches in %q: %w", configPath, err)
 	}
 
-	nodes := make([]talosNode, 0, len(cfgFile.Nodes))
+	nodes := make([]TalosNode, 0, len(cfgFile.Nodes))
 	for _, node := range cfgFile.Nodes {
 		if node.IPAddress == "" {
 			if node.Hostname != "" {
@@ -80,7 +87,7 @@ func (m *Talos) loadConfig(ctx context.Context) (*talosConfig, error) {
 			return nil, fmt.Errorf("invalid patches for node %q in %q: %w", node.Hostname, configPath, err)
 		}
 
-		nodes = append(nodes, talosNode{
+		nodes = append(nodes, TalosNode{
 			IPAddress: node.IPAddress,
 			Hostname:  node.Hostname,
 			Role:      node.Role,
@@ -93,16 +100,17 @@ func (m *Talos) loadConfig(ctx context.Context) (*talosConfig, error) {
 		talosVersion = "v1.12.6"
 	}
 
-	return &talosConfig{
+	return &TalosConfig{
 		ClusterName:         cfgFile.ClusterName,
 		ClusterEndpoint:     cfgFile.Endpoint,
+		Target:              strings.TrimSpace(cfgFile.Target),
 		TalosVersion:        talosVersion,
 		ControlPlanePatches: controlPlanePatches,
 		Nodes:               nodes,
 	}, nil
 }
 
-func (c *talosConfig) patchesFor(nodeName string) ([]string, error) {
+func (c *TalosConfig) patchesFor(nodeName string) ([]string, error) {
 	nodeType, err := c.nodeType(nodeName)
 	if err != nil {
 		return nil, err
@@ -127,7 +135,7 @@ func (c *talosConfig) patchesFor(nodeName string) ([]string, error) {
 	return patches, nil
 }
 
-func (c *talosConfig) nodeType(nodeName string) (string, error) {
+func (c *TalosConfig) nodeType(nodeName string) (string, error) {
 	if nodeName == "" {
 		return "controlplane", nil
 	}
@@ -148,17 +156,17 @@ func (c *talosConfig) nodeType(nodeName string) (string, error) {
 	}
 }
 
-func (c *talosConfig) nodeByName(name string) (talosNode, bool) {
+func (c *TalosConfig) nodeByName(name string) (TalosNode, bool) {
 	for _, node := range c.Nodes {
 		if node.Hostname == name {
 			return node, true
 		}
 	}
 
-	return talosNode{}, false
+	return TalosNode{}, false
 }
 
-func (c *talosConfig) nodeIPByName(name string) (string, error) {
+func (c *TalosConfig) nodeIPByName(name string) (string, error) {
 	node, ok := c.nodeByName(name)
 	if !ok {
 		return "", fmt.Errorf("node %q not found in config.yaml", name)
@@ -171,7 +179,7 @@ func (c *talosConfig) nodeIPByName(name string) (string, error) {
 	return node.IPAddress, nil
 }
 
-func (c *talosConfig) nodeIPs() []string {
+func (c *TalosConfig) nodeIPs() []string {
 	ips := make([]string, 0, len(c.Nodes))
 	for _, node := range c.Nodes {
 		if node.IPAddress == "" {
@@ -184,7 +192,7 @@ func (c *talosConfig) nodeIPs() []string {
 	return ips
 }
 
-func (c *talosConfig) controlPlaneIPs() []string {
+func (c *TalosConfig) controlPlaneIPs() []string {
 	ips := make([]string, 0, len(c.Nodes))
 	for _, node := range c.Nodes {
 		if node.IPAddress == "" {
@@ -202,7 +210,7 @@ func (c *talosConfig) controlPlaneIPs() []string {
 	return ips
 }
 
-func (c *talosConfig) firstControlPlaneIP() (string, error) {
+func (c *TalosConfig) firstControlPlaneIP() (string, error) {
 	for _, node := range c.Nodes {
 		if strings.TrimSpace(node.IPAddress) == "" {
 			continue

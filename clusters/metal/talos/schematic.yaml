@@ -1,8 +1,10 @@
 ---
 customization:
+  extraKernelArgs:
+    - pcie_aspm.policy=powersave
+    - cpufreq.default_governor=powersave
   systemExtensions:
     officialExtensions:
-      - siderolabs/drbd
-      - siderolabs/qemu-guest-agent
+      - siderolabs/amd-ucode
       - siderolabs/zfs
   bootloader: sd-boot

@@ -13,19 +13,56 @@ const talosctlPath = "/usr/local/bin/talosctl"
 
 type Talos struct {
 	Configs *dagger.Directory
+	EnvFile *dagger.File
 	Secrets *dagger.Secret
+	Cfg     *TalosConfig
 }
 
 func New(
-	// +optional
+	ctx context.Context,
 	configs *dagger.Directory,
-	// +optional
+	envFile *dagger.File,
 	secrets *dagger.Secret,
-) *Talos {
+) (*Talos, error) {
+	cfg, err := loadConfig(ctx, configs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load talos config: %w", err)
+	}
+
 	return &Talos{
 		Configs: configs,
+		EnvFile: envFile,
 		Secrets: secrets,
+		Cfg:     cfg,
+	}, err
+}
+
+func (m *Talos) Schematic(ctx context.Context) (string, error) {
+	fileName := "schematic.yaml"
+	schematic, err := dag.
+		Wolfi().
+		Container(dagger.WolfiContainerOpts{Packages: []string{"curl", "jq"}}).
+		WithFile(fileName, m.Configs.File(fileName)).
+		WithExec([]string{"curl", "-sX", "POST", "--data-binary", "@-", "https://factory.talos.dev/schematics"}, dagger.ContainerWithExecOpts{
+			RedirectStdin:  fileName,
+			RedirectStdout: "/tmp/result.json",
+		}).
+		WithExec([]string{"jq", "-r", ".id"}, dagger.ContainerWithExecOpts{
+			RedirectStdin: "/tmp/result.json",
+		}).
+		Stdout(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get schematic ID: %w", err)
 	}
+	return strings.TrimSpace(schematic), nil
+}
+
+func (m *Talos) InstallerImage(ctx context.Context) (string, error) {
+	schematic, err := m.Schematic(ctx)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("factory.talos.dev/%s-installer/%s:%s", m.Cfg.Target, schematic, m.Cfg.TalosVersion), nil
 }
 
 func (m *Talos) MachineConfig(
@@ -33,26 +70,29 @@ func (m *Talos) MachineConfig(
 	// +optional
 	nodeName string,
 ) (*dagger.Secret, error) {
-	cfg, err := m.loadConfig(ctx)
+	nodeType, err := m.Cfg.nodeType(nodeName)
 	if err != nil {
 		return nil, err
 	}
 
-	nodeType, err := cfg.nodeType(nodeName)
+	destination := fmt.Sprintf("/tmp/%s.yaml", nodeName)
+
+	installer, err := m.InstallerImage(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	args := []string{
-		"talosctl", "gen", "config", cfg.ClusterName, cfg.ClusterEndpoint,
-		fmt.Sprintf("--output-types=%s", nodeType), "--output=-",
+		"talosctl", "gen", "config", m.Cfg.ClusterName, m.Cfg.ClusterEndpoint,
+		fmt.Sprintf("--output-types=%s", nodeType), fmt.Sprintf("--output=%s", destination),
+		fmt.Sprintf("--install-image=%s", installer),
 		"--with-secrets=/secrets.yaml",
 		"--with-docs=false",
 		"--with-examples=false",
 		"--with-kubespan=false",
 	}
 
-	patches, err := cfg.patchesFor(nodeName)
+	patches, err := m.Cfg.patchesFor(nodeName)
 	if err != nil {
 		return nil, err
 	}
@@ -61,10 +101,14 @@ func (m *Talos) MachineConfig(
 		args = append(args, fmt.Sprintf("--config-patch=@/src/%s", patchPath))
 	}
 
-	ctr := m.baseContainer(cfg).
+	ctr := m.baseContainer().
 		WithMountedSecret("/secrets.yaml", m.Secrets).
 		WithDirectory("/src", m.Configs).
-		WithExec(args)
+		WithExec(args).
+		WithEnvFileVariables(m.EnvFile.AsEnvFile()).
+		WithExec([]string{"envsubst"}, dagger.ContainerWithExecOpts{
+			RedirectStdin: destination,
+		})
 
 	machineConfigContents, err := ctr.Stdout(ctx)
 	if err != nil {
@@ -84,12 +128,7 @@ func (m *Talos) Validate(
 		return fmt.Errorf("talosSecrets is required for validation")
 	}
 
-	cfg, err := m.loadConfig(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, n := range cfg.Nodes {
+	for _, n := range m.Cfg.Nodes {
 		if node != "" && n.Hostname != node {
 			continue
 		}
@@ -99,7 +138,7 @@ func (m *Talos) Validate(
 			return fmt.Errorf("failed to generate machine config for validation: %w", err)
 		}
 
-		_, err = m.baseContainer(cfg).
+		_, err = m.baseContainer().
 			WithMountedSecret("/machineconfig.yaml", machineCfg).
 			WithExec([]string{"talosctl", "validate", "-c", "/machineconfig.yaml", "-m", "metal", "--strict"}).
 			Sync(ctx)
@@ -113,16 +152,11 @@ func (m *Talos) Validate(
 
 // +cache="never"
 func (m *Talos) TalosConfig(ctx context.Context) (*dagger.Secret, error) {
-	cfg, err := m.loadConfig(ctx)
-	if err != nil {
-		return nil, err
-	}
+	endpoints := m.Cfg.controlPlaneIPs()
+	nodes := m.Cfg.nodeIPs()
+	script := buildTalosConfigScript(m.Cfg, endpoints, nodes)
 
-	endpoints := cfg.controlPlaneIPs()
-	nodes := cfg.nodeIPs()
-	script := buildTalosConfigScript(cfg, endpoints, nodes)
-
-	ctr := m.baseContainer(cfg).
+	ctr := m.baseContainer().
 		WithMountedSecret("/secrets.yaml", m.Secrets).
 		WithMountedTemp("/work").
 		WithExec([]string{"sh", "-ec", script})
@@ -136,30 +170,16 @@ func (m *Talos) TalosConfig(ctx context.Context) (*dagger.Secret, error) {
 }
 
 func (m *Talos) Container(ctx context.Context) (*dagger.Container, error) {
-	cfg, err := m.loadConfig(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	talosCfg, err := m.TalosConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate talos config for runtime container: %w", err)
 	}
 
-	return m.baseContainer(cfg).
+	return m.baseContainer().
 		WithMountedSecret("/talosconfig.yaml", talosCfg).
 		WithEnvVariable("TALOSCONFIG", "/talosconfig.yaml").
 		WithEnvVariable("TERM", "xterm-256color").
 		Sync(ctx)
-}
-
-func (m *Talos) Dashboard(ctx context.Context) (*dagger.Container, error) {
-	ctr, err := m.Container(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return ctr.WithExec([]string{"talosctl", "dashboard"}), nil
 }
 
 // +cache="never"
@@ -173,12 +193,7 @@ func (m *Talos) Apply(
 		return fmt.Errorf("node is required")
 	}
 
-	cfg, err := m.loadConfig(ctx)
-	if err != nil {
-		return err
-	}
-
-	nodeIP, err := cfg.nodeIPByName(node)
+	nodeIP, err := m.Cfg.nodeIPByName(node)
 	if err != nil {
 		return err
 	}
@@ -213,12 +228,7 @@ func (m *Talos) ApplyAll(
 	// +default=false
 	insecure bool,
 ) error {
-	cfg, err := m.loadConfig(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, node := range cfg.Nodes {
+	for _, node := range m.Cfg.Nodes {
 		if err := m.Apply(ctx, insecure, node.Hostname); err != nil {
 			var e *dagger.ExecError
 			if errors.As(err, &e) && strings.Contains(e.Stderr, "certificate required") {
@@ -234,14 +244,32 @@ func (m *Talos) ApplyAll(
 	return nil
 }
 
-// +cache="never"
-func (m *Talos) Bootstrap(ctx context.Context) error {
-	cfg, err := m.loadConfig(ctx)
+func (m *Talos) Upgrade(
+	ctx context.Context,
+	node string,
+	// +optional
+	insecure bool,
+) (*dagger.Container, error) {
+	_, err := m.InstallerImage(ctx)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	nodeIP, err := m.Cfg.nodeIPByName(node)
+	if err != nil {
+		return nil, err
 	}
 
-	nodeIP, err := cfg.firstControlPlaneIP()
+	args := []string{"talosctl", "upgrade", "--wait", "--nodes", nodeIP}
+	if insecure {
+		args = append(args, "--insecure")
+	}
+
+	return m.baseContainer().WithExec(args), nil
+}
+
+// +cache="never"
+func (m *Talos) Bootstrap(ctx context.Context) error {
+	nodeIP, err := m.Cfg.firstControlPlaneIP()
 	if err != nil {
 		return err
 	}
@@ -260,12 +288,7 @@ func (m *Talos) Bootstrap(ctx context.Context) error {
 }
 
 func (m *Talos) KubeConfig(ctx context.Context) (*dagger.Secret, error) {
-	cfg, err := m.loadConfig(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	nodeIP, err := cfg.firstControlPlaneIP()
+	nodeIP, err := m.Cfg.firstControlPlaneIP()
 	if err != nil {
 		return nil, err
 	}
@@ -290,11 +313,15 @@ func (m *Talos) KubeConfig(ctx context.Context) (*dagger.Secret, error) {
 	return dag.SetSecret("kubeconfig", kubeConfigContents), nil
 }
 
-func (m *Talos) baseContainer(cfg *talosConfig) *dagger.Container {
+func (m *Talos) baseContainer() *dagger.Container {
 	talosctlBin := dag.Container().
-		From(fmt.Sprintf("ghcr.io/siderolabs/talosctl:%s", cfg.TalosVersion)).
+		From(fmt.Sprintf("ghcr.io/siderolabs/talosctl:%s", m.Cfg.TalosVersion)).
 		File("/talosctl")
 
-	return dag.Wolfi().Container().
+	return dag.
+		Wolfi().
+		Container(dagger.WolfiContainerOpts{
+			Packages: []string{"curl", "jq", "gettext"},
+		}).
 		WithFile(talosctlPath, talosctlBin, dagger.ContainerWithFileOpts{Permissions: 0o755})
 }

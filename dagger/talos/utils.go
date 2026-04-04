@@ -26,7 +26,7 @@ func sanitizeSecretNamePart(s string) string {
 	return s
 }
 
-func buildTalosConfigScript(cfg *talosConfig, endpoints []string, nodes []string) string {
+func buildTalosConfigScript(cfg *TalosConfig, endpoints []string, nodes []string) string {
 	const talosconfigPath = "/work/talosconfig.yaml"
 
 	cmds := []string{

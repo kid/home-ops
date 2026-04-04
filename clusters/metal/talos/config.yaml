@@ -3,6 +3,8 @@
 clusterName: metal
 endpoint: https://10.0.40.200:6443
 
+target: metal
+
 talosVersion: v1.12.6
 kubernetesVersion: v1.35.0
 
