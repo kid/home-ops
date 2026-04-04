@@ -10,4 +10,5 @@ components:
 resources:
   - ./namespace.yaml
   - ./openebs/ks.yaml
+  - ./volsync/ks.yaml
   - ./piraeus-operator/ks.yaml
