@@ -74,7 +74,15 @@ spec:
         #           storage: 50Gi
     prometheus-node-exporter:
       fullnameOverride: node-exporter
-      affinity: {}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
     kube-state-metrics:
       fullnameOverride: kube-state-metrics
     grafana:
