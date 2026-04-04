@@ -74,6 +74,7 @@ spec:
         #           storage: 50Gi
     prometheus-node-exporter:
       fullnameOverride: node-exporter
+      affinity: {}
     kube-state-metrics:
       fullnameOverride: kube-state-metrics
     grafana:
