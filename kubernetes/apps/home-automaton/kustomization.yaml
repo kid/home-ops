@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: home-automaton
 
 components:
+  - ../../components/cluster-values
   - ../../components/alerts
 
 resources:

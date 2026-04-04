@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: storage-system
 
 components:
+  - ../../components/cluster-values
   - ../../components/alerts
 
 resources:
