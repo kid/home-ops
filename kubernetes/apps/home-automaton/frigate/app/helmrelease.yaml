@@ -39,7 +39,7 @@ spec:
     route:
       app:
         hostnames:
-          - frigate.kidibox.net
+          - frigate.${APP_DOMAIN}
         parentRefs:
           - name: envoy-internal
             namespace: network-system

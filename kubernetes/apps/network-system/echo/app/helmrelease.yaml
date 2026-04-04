@@ -62,7 +62,7 @@ spec:
     route:
       app:
         hostnames:
-          - "{{ .Release.Name }}.kidibox.net"
+          - "{{ .Release.Name }}.${APP_DOMAIN}"
         parentRefs:
           - name: envoy-external
             namespace: network-system

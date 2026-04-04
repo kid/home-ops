@@ -9,7 +9,7 @@ metadata:
       conditions: ["[STATUS] == 404"]
 spec:
   hostnames:
-    - flux-webhook.kidibox.net
+    - flux-webhook.${APP_DOMAIN}
   parentRefs:
     - name: envoy-external
       namespace: network-system

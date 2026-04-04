@@ -6,7 +6,7 @@ metadata:
   name: cloudflare-tunnel
 spec:
   endpoints:
-    - dnsName: external.kidibox.net
+    - dnsName: external.${APP_DOMAIN}
       recordType: CNAME
       targets:
         - ${CLOUDFLARE_TUNNEL_ID}.cfargotunnel.com

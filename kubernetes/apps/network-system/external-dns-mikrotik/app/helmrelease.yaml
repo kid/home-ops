@@ -27,7 +27,7 @@ spec:
     txtOwnerId: prd
     txtPrefix: k8s.prd.
 
-    domainFilters: ["kidibox.net", "internal"]
+    domainFilters: ["${APP_DOMAIN}", "internal"]
     excludeDomains: [""]
 
     provider:
