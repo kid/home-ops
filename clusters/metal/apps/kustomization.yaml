@@ -9,4 +9,4 @@ resources:
   - ../../../kubernetes/apps/kube-system/
   - ../../../kubernetes/apps/network-system/
   - ../../../kubernetes/apps/observability/
-  # - ../../../kubernetes/apps/storage-system/
+  - ./storage-system/
