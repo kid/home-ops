@@ -30,21 +30,28 @@ spec:
     openebs-crds:
       csi:
         volumeSnapshots:
-          enabled: false
+          enabled: true
     zfs-localpv:
       crds:
         zfsLocalPv:
           enabled: true
         csi:
           volumeSnapshots:
-            enabled: false
+            enabled: true
+      zfsNode:
+        encrKeysDir: /var/openebs/keys
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+            effect: NoSchedule
       zfsController:
         tolerations:
           - key: node-role.kubernetes.io/control-plane
             operator: Exists
             effect: NoSchedule
-      zfsNode:
-        tolerations:
-          - key: node-role.kubernetes.io/control-plane
-            operator: Exists
-            effect: NoSchedule
+        snapshotter:
+          image:
+            tag: v8.2.1
+        snapshotController:
+          image:
+            tag: v8.2.1
