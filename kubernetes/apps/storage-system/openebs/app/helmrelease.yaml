@@ -37,7 +37,7 @@ spec:
           enabled: true
         csi:
           volumeSnapshots:
-            enabled: true
+            enabled: false
       zfsNode:
         encrKeysDir: /var/openebs/keys
         tolerations:
@@ -49,9 +49,3 @@ spec:
           - key: node-role.kubernetes.io/control-plane
             operator: Exists
             effect: NoSchedule
-        snapshotter:
-          image:
-            tag: v8.2.1
-        snapshotController:
-          image:
-            tag: v8.2.1
