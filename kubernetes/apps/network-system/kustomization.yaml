@@ -10,6 +10,7 @@ components:
 
 resources:
   - ./namespace.yaml
+  - ./namespace-secrets.yaml
   - ./cert-manager/ks.yaml
   - ./certificates/ks.yaml
   - ./external-dns-cloudflare/ks.yaml

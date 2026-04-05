@@ -11,6 +11,10 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-values
+        optional: false
+      - kind: Secret
+        name: namespace-secrets
+        optional: true
   patches:
     - patch: |
         apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -22,8 +26,13 @@ spec:
             substituteFrom:
               - kind: ConfigMap
                 name: cluster-values
+                optional: false
+              - kind: Secret
+                name: namespace-secrets
+                optional: true
       target:
         kind: Kustomization
+        labelSelector: home-ops.io/skip-cluster-values-substitute-from!=true
   path: ./clusters/metal/apps
   prune: true
   sourceRef:
