@@ -306,21 +306,27 @@ func (m *Talos) Upgrade(
 	// +optional
 	insecure bool,
 ) (*dagger.Container, error) {
-	_, err := m.InstallerImage(ctx, node)
-	if err != nil {
-		return nil, err
-	}
-	nodeIP, err := m.Cfg.nodeIPByName(node)
+	img, err := m.InstallerImage(ctx, node)
 	if err != nil {
 		return nil, err
 	}
 
-	args := []string{"talosctl", "upgrade", "--wait", "--nodes", nodeIP}
+	ip, err := m.Cfg.nodeIPByName(node)
+	if err != nil {
+		return nil, err
+	}
+
+	args := []string{"talosctl", "upgrade", "--wait", "--nodes", ip, "--image", img}
 	if insecure {
 		args = append(args, "--insecure")
 	}
 
-	return m.baseContainer().WithExec(args), nil
+	ctr, err := m.Container(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return ctr.WithExec(args), nil
 }
 
 // +cache="never"
