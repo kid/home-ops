@@ -68,6 +68,8 @@ func (m *FluxLocal) Build(
 	namespace string,
 	// +optional
 	skipKinds []string,
+	// +optional
+	skipHelm bool,
 ) (*dagger.File, error) {
 	ctr, err := m.Container(ctx)
 	if err != nil {
@@ -80,7 +82,10 @@ func (m *FluxLocal) Build(
 	}
 
 	if kind == "all" {
-		args = append(args, "--enable-helm", path)
+		if !skipHelm {
+			args = append(args, "--enable-helm")
+		}
+		args = append(args, path)
 	} else {
 		if namespace != "" {
 			args = append(args, "--namespace", namespace)
@@ -96,4 +101,26 @@ func (m *FluxLocal) Build(
 	}
 
 	return ctr.File("/out/manifests.yaml"), nil
+}
+
+// +check
+func (m *FluxLocal) Test(
+	ctx context.Context,
+) (*dagger.Container, error) {
+	var err error
+	clusters, err := m.Source.Entries(ctx, dagger.DirectoryEntriesOpts{Path: "clusters"})
+	if err != nil {
+		return nil, err
+	}
+
+	ctr, err := m.Container(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cluster := range clusters {
+		ctr = ctr.WithExec([]string{"flux-local", "test", "-A", "--enable-helm", "--path", fmt.Sprintf("clusters/%s", cluster)})
+	}
+
+	return ctr.Sync(ctx)
 }
