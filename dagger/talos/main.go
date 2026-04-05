@@ -162,10 +162,11 @@ func (m *Talos) MachineConfig(
 		WithExec(args).
 		WithEnvFileVariables(m.EnvFile.AsEnvFile()).
 		WithExec([]string{"envsubst"}, dagger.ContainerWithExecOpts{
-			RedirectStdin: destination,
+			RedirectStdin:  destination,
+			RedirectStdout: "/tmp/final.yaml",
 		})
 
-	machineConfigContents, err := ctr.Stdout(ctx)
+	machineConfigContents, err := ctr.File("/tmp/final.yaml").Contents(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate machine config: %w", err)
 	}
