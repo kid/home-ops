@@ -14,6 +14,7 @@ type TalosConfig struct {
 	ClusterName         string
 	ClusterEndpoint     string
 	Target              string
+	Platform            string
 	TalosVersion        string
 	ControlPlanePatches []string
 	Nodes               []TalosNode
@@ -23,6 +24,8 @@ type TalosNode struct {
 	IPAddress string
 	Hostname  string
 	Role      string
+	Target    string
+	Platform  string
 	Patches   []string
 }
 
@@ -30,11 +33,14 @@ type TalosConfigFile struct {
 	ClusterName  string `yaml:"clusterName"`
 	Endpoint     string `yaml:"endpoint"`
 	TalosVersion string `yaml:"talosVersion"`
+	Platform     string `yaml:"platform"`
 	Target       string `yaml:"target"`
 	Nodes        []struct {
 		IPAddress string   `yaml:"ipAddress"`
 		Hostname  string   `yaml:"hostname"`
 		Role      string   `yaml:"role"`
+		Target    string   `yaml:"target"`
+		Platform  string   `yaml:"platform"`
 		Patches   []string `yaml:"patches"`
 	} `yaml:"nodes"`
 	Patches struct {
@@ -55,17 +61,30 @@ func loadConfig(ctx context.Context, configs *dagger.Directory) (*TalosConfig, e
 		return nil, fmt.Errorf("failed to parse talos config file %q: %w", configPath, err)
 	}
 
-	if cfgFile.ClusterName == "" {
+	clusterName := strings.TrimSpace(cfgFile.ClusterName)
+	if clusterName == "" {
 		return nil, fmt.Errorf("invalid talos config file %q: clusterName is required", configPath)
 	}
 
-	if cfgFile.Endpoint == "" {
+	endpoint := strings.TrimSpace(cfgFile.Endpoint)
+	if endpoint == "" {
 		return nil, fmt.Errorf("invalid talos config file %q: endpoint is required", configPath)
 	}
 
-	if strings.TrimSpace(cfgFile.Target) == "" {
+	target, err := normalizeTarget(cfgFile.Target)
+	if err != nil {
+		if strings.TrimSpace(cfgFile.Target) == "" {
+			return nil, fmt.Errorf("invalid talos config file %q: target is required", configPath)
+		}
+
+		return nil, fmt.Errorf("invalid talos config file %q: %w", configPath, err)
+	}
+
+	if target == "" {
 		return nil, fmt.Errorf("invalid talos config file %q: target is required", configPath)
 	}
+
+	platform := strings.TrimSpace(cfgFile.Platform)
 
 	controlPlanePatches, err := resolvePatches(path.Dir(configPath), cfgFile.Patches.ControlPlane)
 	if err != nil {
@@ -74,12 +93,20 @@ func loadConfig(ctx context.Context, configs *dagger.Directory) (*TalosConfig, e
 
 	nodes := make([]TalosNode, 0, len(cfgFile.Nodes))
 	for _, node := range cfgFile.Nodes {
-		if node.IPAddress == "" {
-			if node.Hostname != "" {
-				return nil, fmt.Errorf("invalid talos config file %q: ipAddress is required for node %q", configPath, node.Hostname)
+		nodeIPAddress := strings.TrimSpace(node.IPAddress)
+		nodeHostname := strings.TrimSpace(node.Hostname)
+		nodeRole := strings.ToLower(strings.TrimSpace(node.Role))
+
+		if nodeIPAddress == "" {
+			if nodeHostname != "" {
+				return nil, fmt.Errorf("invalid talos config file %q: ipAddress is required for node %q", configPath, nodeHostname)
 			}
 
 			return nil, fmt.Errorf("invalid talos config file %q: ipAddress is required for all nodes", configPath)
+		}
+
+		if nodeRole == "" {
+			return nil, fmt.Errorf("invalid talos config file %q: role is required for node %q", configPath, nodeHostname)
 		}
 
 		nodePatches, err := resolvePatches(path.Dir(configPath), node.Patches)
@@ -87,10 +114,32 @@ func loadConfig(ctx context.Context, configs *dagger.Directory) (*TalosConfig, e
 			return nil, fmt.Errorf("invalid patches for node %q in %q: %w", node.Hostname, configPath, err)
 		}
 
+		nodeTarget, err := normalizeTarget(node.Target)
+		if err != nil {
+			return nil, fmt.Errorf("invalid target for node %q in %q: %w", nodeHostname, configPath, err)
+		}
+		if nodeTarget == "" {
+			nodeTarget = target
+		}
+
+		nodePlatform := strings.TrimSpace(node.Platform)
+		if nodePlatform == "" {
+			nodePlatform = platform
+		}
+		if nodePlatform == "" {
+			if nodeTarget == "cloud" {
+				return nil, fmt.Errorf("invalid talos config file %q: platform is required for cloud target node %q", configPath, nodeHostname)
+			}
+
+			nodePlatform = nodeTarget
+		}
+
 		nodes = append(nodes, TalosNode{
-			IPAddress: node.IPAddress,
-			Hostname:  node.Hostname,
-			Role:      node.Role,
+			IPAddress: nodeIPAddress,
+			Hostname:  nodeHostname,
+			Role:      nodeRole,
+			Target:    nodeTarget,
+			Platform:  nodePlatform,
 			Patches:   nodePatches,
 		})
 	}
@@ -101,13 +150,61 @@ func loadConfig(ctx context.Context, configs *dagger.Directory) (*TalosConfig, e
 	}
 
 	return &TalosConfig{
-		ClusterName:         cfgFile.ClusterName,
-		ClusterEndpoint:     cfgFile.Endpoint,
-		Target:              strings.TrimSpace(cfgFile.Target),
+		ClusterName:         clusterName,
+		ClusterEndpoint:     endpoint,
+		Target:              target,
+		Platform:            platform,
 		TalosVersion:        talosVersion,
 		ControlPlanePatches: controlPlanePatches,
 		Nodes:               nodes,
 	}, nil
+}
+
+func (c *TalosConfig) platformFor(nodeName string) (string, error) {
+	if nodeName != "" {
+		node, ok := c.nodeByName(nodeName)
+		if !ok {
+			return "", fmt.Errorf("node %q not found in config.yaml", nodeName)
+		}
+
+		return node.Platform, nil
+	}
+
+	if c.Platform != "" {
+		return c.Platform, nil
+	}
+
+	if nodeName == "" {
+		return "", fmt.Errorf("platform is required when target is cloud")
+	}
+
+	return "", fmt.Errorf("platform is required for node %q when target is cloud (set nodes[].platform or top-level platform)", nodeName)
+}
+
+func (c *TalosConfig) targetFor(nodeName string) (string, error) {
+	if nodeName == "" {
+		return c.Target, nil
+	}
+
+	node, ok := c.nodeByName(nodeName)
+	if !ok {
+		return "", fmt.Errorf("node %q not found in config.yaml", nodeName)
+	}
+
+	return node.Target, nil
+}
+
+func normalizeTarget(value string) (string, error) {
+	target := strings.ToLower(strings.TrimSpace(value))
+	if target == "" {
+		return "", nil
+	}
+
+	if target != "metal" && target != "cloud" {
+		return "", fmt.Errorf("target must be one of metal or cloud")
+	}
+
+	return target, nil
 }
 
 func (c *TalosConfig) patchesFor(nodeName string) ([]string, error) {
@@ -145,8 +242,7 @@ func (c *TalosConfig) nodeType(nodeName string) (string, error) {
 		return "", fmt.Errorf("node %q not found in config.yaml", nodeName)
 	}
 
-	role := strings.ToLower(strings.TrimSpace(node.Role))
-	switch role {
+	switch node.Role {
 	case "controlplane":
 		return "controlplane", nil
 	case "worker":
@@ -172,7 +268,7 @@ func (c *TalosConfig) nodeIPByName(name string) (string, error) {
 		return "", fmt.Errorf("node %q not found in config.yaml", name)
 	}
 
-	if strings.TrimSpace(node.IPAddress) == "" {
+	if node.IPAddress == "" {
 		return "", fmt.Errorf("node %q has no ipAddress in config.yaml", name)
 	}
 
@@ -212,12 +308,11 @@ func (c *TalosConfig) controlPlaneIPs() []string {
 
 func (c *TalosConfig) firstControlPlaneIP() (string, error) {
 	for _, node := range c.Nodes {
-		if strings.TrimSpace(node.IPAddress) == "" {
+		if node.IPAddress == "" {
 			continue
 		}
 
-		role := strings.ToLower(strings.TrimSpace(node.Role))
-		if role != "controlplane" {
+		if node.Role != "controlplane" {
 			continue
 		}
 

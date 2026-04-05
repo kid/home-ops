@@ -37,8 +37,16 @@ func New(
 	}, err
 }
 
-func (m *Talos) Schematic(ctx context.Context) (string, error) {
-	fileName := "schematic.yaml"
+func (m *Talos) Schematic(
+	ctx context.Context,
+	// +optional
+	node string,
+) (string, error) {
+	fileName, err := m.schematicFileForNode(ctx, node)
+	if err != nil {
+		return "", err
+	}
+
 	schematic, err := dag.
 		Wolfi().
 		Container(dagger.WolfiContainerOpts{Packages: []string{"curl", "jq"}}).
@@ -57,12 +65,59 @@ func (m *Talos) Schematic(ctx context.Context) (string, error) {
 	return strings.TrimSpace(schematic), nil
 }
 
-func (m *Talos) InstallerImage(ctx context.Context) (string, error) {
-	schematic, err := m.Schematic(ctx)
+func (m *Talos) InstallerImage(
+	ctx context.Context,
+	// +optional
+	node string,
+) (string, error) {
+	schematic, err := m.Schematic(ctx, node)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("factory.talos.dev/%s-installer/%s:%s", m.Cfg.Target, schematic, m.Cfg.TalosVersion), nil
+
+	installerTarget, err := m.Cfg.targetFor(node)
+	if err != nil {
+		return "", err
+	}
+
+	if installerTarget == "cloud" {
+		platform, err := m.Cfg.platformFor(node)
+		if err != nil {
+			return "", err
+		}
+		installerTarget = platform
+	}
+
+	return fmt.Sprintf("factory.talos.dev/%s-installer/%s:%s", installerTarget, schematic, m.Cfg.TalosVersion), nil
+}
+
+func (m *Talos) schematicFileForNode(ctx context.Context, nodeName string) (string, error) {
+	defaultSchematic := "schematic.yaml"
+
+	if strings.TrimSpace(nodeName) != "" {
+		nodeSchematic := fmt.Sprintf("nodes/%s.schematic.yaml", nodeName)
+		exists, err := m.Configs.Exists(ctx, nodeSchematic)
+		if err != nil {
+			return "", fmt.Errorf("failed to check schematic %q: %w", nodeSchematic, err)
+		}
+		if exists {
+			return nodeSchematic, nil
+		}
+	}
+
+	exists, err := m.Configs.Exists(ctx, defaultSchematic)
+	if err != nil {
+		return "", fmt.Errorf("failed to check default schematic %q: %w", defaultSchematic, err)
+	}
+	if !exists {
+		if strings.TrimSpace(nodeName) == "" {
+			return "", fmt.Errorf("required schematic file %q not found", defaultSchematic)
+		}
+
+		return "", fmt.Errorf("no schematic found for node %q: expected %q or %q", nodeName, fmt.Sprintf("nodes/%s.schematic.yaml", nodeName), defaultSchematic)
+	}
+
+	return defaultSchematic, nil
 }
 
 func (m *Talos) MachineConfig(
@@ -75,9 +130,9 @@ func (m *Talos) MachineConfig(
 		return nil, err
 	}
 
-	destination := fmt.Sprintf("/tmp/%s.yaml", nodeName)
+	destination := fmt.Sprintf("/tmp/%s.yaml", machineConfigSecretName(nodeName))
 
-	installer, err := m.InstallerImage(ctx)
+	installer, err := m.InstallerImage(ctx, nodeName)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +193,10 @@ func (m *Talos) Validate(
 			return fmt.Errorf("failed to generate machine config for validation: %w", err)
 		}
 
+		path := fmt.Sprintf("/machineconfig-%s.yaml", n.Hostname)
 		_, err = m.baseContainer().
-			WithMountedSecret("/machineconfig.yaml", machineCfg).
-			WithExec([]string{"talosctl", "validate", "-c", "/machineconfig.yaml", "-m", "metal", "--strict"}).
+			WithMountedSecret(path, machineCfg).
+			WithExec([]string{"talosctl", "validate", "-c", path, "-m", n.Target, "--strict"}).
 			Sync(ctx)
 		if err != nil {
 			return fmt.Errorf("validation failed for node %s: %w", n.Hostname, err)
@@ -250,7 +306,7 @@ func (m *Talos) Upgrade(
 	// +optional
 	insecure bool,
 ) (*dagger.Container, error) {
-	_, err := m.InstallerImage(ctx)
+	_, err := m.InstallerImage(ctx, node)
 	if err != nil {
 		return nil, err
 	}
