@@ -16,26 +16,11 @@ spec:
   #     valuesKey: flux-metrics.yaml
   values:
     cleanPrometheusOperatorObjectNames: true
+    defaultRules:
+      rules:
+        alertmanager: false
     alertmanager:
-      route:
-        main:
-          enabled: true
-          hostnames:
-            - alertmanager.${APP_DOMAIN}
-          parentRefs:
-            - name: envoy-internal
-              namespace: network-system
-      alertmanagerSpec:
-        alertmanagerConfiguration:
-          name: alertmanager
-        externalUrl: https://alertmanager.${APP_DOMAIN}
-        # storage:
-        #   volumeClaimTemplate:
-        #     spec:
-        #       storageClassName: ceph-block
-        #       resources:
-        #         requests:
-        #           storage: 1Gi
+      enabled: false
     kubeEtcd:
       service:
         selector:
