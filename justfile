@@ -3,8 +3,6 @@
 set quiet := true
 set shell := ['bash', '-euo', 'pipefail', '-c']
 
-mod bootstrap "bootstrap"
-
 terragrunt_args := "--non-interactive"
 
 # Displayt he available commands
@@ -15,10 +13,6 @@ default:
 [private]
 log lvl msg *args:
     gum log --time=rfc3339 --structured --level="{{ lvl }}" "{{ msg }}" {{ args }}
-
-[private]
-template file *args:
-    minijinja-cli "{{ file }}" {{ args }} | op inject
 
 # Run the given command against the lab stack
 lab *command:
