@@ -4,7 +4,6 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: certificates-import
-  namespace: network-system
 spec:
   dependsOn:
     - name: cert-manager-issuers
@@ -23,7 +22,6 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: certificates-export
-  namespace: network-system
 spec:
   dependsOn:
     - name: cert-manager-issuers

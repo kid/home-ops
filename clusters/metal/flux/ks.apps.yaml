@@ -24,7 +24,6 @@ spec:
                 name: cluster-values
       target:
         kind: Kustomization
-        namespace: flux-system
   path: ./clusters/metal/apps
   prune: true
   sourceRef:
