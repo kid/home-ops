@@ -1,5 +1,7 @@
 ---
 customization:
+  extraKernelArgs:
+    - talos.dashboard.disabled=1
   systemExtensions:
     officialExtensions:
       - siderolabs/qemu-guest-agent
