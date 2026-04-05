@@ -11,4 +11,5 @@ components:
 resources:
   - ./namespace.yaml
   - ./grafana/ks.app.yaml
+  - ./grafana/ks.resources.yaml
   - ./kube-prometheus-stack/ks.app.yaml
