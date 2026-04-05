@@ -14,6 +14,13 @@ nodes:
     role: controlplane
     patches:
       - ./nodes/talos0.yaml
+  - ipAddress: 10.0.40.201
+    hostname: talos1
+    role: worker
+    target: cloud
+    platform: nocloud
+    patches:
+      - ./nodes/talos1.yaml
 
 patches:
   controlplane:
@@ -22,3 +29,6 @@ patches:
     - ./patches/cluster-discovery.yaml
     - ./patches/host-dns.yaml
     - ./patches/schedule-on-controlplane.yaml
+  worker:
+    - ./patches/host-dns.yaml
+
