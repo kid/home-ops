@@ -24,17 +24,13 @@ func New(
 	}
 }
 
-func (m *FluxLocal) Container(ctx context.Context) (*dagger.Container, error) {
-	ctr := dag.Container().From(fmt.Sprintf("ghcr.io/allenporter/flux-local:%s", m.Version))
-	user, err := ctr.User(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return ctr.
-		WithDirectory("/out", dag.Directory(), dagger.ContainerWithDirectoryOpts{Owner: user}).
-		WithDirectory("/src", m.Source, dagger.ContainerWithDirectoryOpts{Owner: user}).
-		WithWorkdir("/src"), nil
+func (m *FluxLocal) Container() *dagger.Container {
+	return dag.
+		Container().
+		From(fmt.Sprintf("ghcr.io/allenporter/flux-local:%s", m.Version)).
+		WithDirectory("/out", dag.Directory(), dagger.ContainerWithDirectoryOpts{Owner: "1001"}).
+		WithDirectory("/src", m.Source, dagger.ContainerWithDirectoryOpts{Owner: "1001"}).
+		WithWorkdir("/src")
 }
 
 func (m *FluxLocal) Get(
@@ -44,17 +40,12 @@ func (m *FluxLocal) Get(
 	// +optional
 	path string,
 ) (string, error) {
-	ctr, err := m.Container(ctx)
-	if err != nil {
-		return "", err
-	}
-
 	args := []string{"flux-local", "get", kind, "-A"}
 	if path != "" {
 		args = append(args, "--path", path)
 	}
 
-	return ctr.WithExec(args).Stdout(ctx)
+	return m.Container().WithExec(args).Stdout(ctx)
 }
 
 func (m *FluxLocal) Build(
@@ -71,11 +62,6 @@ func (m *FluxLocal) Build(
 	// +optional
 	skipHelm bool,
 ) (*dagger.File, error) {
-	ctr, err := m.Container(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	args := []string{"flux-local", "build", kind, "--output", "/out/manifests.yaml", "--no-skip-crds", "--no-skip-secrets"}
 	if len(skipKinds) > 0 {
 		args = append(args, "--skip-kinds", strings.Join(skipKinds, ","))
@@ -95,7 +81,7 @@ func (m *FluxLocal) Build(
 		args = append(args, "--path", path, name)
 	}
 
-	ctr, err = ctr.WithExec(args).Sync(ctx)
+	ctr, err := m.Container().WithExec(args).Sync(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -106,21 +92,63 @@ func (m *FluxLocal) Build(
 // +check
 func (m *FluxLocal) Test(
 	ctx context.Context,
-) (*dagger.Container, error) {
+) (string, error) {
 	var err error
 	clusters, err := m.Source.Entries(ctx, dagger.DirectoryEntriesOpts{Path: "clusters"})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	ctr, err := m.Container(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+	var results []string
+	ctr := m.Container()
 	for _, cluster := range clusters {
-		ctr = ctr.WithExec([]string{"flux-local", "test", "-A", "--enable-helm", "--path", fmt.Sprintf("clusters/%s", cluster)})
+		out, err := ctr.WithExec([]string{"flux-local", "test", "-A", "--enable-helm", "--path", fmt.Sprintf("clusters/%s", cluster)}).CombinedOutput(ctx)
+		if err != nil {
+			return "", fmt.Errorf("tests failed for cluster %s: %w\nOutput:\n%s", cluster, err, out)
+		}
+		results = append(results, out)
 	}
 
-	return ctr.Sync(ctx)
+	return strings.Join(results, "\n"), nil
+}
+
+// +check
+func (m *FluxLocal) TestBuild(
+	ctx context.Context,
+) (string, error) {
+	var err error
+	clusters, err := m.Source.Entries(ctx, dagger.DirectoryEntriesOpts{Path: "clusters"})
+	if err != nil {
+		return "", err
+	}
+
+	var results []string
+	ctr := m.Container()
+	for _, cluster := range clusters {
+		out, err := ctr.WithExec([]string{"flux-local", "build", "all", "--enable-helm", fmt.Sprintf("clusters/%s", cluster)}).CombinedOutput(ctx)
+		if err != nil {
+			return "", fmt.Errorf("tests failed for cluster %s: %w\nOutput:\n%s", cluster, err, out)
+		}
+		results = append(results, out)
+	}
+
+	return strings.Join(results, "\n"), nil
+}
+
+func (m *FluxLocal) Diff(
+	ctx context.Context,
+	path string,
+	// +default="ks"
+	kind string,
+	// +optional
+	namespace string,
+) (string, error) {
+	args := []string{"flux-local", "diff", kind, "--path", path}
+	if namespace != "" {
+		args = append(args, "--namespace", namespace)
+	} else {
+		args = append(args, "-A")
+	}
+
+	return m.Container().WithExec(args).Stdout(ctx)
 }
