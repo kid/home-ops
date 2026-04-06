@@ -148,7 +148,10 @@ func (m *FluxLocal) Diff(
 	kind string,
 	// +optional
 	namespace string,
-) (string, error) {
+	// +optional
+	// +default="main"
+	branch string,
+) (*dagger.Container, error) {
 	args := []string{"flux-local", "diff", kind, "--path", path}
 	if namespace != "" {
 		args = append(args, "--namespace", namespace)
@@ -156,5 +159,9 @@ func (m *FluxLocal) Diff(
 		args = append(args, "-A")
 	}
 
-	return m.Container().WithExec(args).Stdout(ctx)
+	if branch != "" {
+		args = append(args, "--branch-orig", branch)
+	}
+
+	return m.Container().WithExec(args).Sync(ctx)
 }
