@@ -60,6 +60,7 @@ spec:
                 requests:
                   storage: 50Gi
     prometheus-node-exporter:
+      enabled: false
       fullnameOverride: node-exporter
       affinity:
         nodeAffinity:
