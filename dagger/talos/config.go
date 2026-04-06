@@ -16,7 +16,9 @@ type TalosConfig struct {
 	Target              string
 	Platform            string
 	TalosVersion        string
+	CommonPatches       []string
 	ControlPlanePatches []string
+	WorkerPatches       []string
 	Nodes               []TalosNode
 }
 
@@ -44,7 +46,9 @@ type TalosConfigFile struct {
 		Patches   []string `yaml:"patches"`
 	} `yaml:"nodes"`
 	Patches struct {
+		Common       []string `yaml:"common"`
 		ControlPlane []string `yaml:"controlplane"`
+		Worker       []string `yaml:"worker"`
 	} `yaml:"patches"`
 }
 
@@ -86,9 +90,19 @@ func loadConfig(ctx context.Context, configs *dagger.Directory) (*TalosConfig, e
 
 	platform := strings.TrimSpace(cfgFile.Platform)
 
+	commonPatches, err := resolvePatches(path.Dir(configPath), cfgFile.Patches.Common)
+	if err != nil {
+		return nil, fmt.Errorf("invalid common patches in %q: %w", configPath, err)
+	}
+
 	controlPlanePatches, err := resolvePatches(path.Dir(configPath), cfgFile.Patches.ControlPlane)
 	if err != nil {
 		return nil, fmt.Errorf("invalid control-plane patches in %q: %w", configPath, err)
+	}
+
+	workerPatches, err := resolvePatches(path.Dir(configPath), cfgFile.Patches.Worker)
+	if err != nil {
+		return nil, fmt.Errorf("invalid worker patches in %q: %w", configPath, err)
 	}
 
 	nodes := make([]TalosNode, 0, len(cfgFile.Nodes))
@@ -155,7 +169,9 @@ func loadConfig(ctx context.Context, configs *dagger.Directory) (*TalosConfig, e
 		Target:              target,
 		Platform:            platform,
 		TalosVersion:        talosVersion,
+		CommonPatches:       commonPatches,
 		ControlPlanePatches: controlPlanePatches,
+		WorkerPatches:       workerPatches,
 		Nodes:               nodes,
 	}, nil
 }
@@ -213,10 +229,15 @@ func (c *TalosConfig) patchesFor(nodeName string) ([]string, error) {
 		return nil, err
 	}
 
-	patches := make([]string, 0, len(c.ControlPlanePatches))
+	patches := make([]string, 0, len(c.CommonPatches)+len(c.ControlPlanePatches)+len(c.WorkerPatches))
+	patches = append(patches, c.CommonPatches...)
 
 	if nodeType == "controlplane" {
 		patches = append(patches, c.ControlPlanePatches...)
+	}
+
+	if nodeType == "worker" {
+		patches = append(patches, c.WorkerPatches...)
 	}
 
 	if nodeName == "" {

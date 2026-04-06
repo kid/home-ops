@@ -25,12 +25,12 @@ nodes:
       - ./patches/zfs.yaml
 
 patches:
+  common:
+    - ./patches/files.yaml
+    - ./patches/host-dns.yaml
+
   controlplane:
     - ./patches/additional-sans.yaml
     - ./patches/cilium.yaml
     - ./patches/cluster-discovery.yaml
-    - ./patches/host-dns.yaml
     - ./patches/schedule-on-controlplane.yaml
-  worker:
-    - ./patches/host-dns.yaml
-

@@ -6,4 +6,6 @@ customization:
     officialExtensions:
       - siderolabs/qemu-guest-agent
       - siderolabs/zfs
+      - siderolabs/nfsd
+      - siderolabs/nfsrahead
   bootloader: sd-boot
