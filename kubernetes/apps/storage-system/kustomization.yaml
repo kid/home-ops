@@ -13,3 +13,4 @@ resources:
   - ./openebs/ks.yaml
   - ./volsync/ks.yaml
   - ./piraeus-operator/ks.yaml
+  - ./nfs-server/ks.yaml

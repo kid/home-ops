@@ -1,0 +1,56 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: nfs-server
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: nfs-server
+  interval: 1h
+  values:
+    controllers:
+      nfs-server:
+        replicas: 1
+        pod:
+          hostNetwork: true
+          dnsPolicy: ClusterFirstWithHostNet
+          nodeSelector:
+            kubernetes.io/hostname: talos-storage-1
+        containers:
+          app:
+            image:
+              repository: quay.io/aminvakil/alpine-nfs-server
+              tag: latest
+            env:
+              SHARED_DIRECTORY: /exports
+              PERMITTED: ${CLUSTER_CIDR}
+            securityContext:
+              privileged: true
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+    persistence:
+      export-data:
+        type: hostPath
+        hostPath: /var/mnt/nfs/share
+        hostPathType: DirectoryOrCreate
+        globalMounts:
+          - path: /exports
+      nfsd-fs:
+        type: hostPath
+        hostPath: /proc/fs/nfsd
+        hostPathType: Directory
+        globalMounts:
+          - path: /proc/fs/nfsd
+      lib-modules:
+        type: hostPath
+        hostPath: /lib/modules
+        hostPathType: Directory
+        globalMounts:
+          - path: /lib/modules
+            readOnly: true

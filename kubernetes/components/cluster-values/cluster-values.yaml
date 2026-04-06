@@ -5,3 +5,4 @@ metadata:
   name: cluster-values
 data:
   APP_DOMAIN: ${APP_DOMAIN}
+  CLUSTER_CIDR: ${CLUSTER_CIDR}
