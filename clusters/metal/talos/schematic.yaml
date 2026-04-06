@@ -4,6 +4,7 @@ customization:
     - talos.dashboard.disabled=1
     - pcie_aspm.policy=powersave
     - cpufreq.default_governor=powersave
+    - energy_performance_preference=power
   systemExtensions:
     officialExtensions:
       - siderolabs/amd-ucode
