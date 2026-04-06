@@ -1,0 +1,60 @@
+---
+apiVersion: zfs.openebs.io/v1
+kind: ZFSVolume
+metadata:
+  name: media
+  finalizers:
+    - cluster.local/data-protection
+spec:
+  capacity: "33822867456"
+  compression: "zstd"
+  dedup: "off"
+  fsType: zfs
+  ownerNodeID: talos1
+  poolName: devpool
+  recordsize: 1M
+  shared: "yes"
+  thinProvision: "yes"
+  volumeType: DATASET
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: storage-media-talos1-zfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 30.5Gi
+  csi:
+    driver: zfs.csi.openebs.io
+    fsType: zfs
+    volumeAttributes:
+      openebs.io/cas-type: localpv-zfs
+      openebs.io/poolname: devpool
+    volumeHandle: media
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: openebs.io/nodeid
+              operator: In
+              values:
+                - talos1
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: storage-media-talos1-zfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 30.5Gi
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: storage-media-talos1-zfs

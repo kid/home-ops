@@ -12,45 +12,74 @@ spec:
   values:
     controllers:
       nfs-server:
-        replicas: 1
+        strategy: RollingUpdate
         pod:
-          hostNetwork: true
-          dnsPolicy: ClusterFirstWithHostNet
-          nodeSelector:
-            kubernetes.io/hostname: talos-storage-1
+          priorityClassName: nfs-critical
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            runAsNonRoot: false
+            seccompProfile: { type: Unconfined }
         containers:
-          app:
+          nfs-server:
             image:
+              # Only latest tag is published and digest is overwritten each update so don't pin digest
+              # e.g. node boots after update, latest@sha no longer exists, new update not merged == no nfs
               repository: quay.io/aminvakil/alpine-nfs-server
               tag: latest
             env:
-              SHARED_DIRECTORY: /exports
-              PERMITTED: ${CLUSTER_CIDR}
+              EXPORTS_MOUNTED: true
+              NFS_THREADS: 128
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - sh
+                      - -c
+                      - "showmount -e localhost | grep -q /export"
+              readiness: &probes
+                enabled: true
+                type: TCP
+                port: 2049
+                spec:
+                  periodSeconds: 3
+                  timeoutSeconds: 1
+                  failureThreshold: 2
+                  successThreshold: 1
+              liveness: *probes
             securityContext:
+              allowPrivilegeEscalation: true
+              readOnlyRootFilesystem: false
               privileged: true
-            resources:
-              requests:
-                cpu: 10m
-                memory: 64Mi
-              limits:
-                memory: 256Mi
+    service:
+      nfs-server:
+        controller: nfs-server
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+        annotations:
+          lbipam.cilium.io/ips: 10.0.42.20
+          coredns.io/hostname: nfs.${APP_DOMAIN}
+        ports:
+          nfs:
+            port: 2049
     persistence:
-      export-data:
-        type: hostPath
-        hostPath: /var/mnt/nfs/share
-        hostPathType: DirectoryOrCreate
+      exports:
+        type: configMap
+        name: nfs-exports
         globalMounts:
-          - path: /exports
-      nfsd-fs:
-        type: hostPath
-        hostPath: /proc/fs/nfsd
-        hostPathType: Directory
+          - path: /etc/exports
+            subPath: exports
+      fake-export:
+        type: emptyDir
         globalMounts:
-          - path: /proc/fs/nfsd
-      lib-modules:
-        type: hostPath
-        hostPath: /lib/modules
-        hostPathType: Directory
+          - path: /export
+      media:
+        type: persistentVolumeClaim
+        existingClaim: storage-media-talos1-zfs
         globalMounts:
-          - path: /lib/modules
-            readOnly: true
+          - path: /export/media
