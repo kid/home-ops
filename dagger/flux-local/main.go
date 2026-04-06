@@ -10,6 +10,8 @@ import (
 type FluxLocal struct {
 	Source  *dagger.Directory
 	Version string
+
+	ctr *dagger.Container
 }
 
 func New(
@@ -25,12 +27,16 @@ func New(
 }
 
 func (m *FluxLocal) Container() *dagger.Container {
-	return dag.
-		Container().
-		From(fmt.Sprintf("ghcr.io/allenporter/flux-local:%s", m.Version)).
-		WithDirectory("/out", dag.Directory(), dagger.ContainerWithDirectoryOpts{Owner: "1001"}).
-		WithDirectory("/src", m.Source, dagger.ContainerWithDirectoryOpts{Owner: "1001"}).
-		WithWorkdir("/src")
+	if m.ctr == nil {
+		m.ctr = dag.
+			Container().
+			From(fmt.Sprintf("ghcr.io/allenporter/flux-local:%s", m.Version)).
+			WithDirectory("/out", dag.Directory(), dagger.ContainerWithDirectoryOpts{Owner: "1001"}).
+			WithDirectory("/src", m.Source, dagger.ContainerWithDirectoryOpts{Owner: "1001"}).
+			WithWorkdir("/src")
+	}
+
+	return m.ctr
 }
 
 func (m *FluxLocal) Get(
