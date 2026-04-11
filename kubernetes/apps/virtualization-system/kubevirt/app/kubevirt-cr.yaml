@@ -8,7 +8,7 @@ spec:
   certificateRotateStrategy: {}
   configuration:
     developerConfiguration:
-      useEmulation: true
+      useEmulation: false
       featureGates: []
     imagePullPolicy: IfNotPresent
   customizeComponents: {}
