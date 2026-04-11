@@ -11,3 +11,15 @@ resources:
   - ../../../kubernetes/apps/observability/
   - ../../../kubernetes/apps/virtualization-system/
   # - ./storage-system/
+
+patches:
+  - target:
+      group: kustomize.toolkit.fluxcd.io
+      version: v1
+      kind: Kustomization
+      name: kubevirt
+      namespace: virtualization-system
+    patch: |-
+      - op: replace
+        path: /spec/path
+        value: ./clusters/metal/apps/virtualization-system/kubevirt
