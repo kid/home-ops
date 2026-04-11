@@ -12,6 +12,10 @@ patches:
       name: kubevirt
       namespace: kubevirt
     patch: |-
+      - op: replace
+        path: /spec/configuration/developerConfiguration/featureGates
+        value:
+          - HostDevices
       - op: add
         path: /spec/configuration/permittedHostDevices
         value:
