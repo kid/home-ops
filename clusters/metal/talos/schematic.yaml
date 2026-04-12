@@ -12,4 +12,5 @@ customization:
   systemExtensions:
     officialExtensions:
       - siderolabs/amd-ucode
+      - siderolabs/zfs
   bootloader: sd-boot

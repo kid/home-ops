@@ -12,4 +12,9 @@ volumeBindingMode: WaitForFirstConsumer
 parameters:
   fstype: zfs
   poolname: ssd
-  compression: lz4
+  compression: zstd
+allowedTopologies:
+- matchLabelExpressions:
+  - key: kubernetes.io/hostname
+    values:
+      - talos0
