@@ -8,7 +8,6 @@ metadata:
 provisioner: local.csi.openebs.io
 allowVolumeExpansion: true
 reclaimPolicy: Delete
-volumeBindingMode: WaitForFirstConsumer
 parameters:
   storage: lvm
   fsType: ext4
