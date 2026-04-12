@@ -5,6 +5,9 @@ kind: Kustomization
 metadata:
   name: kubevirt
 spec:
+  dependsOn:
+    - name: local-path-provisioner
+      namespace: storage-system
   interval: 1h
   path: ./deploy
   prune: true

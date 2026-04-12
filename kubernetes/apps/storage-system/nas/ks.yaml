@@ -6,9 +6,8 @@ metadata:
   name: nas
 spec:
   dependsOn:
-    - name: kubevirt-config
+    - name: kubevirt
       namespace: virtualization
-    - name: local-path-provisioner
   interval: 1h
   path: ./kubernetes/apps/storage-system/nas/app
   prune: true

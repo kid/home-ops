@@ -5,9 +5,6 @@ kind: Kustomization
 metadata:
   name: local-path-provisioner
 spec:
-  dependsOn:
-    - name: kubevirt-config
-      namespace: virtualization
   interval: 1h
   path: ./kubernetes/apps/storage-system/local-path-provisioner/app
   prune: true
