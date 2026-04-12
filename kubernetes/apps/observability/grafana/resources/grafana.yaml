@@ -31,14 +31,6 @@ spec:
             - name: grafana-data
               persistentVolumeClaim:
                 claimName: ${APP}
-  persistentVolumeClaim:
-    spec:
-      storageClassName: ${APP_STORAGECLASS}
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 10Gi
   httpRoute:
     spec:
       hostnames:
