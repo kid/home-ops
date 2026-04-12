@@ -81,7 +81,7 @@ spec:
                 - grep -q '^HD_IDLE_OPTS=' /etc/default/hd-idle || echo 'HD_IDLE_OPTS="-i 1800"' >> /etc/default/hd-idle
                 - systemctl daemon-reload
                 - systemctl enable --now zfs-hostid.service
-                - mkdir -p /mnt/tank
+                - zpool import tank
                 - grep -q '^/mnt/tank ' /etc/exports || echo '/mnt/tank *(rw,sync,no_subtree_check,no_root_squash)' >> /etc/exports
                 - exportfs -ra
                 - systemctl enable --now hd-idle
