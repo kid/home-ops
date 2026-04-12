@@ -3,7 +3,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../../../../../kubernetes/apps/virtualization-system/kubevirt/app
+  - ../../../../../kubernetes/apps/virtualization-system/kubevirt/config
 patches:
   - target:
       group: kubevirt.io
