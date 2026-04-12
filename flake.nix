@@ -82,6 +82,7 @@
               fluxcd-operator
               fluxcd-operator-mcp
               helmfile
+              kubevirt
 
               nil
               nixd
