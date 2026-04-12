@@ -245,19 +245,19 @@ func (m *Talos) Apply(
 	// +default=false
 	insecure bool,
 	node string,
-) error {
+) (string, error) {
 	if strings.TrimSpace(node) == "" {
-		return fmt.Errorf("node is required")
+		return "", fmt.Errorf("node is required")
 	}
 
 	nodeIP, err := m.Cfg.nodeIPByName(node)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	machineCfg, err := m.MachineConfig(ctx, node)
 	if err != nil {
-		return fmt.Errorf("failed to generate machine config for apply: %w", err)
+		return "", fmt.Errorf("failed to generate machine config for apply: %w", err)
 	}
 
 	args := []string{"talosctl", "apply", "-f", "/machineconfig.yaml", "--nodes", nodeIP}
@@ -267,16 +267,14 @@ func (m *Talos) Apply(
 
 	runtimeCtr, err := m.Container(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to create talos runtime container: %w", err)
+		return "", fmt.Errorf("failed to create talos runtime container: %w", err)
 	}
 
-	_, err = runtimeCtr.
+	return runtimeCtr.
 		WithMountedSecret("/machineconfig.yaml", machineCfg).
 		WithEnvVariable("CACHEBUSTER", time.Now().String()).
 		WithExec(args).
-		Sync(ctx)
-
-	return err
+		CombinedOutput(ctx)
 }
 
 // +cache="never"
@@ -286,10 +284,10 @@ func (m *Talos) ApplyAll(
 	insecure bool,
 ) error {
 	for _, node := range m.Cfg.Nodes {
-		if err := m.Apply(ctx, insecure, node.Hostname); err != nil {
+		if _, err := m.Apply(ctx, insecure, node.Hostname); err != nil {
 			var e *dagger.ExecError
 			if errors.As(err, &e) && strings.Contains(e.Stderr, "certificate required") {
-				if err := m.Apply(ctx, false, node.Hostname); err != nil {
+				if _, err := m.Apply(ctx, false, node.Hostname); err != nil {
 					return fmt.Errorf("failed to apply config for node %s: %w", node.Hostname, err)
 				}
 			} else {

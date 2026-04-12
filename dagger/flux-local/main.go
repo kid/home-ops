@@ -68,7 +68,8 @@ func (m *FluxLocal) Build(
 	// +optional
 	skipHelm bool,
 ) (*dagger.File, error) {
-	args := []string{"flux-local", "build", kind, "--output", "/out/manifests.yaml", "--no-skip-crds", "--no-skip-secrets"}
+	// FIXME: skipping invalid paths because of kubevirt source
+	args := []string{"flux-local", "build", kind, "--output", "/out/manifests.yaml", "--no-skip-crds", "--no-skip-secrets", "--skip-invalid-kustomization-paths"}
 	if len(skipKinds) > 0 {
 		args = append(args, "--skip-kinds", strings.Join(skipKinds, ","))
 	}
@@ -131,7 +132,7 @@ func (m *FluxLocal) TestBuild(
 	var results []string
 	ctr := m.Container()
 	for _, cluster := range clusters {
-		out, err := ctr.WithExec([]string{"flux-local", "build", "all", "--enable-helm", fmt.Sprintf("clusters/%s", cluster)}).CombinedOutput(ctx)
+		out, err := ctr.WithExec([]string{"flux-local", "build", "all", "--skip-invalid-kustomization-paths", "--enable-helm", fmt.Sprintf("clusters/%s", cluster)}).CombinedOutput(ctx)
 		if err != nil {
 			return "", fmt.Errorf("tests failed for cluster %s: %w\nOutput:\n%s", cluster, err, out)
 		}

@@ -38,6 +38,7 @@ func (m *Bootstrap) All(
 
 	talosConfigs *dagger.Directory,
 	talosSecrets *dagger.Secret,
+	onepasswordToken *dagger.Secret,
 ) error {
 	talos := dag.Talos(dagger.TalosOpts{
 		// Configs: m.Source.Directory(fmt.Sprintf("clusters/%s/talos", m.Cluster)),
@@ -59,12 +60,12 @@ func (m *Bootstrap) All(
 		return fmt.Errorf("waiting for nodes: %w", err)
 	}
 
-	if err := m.Namespaces(ctx, kubeconfig); err != nil {
-		return fmt.Errorf("creating namespaces: %w", err)
-	}
-
 	if err := m.Crds(ctx, kubeconfig); err != nil {
 		return fmt.Errorf("creating crds: %w", err)
+	}
+
+	if err := m.Namespaces(ctx, kubeconfig); err != nil {
+		return fmt.Errorf("creating namespaces: %w", err)
 	}
 
 	releases := []addonSpec{
@@ -106,6 +107,14 @@ func (m *Bootstrap) All(
 		}
 	}
 
+	if err := m.Secret(ctx, kubeconfig, onepasswordToken); err != nil {
+		return err
+	}
+
+	if err := m.Flux(ctx, kubeconfig); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -113,7 +122,9 @@ func (m *Bootstrap) Container(kubeconfig *dagger.Secret) *dagger.Container {
 	return dag.Wolfi().
 		Container(dagger.WolfiContainerOpts{Packages: []string{"kubectl", "yq"}}).
 		WithMountedSecret("/kubeconfig.yaml", kubeconfig).
-		WithEnvVariable("KUBECONFIG", "/kubeconfig.yaml")
+		WithEnvVariable("KUBECONFIG", "/kubeconfig.yaml").
+		WithDirectory("/src", m.Source).
+		WithWorkdir("/src")
 }
 
 func (m *Bootstrap) bootstrapTalos(ctx context.Context, talos *dagger.Talos) error {
@@ -156,7 +167,7 @@ func (m *Bootstrap) Wait(
 ) error {
 	const apiServerReadyScript = `
 attempt=0
-max_attempts=24
+max_attempts=30
 
 until kubectl --request-timeout=5s get --raw=/readyz >/dev/null 2>&1; do
 	attempt=$((attempt + 1))
@@ -251,10 +262,40 @@ func (m *Bootstrap) Apply(
 
 	_, err := m.Container(kubeconfig).
 		WithMountedFile("/manifests.yaml", manifest).
-		WithExec([]string{"kubectl", "apply", "--server-side", "--field-manager=bootstrap", "--force-conflicts", "-f", "/manifests.yaml", "--kubeconfig=/kubeconfig.yaml"}).
+		WithExec([]string{"kubectl", "apply", "--server-side", "--field-manager=bootstrap", "--force-conflicts", "-f", "/manifests.yaml"}).
 		Sync(ctx)
 	if err != nil {
 		return fmt.Errorf("applying Flux resource %s/%s: %w", namespace, name, err)
+	}
+
+	return nil
+}
+
+func (m *Bootstrap) Secret(
+	ctx context.Context,
+	kubeconfig *dagger.Secret,
+	onepasswordToken *dagger.Secret,
+) error {
+	_, err := m.Container(kubeconfig).
+		// WithSecretVariable("OP_SERVICE_ACCOUNT_TOKEN", onepasswordToken).
+		WithMountedSecret("/secrets.env", onepasswordToken).
+		WithExec([]string{"kubectl", "create", "secret", "generic", "onepassword-secret", "-n", "external-secrets", "--from-file=token=/secrets.env"}).
+		Sync(ctx)
+	if err != nil {
+		return fmt.Errorf("creating onepassword secret: %w", err)
+	}
+
+	return nil
+}
+
+func (m *Bootstrap) Flux(
+	ctx context.Context,
+	kubeconfig *dagger.Secret,
+) error {
+
+	_, err := m.Container(kubeconfig).WithExec([]string{"kubectl", "apply", "-k", fmt.Sprintf("clusters/%s", m.Cluster)}).Sync(ctx)
+	if err != nil {
+		return fmt.Errorf("applying Flux configuration: %w", err)
 	}
 
 	return nil
