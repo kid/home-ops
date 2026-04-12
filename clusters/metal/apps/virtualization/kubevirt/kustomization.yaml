@@ -10,7 +10,7 @@ patches:
       version: v1
       kind: KubeVirt
       name: kubevirt
-      namespace: virtualization
+      namespace: kubevirt
     patch: |-
       - op: replace
         path: /spec/configuration/developerConfiguration/featureGates

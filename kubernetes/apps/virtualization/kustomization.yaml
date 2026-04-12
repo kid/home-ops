@@ -10,7 +10,6 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./kubevirt/source.yaml
   - ./kubevirt/ks.yaml
   - ./kubevirt/ks.config.yaml
   - ./cdi/ks.yaml
