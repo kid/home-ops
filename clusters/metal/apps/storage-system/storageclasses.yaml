@@ -12,3 +12,4 @@ parameters:
   storage: lvm
   fsType: ext4
   vgpattern: ".*"
+  thinProvision: "yes"
