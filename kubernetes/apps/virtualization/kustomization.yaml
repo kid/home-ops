@@ -13,5 +13,4 @@ resources:
   - ./kubevirt/source.yaml
   - ./cdi/source.yaml
   - ./kubevirt/ks.yaml
-  - ./kubevirt/ks.config.yaml
   - ./cdi/ks.yaml

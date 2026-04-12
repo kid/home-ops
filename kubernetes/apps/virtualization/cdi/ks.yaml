@@ -6,7 +6,7 @@ metadata:
   name: cdi
 spec:
   dependsOn:
-    - name: kubevirt-config
+    - name: kubevirt
   interval: 1h
   path: ./deploy
   prune: true
