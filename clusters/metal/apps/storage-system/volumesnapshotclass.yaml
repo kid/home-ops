@@ -2,8 +2,8 @@
 apiVersion: snapshot.storage.k8s.io/v1
 kind: VolumeSnapshotClass
 metadata:
-  name: openebs-lvm-snapshots
+  name: openebs-zfs-snapshots
   annotations:
     snapshot.storage.kubernetes.io/is-default-class: "true"
-driver: local.csi.openebs.io
+driver: zfs.csi.openebs.io
 deletionPolicy: Delete
