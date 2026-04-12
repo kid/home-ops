@@ -17,7 +17,7 @@ patches:
       group: kustomize.toolkit.fluxcd.io
       version: v1
       kind: Kustomization
-      name: kubevirt
+      name: kubevirt-config
       namespace: virtualization
     patch: |-
       - op: replace
