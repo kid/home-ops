@@ -5,8 +5,11 @@ customization:
     - pcie_aspm.policy=powersave
     - cpufreq.default_governor=powersave
     - energy_performance_preference=power
+    - amd_iommu=on
+    - iommu=pt
+    - vfio-pci.ids=1000:00e6
+    - module_blacklist=mpt3sas
   systemExtensions:
     officialExtensions:
       - siderolabs/amd-ucode
-      - siderolabs/zfs
   bootloader: sd-boot

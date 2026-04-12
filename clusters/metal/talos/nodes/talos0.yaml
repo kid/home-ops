@@ -2,7 +2,7 @@
 machine:
   type: controlplane
   install:
-    disk: /home/nvme0
+    disk: /dev/nvme0n1
     wipe: true
 ---
 apiVersion: v1alpha1

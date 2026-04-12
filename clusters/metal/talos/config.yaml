@@ -14,15 +14,16 @@ nodes:
     role: controlplane
     patches:
       - ./nodes/talos0.yaml
-      - ./patches/zfs.yaml
-  - ipAddress: 10.0.40.201
-    hostname: talos1
-    role: worker
-    target: cloud
-    platform: nocloud
-    patches:
-      - ./nodes/talos1.yaml
-      - ./patches/zfs.yaml
+      - ./patches/vfio.yaml
+      # - ./patches/zfs.yaml
+  # - ipAddress: 10.0.40.201
+  #   hostname: talos1
+  #   role: worker
+  #   target: cloud
+  #   platform: nocloud
+  #   patches:
+  #     - ./nodes/talos1.yaml
+  #     - ./patches/zfs.yaml
 
 patches:
   common:
