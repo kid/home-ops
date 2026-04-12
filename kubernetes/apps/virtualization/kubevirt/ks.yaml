@@ -6,11 +6,11 @@ metadata:
   name: kubevirt
 spec:
   interval: 1h
-  path: ./kubernetes/apps/virtualization/kubevirt/app
+  path: ./deploy
   prune: true
   sourceRef:
     kind: GitRepository
-    name: flux-system
-    namespace: flux-system
+    name: kubevirt-upstream
+    namespace: virtualization
   targetNamespace: virtualization
   wait: true

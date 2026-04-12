@@ -8,11 +8,11 @@ spec:
   dependsOn:
     - name: kubevirt-config
   interval: 1h
-  path: ./kubernetes/apps/virtualization/cdi/app
+  path: ./deploy
   prune: true
   sourceRef:
     kind: GitRepository
-    name: flux-system
-    namespace: flux-system
+    name: cdi-upstream
+    namespace: virtualization
   targetNamespace: virtualization
   wait: true
