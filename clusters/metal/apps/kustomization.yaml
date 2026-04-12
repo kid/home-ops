@@ -9,7 +9,7 @@ resources:
   - ../../../kubernetes/apps/kube-system/
   - ../../../kubernetes/apps/network-system/
   - ../../../kubernetes/apps/observability/
-  - ../../../kubernetes/apps/virtualization-system/
+  - ../../../kubernetes/apps/virtualization/
   # - ./storage-system/
 
 patches:
@@ -18,8 +18,8 @@ patches:
       version: v1
       kind: Kustomization
       name: kubevirt
-      namespace: virtualization-system
+      namespace: virtualization
     patch: |-
       - op: replace
         path: /spec/path
-        value: ./clusters/metal/apps/virtualization-system/kubevirt
+        value: ./clusters/metal/apps/virtualization/kubevirt

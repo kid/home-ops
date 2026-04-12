@@ -6,9 +6,9 @@ metadata:
   name: cdi
 spec:
   dependsOn:
-    - name: kubevirt
+    - name: kubevirt-config
   interval: 1h
-  path: ./kubernetes/apps/virtualization-system/cdi/app
+  path: ./kubernetes/apps/virtualization/cdi/app
   prune: true
   sourceRef:
     kind: GitRepository

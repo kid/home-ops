@@ -1,0 +1,89 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: nas
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: nas
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: talos0
+      domain:
+        machine:
+          type: q35
+        cpu:
+          cores: 2
+        resources:
+          requests:
+            memory: 4Gi
+        devices:
+          interfaces:
+            - name: default
+              masquerade: {}
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          hostDevices:
+            - name: sas-hba
+              deviceName: devices.kubevirt.io/sas-hba
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/ubuntu:24.04@sha256:85fb07fb7f2da486926955cbcd16f0c974f44da37bbff8525a69bfe995860b34
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              package_update: true
+              ssh_authorized_keys:
+                - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan
+                - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13
+              packages:
+                - zfsutils-linux
+                - nfs-kernel-server
+                - qemu-guest-agent
+              write_files:
+                - path: /etc/systemd/system/zfs-hostid.service
+                  permissions: '0644'
+                  owner: root:root
+                  content: |
+                    [Unit]
+                    Description=Set stable ZFS hostid
+                    DefaultDependencies=no
+                    Before=zfs-import-cache.service zfs-import-scan.service
+                    ConditionPathExists=/usr/sbin/zgenhostid
+
+                    [Service]
+                    Type=oneshot
+                    ExecStart=/usr/sbin/zgenhostid -f 0x1b7ab8a1
+                    RemainAfterExit=yes
+
+                    [Install]
+                    WantedBy=zfs-import-cache.service
+                    WantedBy=zfs-import-scan.service
+              runcmd:
+                - curl -fsSL -o /tmp/hd-idle_amd64.deb https://github.com/adelolmo/hd-idle/releases/download/v1.21/hd-idle_1.21_amd64.deb
+                - apt-get install -y /tmp/hd-idle_amd64.deb
+                - sed -i -E 's/^#?[[:space:]]*START_HD_IDLE=.*/START_HD_IDLE=true/' /etc/default/hd-idle
+                - sed -i -E 's|^#?[[:space:]]*HD_IDLE_OPTS=.*|HD_IDLE_OPTS="-i 1800"|' /etc/default/hd-idle
+                - grep -q '^START_HD_IDLE=' /etc/default/hd-idle || echo 'START_HD_IDLE=true' >> /etc/default/hd-idle
+                - grep -q '^HD_IDLE_OPTS=' /etc/default/hd-idle || echo 'HD_IDLE_OPTS="-i 1800"' >> /etc/default/hd-idle
+                - systemctl daemon-reload
+                - systemctl enable --now zfs-hostid.service
+                - mkdir -p /mnt/tank
+                - grep -q '^/mnt/tank ' /etc/exports || echo '/mnt/tank *(rw,sync,no_subtree_check,no_root_squash)' >> /etc/exports
+                - exportfs -ra
+                - systemctl enable --now hd-idle
+                - systemctl enable --now nfs-server
+                - systemctl enable --now qemu-guest-agent

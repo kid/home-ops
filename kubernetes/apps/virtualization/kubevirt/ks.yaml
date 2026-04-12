@@ -11,5 +11,5 @@ spec:
   sourceRef:
     kind: GitRepository
     name: kubevirt-upstream
-    namespace: virtualization-system
+    namespace: virtualization
   wait: true

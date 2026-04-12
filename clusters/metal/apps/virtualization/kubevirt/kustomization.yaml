@@ -3,14 +3,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../../../../../kubernetes/apps/virtualization-system/kubevirt/config
+  - ../../../../../kubernetes/apps/virtualization/kubevirt/config
 patches:
   - target:
       group: kubevirt.io
       version: v1
       kind: KubeVirt
       name: kubevirt
-      namespace: kubevirt
+      namespace: virtualization
     patch: |-
       - op: replace
         path: /spec/configuration/developerConfiguration/featureGates
