@@ -33,6 +33,7 @@ spec:
                 claimName: ${APP}
   persistentVolumeClaim:
     spec:
+      storageClassName: ${APP_STORAGECLASS}
       accessModes:
         - ReadWriteOnce
       resources:
