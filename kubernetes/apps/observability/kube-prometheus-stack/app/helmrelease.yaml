@@ -55,7 +55,7 @@ spec:
             spec:
               accessModes:
                 - ReadWriteOnce
-              storageClassName: openebs-zfs-ssd
+              storageClassName: openebs-lvm-ssd
               resources:
                 requests:
                   storage: 50Gi

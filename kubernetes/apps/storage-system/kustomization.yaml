@@ -10,7 +10,6 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./local-path-provisioner/ks.yaml
   - ./nas/ks.yaml
   - ./openebs/ks.yaml
   - ./volsync/ks.yaml

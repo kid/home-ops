@@ -2,27 +2,12 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: openebs-zfs-hdd
-  annotations:
-    storageclass.kubernetes.io/is-default-class: "true"
-provisioner: zfs.csi.openebs.io
+  name: openebs-lvm-ssd
+provisioner: local.csi.openebs.io
 allowVolumeExpansion: true
 reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 parameters:
-  fstype: zfs
-  poolname: tank
-  compression: lz4
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: openebs-zfs-ssd
-provisioner: zfs.csi.openebs.io
-allowVolumeExpansion: true
-reclaimPolicy: Delete
-volumeBindingMode: WaitForFirstConsumer
-parameters:
-  fstype: zfs
-  poolname: ssd
-  compression: lz4
+  storage: lvm
+  fsType: ext4
+  vgpattern: ".*"
