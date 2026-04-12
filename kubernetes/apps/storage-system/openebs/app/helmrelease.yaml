@@ -13,9 +13,9 @@ spec:
     engines:
       local:
         lvm:
-          enabled: true
-        zfs:
           enabled: false
+        zfs:
+          enabled: true
         rawfile:
           enabled: false
       replicated:
@@ -31,19 +31,20 @@ spec:
       csi:
         volumeSnapshots:
           enabled: true
-    lvm-localpv:
+    zfs-localpv:
       crds:
-        lvmLocalPv:
+        zfsLocalPv:
           enabled: true
         csi:
           volumeSnapshots:
             enabled: false
-      lvmNode:
+      zfsNode:
+        encrKeysDir: /var/openebs/keys
         tolerations:
           - key: node-role.kubernetes.io/control-plane
             operator: Exists
             effect: NoSchedule
-      lvmController:
+      zfsController:
         tolerations:
           - key: node-role.kubernetes.io/control-plane
             operator: Exists

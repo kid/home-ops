@@ -2,14 +2,14 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: openebs-lvm-ssd
+  name: openebs-zfs-ssd
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
-provisioner: local.csi.openebs.io
+provisioner: zfs.csi.openebs.io
 allowVolumeExpansion: true
 reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
 parameters:
-  storage: lvm
-  fsType: ext4
-  vgpattern: ".*"
-  thinProvision: "yes"
+  fstype: zfs
+  poolname: ssd
+  compression: lz4
