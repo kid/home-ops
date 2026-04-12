@@ -7,6 +7,10 @@ metadata:
 spec:
   dependsOn:
     - name: grafana
+    - name: external-secrets
+      namespace: external-secrets
+    - name: volsync
+      namespace: storage-system
   interval: 1h
   path: ./kubernetes/apps/observability/grafana/resources
   prune: true
@@ -16,3 +20,10 @@ spec:
     namespace: flux-system
   targetNamespace: observability
   wait: true
+  components:
+    - ../../../../components/volsync/
+  postBuild:
+    substitute:
+      APP: grafana
+      VOLSYNC_PUID: "10001"
+      VOLSYNC_PGID: "10001"

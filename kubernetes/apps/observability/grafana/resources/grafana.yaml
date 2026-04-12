@@ -30,7 +30,7 @@ spec:
           volumes:
             - name: grafana-data
               persistentVolumeClaim:
-                claimName: grafana-pvc
+                claimName: ${APP}
   persistentVolumeClaim:
     spec:
       accessModes:

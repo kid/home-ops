@@ -1,0 +1,31 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.m00nlit.dev/volsync.backube/replicationsource_v1alpha1.json
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: "${APP}"
+spec:
+  sourcePVC: "${VOLSYNC_PVC:=${APP}}"
+  trigger:
+    schedule: "0 */2 * * *"
+
+  restic:
+    copyMethod: "${VOLSYNC_COPYMETHOD:=Snapshot}"
+    pruneIntervalDays: 14
+    repository: "${APP}-volsync-secret"
+    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=${APP_SNAPSHOTCLASS}}"
+    cacheCapacity: "${VOLSYNC_CACHE_CAPACITY:=5Gi}"
+    cacheStorageClassName: "${VOLSYNC_CACHE_SNAPSHOTCLASS:=${APP_STORAGECLASS}}"
+    cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
+    storageClassName: "${VOLSYNC_STORAGECLASS:=${APP_STORAGECLASS}}"
+    accessModes: ["${VOLSYNC_SNAP_ACCESSMODES:=ReadWriteOnce}"]
+
+    moverSecurityContext:
+      runAsUser: ${VOLSYNC_PUID:=1000}
+      runAsGroup: ${VOLSYNC_PGID:=1000}
+      fsGroup: ${VOLSYNC_PGID:=1000}
+      fsGroupChangePolicy: "OnRootMismatch"
+
+    retain:
+      hourly: 24
+      daily: 7

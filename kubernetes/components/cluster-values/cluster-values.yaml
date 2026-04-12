@@ -5,3 +5,5 @@ metadata:
   name: cluster-values
 data:
   APP_DOMAIN: ${APP_DOMAIN}
+  APP_STORAGECLASS: ${APP_STORAGECLASS}
+  APP_SNAPSHOTCLASS: ${APP_SNAPSHOTCLASS}
