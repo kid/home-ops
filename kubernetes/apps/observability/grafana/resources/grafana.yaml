@@ -34,7 +34,6 @@ spec:
       resources:
         requests:
           storage: 10Gi
-      storageClassName: openebs-lvm-ssd
   httpRoute:
     spec:
       hostnames:
