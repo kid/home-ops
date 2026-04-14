@@ -70,8 +70,6 @@ spec:
                   type: DirectoryOrCreate
     storageClasses:
       - name: linstor-zfs-virtio
-        annotations:
-          storageclass.kubernetes.io/is-default-class: "true"
         allowVolumeExpansion: true
         volumeBindingMode: WaitForFirstConsumer
         reclaimPolicy: Delete
