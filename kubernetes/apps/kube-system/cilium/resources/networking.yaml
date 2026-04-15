@@ -7,10 +7,9 @@ metadata:
 spec:
   allowFirstLastIPs: "No"
   blocks:
-    - cidr: 10.0.42.0/24
+    - cidr: "${NETWORK_LB_CIDR}"
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/cilium.io/ciliumbgpadvertisement_v2.json
-apiVersion: cilium.io/v2
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/cilium.io/ciliumbgpadvertisement_v2.json apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
 metadata:
   name: l3-bgp-advertisement
@@ -57,9 +56,9 @@ spec:
     - name: cilium
       localASN: 64513
       peers:
-        - name: rb5009
+        - name: "${NETWORK_ROUTER_NAME}"
           peerASN: 64512
-          peerAddress: 10.0.40.1
+          peerAddress: "${NETWORK_ROUTER_IP}"
           peerConfigRef:
             name: l3-bgp-peer-config
 ---
@@ -69,7 +68,7 @@ metadata:
   name: kube-api
   annotations:
     external-dns.alpha.kubernetes.io/hostname: k8s.internal
-    lbipam.cilium.io/ips: 10.0.42.10
+    lbipam.cilium.io/ips: "${NETWORK_API_SERVER_IP}"
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Local

@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: nas
   annotations:
-    lbipam.cilium.io/ips: 10.0.42.20
+    lbipam.cilium.io/ips: "${${NETWORK_LB_CIDR%%/*}%.*}.20"
 spec:
   type: LoadBalancer
   selector:

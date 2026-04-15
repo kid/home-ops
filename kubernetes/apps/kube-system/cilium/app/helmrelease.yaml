@@ -19,6 +19,8 @@ spec:
     ipam:
       mode: kubernetes
 
+    clusterPoolIPv4PodCIDRList: ["${NETWORK_POD_CIDR}"]
+
     # Use Talos-compatible settings
     securityContext:
       capabilities:
