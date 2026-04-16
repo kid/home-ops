@@ -35,6 +35,8 @@ spec:
     linstorSatelliteConfigurations:
       - name: zfs-pool
         storagePools:
+          - name: ssd
+            zfsThinPool: {}
           - name: zfs-data-virtio
             source:
               hostDevices:
@@ -69,6 +71,14 @@ spec:
                   path: /var/etc/lvm/archive
                   type: DirectoryOrCreate
     storageClasses:
+      - name: linstor-zfs-ssd
+        allowVolumeExpansion: true
+        volumeBindingMode: WaitForFirstConsumer
+        reclaimPolicy: Delete
+        provisioner: linstor.csi.linbit.com
+        parameters:
+          linstor.csi.linbit.com/storagePool: ssd
+          linstor.csi.linbit.com/placementCount: "1"
       - name: linstor-zfs-virtio
         allowVolumeExpansion: true
         volumeBindingMode: WaitForFirstConsumer
@@ -79,6 +89,6 @@ spec:
           linstor.csi.linbit.com/placementCount: "2"
 
     volumeSnapshotClasses:
-      - name: linstor-zfs-virtio
+      - name: linstor-zfs
         driver: linstor.csi.linbit.com
         deletionPolicy: Delete
