@@ -9,7 +9,8 @@ spec:
   blocks:
     - cidr: "${NETWORK_LB_CIDR}"
 ---
-# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/cilium.io/ciliumbgpadvertisement_v2.json apiVersion: cilium.io/v2
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/cilium.io/ciliumbgpadvertisement_v2.json
+apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
 metadata:
   name: l3-bgp-advertisement
