@@ -53,7 +53,7 @@ spec:
         storageSpec:
           volumeClaimTemplate:
             spec:
-              storageClassName: linstor-zfs-virtio
+              storageClassName: linstor-zfs-ssd
               accessModes:
                 - ReadWriteOnce
               resources:
