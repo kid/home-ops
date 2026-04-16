@@ -38,12 +38,6 @@ spec:
           - name: ssd
             zfsThinPool:
               zPool: ssd/piraeus
-          - name: zfs-data-virtio
-            source:
-              hostDevices:
-                - /dev/vdb
-            zfsPool:
-              zPool: data-virtio
       - name: talos-loader-override
         podTemplate:
           spec:
@@ -80,14 +74,6 @@ spec:
         parameters:
           linstor.csi.linbit.com/storagePool: ssd
           linstor.csi.linbit.com/placementCount: "1"
-      - name: linstor-zfs-virtio
-        allowVolumeExpansion: true
-        volumeBindingMode: WaitForFirstConsumer
-        reclaimPolicy: Delete
-        provisioner: linstor.csi.linbit.com
-        parameters:
-          linstor.csi.linbit.com/storagePool: zfs-data-virtio
-          linstor.csi.linbit.com/placementCount: "2"
 
     volumeSnapshotClasses:
       - name: linstor-zfs
