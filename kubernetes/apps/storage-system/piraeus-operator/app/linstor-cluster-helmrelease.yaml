@@ -77,3 +77,8 @@ spec:
         parameters:
           linstor.csi.linbit.com/storagePool: zfs-data-virtio
           linstor.csi.linbit.com/placementCount: "2"
+
+    volumeSnapshotClasses:
+      - name: linstor-zfs-virtio
+        driver: linstor.csi.linbit.com
+        deletionPolicy: Delete
