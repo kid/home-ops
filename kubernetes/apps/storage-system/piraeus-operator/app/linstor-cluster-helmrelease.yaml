@@ -36,7 +36,8 @@ spec:
       - name: zfs-pool
         storagePools:
           - name: ssd
-            zfsThinPool: {}
+            zfsThinPool:
+              zPool: ssd/piraeus
           - name: zfs-data-virtio
             source:
               hostDevices:
