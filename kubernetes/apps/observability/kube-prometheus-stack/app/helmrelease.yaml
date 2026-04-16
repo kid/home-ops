@@ -58,7 +58,7 @@ spec:
                 - ReadWriteOnce
               resources:
                 requests:
-                  storage: 50Gi
+                  storage: 10Gi
     prometheus-node-exporter:
       fullnameOverride: node-exporter
       affinity:
