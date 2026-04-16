@@ -76,4 +76,4 @@ spec:
         provisioner: linstor.csi.linbit.com
         parameters:
           linstor.csi.linbit.com/storagePool: zfs-data-virtio
-          linstor.csi.linbit.com/placementCount: "1"
+          linstor.csi.linbit.com/placementCount: "2"
