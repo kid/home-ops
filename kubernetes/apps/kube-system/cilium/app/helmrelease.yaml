@@ -76,7 +76,7 @@ spec:
 
     # Enable native routing (recommended for Talos)
     routingMode: native
-    ipv4NativeRoutingCIDR: 10.42.0.0/16 # Match your pod CIDR
+    ipv4NativeRoutingCIDR: ${NETWORK_POD_CIDR} # Match your pod CIDR
 
     autoDirectNodeRoutes: true
 

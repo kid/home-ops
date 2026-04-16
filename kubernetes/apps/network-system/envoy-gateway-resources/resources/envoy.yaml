@@ -139,7 +139,7 @@ spec:
   clientIPDetection:
     xForwardedFor:
       trustedCIDRs:
-        - 10.42.0.0/16
+        - ${NETWORK_POD_CIDR}
   http2:
     onInvalidMessage: TerminateStream
   http3: {}
