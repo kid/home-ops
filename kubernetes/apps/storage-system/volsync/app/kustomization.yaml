@@ -6,3 +6,5 @@ kind: Kustomization
 resources:
   - ./ocirepository.yaml
   - ./helmrelease.yaml
+  - ./prometheus-rule.yaml
+  - ./grafana-dashboard.yaml
