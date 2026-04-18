@@ -10,6 +10,16 @@ spec:
     kind: OCIRepository
     name: openebs
   values:
+    localpv-provisioner:
+      analytics:
+        enabled: false
+      localpv:
+        basePath: &hostPath /var/mnt/local-storage
+      hostpathClass:
+        enabled: true
+        name: openebs-hostpath
+        isDefaultClass: false
+        basePath: *hostPath
     engines:
       local:
         lvm:
