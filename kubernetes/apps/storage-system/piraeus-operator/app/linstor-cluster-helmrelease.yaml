@@ -13,6 +13,10 @@ spec:
       namespace: storage-system
   interval: 1h
   values:
+    monitoring:
+      enabled: true
+      dashboard:
+        enabled: true
     linstorCluster:
       controller:
         podTemplate:
