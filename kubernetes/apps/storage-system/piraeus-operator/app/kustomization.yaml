@@ -8,3 +8,4 @@ resources:
   - ./helmrelease.yaml
   - ./linstor-cluster-ocirepository.yaml
   - ./linstor-cluster-helmrelease.yaml
+  - ./grafanadashboard.yaml
