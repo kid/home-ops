@@ -1,8 +1,10 @@
 machine:
   certSANs:
+    - k8s.internal
     - metal.talos.internal
 cluster:
   apiServer:
     certSANs:
+      - k8s.internal
       - metal.talos.internal
 

@@ -5,3 +5,7 @@ cluster:
   network:
     cni:
       name: none
+    podSubnets:
+      - ${NETWORK_POD_CIDR}
+    serviceSubnets:
+      - ${NETWORK_SVC_CIDR}
