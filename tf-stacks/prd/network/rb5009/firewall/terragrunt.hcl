@@ -36,6 +36,7 @@ inputs = merge(
       ]
       "${local.vlans.Talos.name}" = [
         { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), dst_port = 443, protocol = "tcp", comment = "Allow access to Management from Talos for external-dns" },
+        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), dst_port = 8729, protocol = "tcp", comment = "Allow access to Management from Talos for mikrotik-exporter" },
       ]
     }
 
@@ -57,6 +58,7 @@ inputs = merge(
       "${local.vlans.Talos.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
         { action = "accept", dst_address = "10.0.42.0/24", comment = "Allow Traffic to load balancer ips" },
+        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 2), dst_port = 8729, protocol = "tcp", comment = "Allow access to crs320 for mikrotik-exporter" },
       ]
       "${local.vlans.IotLocal.name}" = [
         { action = "accept", out_interface_list = "WAN", comment = "Allow WAN", disabled = true },
