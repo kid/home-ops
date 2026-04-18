@@ -123,16 +123,16 @@ func (m *Talos) schematicFileForNode(ctx context.Context, nodeName string) (stri
 func (m *Talos) MachineConfig(
 	ctx context.Context,
 	// +optional
-	nodeName string,
+	node string,
 ) (*dagger.Secret, error) {
-	nodeType, err := m.Cfg.nodeType(nodeName)
+	nodeType, err := m.Cfg.nodeType(node)
 	if err != nil {
 		return nil, err
 	}
 
-	destination := fmt.Sprintf("/tmp/%s.yaml", machineConfigSecretName(nodeName))
+	destination := fmt.Sprintf("/tmp/%s.yaml", machineConfigSecretName(node))
 
-	installer, err := m.InstallerImage(ctx, nodeName)
+	installer, err := m.InstallerImage(ctx, node)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (m *Talos) MachineConfig(
 		"--with-kubespan=false",
 	}
 
-	patches, err := m.Cfg.patchesFor(nodeName)
+	patches, err := m.Cfg.patchesFor(node)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (m *Talos) MachineConfig(
 		return nil, fmt.Errorf("failed to generate machine config: %w", err)
 	}
 
-	return dag.SetSecret(machineConfigSecretName(nodeName), machineConfigContents), nil
+	return dag.SetSecret(machineConfigSecretName(node), machineConfigContents), nil
 }
 
 // +check
@@ -299,6 +299,7 @@ func (m *Talos) ApplyAll(
 	return nil
 }
 
+// +cache="never"
 func (m *Talos) Upgrade(
 	ctx context.Context,
 	node string,
@@ -315,9 +316,11 @@ func (m *Talos) Upgrade(
 		return nil, err
 	}
 
-	args := []string{"talosctl", "upgrade", "--wait", "--nodes", ip, "--image", img}
+	args := []string{"talosctl", "upgrade", "--nodes", ip, "--image", img}
 	if insecure {
 		args = append(args, "--insecure")
+	} else {
+		args = append(args, "--wait")
 	}
 
 	ctr, err := m.Container(ctx)
@@ -325,7 +328,7 @@ func (m *Talos) Upgrade(
 		return nil, err
 	}
 
-	return ctr.WithExec(args), nil
+	return ctr.WithEnvVariable("CACHEBUSTER", time.Now().String()).WithExec(args), nil
 }
 
 // +cache="never"

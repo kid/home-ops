@@ -68,43 +68,8 @@ func (m *Bootstrap) All(
 		return fmt.Errorf("creating namespaces: %w", err)
 	}
 
-	releases := []addonSpec{
-		{
-			kind:      "hr",
-			name:      "cilium",
-			namespace: "kube-system",
-			skipKinds: []string{"ServiceMonitor"},
-		},
-		{
-			kind:      "ks",
-			name:      "cilium-resources",
-			namespace: "kube-system",
-		},
-		{
-			kind:      "hr",
-			name:      "external-secrets",
-			namespace: "external-secrets",
-			skipKinds: []string{"ServiceMonitor"},
-		},
-		{
-			kind:      "hr",
-			name:      "flux-operator",
-			namespace: "flux-system",
-			skipKinds: []string{"ServiceMonitor"},
-		},
-		{
-			kind:      "hr",
-			name:      "flux-instance",
-			namespace: "flux-system",
-			skipKinds: []string{"ServiceMonitor"},
-		},
-	}
-
-	for _, release := range releases {
-		err := m.Apply(ctx, kubeconfig, release.kind, release.name, release.namespace, release.skipKinds)
-		if err != nil {
-			return err
-		}
+	if err := m.Apps(ctx, kubeconfig); err != nil {
+		return fmt.Errorf("applying apps: %w", err)
 	}
 
 	if err := m.Secret(ctx, kubeconfig, onepasswordToken); err != nil {
@@ -120,7 +85,7 @@ func (m *Bootstrap) All(
 
 func (m *Bootstrap) Container(kubeconfig *dagger.Secret) *dagger.Container {
 	return dag.Wolfi().
-		Container(dagger.WolfiContainerOpts{Packages: []string{"kubectl", "yq"}}).
+		Container(dagger.WolfiContainerOpts{Packages: []string{"kubectl", "yq", "flux"}}).
 		WithMountedSecret("/kubeconfig.yaml", kubeconfig).
 		WithEnvVariable("KUBECONFIG", "/kubeconfig.yaml").
 		WithDirectory("/src", m.Source).
@@ -211,6 +176,7 @@ func (m *Bootstrap) Namespaces(
 		FluxLocal(dagger.FluxLocalOpts{Source: m.Source}).
 		Build(path, dagger.FluxLocalBuildOpts{
 			Kind: "all",
+			// EnvFile: m.Source.File(fmt.Sprintf("clusters/%s/%s.env", m.Cluster, m.Cluster)),
 		})
 	_, err := m.Container(kubeconfig).
 		WithFile("/manifests.yaml", manifests).
@@ -230,6 +196,7 @@ func (m *Bootstrap) Crds(
 		FluxLocal(dagger.FluxLocalOpts{Source: m.Source}).
 		Build(path, dagger.FluxLocalBuildOpts{
 			Kind: "all",
+			// EnvFile: m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)),
 		})
 	_, err := m.Container(kubeconfig).
 		WithFile("/manifests.yaml", manifests).
@@ -237,6 +204,52 @@ func (m *Bootstrap) Crds(
 			"sh", "-ec", "yq -e 'select(.kind == \"CustomResourceDefinition\")' /manifests.yaml | kubectl apply --server-side --field-manager=bootstrap --force-conflicts -f -",
 		}).Sync(ctx)
 	return err
+}
+
+func (m *Bootstrap) Apps(
+	ctx context.Context,
+	kubeconfig *dagger.Secret,
+) error {
+	releases := []addonSpec{
+		{
+			kind:      "hr",
+			name:      "cilium",
+			namespace: "kube-system",
+			skipKinds: []string{"ServiceMonitor"},
+		},
+		{
+			kind:      "ks",
+			name:      "cilium-resources",
+			namespace: "kube-system",
+		},
+		{
+			kind:      "hr",
+			name:      "external-secrets",
+			namespace: "external-secrets",
+			skipKinds: []string{"ServiceMonitor"},
+		},
+		{
+			kind:      "hr",
+			name:      "flux-operator",
+			namespace: "flux-system",
+			skipKinds: []string{"ServiceMonitor"},
+		},
+		{
+			kind:      "hr",
+			name:      "flux-instance",
+			namespace: "flux-system",
+			skipKinds: []string{"ServiceMonitor"},
+		},
+	}
+
+	for _, release := range releases {
+		err := m.Apply(ctx, kubeconfig, release.kind, release.name, release.namespace, release.skipKinds)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // +cache="never"
@@ -258,12 +271,19 @@ func (m *Bootstrap) Apply(
 			Name:      name,
 			Namespace: namespace,
 			SkipKinds: skipKinds,
+			// EnvFile:   m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)),
 		})
 
-	_, err := m.Container(kubeconfig).
-		WithMountedFile("/manifests.yaml", manifest).
-		WithExec([]string{"kubectl", "apply", "--server-side", "--field-manager=bootstrap", "--force-conflicts", "-f", "/manifests.yaml"}).
-		Sync(ctx)
+	ctr := m.Container(kubeconfig).WithMountedFile("/manifests.yaml", manifest)
+	if kind == "ks" {
+		ctr = ctr.
+			WithEnvFileVariables(m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)).AsEnvFile()).
+			WithExec([]string{"/bin/sh", "-ec", "cat /manifests.yaml | flux envsubst --strict | kubectl apply --server-side --field-manager=bootstrap --force-conflicts -f -"})
+	} else {
+		ctr = ctr.WithExec([]string{"kubectl", "apply", "--server-side", "--field-manager=bootstrap", "--force-conflicts", "-f", "/manifests.yaml"})
+	}
+
+	_, err := ctr.Sync(ctx)
 	if err != nil {
 		return fmt.Errorf("applying Flux resource %s/%s: %w", namespace, name, err)
 	}

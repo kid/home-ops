@@ -67,6 +67,8 @@ func (m *FluxLocal) Build(
 	skipKinds []string,
 	// +optional
 	skipHelm bool,
+	// +optional
+	envFile *dagger.File,
 ) (*dagger.File, error) {
 	// FIXME: skipping invalid paths because of kubevirt source
 	args := []string{"flux-local", "build", kind, "--output", "/out/manifests.yaml", "--no-skip-crds", "--no-skip-secrets", "--skip-invalid-kustomization-paths"}
@@ -91,6 +93,21 @@ func (m *FluxLocal) Build(
 	ctr, err := m.Container().WithExec(args).Sync(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if envFile != nil {
+		_, err = ctr.
+			WithEnvFileVariables(envFile.AsEnvFile()).
+			// WithExec([]string{"flux", "envsubst"}, dagger.ContainerWithExecOpts{
+			// 	RedirectStdin:  "/out/manifests.yaml",
+			// 	RedirectStdout: "/out/manifests-envsubst.yaml",
+			// }).
+			WithExec([]string{"sh", "-c", "cat /out/manifests.yaml | flux envsubst --strict > /out/manifests-envsubst.yaml"}).
+			Sync(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to run envsubst: %w", err)
+		}
+		return ctr.File("/out/manifests-envsubst.yaml"), nil
 	}
 
 	return ctr.File("/out/manifests.yaml"), nil
