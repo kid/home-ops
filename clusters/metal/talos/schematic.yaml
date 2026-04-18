@@ -13,4 +13,7 @@ customization:
     officialExtensions:
       - siderolabs/amd-ucode
       - siderolabs/zfs
+      - siderolabs/nfsd
+      - siderolabs/nfsrahead
+      - siderolabs/drbd
   bootloader: sd-boot

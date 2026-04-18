@@ -11,7 +11,7 @@ $patch: delete
 ---
 apiVersion: v1alpha1
 kind: HostnameConfig
-hostname: talos1
+hostname: talos2
 ---
 apiVersion: v1alpha1
 kind: VolumeConfig

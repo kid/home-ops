@@ -16,22 +16,32 @@ nodes:
       - ./nodes/talos0.yaml
       - ./patches/vfio.yaml
       - ./patches/zfs.yaml
-  # - ipAddress: 10.0.40.201
-  #   hostname: talos1
-  #   role: worker
-  #   target: cloud
-  #   platform: nocloud
-  #   patches:
-  #     - ./nodes/talos1.yaml
-  #     - ./patches/zfs.yaml
+  - ipAddress: 10.0.40.201
+    hostname: talos1
+    role: controlplane
+    target: cloud
+    platform: nocloud
+    patches:
+      - ./nodes/talos1.yaml
+      - ./patches/zfs.yaml
+  - ipAddress: 10.0.40.202
+    hostname: talos2
+    role: controlplane
+    target: cloud
+    platform: nocloud
+    patches:
+      - ./nodes/talos2.yaml
+      - ./patches/zfs.yaml
 
 patches:
   common:
     - ./patches/files.yaml
     - ./patches/host-dns.yaml
+    - ./patches/cilium.yaml
+    - ./patches/piraeus.yaml
 
   controlplane:
     - ./patches/additional-sans.yaml
-    - ./patches/cilium.yaml
     - ./patches/cluster-discovery.yaml
+    - ./patches/metrics.yaml
     - ./patches/schedule-on-controlplane.yaml
