@@ -11,6 +11,10 @@ spec:
   interval: 1h
   values:
     manageCRDs: true
+
+    metrics:
+      disableAuth: true
+
     tolerations:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
