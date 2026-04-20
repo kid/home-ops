@@ -6,6 +6,8 @@ kind: Kustomization
 resources:
   - ./ocirepository.yaml
   - ./helmrelease.yaml
+  - ./linstor-affinity-controller-ocirepository.yaml
+  - ./linstor-affinity-controller-helmrelease.yaml
   - ./linstor-cluster-ocirepository.yaml
   - ./linstor-cluster-helmrelease.yaml
   - ./grafanadashboard.yaml
