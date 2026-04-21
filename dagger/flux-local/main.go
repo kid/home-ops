@@ -114,6 +114,14 @@ func (m *FluxLocal) Build(
 }
 
 // +check
+func (m *FluxLocal) Diagnostics(
+	ctx context.Context,
+) error {
+	_, err := m.Container().WithExec([]string{"flux-local", "diagnostics"}).Sync(ctx)
+	return err
+}
+
+// +check
 func (m *FluxLocal) Test(
 	ctx context.Context,
 ) (string, error) {
