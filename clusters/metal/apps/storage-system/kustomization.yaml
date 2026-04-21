@@ -5,8 +5,6 @@ kind: Kustomization
 
 resources:
   - ../../../../kubernetes/apps/storage-system/
-  - ./storageclasses.yaml
-  - ./volumesnapshotclass.yaml
 
 # patches:
 #   - target:
