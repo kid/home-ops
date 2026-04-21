@@ -45,6 +45,10 @@ spec:
             properties:
               - name: StorDriver/ZfscreateOptions
                 value: -o volblocksize=4K
+            source:
+              hostDevices:
+                - /dev/vdb
+
       - name: talos-loader-override
         podTemplate:
           spec:
