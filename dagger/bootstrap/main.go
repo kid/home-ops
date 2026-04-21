@@ -171,6 +171,10 @@ done
 }
 
 // +cache="never"
+// Wait is a small wrapper around kubectl wait so bootstrap can declare
+// readiness checks next to each app instead of open-coding shell commands.
+// It supports passing multiple resource targets because several apps need to
+// wait for more than one CRD or object before continuing.
 func (m *Bootstrap) Wait(
 	ctx context.Context,
 	kubeconfig *dagger.Secret,
@@ -224,7 +228,6 @@ func (m *Bootstrap) Crds(
 		FluxLocal(dagger.FluxLocalOpts{Source: m.Source}).
 		Build(path, dagger.FluxLocalBuildOpts{
 			Kind: "all",
-			// EnvFile: m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)),
 		})
 	_, err := m.Container(kubeconfig).
 		WithFile("/manifests.yaml", manifests).
@@ -238,6 +241,10 @@ func (m *Bootstrap) Apps(
 	ctx context.Context,
 	kubeconfig *dagger.Secret,
 ) error {
+	// Bootstrap applies a minimal ordered subset of apps directly, before Flux is
+	// ready to reconcile the full cluster. Per-app waits and skipKinds handle the
+	// cases where later resources depend on CRDs or operators created by earlier
+	// apps.
 	releases := []addonSpec{
 		{
 			kind:      "hr",
@@ -345,13 +352,15 @@ func (m *Bootstrap) Apply(
 			Name:      name,
 			Namespace: namespace,
 			SkipKinds: skipKinds,
-			// EnvFile:   m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)),
+			EnvFile:   m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)),
 		})
 
+	// Apply the manifests exactly as rendered by flux-local. Running envsubst here
+	// is unsafe because Helm charts and manifests may intentionally contain
+	// placeholders like ${BIN_PATH} that are not cluster variables.
 	ctr := m.Container(kubeconfig).
 		WithMountedFile("/manifests.yaml", manifest).
-		WithEnvFileVariables(m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)).AsEnvFile()).
-		WithExec([]string{"/bin/sh", "-ec", "cat /manifests.yaml | flux envsubst | kubectl apply --server-side --field-manager=bootstrap --force-conflicts -f -"})
+		WithExec([]string{"kubectl", "apply", "--server-side", "--field-manager=bootstrap", "--force-conflicts", "-f", "/manifests.yaml"})
 
 	_, err := ctr.Sync(ctx)
 	if err != nil {
