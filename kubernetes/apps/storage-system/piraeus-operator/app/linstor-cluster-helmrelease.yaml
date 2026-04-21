@@ -41,7 +41,7 @@ spec:
         storagePools:
           - name: ssd
             zfsPool:
-              zPool: ssd/piraeus
+              zPool: ssd
             properties:
               - name: StorDriver/ZfscreateOptions
                 value: -o volblocksize=4K
