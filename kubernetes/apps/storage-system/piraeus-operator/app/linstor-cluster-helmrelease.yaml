@@ -80,7 +80,7 @@ spec:
         provisioner: linstor.csi.linbit.com
         parameters:
           linstor.csi.linbit.com/storagePool: ssd
-          linstor.csi.linbit.com/placementCount: "2"
+          linstor.csi.linbit.com/placementCount: "3"
 
     volumeSnapshotClasses:
       - name: linstor-zfs
