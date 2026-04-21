@@ -3,7 +3,7 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: kidibox-net
+  name: letsencrypt
 spec:
   dnsNames:
     - ${APP_DOMAIN}
@@ -16,6 +16,6 @@ spec:
     algorithm: ECDSA
     size: 256
     rotationPolicy: Always
-  secretName: kidibox-net-tls
+  secretName: letsencrypt-tls
   usages:
     - digital signature
