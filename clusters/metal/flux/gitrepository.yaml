@@ -8,5 +8,5 @@ metadata:
 spec:
   interval: 1m0s
   ref:
-    branch: main
+    branch: ${CLUSTER_BRANCH:main}
   url: https://github.com/kid/home-ops
