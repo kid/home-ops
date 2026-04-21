@@ -2,7 +2,7 @@ locals {
   infra_module_version = "talos-infra-v1.4.0"
   bgp_module_version   = "talos-bgp-v1.1.0"
 
-  config = yamldecode(file("${get_repo_root()}/clusters/metal/talos/config.yaml"))
+  config = yamldecode(file("${get_repo_root()}/clusters/dev/talos/config.yaml"))
 
   vlan_id   = 40
   vlan_cidr = "10.0.${local.vlan_id}.0/24"
@@ -45,7 +45,7 @@ unit "infra" {
       } if lookup(node, "target", local.config.target) != "metal"
     }
 
-    image_factory_schematic = yamldecode(file("${get_repo_root()}/clusters/metal/talos/nodes/talos1.schematic.yaml"))
+    image_factory_schematic = yamldecode(file("${get_repo_root()}/clusters/dev/talos/nodes/talos1.schematic.yaml"))
   }
 }
 

@@ -33,7 +33,7 @@ spec:
       target:
         kind: Kustomization
         labelSelector: home-ops.io/skip-cluster-values-substitute-from!=true
-  path: ./clusters/metal/apps
+  path: ./clusters/dev/apps
   prune: true
   sourceRef:
     kind: GitRepository

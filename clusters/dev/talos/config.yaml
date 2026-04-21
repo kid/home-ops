@@ -1,6 +1,6 @@
 ---
 
-clusterName: ${CLUSTER_NAME}
+clusterName: dev
 endpoint: https://10.0.40.200:6443
 
 target: metal
