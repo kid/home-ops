@@ -40,8 +40,11 @@ spec:
       - name: zfs-pool
         storagePools:
           - name: ssd
-            zfsThinPool:
+            zfsPool:
               zPool: ssd/piraeus
+            properties:
+              - name: StorDriver/ZfscreateOptions
+                value: -o volblocksize=4K
       - name: talos-loader-override
         podTemplate:
           spec:
