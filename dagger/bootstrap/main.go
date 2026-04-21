@@ -243,15 +243,14 @@ func (m *Bootstrap) Apps(
 			kind:      "hr",
 			name:      "cilium",
 			namespace: "kube-system",
+			skipKinds: []string{"ServiceMonitor"},
 			waits: []waitSpec{
 				{
-					condition: "Established",
+					condition: "Available",
 					timeout:   "5m",
+					namespace: "kube-system",
 					targets: []string{
-						"crd/ciliumloadbalancerippools.cilium.io",
-						"crd/ciliumbgpadvertisements.cilium.io",
-						"crd/ciliumbgppeerconfigs.cilium.io",
-						"crd/ciliumbgpclusterconfigs.cilium.io",
+						"deployment/cilium-operator",
 					},
 				},
 			},
@@ -265,6 +264,7 @@ func (m *Bootstrap) Apps(
 			kind:      "hr",
 			name:      "external-secrets",
 			namespace: "external-secrets",
+			skipKinds: []string{"ServiceMonitor"},
 			waits: []waitSpec{
 				{
 					condition: "Established",
@@ -280,6 +280,7 @@ func (m *Bootstrap) Apps(
 			kind:      "hr",
 			name:      "flux-operator",
 			namespace: "flux-system",
+			skipKinds: []string{"ServiceMonitor"},
 			waits: []waitSpec{
 				{
 					condition: "Established",
@@ -347,14 +348,10 @@ func (m *Bootstrap) Apply(
 			// EnvFile:   m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)),
 		})
 
-	ctr := m.Container(kubeconfig).WithMountedFile("/manifests.yaml", manifest)
-	if kind == "ks" {
-		ctr = ctr.
-			WithEnvFileVariables(m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)).AsEnvFile()).
-			WithExec([]string{"/bin/sh", "-ec", "cat /manifests.yaml | flux envsubst --strict | kubectl apply --server-side --field-manager=bootstrap --force-conflicts -f -"})
-	} else {
-		ctr = ctr.WithExec([]string{"kubectl", "apply", "--server-side", "--field-manager=bootstrap", "--force-conflicts", "-f", "/manifests.yaml"})
-	}
+	ctr := m.Container(kubeconfig).
+		WithMountedFile("/manifests.yaml", manifest).
+		WithEnvFileVariables(m.Source.File(fmt.Sprintf("clusters/%s/cluster.env", m.Cluster)).AsEnvFile()).
+		WithExec([]string{"/bin/sh", "-ec", "cat /manifests.yaml | flux envsubst | kubectl apply --server-side --field-manager=bootstrap --force-conflicts -f -"})
 
 	_, err := ctr.Sync(ctx)
 	if err != nil {
