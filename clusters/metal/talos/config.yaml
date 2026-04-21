@@ -1,6 +1,6 @@
 ---
 
-clusterName: metal
+clusterName: ${CLUSTER_NAME}
 endpoint: https://10.0.40.200:6443
 
 target: metal
