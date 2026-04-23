@@ -14,3 +14,6 @@ spec:
     namespace: flux-system
   targetNamespace: external-secrets
   wait: true
+  dependsOn:
+    - name: grafana
+      namespace: observability
