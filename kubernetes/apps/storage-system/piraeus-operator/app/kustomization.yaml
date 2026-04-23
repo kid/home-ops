@@ -8,4 +8,6 @@ resources:
   - ./helmrelease.yaml
   - ./linstor-cluster-ocirepository.yaml
   - ./linstor-cluster-helmrelease.yaml
+  - ./storageclass-linstor-zfs-ssd.yaml
+  - ./volumesnapshotclass-linstor-zfs.yaml
   - ./grafanadashboard.yaml

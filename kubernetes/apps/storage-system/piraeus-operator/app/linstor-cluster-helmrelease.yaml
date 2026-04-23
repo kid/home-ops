@@ -37,7 +37,14 @@ spec:
           operator: Exists
           effect: NoSchedule
     linstorSatelliteConfigurations:
-      - name: zfs-pool
+      - name: zfs-pool-default
+        nodeAffinity:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: NotIn
+                  values:
+                    - talos0
         storagePools:
           - name: ssd
             zfsPool:
@@ -48,6 +55,20 @@ spec:
             source:
               hostDevices:
                 - /dev/vdb
+
+      - name: zfs-pool-talos0
+        nodeSelector:
+          kubernetes.io/hostname: talos0
+        storagePools:
+          - name: ssd
+            zfsPool:
+              zPool: piraeus-ssd
+            properties:
+              - name: StorDriver/ZfscreateOptions
+                value: -o volblocksize=4K
+            source:
+              hostDevices:
+                - /dev/sda
 
       - name: talos-loader-override
         podTemplate:
@@ -76,17 +97,3 @@ spec:
                 hostPath:
                   path: /var/etc/lvm/archive
                   type: DirectoryOrCreate
-    storageClasses:
-      - name: linstor-zfs-ssd
-        allowVolumeExpansion: true
-        volumeBindingMode: WaitForFirstConsumer
-        reclaimPolicy: Delete
-        provisioner: linstor.csi.linbit.com
-        parameters:
-          linstor.csi.linbit.com/storagePool: ssd
-          linstor.csi.linbit.com/placementCount: "3"
-
-    volumeSnapshotClasses:
-      - name: linstor-zfs
-        driver: linstor.csi.linbit.com
-        deletionPolicy: Delete
