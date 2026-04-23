@@ -20,7 +20,7 @@ spec:
     linstorCluster:
       properties:
         - name: DrbdOptions/auto-add-quorum-tiebreaker
-          value: "False"
+          value: "True"
       controller:
         podTemplate:
           spec:
