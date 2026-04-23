@@ -10,3 +10,4 @@ volumeBindingMode: WaitForFirstConsumer
 parameters:
   linstor.csi.linbit.com/storagePool: ssd
   linstor.csi.linbit.com/placementCount: "2"
+  linstor.csi.linbit.com/resourceGroup: linstor-zfs-ssd
