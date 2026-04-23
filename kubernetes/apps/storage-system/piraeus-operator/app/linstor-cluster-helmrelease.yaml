@@ -18,6 +18,9 @@ spec:
       dashboard:
         enabled: true
     linstorCluster:
+      properties:
+        - name: DrbdOptions/auto-add-quorum-tiebreaker
+          value: "False"
       controller:
         podTemplate:
           spec:
