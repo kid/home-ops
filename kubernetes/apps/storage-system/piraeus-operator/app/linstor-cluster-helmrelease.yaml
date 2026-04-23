@@ -100,3 +100,6 @@ spec:
                 hostPath:
                   path: /var/etc/lvm/archive
                   type: DirectoryOrCreate
+
+      - name: satellite-deletion-policy
+        deletionPolicy: Evacuate
