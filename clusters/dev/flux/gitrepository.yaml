@@ -8,5 +8,5 @@ metadata:
 spec:
   interval: 1m0s
   ref:
-    branch: main
+    branch: feat/victoria-logs
   url: https://github.com/kid/home-ops
