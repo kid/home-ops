@@ -14,3 +14,5 @@ resources:
   - ./grafana/ks.resources.yaml
   - ./kube-prometheus-stack/ks.app.yaml
   - ./mikrotik-exporter/ks.app.yaml
+  - ./victoria-logs/ks.app.yaml
+  - ./victoria-logs-collector/ks.app.yaml

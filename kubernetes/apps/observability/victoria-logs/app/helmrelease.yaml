@@ -1,0 +1,111 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: victoria-logs
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: victoria-logs-cluster
+  interval: 1h
+  targetNamespace: observability
+  values:
+    nameOverride: vl
+    vlinsert:
+      replicaCount: 2
+      service:
+        clusterIP: None
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: vlinsert
+              app.kubernetes.io/instance: victoria-logs
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+    vlselect:
+      replicaCount: 2
+      service:
+        clusterIP: None
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: vlselect
+              app.kubernetes.io/instance: victoria-logs
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+    vlstorage:
+      replicaCount: 2
+      retentionPeriod: 30d
+      persistentVolume:
+        enabled: true
+        storageClassName: ${APP_STORAGECLASS}
+        size: 20Gi
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: vlstorage
+              app.kubernetes.io/instance: victoria-logs
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          memory: 1Gi
+    vmauth:
+      enabled: true
+      replicaCount: 2
+      route:
+        enabled: true
+        hostnames:
+          - logs.${APP_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network-system
+        matches:
+          - path:
+              type: PathPrefix
+              value: /select
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: vmauth
+              app.kubernetes.io/instance: victoria-logs
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 1
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 256Mi
