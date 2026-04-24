@@ -11,12 +11,12 @@ spec:
   interval: 1h
   targetNamespace: observability
   values:
+    remoteWrite:
+      - url: &vmauthUrl http://victoria-logs-vl-vmauth.observability.svc.cluster.local:8427
+        maxDiskUsagePerURL: 10GB
     fullnameOverride: vl-collector
     extraArgs:
       tmpDataPath: /var/lib/vl-collector
-    remoteWrite:
-      - url: http://victoria-logs-vl-vmauth.observability.svc.cluster.local:8427
-        maxDiskUsagePerURL: 10GB
     collector:
       excludeFilter: kubernetes.pod_name:=%{HOSTNAME}
       includePodLabels: true

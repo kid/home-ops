@@ -14,6 +14,6 @@ spec:
     name: VictoriaLogs
     type: victoriametrics-logs-datasource
     access: proxy
-    url: http://victoria-logs-vl-vmauth.observability.svc.cluster.local:8427
+    url: &vmauthUrl http://victoria-logs-vl-vmauth.observability.svc.cluster.local:8427
     isDefault: false
     jsonData: {}
