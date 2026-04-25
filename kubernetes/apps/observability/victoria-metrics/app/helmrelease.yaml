@@ -17,6 +17,7 @@ spec:
     fullnameOverride: victoria-metrics
     victoria-metrics-operator:
       admissionWebhooks:
+        policy: Ignore
         certManager:
           enabled: true
     defaultDashboards:
