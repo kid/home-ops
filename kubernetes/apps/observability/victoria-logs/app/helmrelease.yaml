@@ -84,6 +84,18 @@ spec:
       replicaCount: 2
       route:
         enabled: true
+        extraRules:
+          - matches:
+              - path:
+                  type: Exact
+                  value: /
+            filters:
+              - type: RequestRedirect
+                requestRedirect:
+                  path:
+                    type: ReplaceFullPath
+                    replaceFullPath: /select/vmui/
+                  statusCode: 302
         hostnames:
           - logs.${APP_DOMAIN}
         parentRefs:
