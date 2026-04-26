@@ -39,9 +39,9 @@ spec:
       vmScrape:
         spec:
           endpoints:
-            - port: http-metrics
+            - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              port: http-metrics
               scheme: https
-              bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
               tlsConfig:
                 caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                 insecureSkipVerify: true
@@ -52,10 +52,10 @@ spec:
       vmScrape:
         spec:
           endpoints:
-            - port: https
+            - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              port: https
               scheme: https
-              bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-              max_scrape_size: 33554432
+              max_scrape_size: "33554432"
               tlsConfig:
                 caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                 serverName: kubernetes
@@ -63,9 +63,9 @@ spec:
       vmScrape:
         spec:
           endpoints:
-            - port: http-metrics
+            - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              port: http-metrics
               scheme: https
-              bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
               tlsConfig:
                 caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                 insecureSkipVerify: true
@@ -73,9 +73,9 @@ spec:
       vmScrape:
         spec:
           endpoints:
-            - port: http-metrics
+            - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              port: http-metrics
               scheme: https
-              bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
               tlsConfig:
                 caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                 insecureSkipVerify: true
