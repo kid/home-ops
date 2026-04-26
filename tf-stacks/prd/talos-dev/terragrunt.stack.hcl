@@ -39,7 +39,7 @@ unit "infra" {
         memory     = 8192
         disk_size  = 100
         additional_disks = [
-          { size = 32 },
+          { size = 100 },
           { size = 32 },
         ]
       } if lookup(node, "target", local.config.target) != "metal"
