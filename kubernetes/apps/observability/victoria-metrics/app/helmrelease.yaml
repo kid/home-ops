@@ -83,6 +83,17 @@ spec:
     kubelet:
       vmScrape:
         spec:
+          metricRelabelConfigs:
+            - action: labeldrop
+              regex: (uid)
+            - action: labeldrop
+              regex: (id|name)
+            - action: drop
+              regex: (rest_client_request_duration_seconds_bucket|rest_client_request_duration_seconds_sum|rest_client_request_duration_seconds_count)
+              source_labels:
+                - __name__
+            - action: labeldrop
+              regex: (beta_kubernetes_io_.+|kubernetes_io_.+|kubevirt_io_.+|cpu_feature_node_kubevirt_io_.+|host_model_required_features_node_kubevirt_io_.+|machine_type_node_kubevirt_io_.+|hyperv_node_kubevirt_io_.+|scheduling_node_kubevirt_io_.+)
           relabelConfigs:
             - sourceLabels:
                 - __meta_kubernetes_node_name
