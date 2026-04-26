@@ -81,6 +81,7 @@
               fluxcd
               fluxcd-operator
               fluxcd-operator-mcp
+              mcp-grafana
               helmfile
               kubevirt
 

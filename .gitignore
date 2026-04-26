@@ -3,6 +3,7 @@
 # Devenv
 .devenv
 .direnv
+.worktrees
 .pre-commit-config.yaml
 
 # Terragrunt
