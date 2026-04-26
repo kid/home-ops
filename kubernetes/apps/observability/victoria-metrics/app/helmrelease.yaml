@@ -80,6 +80,18 @@ spec:
                 insecureSkipVerify: true
     kubeProxy:
       enabled: false
+    kubelet:
+      vmScrape:
+        spec:
+          relabelConfigs:
+            - sourceLabels:
+                - __meta_kubernetes_node_name
+              targetLabel: node
+            - sourceLabels:
+                - __metrics_path__
+              targetLabel: metrics_path
+            - targetLabel: job
+              replacement: kubelet
     vmsingle:
       enabled: true
       spec:
