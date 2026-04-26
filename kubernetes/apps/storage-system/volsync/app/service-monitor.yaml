@@ -14,3 +14,5 @@ spec:
   endpoints:
     - port: https
       scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
