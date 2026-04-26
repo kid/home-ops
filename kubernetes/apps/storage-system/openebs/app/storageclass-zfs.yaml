@@ -9,4 +9,4 @@ reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 parameters:
   fstype: zfs
-  poolname: ssd/openebs
+  poolname: piraeus-ssd/openebs
