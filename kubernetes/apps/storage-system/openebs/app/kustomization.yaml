@@ -6,3 +6,5 @@ kind: Kustomization
 resources:
   - ./ocirepository.yaml
   - ./helmrelease.yaml
+  - ./storageclass-zfs.yaml
+  - ./volumesnapshotclass-zfs.yaml

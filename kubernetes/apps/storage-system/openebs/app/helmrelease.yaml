@@ -9,6 +9,23 @@ spec:
   chartRef:
     kind: OCIRepository
     name: openebs
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: openebs-zfs-localpv-controller
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: openebs-zfs-localpv-controller
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: snapshot-controller
+                        $patch: delete
   values:
     localpv-provisioner:
       analytics:
@@ -25,7 +42,7 @@ spec:
         lvm:
           enabled: false
         zfs:
-          enabled: false
+          enabled: true
         rawfile:
           enabled: false
       replicated:
@@ -41,3 +58,8 @@ spec:
       csi:
         volumeSnapshots:
           enabled: false
+    zfs-localpv:
+      crds:
+        csi:
+          volumeSnapshots:
+            enabled: false
