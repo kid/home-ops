@@ -59,6 +59,8 @@ spec:
         volumeSnapshots:
           enabled: false
     zfs-localpv:
+      zfsNode:
+        encrKeysDir: /var/mnt/local-storage/openebs/zfs-keys
       crds:
         csi:
           volumeSnapshots:
