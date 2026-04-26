@@ -2,8 +2,9 @@
 # yaml-language-server: $schema=https://json.schemastore.org/kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 resources:
-  - ./externalsecret.yaml
-  - ./grafana.yaml
-  - ./datasource-victoria-metrics.yaml
-  - ./datasource-victorialogs.yaml
+  - ./prometheus-operator-crds-ocirepository.yaml
+  - ./prometheus-operator-crds-helmrelease.yaml
+  - ./ocirepository.yaml
+  - ./helmrelease.yaml

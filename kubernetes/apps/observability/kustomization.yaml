@@ -12,7 +12,8 @@ resources:
   - ./namespace.yaml
   - ./grafana/ks.app.yaml
   - ./grafana/ks.resources.yaml
-  - ./kube-prometheus-stack/ks.app.yaml
   - ./mikrotik-exporter/ks.app.yaml
+  - ./victoria-metrics/ks.app.yaml
+  - ./victoria-metrics-rules/ks.app.yaml
   - ./victoria-logs/ks.app.yaml
   - ./victoria-logs-collector/ks.app.yaml
