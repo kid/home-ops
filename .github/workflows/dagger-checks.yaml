@@ -17,6 +17,6 @@ jobs:
         run: cp .env.gha .env
 
       - name: Run Dagger checks
-        uses: dagger/checks@v1.0.0
+        uses: dagger/checks@64525befa1c36dd55577dae083df5c8968d9325a # v1.1.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
