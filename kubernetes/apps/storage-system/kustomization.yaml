@@ -10,7 +10,6 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./nas/ks.yaml
   - ./external-snapshotter/ks.yaml
   - ./openebs/ks.yaml
   - ./volsync/ks.yaml
