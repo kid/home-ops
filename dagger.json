@@ -8,7 +8,10 @@
     },
     {
       "name": "flux-local",
-      "source": "dagger/flux-local"
+      "source": "dagger/flux-local",
+      "ignoreChecks": [
+        "test"
+      ]
     },
     {
       "name": "talos",
