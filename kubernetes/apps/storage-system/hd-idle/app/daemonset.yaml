@@ -19,6 +19,7 @@ spec:
       containers:
         - name: hd-idle
           image: currucuxu/hd-idle@sha256:b3d1c83a4d7a5dde86362288a3d2d86ddca663f11df6de78939dc18c98329161
+          command: ["hd-idle"]
           args: ["-i", "1800"]
           securityContext:
             privileged: true
