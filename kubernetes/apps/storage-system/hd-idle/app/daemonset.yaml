@@ -1,0 +1,32 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: hd-idle
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hd-idle
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hd-idle
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: talos0
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: hd-idle
+          image: currucuxu/hd-idle@sha256:b3d1c83a4d7a5dde86362288a3d2d86ddca663f11df6de78939dc18c98329161
+          args: ["-i", "1800"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: dev
+              mountPath: /dev
+      volumes:
+        - name: dev
+          hostPath:
+            path: /dev
+            type: Directory
