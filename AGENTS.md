@@ -43,6 +43,6 @@
 
 ## Verification
 
-- For cluster manifest changes, use the Flux-local checks defined in `dagger/flux-local/main.go`: `flux-local test -A --enable-helm --path clusters/<cluster>` and `flux-local build all --skip-invalid-kustomization-paths --enable-helm clusters/<cluster>`.
+- For cluster manifest changes, run the Flux-local checks through Dagger as exposed by `dagger.json` and implemented in `dagger/flux-local/main.go`. Use `direnv exec . dagger call flux-local test` to run the repo's cluster test suite and `direnv exec . dagger call flux-local test-build` to run the repo's cluster build suite. For single-cluster or targeted rendering, use `direnv exec . dagger call flux-local build --path clusters/<cluster> --kind all export --path /tmp/<cluster>.yaml`.
 - Do not run blind `envsubst` over rendered manifests. `dagger/bootstrap/main.go` explicitly avoids that because Helm/manifests may contain placeholders that must survive rendering.
 - `test/network_management_test.go` requires SOPS-decryptable `secrets/dev/routeros.sops.yaml` and reachable RouterOS OOB IPs; it is an environment-dependent integration test.
