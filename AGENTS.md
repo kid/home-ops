@@ -24,6 +24,7 @@
 
 - For temporary live testing, suspend only `Kustomization/flux-system`. Do not suspend the `GitRepository`; `flux-system` is the object that would otherwise reconcile the source configuration back to the normal branch.
 - When working from a branch, always open a PR for it before live testing.
+- Before deploying a PR, check whether `GitRepository/flux-system` is already pinned to another PR merge ref. Do not replace an active PR deployment without explicit user approval.
 - Patch live `GitRepository/flux-system` to the PR merge ref `refs/pull/<id>/merge`, then let the webhook or a manual reconcile of `GitRepository/flux-system` fetch the new source artifact while `flux-system` remains suspended.
 - Reconcile the owning app `Kustomization` to apply changed git-managed manifests from the fetched branch. Reconcile a `HelmRelease` only when you need to re-run Helm after the `HelmRelease` spec has already been applied.
 - Do not resume `flux-system` while the cluster should stay on the PR merge ref; resuming it will allow Flux to restore the normal source branch.
