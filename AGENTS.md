@@ -22,12 +22,14 @@
 
 ## Feature Branch Deployment
 
-- For temporary live testing from a feature branch, suspend only `Kustomization/flux-system`. Do not suspend the `GitRepository`; `flux-system` is the object that would otherwise reconcile the source configuration back to the normal branch.
-- Patch live `GitRepository/flux-system` to the feature branch, then let the webhook or a manual reconcile of `GitRepository/flux-system` fetch the new source artifact while `flux-system` remains suspended.
+- For temporary live testing, suspend only `Kustomization/flux-system`. Do not suspend the `GitRepository`; `flux-system` is the object that would otherwise reconcile the source configuration back to the normal branch.
+- For short-lived PR validation, prefer patching live `GitRepository/flux-system` to a provider-exposed merge ref such as `refs/pull/<id>/merge` so the cluster tests the PR as merged with the current base branch. Use a feature branch ref instead when you need a more stable ref or the provider does not expose PR merge refs.
+- When working from a feature branch, always open a PR for it. Even if live testing uses the branch ref instead of the merge ref, the branch should still have an associated PR for review and merge tracking.
+- Patch live `GitRepository/flux-system` to the chosen branch or ref, then let the webhook or a manual reconcile of `GitRepository/flux-system` fetch the new source artifact while `flux-system` remains suspended.
 - Reconcile the owning app `Kustomization` to apply changed git-managed manifests from the fetched branch. Reconcile a `HelmRelease` only when you need to re-run Helm after the `HelmRelease` spec has already been applied.
-- Do not resume `flux-system` while the cluster should stay on the feature branch; resuming it will allow Flux to restore the normal source branch.
+- Do not resume `flux-system` while the cluster should stay on the temporary branch or PR ref; resuming it will allow Flux to restore the normal source branch.
 - For rollback or cleanup, prefer waiting until the PR is merged so the normal branch contains the tested changes before switching the cluster back.
-- After merge, patch `GitRepository/flux-system` back to the normal branch, let the webhook or a manual reconcile of `GitRepository/flux-system` fetch that source, reconcile the affected app `Kustomization` objects, and only then resume `Kustomization/flux-system`.
+- After merge, resuming `Kustomization/flux-system` should be sufficient; it will reconcile the source configuration back to the normal branch.
 
 ## Talos
 
