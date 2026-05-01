@@ -2,7 +2,6 @@ name: Dagger Checks
 
 on:
   pull_request:
-  push:
 
 permissions:
   contents: read
