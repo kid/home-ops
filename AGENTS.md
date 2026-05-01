@@ -20,14 +20,16 @@
 - Preserve Flux ordering fields such as `dependsOn`, `wait`, and namespaces. Bootstrap in `dagger/bootstrap/main.go` relies on a minimal ordered subset of apps before full reconciliation.
 - Use `clusters/dev/cluster.env` as the source of truth for cluster-wide values like domains, CIDRs, and storage class names.
 
-## Feature Branch Deployment
+## PR Deployment
 
-- For temporary live testing from a feature branch, suspend only `Kustomization/flux-system`. Do not suspend the `GitRepository`; `flux-system` is the object that would otherwise reconcile the source configuration back to the normal branch.
-- Patch live `GitRepository/flux-system` to the feature branch, then let the webhook or a manual reconcile of `GitRepository/flux-system` fetch the new source artifact while `flux-system` remains suspended.
+- For temporary live testing, suspend only `Kustomization/flux-system`. Do not suspend the `GitRepository`; `flux-system` is the object that would otherwise reconcile the source configuration back to the normal branch.
+- When working from a branch, always open a PR for it before live testing.
+- Before deploying a PR, check whether `GitRepository/flux-system` is already pinned to another PR merge ref. Do not replace an active PR deployment without explicit user approval.
+- Patch live `GitRepository/flux-system` to the PR merge ref `refs/pull/<id>/merge`, then let the webhook or a manual reconcile of `GitRepository/flux-system` fetch the new source artifact while `flux-system` remains suspended.
 - Reconcile the owning app `Kustomization` to apply changed git-managed manifests from the fetched branch. Reconcile a `HelmRelease` only when you need to re-run Helm after the `HelmRelease` spec has already been applied.
-- Do not resume `flux-system` while the cluster should stay on the feature branch; resuming it will allow Flux to restore the normal source branch.
+- Do not resume `flux-system` while the cluster should stay on the PR merge ref; resuming it will allow Flux to restore the normal source branch.
 - For rollback or cleanup, prefer waiting until the PR is merged so the normal branch contains the tested changes before switching the cluster back.
-- After merge, patch `GitRepository/flux-system` back to the normal branch, let the webhook or a manual reconcile of `GitRepository/flux-system` fetch that source, reconcile the affected app `Kustomization` objects, and only then resume `Kustomization/flux-system`.
+- After merge, resuming `Kustomization/flux-system` should be sufficient; it will reconcile the source configuration back to the normal branch.
 
 ## Talos
 
