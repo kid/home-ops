@@ -1,9 +1,0 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nfs
-data:
-  SHARED_DIRECTORY: /nfsshare
-  SYNC: "true"
-  PERMITTED: "*"
