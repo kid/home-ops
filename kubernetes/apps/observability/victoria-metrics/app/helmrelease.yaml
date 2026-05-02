@@ -114,7 +114,7 @@ spec:
           resources:
             requests:
               storage: 10Gi
-          storageClassName: linstor-zfs-ssd
+          storageClassName: linstor-zfs-ssd-replicated
     vmagent:
       spec:
         resources:

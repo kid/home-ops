@@ -12,7 +12,7 @@ spec:
     repository: "${APP}-volsync-secret"
     copyMethod: Snapshot
     volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=${APP_SNAPSHOTCLASS}}"
-    cacheStorageClassName: "${VOLSYNC_CACHE_SNAPSHOTCLASS:=${APP_STORAGECLASS}}"
+    cacheStorageClassName: "${VOLSYNC_CACHE_STORAGECLASS:=${VOLSYNC_STORAGECLASS:=${APP_STORAGECLASS}}}"
     cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
     cacheCapacity: "${VOLSYNC_CACHE_CAPACITY:=5Gi}"
     storageClassName: "${VOLSYNC_STORAGECLASS:=${APP_STORAGECLASS}}"
