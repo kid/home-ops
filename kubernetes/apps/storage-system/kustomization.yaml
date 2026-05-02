@@ -10,8 +10,8 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./nas/ks.yaml
   - ./external-snapshotter/ks.yaml
+  - ./hd-idle/ks.yaml
   - ./openebs/ks.yaml
   - ./volsync/ks.yaml
   - ./piraeus-operator/ks.yaml
