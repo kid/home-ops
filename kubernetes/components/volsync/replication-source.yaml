@@ -15,7 +15,7 @@ spec:
     repository: "${APP}-volsync-secret"
     volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=${APP_SNAPSHOTCLASS}}"
     cacheCapacity: "${VOLSYNC_CACHE_CAPACITY:=5Gi}"
-    cacheStorageClassName: "${VOLSYNC_CACHE_SNAPSHOTCLASS:=${APP_STORAGECLASS}}"
+    cacheStorageClassName: "${VOLSYNC_CACHE_STORAGECLASS:=${VOLSYNC_STORAGECLASS:=${APP_STORAGECLASS}}}"
     cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
     storageClassName: "${VOLSYNC_STORAGECLASS:=${APP_STORAGECLASS}}"
     accessModes: ["${VOLSYNC_SNAP_ACCESSMODES:=ReadWriteOnce}"]
