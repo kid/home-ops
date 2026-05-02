@@ -18,9 +18,13 @@ spec:
         - operator: Exists
       containers:
         - name: hd-idle
-          image: currucuxu/hd-idle@sha256:b3d1c83a4d7a5dde86362288a3d2d86ddca663f11df6de78939dc18c98329161
-          command: ["/usr/sbin/hd-idle"]
-          args: ["-d", "-i", "1800"]
+          image: docker.io/library/debian:bookworm-slim@sha256:f9c6a2fd2ddbc23e336b6257a5245e31f996953ef06cd13a59fa0a1df2d5c252
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              apt-get update
+              apt-get install -y --no-install-recommends hd-idle
+              exec /usr/sbin/hd-idle -d -i 1800
           securityContext:
             privileged: true
           volumeMounts:
