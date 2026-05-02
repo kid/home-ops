@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nfs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nfs
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: talos0
+      containers:
+        - name: nfs
+          image: quay.io/aminvakil/alpine-nfs-server:latest
+          env:
+            - name: SHARED_DIRECTORY
+              value: /nfsshare
+            - name: SYNC
+              value: "true"
+            - name: PERMITTED
+              value: "*"
+          ports:
+            - name: nfs
+              containerPort: 2049
+              protocol: TCP
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: nfsshare
+              mountPath: /nfsshare
+      volumes:
+        - name: nfsshare
+          hostPath:
+            path: /var/mnt/tank
+            type: Directory

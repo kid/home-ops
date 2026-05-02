@@ -10,6 +10,7 @@ components:
 
 resources:
   - ./namespace.yaml
+  - ./nfs/ks.yaml
   - ./external-snapshotter/ks.yaml
   - ./hd-idle/ks.yaml
   - ./openebs/ks.yaml
