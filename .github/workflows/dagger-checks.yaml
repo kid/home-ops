@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Prepare CI env file
         run: cp .env.gha .env
 
       - name: Run Dagger checks
-        uses: dagger/checks@v1.0.0
+        uses: dagger/checks@64525befa1c36dd55577dae083df5c8968d9325a # v1.1.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}

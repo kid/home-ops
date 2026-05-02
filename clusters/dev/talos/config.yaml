@@ -14,7 +14,6 @@ nodes:
     role: controlplane
     patches:
       - ./nodes/talos0.yaml
-      - ./patches/vfio.yaml
       - ./patches/zfs.yaml
   - ipAddress: 10.0.40.201
     hostname: talos1
