@@ -407,6 +407,9 @@ spec:
           routes:
             - receiver: blackhole
               matchers:
+                - alertname = "Watchdog"
+            - receiver: blackhole
+              matchers:
                 - alertname = "InfoInhibitor"
         inhibit_rules:
           - source_matchers:
