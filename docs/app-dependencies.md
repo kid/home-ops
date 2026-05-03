@@ -21,8 +21,8 @@ graph TD
   external_dns_mikrotik["external-dns-mikrotik"]
   echo["echo"]
   kube_prometheus_stack["kube-prometheus-stack"]
+  grafana_operator["grafana-operator"]
   grafana["grafana"]
-  grafana_resources["grafana-resources"]
   kubevirt["kubevirt"]
   cdi["cdi"]
   openebs["openebs"]
@@ -42,13 +42,13 @@ graph TD
   certificates_import --> envoy_gateway_resources
   envoy_gateway --> echo
   envoy_gateway_resources --> echo
-  grafana --> grafana_resources
+  grafana_operator --> grafana
   kubevirt --> cdi
   kubevirt --> nas
   external_secrets --> external_dns_cf
   external_secrets --> external_dns_mikrotik
-  external_secrets --> grafana_resources
-  volsync --> grafana_resources
+  external_secrets --> grafana
+  volsync --> grafana
 ```
 
 Notes:

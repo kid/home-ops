@@ -8,7 +8,7 @@ spec:
   dependsOn:
     - name: cert-manager
       namespace: network-system
-    - name: grafana
+    - name: grafana-operator
     - name: piraeus-operator
       namespace: storage-system
   interval: 1h

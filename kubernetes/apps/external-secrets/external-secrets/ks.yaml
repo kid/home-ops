@@ -15,5 +15,5 @@ spec:
   targetNamespace: external-secrets
   wait: true
   dependsOn:
-    - name: grafana
+    - name: grafana-operator
       namespace: observability

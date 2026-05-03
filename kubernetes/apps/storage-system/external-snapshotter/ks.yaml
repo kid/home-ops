@@ -15,5 +15,5 @@ spec:
   targetNamespace: storage-system
   wait: true
   dependsOn:
-    - name: grafana
+    - name: grafana-operator
       namespace: observability
