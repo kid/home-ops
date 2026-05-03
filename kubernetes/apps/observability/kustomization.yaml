@@ -13,6 +13,7 @@ resources:
   - ./grafana-operator/ks.yaml
   - ./grafana/ks.yaml
   - ./mikrotik-exporter/ks.app.yaml
+  - ./prometheus-operator-crds/ks.yaml
   - ./victoria-metrics/ks.app.yaml
   - ./victoria-metrics-rules/ks.app.yaml
   - ./victoria-logs/ks.app.yaml
