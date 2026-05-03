@@ -11,6 +11,7 @@ spec:
     - name: external-secrets
       namespace: external-secrets
     - name: grafana-operator
+    - name: prometheus-operator-crds
     - name: piraeus-operator
       namespace: storage-system
     - name: volsync
