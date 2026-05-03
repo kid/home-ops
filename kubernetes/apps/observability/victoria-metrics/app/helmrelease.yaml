@@ -390,6 +390,53 @@ spec:
           limits:
             cpu: 500m
     alertmanager:
+      config:
+        global:
+          resolve_timeout: 5m
+          telegram_bot_token: ${TELEGRAM_BOT_TOKEN}
+        route:
+          receiver: telegram
+          group_by:
+            - alertname
+            - cluster
+            - namespace
+            - severity
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 4h
+          routes:
+            - receiver: blackhole
+              matchers:
+                - alertname = "InfoInhibitor"
+        inhibit_rules:
+          - source_matchers:
+              - severity = "critical"
+            target_matchers:
+              - severity =~ "warning|info"
+            equal:
+              - cluster
+              - namespace
+              - alertname
+          - source_matchers:
+              - severity = "warning"
+            target_matchers:
+              - severity = "info"
+            equal:
+              - cluster
+              - namespace
+              - alertname
+        receivers:
+          - name: blackhole
+          - name: telegram
+            telegram_configs:
+              - chat_id: ${TELEGRAM_CHAT_ID}
+                message: >-
+                  {{ range .Alerts }}{{ if ne .Annotations.description "" }}{{ .Annotations.description }}{{ else if ne .Annotations.summary "" }}{{ .Annotations.summary }}{{ else if ne .Annotations.message "" }}{{ .Annotations.message }}{{ else }}Alert description not available{{ end }}{{ if gt (len .Labels.SortedPairs) 0 }}
+
+                  {{ range .Labels.SortedPairs }}<b>{{ .Name }}:</b> {{ .Value }}
+                  {{ end }}{{ end }}{{ end }}
+                parse_mode: HTML
+                send_resolved: true
       route:
         enabled: true
         hostnames:
