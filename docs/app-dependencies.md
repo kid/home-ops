@@ -33,9 +33,15 @@ graph TD
   external_snapshotter["external-snapshotter"]
   volsync["volsync"]
   piraeus_operator["piraeus-operator"]
+  prometheus_operator_crds["prometheus-operator-crds"]
 
   flux_operator --> flux_instance
   cilium --> cilium_resources
+  prometheus_operator_crds --> flux_operator
+  prometheus_operator_crds --> cert_manager
+  prometheus_operator_crds --> echo
+  prometheus_operator_crds --> grafana_operator
+  prometheus_operator_crds --> mikrotik_exporter
   cert_manager --> cert_manager_issuers
   cert_manager --> cloudflare_tunnel
   cert_manager_issuers --> certificates_import

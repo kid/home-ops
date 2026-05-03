@@ -5,6 +5,8 @@ kind: Kustomization
 metadata:
   name: mikrotik-exporter
 spec:
+  dependsOn:
+    - name: prometheus-operator-crds
   interval: 1h
   path: ./kubernetes/apps/observability/mikrotik-exporter/app
   prune: true
