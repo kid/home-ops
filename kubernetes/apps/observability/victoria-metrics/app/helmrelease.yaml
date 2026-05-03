@@ -104,17 +104,20 @@ spec:
             - targetLabel: job
               replacement: kubelet
     vmsingle:
-      enabled: true
       spec:
         replicaCount: 1
         retentionPeriod: 14d
         storage:
           accessModes:
             - ReadWriteOnce
+          dataSourceRef:
+            apiGroup: volsync.backube
+            kind: ReplicationDestination
+            name: victoria-metrics-dst
           resources:
             requests:
-              storage: 10Gi
-          storageClassName: linstor-zfs-ssd-replicated
+              storage: 5Gi
+          storageClassName: ${APP_STORAGECLASS}
     vmagent:
       spec:
         resources:
