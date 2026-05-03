@@ -19,3 +19,5 @@
 # Talos / Kubernetes
 talosconfig
 kubeconfig
+
+.agents/

@@ -84,6 +84,7 @@
               mcp-grafana
               helmfile
               kubevirt
+              nodejs
 
               nil
               nixd
