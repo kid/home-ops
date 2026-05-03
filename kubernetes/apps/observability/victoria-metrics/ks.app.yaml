@@ -8,8 +8,12 @@ spec:
   dependsOn:
     - name: cert-manager
       namespace: network-system
+    - name: external-secrets
+      namespace: external-secrets
     - name: grafana-operator
     - name: piraeus-operator
+      namespace: storage-system
+    - name: volsync
       namespace: storage-system
   interval: 1h
   path: ./kubernetes/apps/observability/victoria-metrics/app
@@ -20,3 +24,12 @@ spec:
     namespace: flux-system
   targetNamespace: observability
   wait: true
+  components:
+    - ../../../../components/volsync-nopvc/
+  postBuild:
+    substitute:
+      APP: victoria-metrics
+      VOLSYNC_PVC: vmsingle-victoria-metrics
+      VOLSYNC_CAPACITY: 5Gi
+      VOLSYNC_PUID: "0"
+      VOLSYNC_PGID: "0"
