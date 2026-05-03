@@ -1,6 +1,6 @@
 # Application Dependencies
 
-This diagram shows Flux `Kustomization` application dependencies currently deployed from `clusters/metal/apps`.
+This diagram shows Flux `Kustomization` application dependencies currently deployed from `clusters/dev/apps`.
 
 ```mermaid
 graph TD
@@ -20,16 +20,19 @@ graph TD
   external_dns_cf["external-dns-cloudflare"]
   external_dns_mikrotik["external-dns-mikrotik"]
   echo["echo"]
-  kube_prometheus_stack["kube-prometheus-stack"]
   grafana_operator["grafana-operator"]
   grafana["grafana"]
-  kubevirt["kubevirt"]
-  cdi["cdi"]
+  mikrotik_exporter["mikrotik-exporter"]
+  victoria_metrics["victoria-metrics"]
+  victoria_metrics_rules["victoria-metrics-rules"]
+  victoria_logs["victoria-logs"]
+  victoria_logs_collector["victoria-logs-collector"]
+  nfs["nfs"]
+  hd_idle["hd-idle"]
   openebs["openebs"]
+  external_snapshotter["external-snapshotter"]
   volsync["volsync"]
   piraeus_operator["piraeus-operator"]
-  nas["nas"]
-  mqtt["mqtt"]
 
   flux_operator --> flux_instance
   cilium --> cilium_resources
@@ -42,16 +45,24 @@ graph TD
   certificates_import --> envoy_gateway_resources
   envoy_gateway --> echo
   envoy_gateway_resources --> echo
+  grafana_operator --> external_secrets
   grafana_operator --> grafana
-  kubevirt --> cdi
-  kubevirt --> nas
+  grafana_operator --> external_snapshotter
+  grafana_operator --> piraeus_operator
+  grafana_operator --> victoria_metrics
   external_secrets --> external_dns_cf
   external_secrets --> external_dns_mikrotik
   external_secrets --> grafana
+  external_snapshotter --> volsync
+  external_snapshotter --> openebs
+  external_snapshotter --> piraeus_operator
   volsync --> grafana
+  piraeus_operator --> victoria_metrics
+  victoria_metrics --> victoria_metrics_rules
+  victoria_logs --> victoria_logs_collector
 ```
 
 Notes:
 
-- This includes deployed application kustomizations referenced by `clusters/metal/apps/kustomization.yaml`.
+- This includes deployed application kustomizations referenced by `clusters/dev/apps/kustomization.yaml`.
 - `frigate` is intentionally omitted because it is commented out in `kubernetes/apps/home-automaton/kustomization.yaml`.
