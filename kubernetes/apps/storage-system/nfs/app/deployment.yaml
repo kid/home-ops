@@ -15,6 +15,7 @@ spec:
       labels:
         app.kubernetes.io/name: nfs
     spec:
+      priorityClassName: nfs-storage-critical
       nodeSelector:
         kubernetes.io/hostname: talos0
       containers:
@@ -31,6 +32,20 @@ spec:
             - name: nfs
               containerPort: 2049
               protocol: TCP
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - showmount -e 127.0.0.1 2>/dev/null | grep -qE '^/nfsshare([[:space:]]|$)'
+          readinessProbe: &probe
+            tcpSocket:
+              port: nfs
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 2
+            successThreshold: 1
+          livenessProbe: *probe
           securityContext:
             privileged: true
           volumeMounts:
