@@ -9,4 +9,5 @@ resources:
   - ../../../kubernetes/apps/kube-system/
   - ../../../kubernetes/apps/network-system/
   - ../../../kubernetes/apps/observability/
+  - ../../../kubernetes/apps/virtualization/
   - ./storage-system/
