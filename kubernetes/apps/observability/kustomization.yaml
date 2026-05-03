@@ -10,7 +10,7 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./grafana/app/ks.yaml
+  - ./grafana-operator/ks.yaml
   - ./grafana/ks.yaml
   - ./mikrotik-exporter/ks.app.yaml
   - ./victoria-metrics/ks.app.yaml

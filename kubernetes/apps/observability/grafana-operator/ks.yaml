@@ -6,7 +6,7 @@ metadata:
   name: grafana-operator
 spec:
   interval: 1h
-  path: ./kubernetes/apps/observability/grafana/app
+  path: ./kubernetes/apps/observability/grafana-operator
   prune: true
   sourceRef:
     kind: GitRepository
