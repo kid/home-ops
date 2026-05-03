@@ -12,7 +12,6 @@ spec:
   values:
     serviceMonitor:
       create: true
-      interval: 61s
     # web:
     #   config:
     #     authentication:
