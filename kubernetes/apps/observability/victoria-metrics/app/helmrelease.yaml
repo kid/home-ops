@@ -430,11 +430,19 @@ spec:
           - name: telegram
             telegram_configs:
               - chat_id: ${TELEGRAM_CHAT_ID}
-                message: >-
-                  {{ range .Alerts }}{{ if ne .Annotations.description "" }}{{ .Annotations.description }}{{ else if ne .Annotations.summary "" }}{{ .Annotations.summary }}{{ else if ne .Annotations.message "" }}{{ .Annotations.message }}{{ else }}Alert description not available{{ end }}{{ if gt (len .Labels.SortedPairs) 0 }}
+                message: |-
+                  <b>{{ .Status }}</b>: <b>{{ .CommonLabels.alertname }}</b>
+                  <b>Severity:</b> {{ .CommonLabels.severity }}
+                  <b>Cluster:</b> {{ .CommonLabels.cluster }}{{ if .CommonLabels.namespace }}
+                  <b>Namespace:</b> {{ .CommonLabels.namespace }}{{ end }}
+                  <b>Alerts:</b> {{ len .Alerts }}
 
+                  {{ range .Alerts }}{{ if ne .Annotations.summary "" }}{{ .Annotations.summary }}{{ else if ne .Annotations.description "" }}{{ .Annotations.description }}{{ else if ne .Annotations.message "" }}{{ .Annotations.message }}{{ else }}Alert description not available{{ end }}{{ if ne .Annotations.runbook_url "" }}
+                  <b>Runbook:</b> {{ .Annotations.runbook_url }}{{ end }}{{ if gt (len .Labels.SortedPairs) 0 }}
                   {{ range .Labels.SortedPairs }}<b>{{ .Name }}:</b> {{ .Value }}
-                  {{ end }}{{ end }}{{ end }}
+                  {{ end }}{{ end }}
+
+                  {{ end }}
                 parse_mode: HTML
                 send_resolved: true
       route:
