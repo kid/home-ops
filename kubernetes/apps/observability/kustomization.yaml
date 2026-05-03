@@ -10,7 +10,8 @@ components:
 
 resources:
   - ./namespace.yaml
-  - ./alertmanager-telegram-secrets.yaml
+  - ./namespace-secrets.yaml
+  - ./alertmanager-config/ks.app.yaml
   - ./grafana-operator/ks.yaml
   - ./grafana/ks.yaml
   - ./mikrotik-exporter/ks.app.yaml

@@ -1,0 +1,30 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: alertmanager-config
+  labels:
+    home-ops.io/skip-cluster-values-substitute-from: "true"
+spec:
+  dependsOn:
+    - name: external-secrets
+      namespace: external-secrets
+    - name: victoria-metrics
+  interval: 1h
+  path: ./kubernetes/apps/observability/alertmanager-config/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: observability
+  wait: true
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-values
+        optional: false
+      - kind: Secret
+        name: namespace-secrets
+        optional: true
