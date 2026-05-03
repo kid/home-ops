@@ -12,7 +12,7 @@ spec:
     - name: volsync
       namespace: storage-system
   interval: 1h
-  path: ./kubernetes/apps/observability/grafana
+  path: ./kubernetes/apps/observability/grafana/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -21,7 +21,7 @@ spec:
   targetNamespace: observability
   wait: true
   components:
-    - ../../../components/volsync/
+    - ../../../../components/volsync/
   postBuild:
     substitute:
       APP: grafana
