@@ -351,6 +351,25 @@ spec:
                         - spec
                         - url
     vmsingle:
+      route:
+        enabled: true
+        extraRules:
+          - matches:
+              - path:
+                  type: Exact
+                  value: /
+            filters:
+              - type: RequestRedirect
+                requestRedirect:
+                  path:
+                    type: ReplaceFullPath
+                    replaceFullPath: /vmui/
+                  statusCode: 302
+        hostnames:
+          - metrics.${APP_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network-system
       spec:
         replicaCount: 1
         retentionPeriod: 14d
@@ -370,3 +389,25 @@ spec:
         resources:
           limits:
             cpu: 500m
+    alertmanager:
+      route:
+        enabled: true
+        hostnames:
+          - alertmanager.${APP_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network-system
+      spec:
+        disableNamespaceMatcher: true
+        externalURL: https://alertmanager.${APP_DOMAIN}
+    vmalert:
+      route:
+        enabled: true
+        hostnames:
+          - vmalert.${APP_DOMAIN}
+        parentRefs:
+          - name: envoy-internal
+            namespace: network-system
+      spec:
+        extraArgs:
+          external.url: https://vmalert.${APP_DOMAIN}
