@@ -8,6 +8,8 @@ spec:
   dependsOn:
     - name: envoy-gateway
     - name: envoy-gateway-resources
+    - name: prometheus-operator-crds
+      namespace: observability
   interval: 1h
   path: ./kubernetes/apps/network-system/echo/app
   prune: true

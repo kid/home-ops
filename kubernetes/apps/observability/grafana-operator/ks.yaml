@@ -5,6 +5,8 @@ kind: Kustomization
 metadata:
   name: grafana-operator
 spec:
+  dependsOn:
+    - name: prometheus-operator-crds
   interval: 1h
   path: ./kubernetes/apps/observability/grafana-operator/app
   prune: true
