@@ -16,6 +16,7 @@ resources:
   - ./mikrotik-exporter/ks.app.yaml
   - ./prometheus-operator-crds/ks.yaml
   - ./silence-operator/ks.app.yaml
+  - ./silence-operator/ks.silence.yaml
   - ./victoria-metrics/ks.app.yaml
   - ./victoria-metrics-rules/ks.app.yaml
   - ./victoria-logs/ks.app.yaml
