@@ -9,7 +9,11 @@ spec:
   interval: 10m0s
   postBuild:
     substitute:
-      CLUSTER_BRANCH: main
+      var_substitution_enabled: "true"
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-branch-override
+        optional: true
   path: ./clusters/dev
   prune: true
   sourceRef:

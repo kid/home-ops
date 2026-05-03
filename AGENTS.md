@@ -22,14 +22,14 @@
 
 ## PR Deployment
 
-- For temporary live testing, keep `Kustomization/flux-system` reconciling. The branch override now lives in `spec.postBuild.substitute.CLUSTER_BRANCH` on that Kustomization and is consumed by `clusters/dev/flux/gitrepository.yaml`.
+- For temporary live testing, keep `Kustomization/flux-system` reconciling. The branch override now lives in `ConfigMap/flux-system/cluster-branch-override` as `data.CLUSTER_BRANCH` and is consumed by `clusters/dev/flux/gitrepository.yaml` through `Kustomization/flux-system.spec.postBuild.substituteFrom`.
 - When working from a branch, always open a PR for it before live testing.
-- Before deploying a PR, check whether `Kustomization/flux-system` already has a non-default `spec.postBuild.substitute.CLUSTER_BRANCH`. Do not replace an active PR deployment without explicit user approval.
-- Patch live `Kustomization/flux-system` to the PR branch name with `spec.postBuild.substitute.CLUSTER_BRANCH`; the patch will trigger reconciliation and reapply `GitRepository/flux-system` with the same branch value from git. Do not use GitHub PR merge refs here; this cluster's Flux/source-controller version may resolve them without fetching the commit object.
+- Before deploying a PR, check whether `ConfigMap/flux-system/cluster-branch-override` already exists with a non-default `CLUSTER_BRANCH`. Do not replace an active PR deployment without explicit user approval.
+- Create or patch `ConfigMap/flux-system/cluster-branch-override` with `data.CLUSTER_BRANCH=<branch>`; that override will be consumed by `Kustomization/flux-system` and reapply `GitRepository/flux-system` with the same branch value from git. Do not use GitHub PR merge refs here; this cluster's Flux/source-controller version may resolve them without fetching the commit object.
 - Reconcile the owning app `Kustomization` to apply changed git-managed manifests from the fetched branch. Reconcile a `HelmRelease` only when you need to re-run Helm after the `HelmRelease` spec has already been applied.
-- Keep the override in place while the cluster should stay on the PR branch ref; once `Kustomization/flux-system` reconciles from git it will continue to enforce the patched branch until you revert `spec.postBuild.substitute.CLUSTER_BRANCH` to `main`.
+- Keep the override `ConfigMap` in place while the cluster should stay on the PR branch ref; once `Kustomization/flux-system` reconciles from git it will continue to enforce the overridden branch until you update or remove `ConfigMap/flux-system/cluster-branch-override`.
 - For rollback or cleanup, prefer waiting until the PR is merged so the normal branch contains the tested changes before switching the cluster back.
-- After merge, patching `spec.postBuild.substitute.CLUSTER_BRANCH=main` on `Kustomization/flux-system` should be sufficient to restore the normal source branch.
+- After merge, deleting `ConfigMap/flux-system/cluster-branch-override` should be sufficient to restore the normal source branch; `clusters/dev/flux/gitrepository.yaml` defaults to `main` when no override is present.
 
 ## Talos
 
