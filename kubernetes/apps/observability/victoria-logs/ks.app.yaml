@@ -5,6 +5,13 @@ kind: Kustomization
 metadata:
   name: victoria-logs
 spec:
+  dependsOn:
+    - name: external-secrets
+      namespace: external-secrets
+    - name: piraeus-operator
+      namespace: storage-system
+    - name: volsync
+      namespace: storage-system
   interval: 1h
   path: ./kubernetes/apps/observability/victoria-logs/app
   prune: true
@@ -14,3 +21,12 @@ spec:
     namespace: flux-system
   targetNamespace: observability
   wait: true
+  components:
+    - ../../../../components/volsync/
+  postBuild:
+    substitute:
+      APP: victoria-logs
+      VOLSYNC_PVC: victoria-logs
+      VOLSYNC_CAPACITY: 5Gi
+      VOLSYNC_PUID: "1000"
+      VOLSYNC_PGID: "1000"
