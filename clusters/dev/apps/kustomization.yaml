@@ -4,10 +4,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - ./storage-system/
   - ../../../kubernetes/apps/actions-runner-system/
   - ../../../kubernetes/apps/external-secrets/
   - ../../../kubernetes/apps/flux-system/
   - ../../../kubernetes/apps/kube-system/
   - ../../../kubernetes/apps/network-system/
   - ../../../kubernetes/apps/observability/
-  - ./storage-system/
+  - ../../../kubernetes/apps/media/
