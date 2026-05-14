@@ -30,15 +30,6 @@ spec:
         resources:
           requests:
             storage: 10Gi
-      kubernetesModeAdditionalRoleRules:
-        - apiGroups:
-            - ""
-          resources:
-            - pods/attach
-            - pods/portforward
-          verbs:
-            - create
-            - get
     template:
       spec:
         containers:
