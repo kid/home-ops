@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: sonarr-media
+  name: sonarr-library
 spec:
   capacity:
     storage: 1Ti
@@ -22,12 +22,12 @@ spec:
     - retrans=2
   nfs:
     server: tank.nfs.${INTERNAL_DOMAIN}
-    path: /library/series
+    path: /var/mnt/tank/library/series
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: sonarr-media
+  name: sonarr-library
 spec:
   accessModes:
     - ReadWriteMany
@@ -35,4 +35,4 @@ spec:
     requests:
       storage: 1Ti
   storageClassName: ""
-  volumeName: sonarr-media
+  volumeName: sonarr-library
