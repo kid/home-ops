@@ -1,0 +1,37 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: home-ops-runner
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: home-ops-runner
+  interval: 1h
+  values:
+    githubConfigUrl: https://github.com/kid/home-ops
+    githubConfigSecret: home-ops-runner-auth-secret
+    runnerScaleSetName: home-ops
+    minRunners: 0
+    maxRunners: 2
+    scaleSetLabels:
+      - home-ops
+      - kubernetes
+    controllerServiceAccount:
+      namespace: actions-runner-system
+      name: actions-runner-controller-gha-rs-controller
+    containerMode:
+      type: dind
+    listenerTemplate:
+      spec:
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+            effect: NoSchedule
+    template:
+      spec:
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+            effect: NoSchedule
