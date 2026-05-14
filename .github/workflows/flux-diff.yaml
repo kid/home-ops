@@ -86,7 +86,7 @@ jobs:
         run: cp .env.gha .env
 
       - name: Install Dagger
-        uses: dagger/dagger-for-github@v8.4.0
+        uses: dagger/dagger-for-github@27b130bf0f79a7f6fbbbe0fbca6760dc9bb40a77 # v8.4.1
         with:
           version: latest
           dagger-flags: --progress=logs
