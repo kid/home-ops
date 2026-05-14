@@ -26,7 +26,7 @@ spec:
       kubernetesModeWorkVolumeClaim:
         accessModes:
           - ReadWriteOnce
-        storageClassName: ${APP_STORAGECLASS}
+        storageClassName: openebs-hostpath
         resources:
           requests:
             storage: 10Gi
@@ -41,21 +41,17 @@ spec:
             - get
     template:
       spec:
+        containers:
+          - name: runner
+            image: ghcr.io/home-operations/actions-runner:2.334.0@sha256:95d91d7f8d241e319ef2f4fec08f417aa1606b96fbb327643f75c303acd30002
+            command:
+              - /home/runner/run.sh
+            env:
+              - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
+                value: "false"
         securityContext:
           fsGroup: 1001
           fsGroupChangePolicy: OnRootMismatch
-        initContainers:
-          - name: init-workdir-perms
-            image: busybox:1.36
-            command:
-              - sh
-              - -lc
-              - mkdir -p /home/runner/_work/_tool && chown -R 1001:1001 /home/runner/_work
-            securityContext:
-              runAsUser: 0
-            volumeMounts:
-              - name: work
-                mountPath: /home/runner/_work
         tolerations:
           - key: node-role.kubernetes.io/control-plane
             operator: Exists

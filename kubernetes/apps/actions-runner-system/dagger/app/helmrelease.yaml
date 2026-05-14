@@ -14,6 +14,20 @@ spec:
       kind: StatefulSet
       newServiceAccount:
         create: true
+      statefulSet:
+        persistentVolumeClaim:
+          enabled: true
+          storageClassName: ${APP_STORAGECLASS}
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+      hostPath:
+        dataVolume:
+          enabled: false
+        runVolume:
+          enabled: false
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
