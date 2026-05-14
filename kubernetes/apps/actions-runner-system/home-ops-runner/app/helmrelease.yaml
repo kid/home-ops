@@ -41,6 +41,21 @@ spec:
             - get
     template:
       spec:
+        securityContext:
+          fsGroup: 1001
+          fsGroupChangePolicy: OnRootMismatch
+        initContainers:
+          - name: init-workdir-perms
+            image: busybox:1.36
+            command:
+              - sh
+              - -lc
+              - mkdir -p /home/runner/_work/_tool && chown -R 1001:1001 /home/runner/_work
+            securityContext:
+              runAsUser: 0
+            volumeMounts:
+              - name: work
+                mountPath: /home/runner/_work
         tolerations:
           - key: node-role.kubernetes.io/control-plane
             operator: Exists
