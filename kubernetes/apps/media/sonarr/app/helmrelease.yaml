@@ -87,7 +87,7 @@ spec:
         globalMounts:
           - path: /config
       media:
-        existingClaim: sonarr-series
+        existingClaim: sonarr-series-local
         globalMounts:
           - path: /media
       tmp:
