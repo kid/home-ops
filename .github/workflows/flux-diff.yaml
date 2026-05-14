@@ -51,7 +51,7 @@ jobs:
   diff:
     name: Flux Diff - ${{ matrix.cluster }} / ${{ matrix.kind }}
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: home-ops
     permissions:
       contents: read
       pull-requests: write
