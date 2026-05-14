@@ -52,8 +52,6 @@ jobs:
     name: Flux Diff - ${{ matrix.cluster }} / ${{ matrix.kind }}
     needs: prepare
     runs-on: home-ops
-    container:
-      image: ghcr.io/actions/actions-runner:latest
     permissions:
       contents: read
       pull-requests: write
