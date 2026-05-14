@@ -22,7 +22,23 @@ spec:
       namespace: actions-runner-system
       name: actions-runner-controller-gha-rs-controller
     containerMode:
-      type: dind
+      type: kubernetes
+      kubernetesModeWorkVolumeClaim:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: ${APP_STORAGECLASS}
+        resources:
+          requests:
+            storage: 10Gi
+      kubernetesModeAdditionalRoleRules:
+        - apiGroups:
+            - ""
+          resources:
+            - pods/attach
+            - pods/portforward
+          verbs:
+            - create
+            - get
     template:
       spec:
         tolerations:

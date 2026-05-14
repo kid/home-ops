@@ -1,3 +1,4 @@
+---
 name: Dagger Checks
 
 on:
@@ -15,6 +16,51 @@ jobs:
 
       - name: Prepare CI env file
         run: cp .env.gha .env
+
+      - name: Configure Dagger cluster runner
+        shell: bash
+        env:
+          DAGGER_NAMESPACE: actions-runner-system
+          DAGGER_ENGINE_LABEL_SELECTOR: name%3Ddagger-dagger-helm-engine
+        run: |
+          set -euo pipefail
+
+          token_file=/var/run/secrets/kubernetes.io/serviceaccount/token
+          ca_file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+          if [[ ! -r "$token_file" ]]; then
+            echo "missing service account token at $token_file" >&2
+            exit 1
+          fi
+
+          api_server="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS:-443}"
+          pods_json="$({
+            curl --fail --silent --show-error \
+              --cacert "$ca_file" \
+              -H "Authorization: Bearer $(< "$token_file")" \
+              "$api_server/api/v1/namespaces/$DAGGER_NAMESPACE/pods?labelSelector=$DAGGER_ENGINE_LABEL_SELECTOR"
+          })"
+
+          pod_name="$({
+            printf '%s' "$pods_json" | node -e '
+              let input = "";
+              process.stdin.on("data", (chunk) => (input += chunk));
+              process.stdin.on("end", () => {
+                const data = JSON.parse(input);
+                const pod =
+                  (data.items || []).find((item) => item.status?.phase === "Running") ||
+                  (data.items || [])[0];
+                if (!pod?.metadata?.name) {
+                  console.error("no dagger engine pod found");
+                  process.exit(1);
+                }
+                process.stdout.write(pod.metadata.name);
+              });
+            '
+          })"
+
+          echo "_EXPERIMENTAL_DAGGER_RUNNER_HOST=kube-pod://$pod_name?namespace=$DAGGER_NAMESPACE" >> "$GITHUB_ENV"
+          echo "Using Dagger engine pod $pod_name in $DAGGER_NAMESPACE"
 
       - name: Run Dagger checks
         uses: dagger/checks@64525befa1c36dd55577dae083df5c8968d9325a # v1.1.0
