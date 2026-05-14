@@ -37,6 +37,9 @@ spec:
                   httpGet:
                     path: /api?mode=version
                     port: *port
+                    httpHeaders:
+                      - name: Host
+                        value: sabnzbd.${APP_DOMAIN}
                   periodSeconds: 10
                   timeoutSeconds: 5
                   failureThreshold: 5
