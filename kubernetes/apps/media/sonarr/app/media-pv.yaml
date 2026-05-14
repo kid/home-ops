@@ -1,0 +1,38 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sonarr-media
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - nfsvers=4.2
+    - proto=tcp
+    - nconnect=16
+    - rsize=1048576
+    - wsize=1048576
+    - noatime
+    - softerr
+    - timeo=10
+    - retrans=2
+  nfs:
+    server: tank.nfs.${INTERNAL_DOMAIN}
+    path: /library/series
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-media
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Ti
+  storageClassName: ""
+  volumeName: sonarr-media

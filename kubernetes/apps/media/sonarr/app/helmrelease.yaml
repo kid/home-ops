@@ -62,6 +62,8 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: talos0
       securityContext:
+        seccompProfile:
+          type: RuntimeDefault
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
@@ -85,9 +87,7 @@ spec:
         globalMounts:
           - path: /config
       media:
-        type: nfs
-        server: tank.nfs.${INTERNAL_DOMAIN}
-        path: /library/series
+        existingClaim: sonarr-media
         globalMounts:
           - path: /media
       tmp:
