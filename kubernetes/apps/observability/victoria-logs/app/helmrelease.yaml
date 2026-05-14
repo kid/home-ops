@@ -8,80 +8,18 @@ spec:
   releaseName: *release
   chartRef:
     kind: OCIRepository
-    name: victoria-logs-cluster
+    name: victoria-logs-single
   interval: 1h
   targetNamespace: observability
   values:
     nameOverride: vl
-    vlinsert:
-      replicaCount: 2
-      service:
-        clusterIP: None
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
-          labelSelector:
-            matchLabels:
-              app.kubernetes.io/component: vlinsert
-              app.kubernetes.io/instance: victoria-logs
-      podDisruptionBudget:
-        enabled: true
-        minAvailable: 1
-      resources:
-        requests:
-          cpu: 100m
-          memory: 256Mi
-        limits:
-          memory: 512Mi
-    vlselect:
-      replicaCount: 2
-      service:
-        clusterIP: None
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
-          labelSelector:
-            matchLabels:
-              app.kubernetes.io/component: vlselect
-              app.kubernetes.io/instance: victoria-logs
-      podDisruptionBudget:
-        enabled: true
-        minAvailable: 1
-      resources:
-        requests:
-          cpu: 100m
-          memory: 256Mi
-        limits:
-          memory: 512Mi
-    vlstorage:
-      replicaCount: 2
+    server:
+      replicaCount: 1
       retentionPeriod: 30d
       persistentVolume:
         enabled: true
-        storageClassName: ${APP_STORAGECLASS}
-        size: 20Gi
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
-          labelSelector:
-            matchLabels:
-              app.kubernetes.io/component: vlstorage
-              app.kubernetes.io/instance: victoria-logs
-      podDisruptionBudget:
-        enabled: true
-        minAvailable: 1
-      resources:
-        requests:
-          cpu: 100m
-          memory: 512Mi
-        limits:
-          memory: 1Gi
-    vmauth:
-      enabled: true
-      replicaCount: 2
+        existingClaim: ${VOLSYNC_PVC}
+        mountPath: /storage
       route:
         enabled: true
         extraRules:
@@ -101,24 +39,16 @@ spec:
         parentRefs:
           - name: envoy-internal
             namespace: network-system
-        matches:
-          - path:
-              type: PathPrefix
-              value: /select
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: DoNotSchedule
-          labelSelector:
-            matchLabels:
-              app.kubernetes.io/component: vmauth
-              app.kubernetes.io/instance: victoria-logs
       podDisruptionBudget:
         enabled: true
         minAvailable: 1
       resources:
         requests:
-          cpu: 50m
-          memory: 128Mi
+          cpu: 300m
+          memory: 1Gi
         limits:
-          memory: 256Mi
+          memory: 2Gi
