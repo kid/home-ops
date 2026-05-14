@@ -12,6 +12,7 @@ spec:
   values:
     engine:
       kind: StatefulSet
+      port: 1234
       newServiceAccount:
         create: true
       statefulSet:
