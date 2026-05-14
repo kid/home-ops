@@ -1,0 +1,39 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: dagger
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: dagger
+  interval: 1h
+  values:
+    engine:
+      kind: StatefulSet
+      port: 1234
+      newServiceAccount:
+        create: true
+      statefulSet:
+        persistentVolumeClaim:
+          enabled: true
+          storageClassName: ${APP_STORAGECLASS}
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+      hostPath:
+        dataVolume:
+          enabled: false
+        runVolume:
+          enabled: false
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi

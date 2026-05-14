@@ -1,3 +1,4 @@
+---
 name: Dagger Checks
 
 on:
@@ -15,6 +16,12 @@ jobs:
 
       - name: Prepare CI env file
         run: cp .env.gha .env
+
+      - name: Configure Dagger cluster runner
+        shell: bash
+        run: |
+          echo "_EXPERIMENTAL_DAGGER_RUNNER_HOST=tcp://dagger.actions-runner-system.svc.cluster.local:1234" >> "$GITHUB_ENV"
+          echo "Using Dagger engine service dagger.actions-runner-system.svc.cluster.local:1234"
 
       - name: Run Dagger checks
         uses: dagger/checks@64525befa1c36dd55577dae083df5c8968d9325a # v1.1.0
