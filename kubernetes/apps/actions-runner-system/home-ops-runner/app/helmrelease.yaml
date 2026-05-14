@@ -14,7 +14,7 @@ spec:
     githubConfigSecret: home-ops-runner-auth-secret
     runnerScaleSetName: home-ops
     minRunners: 0
-    maxRunners: 2
+    maxRunners: 3
     scaleSetLabels:
       - home-ops
       - kubernetes
