@@ -85,7 +85,7 @@ spec:
       media:
         type: nfs
         server: tank.nfs.${INTERNAL_DOMAIN}
-        path: /nfsshare/library/series
+        path: /library/series
         globalMounts:
           - path: /media
       tmp:

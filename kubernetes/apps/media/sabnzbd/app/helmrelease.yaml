@@ -80,12 +80,12 @@ spec:
         existingClaim: sabnzbd
         globalMounts:
           - path: /config
-      media:
+      downloads:
         type: nfs
         server: tank.nfs.${INTERNAL_DOMAIN}
-        path: /nfsshare
+        path: /downloads
         globalMounts:
-          - path: /media
+          - path: /downloads
       tmp:
         type: emptyDir
         globalMounts:
