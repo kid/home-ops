@@ -46,7 +46,8 @@ func (m *Bootstrap) All(
 
 	talosConfigs *dagger.Directory,
 	talosSecrets *dagger.Secret,
-	onepasswordToken *dagger.Secret,
+	onepasswordConnectToken *dagger.Secret,
+	onepasswordConnectCredentials *dagger.Secret,
 ) error {
 	talos := dag.Talos(dagger.TalosOpts{
 		// Configs: m.Source.Directory(fmt.Sprintf("clusters/%s/talos", m.Cluster)),
@@ -80,7 +81,7 @@ func (m *Bootstrap) All(
 		return fmt.Errorf("applying apps: %w", err)
 	}
 
-	if err := m.Secret(ctx, kubeconfig, onepasswordToken); err != nil {
+	if err := m.Secret(ctx, kubeconfig, onepasswordConnectToken, onepasswordConnectCredentials); err != nil {
 		return err
 	}
 
@@ -373,15 +374,17 @@ func (m *Bootstrap) Apply(
 func (m *Bootstrap) Secret(
 	ctx context.Context,
 	kubeconfig *dagger.Secret,
-	onepasswordToken *dagger.Secret,
+	onepasswordConnectToken *dagger.Secret,
+	onepasswordConnectCredentials *dagger.Secret,
 ) error {
 	_, err := m.Container(kubeconfig).
-		// WithSecretVariable("OP_SERVICE_ACCOUNT_TOKEN", onepasswordToken).
-		WithMountedSecret("/secrets.env", onepasswordToken).
-		WithExec([]string{"kubectl", "create", "secret", "generic", "onepassword-secret", "-n", "external-secrets", "--from-file=token=/secrets.env"}).
+		WithMountedSecret("/onepassword-connect-token", onepasswordConnectToken).
+		WithMountedSecret("/onepassword-credentials.json", onepasswordConnectCredentials).
+		WithExec([]string{"sh", "-c", "kubectl create secret generic onepassword-connect-token-secret -n external-secrets --from-file=token=/onepassword-connect-token --dry-run=client -o yaml | kubectl apply -f -"}).
+		WithExec([]string{"sh", "-c", "kubectl create secret generic onepassword-connect-credentials-secret -n external-secrets --from-file=1password-credentials.json=/onepassword-credentials.json --dry-run=client -o yaml | kubectl apply -f -"}).
 		Sync(ctx)
 	if err != nil {
-		return fmt.Errorf("creating onepassword secret: %w", err)
+		return fmt.Errorf("creating onepassword connect secrets: %w", err)
 	}
 
 	return nil
