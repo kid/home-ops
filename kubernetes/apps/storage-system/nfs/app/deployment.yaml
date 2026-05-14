@@ -23,7 +23,7 @@ spec:
           image: quay.io/aminvakil/alpine-nfs-server:latest
           env:
             - name: SHARED_DIRECTORY
-              value: /nfsshare
+              value: /var/mnt/tank
             - name: SYNC
               value: "true"
             - name: PERMITTED
@@ -37,7 +37,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - showmount -e 127.0.0.1 2>/dev/null | grep -qE '^/nfsshare([[:space:]]|$)'
+                - showmount -e 127.0.0.1 2>/dev/null | grep -qE '^/var/mnt/tank([[:space:]]|$)'
           readinessProbe: &probe
             tcpSocket:
               port: nfs
@@ -50,7 +50,7 @@ spec:
             privileged: true
           volumeMounts:
             - name: nfsshare
-              mountPath: /nfsshare
+              mountPath: /var/mnt/tank
       volumes:
         - name: nfsshare
           hostPath:
