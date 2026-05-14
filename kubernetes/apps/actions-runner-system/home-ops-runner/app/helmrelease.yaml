@@ -23,12 +23,6 @@ spec:
       name: actions-runner-controller-gha-rs-controller
     containerMode:
       type: dind
-    listenerTemplate:
-      spec:
-        tolerations:
-          - key: node-role.kubernetes.io/control-plane
-            operator: Exists
-            effect: NoSchedule
     template:
       spec:
         tolerations:
