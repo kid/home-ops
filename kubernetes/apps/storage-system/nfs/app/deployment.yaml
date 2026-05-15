@@ -22,12 +22,8 @@ spec:
         - name: nfs
           image: quay.io/aminvakil/alpine-nfs-server:latest
           env:
-            - name: SHARED_DIRECTORY
-              value: /var/mnt/tank
-            - name: SYNC
+            - name: EXPORTS_MOUNTED
               value: "true"
-            - name: PERMITTED
-              value: "*"
           ports:
             - name: nfs
               containerPort: 2049
@@ -37,7 +33,11 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - showmount -e 127.0.0.1 2>/dev/null | grep -qE '^/var/mnt/tank([[:space:]]|$)'
+                - >-
+                  showmount -e 127.0.0.1 2>/dev/null |
+                  grep -qE '^/var/library/movies([[:space:]]|$)' &&
+                  showmount -e 127.0.0.1 2>/dev/null |
+                  grep -qE '^/var/library/series([[:space:]]|$)'
           readinessProbe: &probe
             tcpSocket:
               port: nfs
@@ -49,10 +49,23 @@ spec:
           securityContext:
             privileged: true
           volumeMounts:
-            - name: nfsshare
-              mountPath: /var/mnt/tank
+            - name: movies
+              mountPath: /var/library/movies
+            - name: series
+              mountPath: /var/library/series
+            - name: exports
+              mountPath: /etc/exports
+              subPath: exports
+              readOnly: true
       volumes:
-        - name: nfsshare
+        - name: movies
           hostPath:
-            path: /var/mnt/tank
+            path: /var/library/movies
             type: Directory
+        - name: series
+          hostPath:
+            path: /var/library/series
+            type: Directory
+        - name: exports
+          configMap:
+            name: nfs-exports
