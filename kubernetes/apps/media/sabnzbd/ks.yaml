@@ -10,8 +10,6 @@ spec:
       namespace: external-secrets
     - name: volsync
       namespace: storage-system
-    - name: nfs
-      namespace: storage-system
   interval: 1h
   path: ./kubernetes/apps/media/sabnzbd/app
   prune: true

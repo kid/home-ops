@@ -85,9 +85,7 @@ spec:
         globalMounts:
           - path: /config
       downloads:
-        type: nfs
-        server: tank.nfs.${INTERNAL_DOMAIN}
-        path: /downloads
+        existingClaim: sabnzbd-downloads
         globalMounts:
           - path: /downloads
       tmp:
