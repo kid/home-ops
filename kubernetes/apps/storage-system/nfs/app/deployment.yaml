@@ -35,9 +35,9 @@ spec:
                 - -c
                 - >-
                   showmount -e 127.0.0.1 2>/dev/null |
-                  grep -qE '^/var/library/movies([[:space:]]|$)' &&
+                  grep -qE '^/export/movies([[:space:]]|$)' &&
                   showmount -e 127.0.0.1 2>/dev/null |
-                  grep -qE '^/var/library/series([[:space:]]|$)'
+                  grep -qE '^/export/series([[:space:]]|$)'
           readinessProbe: &probe
             tcpSocket:
               port: nfs
@@ -49,16 +49,26 @@ spec:
           securityContext:
             privileged: true
           volumeMounts:
-            - name: library
-              mountPath: /var/library
+            - name: export-root
+              mountPath: /export
+            - name: movies
+              mountPath: /export/movies
+            - name: series
+              mountPath: /export/series
             - name: exports
               mountPath: /etc/exports
               subPath: exports
               readOnly: true
       volumes:
-        - name: library
+        - name: export-root
+          emptyDir: {}
+        - name: movies
           hostPath:
-            path: /var/library
+            path: /var/library/movies
+            type: Directory
+        - name: series
+          hostPath:
+            path: /var/library/series
             type: Directory
         - name: exports
           configMap:

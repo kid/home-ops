@@ -5,6 +5,6 @@ metadata:
   name: nfs-exports
 data:
   exports: |
-    /var/library *(ro,fsid=0,crossmnt,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
-    /var/library/movies *(rw,sync,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
-    /var/library/series *(rw,sync,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
+    /export *(ro,fsid=0,crossmnt,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
+    /export/movies *(rw,sync,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
+    /export/series *(rw,sync,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
