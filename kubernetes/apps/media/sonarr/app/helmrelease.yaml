@@ -87,7 +87,9 @@ spec:
         globalMounts:
           - path: /config
       media:
-        existingClaim: sonarr-series-local
+        type: nfs
+        server: tank.nfs.${INTERNAL_DOMAIN}
+        path: /library/series
         globalMounts:
           - path: /media
       tmp:
