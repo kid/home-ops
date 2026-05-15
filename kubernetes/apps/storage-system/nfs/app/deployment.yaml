@@ -49,22 +49,16 @@ spec:
           securityContext:
             privileged: true
           volumeMounts:
-            - name: movies
-              mountPath: /var/library/movies
-            - name: series
-              mountPath: /var/library/series
+            - name: library
+              mountPath: /var/library
             - name: exports
               mountPath: /etc/exports
               subPath: exports
               readOnly: true
       volumes:
-        - name: movies
+        - name: library
           hostPath:
-            path: /var/library/movies
-            type: Directory
-        - name: series
-          hostPath:
-            path: /var/library/series
+            path: /var/library
             type: Directory
         - name: exports
           configMap:
