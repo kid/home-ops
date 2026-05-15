@@ -19,6 +19,7 @@ spec:
               tag: 5.0.1@sha256:c22ada9eb6f6306a4e94d3372c784a5330818f2021b2fa9233ff4ae92d9f3582
             env:
               SABNZBD__HOST_WHITELIST_ENTRIES: "*"
+              SABNZBD__INET_EXPOSURE: "4"
               SABNZBD__PORT: &port 80
             envFrom:
               - secretRef:
