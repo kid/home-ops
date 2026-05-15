@@ -21,6 +21,7 @@ spec:
               - --inet_exposure
               - "4"
             env:
+              SABNZBD__HOST_WHITELIST_ENTRIES: "sabnzbd.${APP_DOMAIN}, sabnzbd.media, sabnzbd.media.svc, sabnzbd.media.svc.cluster.local"
               SABNZBD__PORT: &port 80
             envFrom:
               - secretRef:
