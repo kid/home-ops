@@ -10,6 +10,7 @@ components:
 
 resources:
   - ./namespace.yaml
+  - ./clonarr/ks.yaml
   - ./sonarr/ks.yaml
   - ./radarr/ks.yaml
   - ./prowlarr/ks.yaml
