@@ -59,8 +59,6 @@ spec:
               limits:
                 memory: 4Gi
     defaultPodOptions:
-      nodeSelector:
-        kubernetes.io/hostname: talos0
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
