@@ -249,12 +249,15 @@ func (m *FluxLocal) Diff(
 	// +default="ks"
 	kind string,
 	// +optional
+	// +default="flux-system"
+	sources string,
+	// +optional
 	namespace string,
 	// +optional
 	// +default="main"
 	branch string,
 ) (*dagger.Container, error) {
-	args := []string{"flux-local", "diff", kind, "--path", path}
+	args := []string{"flux-local", "diff", kind, "--path", path, "--sources", sources, "--strip-attrs", "helm.sh/chart,checksum/config,app.kubernetes.io/version,chart"}
 	if namespace != "" {
 		args = append(args, "--namespace", namespace)
 	} else {

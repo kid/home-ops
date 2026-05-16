@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nfs-exports
+data:
+  exports: |
+    /export *(ro,fsid=0,crossmnt,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
+    /export/movies *(rw,sync,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
+    /export/series *(rw,sync,no_subtree_check,no_auth_nlm,insecure,no_root_squash)
