@@ -1,0 +1,120 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-logs-config
+  namespace: observability
+data:
+  config.alloy: |
+    logging {
+      level  = "info"
+      format = "logfmt"
+    }
+
+    otelcol.processor.batch "logs" {
+      output {
+        logs = [otelcol.exporter.otlphttp.victorialogs.input]
+      }
+    }
+
+    otelcol.exporter.otlphttp "victorialogs" {
+      client {
+        endpoint    = "http://victoria-logs-vl-server.observability.svc.cluster.local:9428/insert/opentelemetry"
+        compression = "gzip"
+        timeout     = "30s"
+      }
+
+      retry_on_failure {
+        enabled          = true
+        initial_interval = "1s"
+        max_interval     = "30s"
+        max_elapsed_time = "5m"
+      }
+
+      sending_queue {
+        enabled       = true
+        num_consumers = 4
+        queue_size    = 1000
+      }
+    }
+
+    otelcol.receiver.tcplog "talos" {
+      listen_address     = "127.0.0.1:15140"
+      max_log_size       = "1MiB"
+      one_log_per_packet = false
+      encoding           = "utf-8"
+
+      attributes = {
+        cluster      = "${CLUSTER_NAME}",
+        node         = sys.env("ALLOY_NODE_NAME"),
+        "log.source" = "talos",
+      }
+
+      resource = {
+        "service.name"    = "talos",
+        "service.namespace" = "talos",
+        "host.name"       = sys.env("ALLOY_NODE_NAME"),
+        "k8s.node.name"   = sys.env("ALLOY_NODE_NAME"),
+        "k8s.cluster.name" = "${CLUSTER_NAME}",
+      }
+
+      retry_on_failure {
+        enabled          = true
+        initial_interval = "1s"
+        max_interval     = "30s"
+        max_elapsed_time = "5m"
+      }
+
+      operators = [
+        {
+          type = "json_parser"
+        },
+      ]
+
+      output {
+        logs = [otelcol.processor.batch.logs.input]
+      }
+    }
+
+    otelcol.receiver.filelog "alloy_self" {
+      include = [string.format("/var/log/pods/observability_%s_*/alloy/*.log", sys.env("POD_NAME"))]
+      start_at = "end"
+
+      attributes = {
+        cluster                     = "${CLUSTER_NAME}",
+        node                        = sys.env("ALLOY_NODE_NAME"),
+        "log.source"               = "alloy-self",
+        "kubernetes.pod_name"      = sys.env("POD_NAME"),
+        "kubernetes.pod_namespace" = sys.env("POD_NAMESPACE"),
+        "kubernetes.container_name" = "alloy",
+      }
+
+      resource = {
+        "service.name"       = "alloy-logs",
+        "service.namespace"  = sys.env("POD_NAMESPACE"),
+        "service.instance.id" = sys.env("POD_NAME"),
+        "host.name"          = sys.env("ALLOY_NODE_NAME"),
+        "k8s.cluster.name"   = "${CLUSTER_NAME}",
+        "k8s.namespace.name" = sys.env("POD_NAMESPACE"),
+        "k8s.pod.name"       = sys.env("POD_NAME"),
+        "k8s.container.name" = "alloy",
+        "k8s.node.name"      = sys.env("ALLOY_NODE_NAME"),
+      }
+
+      retry_on_failure {
+        enabled          = true
+        initial_interval = "1s"
+        max_interval     = "30s"
+        max_elapsed_time = "5m"
+      }
+
+      operators = [
+        {
+          type = "container"
+        },
+      ]
+
+      output {
+        logs = [otelcol.processor.batch.logs.input]
+      }
+    }

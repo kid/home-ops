@@ -1,0 +1,6 @@
+---
+machine:
+  logging:
+    destinations:
+      - endpoint: tcp://127.0.0.1:15140/
+        format: json_lines
