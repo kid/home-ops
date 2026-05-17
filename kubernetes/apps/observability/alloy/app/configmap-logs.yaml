@@ -256,6 +256,49 @@ data:
       }
 
       output {
+        logs = [otelcol.processor.k8sattributes.kubernetes.input]
+      }
+    }
+
+    otelcol.processor.k8sattributes "kubernetes" {
+      auth_type = "serviceAccount"
+
+      extract {
+        metadata = [
+          "k8s.namespace.name",
+          "k8s.pod.name",
+          "k8s.pod.uid",
+          "k8s.pod.ip",
+          "k8s.node.name",
+        ]
+
+        label {
+          from      = "pod"
+          key_regex = "(.*)"
+          tag_name  = "kubernetes.pod_labels.$1"
+        }
+      }
+
+      pod_association {
+        source {
+          from = "resource_attribute"
+          name = "k8s.pod.uid"
+        }
+      }
+
+      output {
+        logs = [otelcol.processor.attributes.kubernetes_metadata.input]
+      }
+    }
+
+    otelcol.processor.attributes "kubernetes_metadata" {
+      action {
+        key            = "kubernetes.pod_ip"
+        from_attribute = "k8s.pod.ip"
+        action         = "upsert"
+      }
+
+      output {
         logs = [otelcol.processor.batch.logs.input]
       }
     }
