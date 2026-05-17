@@ -159,42 +159,6 @@ data:
         action = "upsert"
       }
 
-      action {
-        key            = "alloy.k8s.pod.uid"
-        from_attribute = "pod_uid"
-        action         = "upsert"
-      }
-
-      action {
-        key    = "pod_name"
-        action = "delete"
-      }
-
-      action {
-        key    = "pod_namespace"
-        action = "delete"
-      }
-
-      action {
-        key    = "container_name"
-        action = "delete"
-      }
-
-      action {
-        key    = "pod_uid"
-        action = "delete"
-      }
-
-      action {
-        key    = "restart_count"
-        action = "delete"
-      }
-
-      action {
-        key    = "log.file.path"
-        action = "delete"
-      }
-
       output {
         logs = [otelcol.processor.k8sattributes.kubernetes.input]
       }
@@ -223,8 +187,8 @@ data:
 
       pod_association {
         source {
-          from = "resource_attribute"
-          name = "alloy.k8s.pod.uid"
+          from = "attribute"
+          name = "pod_uid"
         }
       }
 
@@ -239,7 +203,12 @@ data:
       log_statements {
         context = "log"
         statements = [
-          "delete_key(attributes, \"alloy.k8s.pod.uid\")",
+          "delete_key(attributes, \"pod_name\")",
+          "delete_key(attributes, \"pod_namespace\")",
+          "delete_key(attributes, \"container_name\")",
+          "delete_key(attributes, \"pod_uid\")",
+          "delete_key(attributes, \"restart_count\")",
+          "delete_key(attributes, \"log.file.path\")",
           "delete_key(attributes, \"k8s.pod.uid\")",
         ]
       }
@@ -247,7 +216,6 @@ data:
       log_statements {
         context = "resource"
         statements = [
-          "delete_key(attributes, \"alloy.k8s.pod.uid\")",
           "delete_key(attributes, \"k8s.pod.uid\")",
         ]
       }
