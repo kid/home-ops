@@ -43,9 +43,9 @@ data:
       }
 
       action {
-        key            = "node"
-        from_attribute = "talos_node_name"
-        action         = "upsert"
+        key    = "node"
+        value  = sys.env("ALLOY_NODE_NAME")
+        action = "upsert"
       }
 
       action {
@@ -67,21 +67,21 @@ data:
       }
 
       action {
-        key            = "host.name"
-        from_attribute = "talos_node_name"
-        action         = "upsert"
+        key    = "host.name"
+        value  = sys.env("ALLOY_NODE_NAME")
+        action = "upsert"
       }
 
       action {
-        key            = "host.ip"
-        from_attribute = "talos_node_ip"
-        action         = "upsert"
+        key    = "host.ip"
+        value  = sys.env("ALLOY_HOST_IP")
+        action = "upsert"
       }
 
       action {
-        key            = "k8s.node.name"
-        from_attribute = "talos_node_name"
-        action         = "upsert"
+        key    = "k8s.node.name"
+        value  = sys.env("ALLOY_NODE_NAME")
+        action = "upsert"
       }
 
       action {

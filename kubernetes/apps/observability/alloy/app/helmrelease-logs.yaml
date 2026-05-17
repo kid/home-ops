@@ -29,6 +29,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        - name: ALLOY_HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
       extraPorts:
         - name: talos-tcplog
           port: 15140
