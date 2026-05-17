@@ -39,7 +39,6 @@ patches:
     - ./patches/host-dns.yaml
     - ./patches/cilium.yaml
     - ./patches/piraeus.yaml
-    - ./patches/logging.yaml
 
   controlplane:
     - ./patches/additional-sans.yaml

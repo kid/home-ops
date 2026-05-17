@@ -4,6 +4,13 @@ machine:
   install:
     disk: /home/vda
     wipe: true
+  logging:
+    destinations:
+      - endpoint: tcp://127.0.0.1:15140/
+        format: json_lines
+        extraTags:
+          talos_node_name: talos1
+          talos_node_ip: 10.0.40.201
 ---
 apiVersion: v1alpha1
 kind: HostnameConfig

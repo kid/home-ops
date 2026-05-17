@@ -4,6 +4,13 @@ machine:
   install:
     disk: /dev/nvme0n1
     wipe: true
+  logging:
+    destinations:
+      - endpoint: tcp://127.0.0.1:15140/
+        format: json_lines
+        extraTags:
+          talos_node_name: talos0
+          talos_node_ip: 10.0.40.200
 ---
 apiVersion: v1alpha1
 kind: HostnameConfig

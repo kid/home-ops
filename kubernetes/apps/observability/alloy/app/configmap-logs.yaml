@@ -17,6 +17,24 @@ data:
       }
     }
 
+    otelcol.processor.transform "talos_json" {
+      error_mode = "ignore"
+
+      log_statements {
+        context = "log"
+        statements = [
+          "merge_maps(attributes, ParseJSON(body), \"upsert\")",
+          "set(body, attributes[\"msg\"]) where attributes[\"msg\"] != nil",
+          "set(severity_text, attributes[\"talos-level\"]) where attributes[\"talos-level\"] != nil",
+          "delete_key(attributes, \"msg\")",
+        ]
+      }
+
+      output {
+        logs = [otelcol.processor.attributes.talos.input]
+      }
+    }
+
     otelcol.processor.attributes "talos" {
       action {
         key    = "cluster"
@@ -26,7 +44,7 @@ data:
 
       action {
         key            = "node"
-        from_attribute = "net.host.name"
+        from_attribute = "talos_node_name"
         action         = "upsert"
       }
 
@@ -37,9 +55,9 @@ data:
       }
 
       action {
-        key    = "service.name"
-        value  = "talos"
-        action = "upsert"
+        key            = "service.name"
+        from_attribute = "talos-service"
+        action         = "upsert"
       }
 
       action {
@@ -50,13 +68,19 @@ data:
 
       action {
         key            = "host.name"
-        from_attribute = "net.host.name"
+        from_attribute = "talos_node_name"
+        action         = "upsert"
+      }
+
+      action {
+        key            = "host.ip"
+        from_attribute = "talos_node_ip"
         action         = "upsert"
       }
 
       action {
         key            = "k8s.node.name"
-        from_attribute = "net.host.name"
+        from_attribute = "talos_node_name"
         action         = "upsert"
       }
 
@@ -64,6 +88,36 @@ data:
         key    = "k8s.cluster.name"
         value  = "${CLUSTER_NAME}"
         action = "upsert"
+      }
+
+      action {
+        key    = "net.host.ip"
+        action = "delete"
+      }
+
+      action {
+        key    = "net.host.name"
+        action = "delete"
+      }
+
+      action {
+        key    = "net.host.port"
+        action = "delete"
+      }
+
+      action {
+        key    = "net.peer.ip"
+        action = "delete"
+      }
+
+      action {
+        key    = "net.peer.name"
+        action = "delete"
+      }
+
+      action {
+        key    = "net.peer.port"
+        action = "delete"
       }
 
       output {
@@ -107,7 +161,7 @@ data:
       }
 
       output {
-        logs = [otelcol.processor.attributes.talos.input]
+        logs = [otelcol.processor.transform.talos_json.input]
       }
     }
 
