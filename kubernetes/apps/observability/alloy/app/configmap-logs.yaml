@@ -144,12 +144,6 @@ data:
         max_elapsed_time = "5m"
       }
 
-      operators = [
-        {
-          type = "container",
-        },
-      ]
-
       output {
         logs = [otelcol.processor.batch.logs.input]
       }
