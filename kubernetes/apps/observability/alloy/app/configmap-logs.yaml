@@ -133,7 +133,7 @@ data:
       log_statements {
         context = "log"
         statements = [
-          "merge_maps(attributes, ParseJSON(body), \"upsert\") where IsMatch(body, \"^\\s*\\{\")",
+          "merge_maps(attributes, ParseJSON(body), \"upsert\") where Substring(body, 0, 1) == \"{\"",
           "set(body, attributes[\"message\"]) where attributes[\"message\"] != nil",
           "set(body, attributes[\"msg\"]) where attributes[\"message\"] == nil and attributes[\"msg\"] != nil",
           "set(body, attributes[\"log\"]) where attributes[\"message\"] == nil and attributes[\"msg\"] == nil and attributes[\"log\"] != nil",
