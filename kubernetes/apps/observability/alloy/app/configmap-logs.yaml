@@ -106,12 +106,6 @@ data:
         max_elapsed_time = "5m"
       }
 
-      operators = [
-        {
-          type = "json_parser",
-        },
-      ]
-
       output {
         logs = [otelcol.processor.attributes.talos.input]
       }
