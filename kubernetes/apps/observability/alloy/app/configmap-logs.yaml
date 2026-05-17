@@ -25,8 +25,15 @@ data:
         statements = [
           "merge_maps(attributes, ParseJSON(body), \"upsert\")",
           "set(body, attributes[\"msg\"]) where attributes[\"msg\"] != nil",
+          "set(time, Time(attributes[\"talos-time\"])) where attributes[\"talos-time\"] != nil",
           "set(severity_text, attributes[\"talos-level\"]) where attributes[\"talos-level\"] != nil",
+          "set(attributes[\"service.name\"], attributes[\"talos-service\"]) where attributes[\"talos-service\"] != nil",
           "delete_key(attributes, \"msg\")",
+          "delete_key(attributes, \"talos-level\")",
+          "delete_key(attributes, \"talos-service\")",
+          "delete_key(attributes, \"talos-time\")",
+          "delete_key(attributes, \"talos_node_name\")",
+          "delete_key(attributes, \"talos_node_ip\")",
         ]
       }
 
@@ -52,12 +59,6 @@ data:
         key    = "log.source"
         value  = "talos"
         action = "upsert"
-      }
-
-      action {
-        key            = "service.name"
-        from_attribute = "talos-service"
-        action         = "upsert"
       }
 
       action {
