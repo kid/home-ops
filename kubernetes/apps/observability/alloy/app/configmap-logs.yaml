@@ -154,6 +154,12 @@ data:
       }
 
       action {
+        key    = "log.source"
+        value  = "kubernetes"
+        action = "upsert"
+      }
+
+      action {
         key            = "alloy.k8s.pod.uid"
         from_attribute = "pod_uid"
         action         = "upsert"
