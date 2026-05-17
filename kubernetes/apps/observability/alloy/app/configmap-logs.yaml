@@ -201,7 +201,8 @@ data:
     }
 
     otelcol.processor.k8sattributes "kubernetes" {
-      auth_type = "serviceAccount"
+      auth_type         = "serviceAccount"
+      wait_for_metadata = true
 
       extract {
         metadata = [
