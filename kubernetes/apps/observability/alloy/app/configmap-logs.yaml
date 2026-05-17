@@ -152,7 +152,7 @@ data:
       log_statements {
         context = "log"
         statements = [
-          "set(resource.attributes[\"alloy.k8s.pod.uid\"], attributes[\"pod_uid\"]) where attributes[\"pod_uid\"] != nil",
+          "set(resource.attributes[\"k8s.pod.uid\"], attributes[\"pod_uid\"]) where attributes[\"pod_uid\"] != nil",
         ]
       }
 
@@ -185,7 +185,7 @@ data:
       pod_association {
         source {
           from = "resource_attribute"
-          name = "alloy.k8s.pod.uid"
+          name = "k8s.pod.uid"
         }
       }
 
@@ -215,7 +215,6 @@ data:
         context = "resource"
         statements = [
           "set(attributes[\"k8s.cluster.name\"], \"${CLUSTER_NAME}\")",
-          "delete_key(attributes, \"alloy.k8s.pod.uid\")",
           "delete_key(attributes, \"k8s.pod.uid\")",
         ]
       }
