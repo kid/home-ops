@@ -22,4 +22,3 @@ resources:
   - ./victoria-metrics/ks.app.yaml
   - ./victoria-metrics-rules/ks.app.yaml
   - ./victoria-logs/ks.app.yaml
-  - ./victoria-logs-collector/ks.app.yaml
