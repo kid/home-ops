@@ -154,38 +154,8 @@ data:
       }
 
       action {
-        key    = "k8s.node.name"
-        value  = sys.env("ALLOY_NODE_NAME")
-        action = "upsert"
-      }
-
-      action {
-        key            = "k8s.namespace.name"
-        from_attribute = "pod_namespace"
-        action         = "upsert"
-      }
-
-      action {
-        key            = "k8s.pod.name"
-        from_attribute = "pod_name"
-        action         = "upsert"
-      }
-
-      action {
-        key            = "k8s.pod.uid"
+        key            = "alloy.k8s.pod.uid"
         from_attribute = "pod_uid"
-        action         = "upsert"
-      }
-
-      action {
-        key            = "k8s.container.name"
-        from_attribute = "container_name"
-        action         = "upsert"
-      }
-
-      action {
-        key            = "k8s.container.restart_count"
-        from_attribute = "restart_count"
         action         = "upsert"
       }
 
@@ -240,8 +210,23 @@ data:
       pod_association {
         source {
           from = "resource_attribute"
-          name = "k8s.pod.uid"
+          name = "alloy.k8s.pod.uid"
         }
+      }
+
+      output {
+        logs = [otelcol.processor.transform.kubernetes_cleanup.input]
+      }
+    }
+
+    otelcol.processor.transform "kubernetes_cleanup" {
+      error_mode = "ignore"
+
+      log_statements {
+        context = "resource"
+        statements = [
+          "delete_key(attributes, \"alloy.k8s.pod.uid\")",
+        ]
       }
 
       output {
