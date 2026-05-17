@@ -190,39 +190,9 @@ data:
       }
 
       action {
-        key            = "k8s.namespace.name"
-        from_attribute = "pod_namespace"
-        action         = "upsert"
-      }
-
-      action {
-        key            = "k8s.pod.name"
-        from_attribute = "pod_name"
-        action         = "upsert"
-      }
-
-      action {
         key            = "k8s.pod.uid"
         from_attribute = "pod_uid"
         action         = "upsert"
-      }
-
-      action {
-        key            = "k8s.container.name"
-        from_attribute = "container_name"
-        action         = "upsert"
-      }
-
-      action {
-        key    = "k8s.node.name"
-        value  = sys.env("ALLOY_NODE_NAME")
-        action = "upsert"
-      }
-
-      action {
-        key    = "k8s.cluster.name"
-        value  = "${CLUSTER_NAME}"
-        action = "upsert"
       }
 
       action {
@@ -271,12 +241,6 @@ data:
           "k8s.pod.ip",
           "k8s.node.name",
         ]
-
-        label {
-          from      = "pod"
-          key_regex = "(.*)"
-          tag_name  = "kubernetes.pod_labels.$1"
-        }
       }
 
       pod_association {
@@ -299,6 +263,52 @@ data:
         statements = [
           "set(attributes[\"kubernetes.pod_ip\"], resource.attributes[\"k8s.pod.ip\"]) where resource.attributes[\"k8s.pod.ip\"] != nil",
         ]
+      }
+
+      output {
+        logs = [otelcol.processor.attributes.kubernetes_cleanup.input]
+      }
+    }
+
+    otelcol.processor.attributes "kubernetes_cleanup" {
+      action {
+        key    = "k8s.namespace.name"
+        action = "delete"
+      }
+
+      action {
+        key    = "k8s.pod.name"
+        action = "delete"
+      }
+
+      action {
+        key    = "k8s.pod.uid"
+        action = "delete"
+      }
+
+      action {
+        key    = "k8s.pod.ip"
+        action = "delete"
+      }
+
+      action {
+        key    = "k8s.node.name"
+        action = "delete"
+      }
+
+      action {
+        key    = "k8s.cluster.name"
+        action = "delete"
+      }
+
+      action {
+        key    = "k8s.container.name"
+        action = "delete"
+      }
+
+      action {
+        key    = "k8s.container.restart_count"
+        action = "delete"
       }
 
       output {
