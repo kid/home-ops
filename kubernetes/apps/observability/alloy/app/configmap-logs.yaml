@@ -67,7 +67,7 @@ data:
 
       operators = [
         {
-          type = "json_parser"
+          type = "json_parser",
         },
       ]
 
@@ -110,7 +110,7 @@ data:
 
       operators = [
         {
-          type = "container"
+          type = "container",
         },
       ]
 
