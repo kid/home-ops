@@ -142,6 +142,21 @@ data:
       }
 
       output {
+        logs = [otelcol.processor.transform.kubernetes_association.input]
+      }
+    }
+
+    otelcol.processor.transform "kubernetes_association" {
+      error_mode = "ignore"
+
+      log_statements {
+        context = "log"
+        statements = [
+          "set(resource.attributes[\"alloy.k8s.pod.uid\"], attributes[\"pod_uid\"]) where attributes[\"pod_uid\"] != nil",
+        ]
+      }
+
+      output {
         logs = [otelcol.processor.k8sattributes.kubernetes.input]
       }
     }
@@ -169,8 +184,8 @@ data:
 
       pod_association {
         source {
-          from = "attribute"
-          name = "pod_uid"
+          from = "resource_attribute"
+          name = "alloy.k8s.pod.uid"
         }
       }
 
@@ -200,6 +215,7 @@ data:
         context = "resource"
         statements = [
           "set(attributes[\"k8s.cluster.name\"], \"${CLUSTER_NAME}\")",
+          "delete_key(attributes, \"alloy.k8s.pod.uid\")",
           "delete_key(attributes, \"k8s.pod.uid\")",
         ]
       }
