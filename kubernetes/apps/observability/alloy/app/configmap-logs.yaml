@@ -27,6 +27,8 @@ data:
           "set(body, attributes[\"msg\"]) where attributes[\"msg\"] != nil",
           "set(severity_text, attributes[\"talos-level\"]) where attributes[\"talos-level\"] != nil",
           "set(attributes[\"service.name\"], attributes[\"talos-service\"]) where attributes[\"talos-service\"] != nil",
+          "set(attributes[\"service.name\"], \"talos\") where attributes[\"service.name\"] == nil",
+          "set(attributes[\"service.name\"], \"talos\") where attributes[\"service.name\"] == \"\"",
           "delete_key(attributes, \"msg\")",
           "delete_key(attributes, \"talos-level\")",
           "delete_key(attributes, \"talos-service\")",
