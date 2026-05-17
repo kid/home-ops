@@ -177,6 +177,8 @@ data:
           "k8s.statefulset.name",
           "k8s.job.name",
           "k8s.cronjob.name",
+          "service.name",
+          "service.namespace",
         ]
 
         otel_annotations = true
