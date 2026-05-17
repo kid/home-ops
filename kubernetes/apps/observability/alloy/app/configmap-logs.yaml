@@ -17,6 +17,60 @@ data:
       }
     }
 
+    otelcol.processor.attributes "talos" {
+      action {
+        key    = "cluster"
+        value  = "${CLUSTER_NAME}"
+        action = "upsert"
+      }
+
+      action {
+        key            = "node"
+        from_attribute = "net.host.name"
+        action         = "upsert"
+      }
+
+      action {
+        key    = "log.source"
+        value  = "talos"
+        action = "upsert"
+      }
+
+      action {
+        key    = "service.name"
+        value  = "talos"
+        action = "upsert"
+      }
+
+      action {
+        key    = "service.namespace"
+        value  = "talos"
+        action = "upsert"
+      }
+
+      action {
+        key            = "host.name"
+        from_attribute = "net.host.name"
+        action         = "upsert"
+      }
+
+      action {
+        key            = "k8s.node.name"
+        from_attribute = "net.host.name"
+        action         = "upsert"
+      }
+
+      action {
+        key    = "k8s.cluster.name"
+        value  = "${CLUSTER_NAME}"
+        action = "upsert"
+      }
+
+      output {
+        logs = [otelcol.processor.batch.logs.input]
+      }
+    }
+
     otelcol.exporter.otlphttp "victorialogs" {
       client {
         endpoint    = "http://victoria-logs-vl-server.observability.svc.cluster.local:9428/insert/opentelemetry"
@@ -43,20 +97,7 @@ data:
       max_log_size       = "1MiB"
       one_log_per_packet = false
       encoding           = "utf-8"
-
-      attributes = {
-        cluster      = "${CLUSTER_NAME}",
-        node         = sys.env("ALLOY_NODE_NAME"),
-        "log.source" = "talos",
-      }
-
-      resource = {
-        "service.name"    = "talos",
-        "service.namespace" = "talos",
-        "host.name"       = sys.env("ALLOY_NODE_NAME"),
-        "k8s.node.name"   = sys.env("ALLOY_NODE_NAME"),
-        "k8s.cluster.name" = "${CLUSTER_NAME}",
-      }
+      add_attributes     = true
 
       retry_on_failure {
         enabled          = true
@@ -72,7 +113,7 @@ data:
       ]
 
       output {
-        logs = [otelcol.processor.batch.logs.input]
+        logs = [otelcol.processor.attributes.talos.input]
       }
     }
 
