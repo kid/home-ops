@@ -262,6 +262,7 @@ data:
         context = "log"
         statements = [
           "set(attributes[\"kubernetes.pod_ip\"], resource.attributes[\"k8s.pod.ip\"]) where resource.attributes[\"k8s.pod.ip\"] != nil",
+          "delete_key(attributes, \"k8s.pod.uid\")",
         ]
       }
 
