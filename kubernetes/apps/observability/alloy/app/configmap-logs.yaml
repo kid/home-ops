@@ -133,7 +133,7 @@ data:
       log_statements {
         context = "log"
         statements = [
-          "merge_maps(attributes, ParseJSON(body), \"upsert\") where Substring(body, 0, 1) == \"{\"",
+          "merge_maps(attributes, ParseJSON(body), \"upsert\") where body != \"\" and Substring(body, 0, 1) == \"{\"",
           "set(body, attributes[\"message\"]) where attributes[\"message\"] != nil",
           "set(body, attributes[\"msg\"]) where attributes[\"message\"] == nil and attributes[\"msg\"] != nil",
           "set(body, attributes[\"log\"]) where attributes[\"message\"] == nil and attributes[\"msg\"] == nil and attributes[\"log\"] != nil",
@@ -287,15 +287,18 @@ data:
       }
 
       output {
-        logs = [otelcol.processor.attributes.kubernetes_metadata.input]
+        logs = [otelcol.processor.transform.kubernetes_metadata.input]
       }
     }
 
-    otelcol.processor.attributes "kubernetes_metadata" {
-      action {
-        key            = "kubernetes.pod_ip"
-        from_attribute = "k8s.pod.ip"
-        action         = "upsert"
+    otelcol.processor.transform "kubernetes_metadata" {
+      error_mode = "ignore"
+
+      log_statements {
+        context = "log"
+        statements = [
+          "set(attributes[\"kubernetes.pod_ip\"], resource.attributes[\"k8s.pod.ip\"]) where resource.attributes[\"k8s.pod.ip\"] != nil",
+        ]
       }
 
       output {
