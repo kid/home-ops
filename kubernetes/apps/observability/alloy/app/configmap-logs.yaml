@@ -142,24 +142,6 @@ data:
       }
 
       output {
-        logs = [otelcol.processor.attributes.kubernetes_logs.input]
-      }
-    }
-
-    otelcol.processor.attributes "kubernetes_logs" {
-      action {
-        key    = "k8s.cluster.name"
-        value  = "${CLUSTER_NAME}"
-        action = "upsert"
-      }
-
-      action {
-        key    = "log.source"
-        value  = "kubernetes"
-        action = "upsert"
-      }
-
-      output {
         logs = [otelcol.processor.k8sattributes.kubernetes.input]
       }
     }
@@ -203,6 +185,7 @@ data:
       log_statements {
         context = "log"
         statements = [
+          "set(attributes[\"log.source\"], \"kubernetes\")",
           "delete_key(attributes, \"pod_name\")",
           "delete_key(attributes, \"pod_namespace\")",
           "delete_key(attributes, \"container_name\")",
@@ -216,6 +199,7 @@ data:
       log_statements {
         context = "resource"
         statements = [
+          "set(attributes[\"k8s.cluster.name\"], \"${CLUSTER_NAME}\")",
           "delete_key(attributes, \"k8s.pod.uid\")",
         ]
       }
