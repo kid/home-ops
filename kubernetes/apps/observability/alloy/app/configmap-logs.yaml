@@ -240,6 +240,7 @@ data:
         context = "log"
         statements = [
           "delete_key(attributes, \"alloy.k8s.pod.uid\")",
+          "delete_key(attributes, \"k8s.pod.uid\")",
         ]
       }
 
@@ -247,6 +248,7 @@ data:
         context = "resource"
         statements = [
           "delete_key(attributes, \"alloy.k8s.pod.uid\")",
+          "delete_key(attributes, \"k8s.pod.uid\")",
         ]
       }
 
