@@ -14,6 +14,38 @@ spec:
     fullnameOverride: alloy-logs
     service:
       enabled: false
+    rbac:
+      rules:
+        - apiGroups: ["", "discovery.k8s.io", "networking.k8s.io"]
+          resources: ["endpoints", "endpointslices", "ingresses", "pods", "services"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: [""]
+          resources: ["pods", "pods/log", "namespaces"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["monitoring.grafana.com"]
+          resources: ["podlogs"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["monitoring.coreos.com"]
+          resources: ["prometheusrules"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["monitoring.coreos.com"]
+          resources: ["alertmanagerconfigs"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["monitoring.coreos.com"]
+          resources: ["podmonitors", "servicemonitors", "probes", "scrapeconfigs"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: [""]
+          resources: ["events"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: [""]
+          resources: ["configmaps", "secrets"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["apps", "extensions"]
+          resources: ["replicasets", "deployments", "statefulsets", "daemonsets"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["batch"]
+          resources: ["jobs", "cronjobs"]
+          verbs: ["get", "list", "watch"]
     alloy:
       stabilityLevel: experimental
       extraEnv:
