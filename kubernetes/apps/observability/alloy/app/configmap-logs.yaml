@@ -133,7 +133,7 @@ data:
       log_statements {
         context = "log"
         statements = [
-          "merge_maps(attributes, ParseJSON(body), \"upsert\")",
+          "merge_maps(attributes, ParseJSON(body), \"upsert\") where IsMatch(body, \"^\\s*\\{\")",
           "set(body, attributes[\"message\"]) where attributes[\"message\"] != nil",
           "set(body, attributes[\"msg\"]) where attributes[\"message\"] == nil and attributes[\"msg\"] != nil",
           "set(body, attributes[\"log\"]) where attributes[\"message\"] == nil and attributes[\"msg\"] == nil and attributes[\"log\"] != nil",
@@ -184,12 +184,6 @@ data:
       }
 
       action {
-        key            = "kubernetes.container_id"
-        from_attribute = "container_id"
-        action         = "upsert"
-      }
-
-      action {
         key    = "kubernetes.pod_node_name"
         value  = sys.env("ALLOY_NODE_NAME")
         action = "upsert"
@@ -204,6 +198,12 @@ data:
       action {
         key            = "k8s.pod.name"
         from_attribute = "pod_name"
+        action         = "upsert"
+      }
+
+      action {
+        key            = "k8s.pod.uid"
+        from_attribute = "pod_uid"
         action         = "upsert"
       }
 
@@ -241,7 +241,12 @@ data:
       }
 
       action {
-        key    = "container_id"
+        key    = "pod_uid"
+        action = "delete"
+      }
+
+      action {
+        key    = "restart_count"
         action = "delete"
       }
 
@@ -296,8 +301,10 @@ data:
     }
 
     otelcol.receiver.filelog "kubernetes" {
-      include           = ["/var/log/containers/*.log"]
-      exclude           = [string.format("/var/log/containers/%s_%s_*.log", sys.env("POD_NAME"), sys.env("POD_NAMESPACE"))]
+      include = ["/var/log/pods/*/*/*.log"]
+      exclude = [
+        string.format("/var/log/pods/%s_%s_*/alloy/*.log", sys.env("POD_NAMESPACE"), sys.env("POD_NAME")),
+      ]
       include_file_path = true
       start_at          = "end"
 
@@ -315,7 +322,7 @@ data:
         {
           type       = "regex_parser",
           parse_from = "attributes[\"log.file.path\"]",
-          regex      = "^/var/log/containers/(?P<pod_name>.+)_(?P<pod_namespace>[^_]+)_(?P<container_name>.+)-(?P<container_id>[a-f0-9]+)\\.log$",
+          regex      = "^/var/log/pods/(?P<pod_namespace>[^_]+)_(?P<pod_name>.+)_(?P<pod_uid>[0-9a-fA-F-]+)/(?P<container_name>[^/]+)/(?P<restart_count>[0-9]+)\\.log$",
         },
       ]
 
