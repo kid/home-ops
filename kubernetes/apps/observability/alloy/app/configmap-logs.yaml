@@ -112,8 +112,9 @@ data:
     }
 
     otelcol.receiver.filelog "alloy_self" {
-      include = [string.format("/var/log/pods/observability_%s_*/alloy/*.log", sys.env("POD_NAME"))]
-      start_at = "end"
+      include           = [string.format("/var/log/pods/observability_%s_*/alloy/*.log", sys.env("POD_NAME"))]
+      include_file_path = true
+      start_at          = "end"
 
       attributes = {
         cluster                     = "${CLUSTER_NAME}",
