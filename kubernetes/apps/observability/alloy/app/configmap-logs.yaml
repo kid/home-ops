@@ -265,50 +265,18 @@ data:
         ]
       }
 
-      output {
-        logs = [otelcol.processor.attributes.kubernetes_cleanup.input]
-      }
-    }
-
-    otelcol.processor.attributes "kubernetes_cleanup" {
-      action {
-        key    = "k8s.namespace.name"
-        action = "delete"
-      }
-
-      action {
-        key    = "k8s.pod.name"
-        action = "delete"
-      }
-
-      action {
-        key    = "k8s.pod.uid"
-        action = "delete"
-      }
-
-      action {
-        key    = "k8s.pod.ip"
-        action = "delete"
-      }
-
-      action {
-        key    = "k8s.node.name"
-        action = "delete"
-      }
-
-      action {
-        key    = "k8s.cluster.name"
-        action = "delete"
-      }
-
-      action {
-        key    = "k8s.container.name"
-        action = "delete"
-      }
-
-      action {
-        key    = "k8s.container.restart_count"
-        action = "delete"
+      log_statements {
+        context = "resource"
+        statements = [
+          "delete_key(attributes, \"k8s.namespace.name\")",
+          "delete_key(attributes, \"k8s.pod.name\")",
+          "delete_key(attributes, \"k8s.pod.uid\")",
+          "delete_key(attributes, \"k8s.pod.ip\")",
+          "delete_key(attributes, \"k8s.node.name\")",
+          "delete_key(attributes, \"k8s.cluster.name\")",
+          "delete_key(attributes, \"k8s.container.name\")",
+          "delete_key(attributes, \"k8s.container.restart_count\")",
+        ]
       }
 
       output {
