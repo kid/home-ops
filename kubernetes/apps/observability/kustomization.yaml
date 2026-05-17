@@ -12,6 +12,7 @@ resources:
   - ./namespace.yaml
   - ./namespace-secrets.yaml
   - ./alertmanager-config/ks.app.yaml
+  - ./alloy/ks.app.yaml
   - ./grafana-operator/ks.yaml
   - ./grafana/ks.yaml
   - ./mikrotik-exporter/ks.app.yaml
