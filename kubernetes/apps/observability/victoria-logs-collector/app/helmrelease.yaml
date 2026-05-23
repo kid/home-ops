@@ -17,12 +17,24 @@ spec:
     fullnameOverride: vl-collector
     extraArgs:
       tmpDataPath: /var/lib/vl-collector
+      fileCollector.glob:
+        - /var/log/*.log
+        - /var/log/audit/kube/*.log
+      fileCollector.extraFields:
+        - '{"log.source":"talos","node":"%{NODE_NAME}"}'
+        - '{"log.source":"talos-audit","node":"%{NODE_NAME}"}'
+      fileCollector.streamFields: file,node
     collector:
       excludeFilter: kubernetes.pod_name:=%{HOSTNAME}
       includePodLabels: true
       includePodAnnotations: false
       includeNodeLabels: false
       includeNodeAnnotations: false
+    env:
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
     tolerations:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
