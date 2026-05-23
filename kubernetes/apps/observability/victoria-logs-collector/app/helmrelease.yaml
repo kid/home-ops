@@ -23,6 +23,10 @@ spec:
       includePodAnnotations: false
       includeNodeLabels: false
       includeNodeAnnotations: false
+      # vlagent can't rename dynamic kubernetes.* metadata into OpenTelemetry k8s.* fields,
+      # but it can attach the static OTel-style fields that downstream queries expect.
+      extraFields: >-
+        {"cluster":"${CLUSTER_NAME}","k8s.cluster.name":"${CLUSTER_NAME}","log.source":"kubernetes"}
     tolerations:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
