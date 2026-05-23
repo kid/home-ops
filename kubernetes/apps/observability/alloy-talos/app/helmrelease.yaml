@@ -1,0 +1,62 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy-talos
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: alloy
+  targetNamespace: observability
+  values:
+    fullnameOverride: alloy-talos
+    crds:
+      create: false
+    service:
+      enabled: true
+      type: LoadBalancer
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: talos-logs.${INTERNAL_DOMAIN}
+    rbac:
+      create: false
+    configReloader:
+      enabled: false
+    alloy:
+      stabilityLevel: experimental
+      enableReporting: false
+      extraEnv:
+        - name: ALLOY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+      extraPorts:
+        - name: talos-tcplog
+          port: 15140
+          targetPort: 15140
+          protocol: TCP
+      configMap:
+        create: false
+        name: alloy-talos-config
+        key: config.alloy
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 256Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+    controller:
+      type: deployment
+      replicas: 1
+      nodeSelector:
+        kubernetes.io/hostname: talos0
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule

@@ -1,0 +1,6 @@
+---
+machine:
+  logging:
+    destinations:
+      - endpoint: tcp://talos-logs.${INTERNAL_DOMAIN}:15140/
+        format: json_lines
