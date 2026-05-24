@@ -23,6 +23,7 @@ spec:
   wait: false
   components:
     - ../../../../components/volsync/
+    - ../../../../components/nfs/
   postBuild:
     substitute:
       APP: radarr
