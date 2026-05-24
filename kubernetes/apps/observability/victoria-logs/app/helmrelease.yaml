@@ -18,7 +18,7 @@ spec:
       retentionPeriod: 30d
       persistentVolume:
         enabled: true
-        existingClaim: ${VOLSYNC_PVC}
+        existingClaim: victoria-logs
         mountPath: /storage
       route:
         enabled: true
