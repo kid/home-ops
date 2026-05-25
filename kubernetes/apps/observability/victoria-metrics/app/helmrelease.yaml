@@ -376,10 +376,6 @@ spec:
         storage:
           accessModes:
             - ReadWriteOnce
-          dataSourceRef:
-            apiGroup: volsync.backube
-            kind: ReplicationDestination
-            name: victoria-metrics-dst
           resources:
             requests:
               storage: 10Gi
