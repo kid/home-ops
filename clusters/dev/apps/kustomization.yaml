@@ -5,10 +5,10 @@ kind: Kustomization
 
 resources:
   - ./storage-system/
+  - ./observability/
   - ../../../kubernetes/apps/actions-runner-system/
   - ../../../kubernetes/apps/external-secrets/
   - ../../../kubernetes/apps/flux-system/
   - ../../../kubernetes/apps/kube-system/
   - ../../../kubernetes/apps/network-system/
-  - ../../../kubernetes/apps/observability/
   - ../../../kubernetes/apps/media/
