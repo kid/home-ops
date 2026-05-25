@@ -5,28 +5,8 @@ kind: Kustomization
 metadata:
   name: sonarr
 spec:
-  dependsOn:
-    - name: external-secrets
-      namespace: external-secrets
-    - name: volsync
-      namespace: storage-system
-    - name: nfs
-      namespace: storage-system
-  interval: 1h
   path: ./kubernetes/apps/media/sonarr/app
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-    namespace: flux-system
   targetNamespace: media
-  wait: false
-  components:
-    - ../../../../components/volsync/
-    - ../../../../components/nfs/
   postBuild:
     substitute:
       APP: sonarr
-      VOLSYNC_CAPACITY: 5Gi
-      VOLSYNC_PUID: "1000"
-      VOLSYNC_PGID: "1000"
