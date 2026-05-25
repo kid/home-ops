@@ -1,0 +1,15 @@
+apiVersion: operator.victoriametrics.com/v1
+kind: "VLAgent"
+metadata:
+  name: victoria-logs
+spec:
+  k8sCollector:
+    enabled: true
+  remoteWrite:
+    - url: http://vlsingle-victoria-logs.observability.svc.cluster.local:9428/internal/insert
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi

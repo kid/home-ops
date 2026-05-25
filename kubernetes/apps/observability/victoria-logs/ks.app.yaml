@@ -6,10 +6,10 @@ metadata:
   name: victoria-logs
 spec:
   dependsOn:
-    - name: external-secrets
-      namespace: external-secrets
     - name: piraeus-operator
       namespace: storage-system
+    - name: victoria-metrics
+    - name: grafana-operator
   interval: 1h
   path: ./kubernetes/apps/observability/victoria-logs/app
   prune: true
