@@ -6,4 +6,3 @@ resources:
   - ./externalsecret.yaml
   - ./grafana.yaml
   - ./datasource-victoria-metrics.yaml
-  - ./datasource-victorialogs.yaml

@@ -1,0 +1,16 @@
+---
+# yaml-language-server: $schema=https://schemas.mortebrume.eu/operator.victoriametrics.com/vlsingle_v1.json
+apiVersion: operator.victoriametrics.com/v1
+kind: VLSingle
+metadata:
+  name: victoria-logs
+spec:
+  retentionPeriod: 30d
+  retentionMaxDiskSpaceUsageBytes: 2GB
+  storage:
+    storageClassName: ${APP_STORAGECLASS}
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 5Gi
