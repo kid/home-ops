@@ -80,3 +80,34 @@ develop:
 
 test:
     cd test && go test -v
+
+# Override Flux to deploy the current Git branch
+flux-branch-override-set:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    branch="$(git branch --show-current)"
+    if [[ -z "$branch" ]]; then
+        echo "Could not determine the current git branch (detached HEAD?)" >&2
+        exit 1
+    fi
+    kubectl create configmap cluster-branch-override \
+        --namespace flux-system \
+        --from-literal=CLUSTER_BRANCH="$branch" \
+        --dry-run=client \
+        -o yaml | kubectl apply -f -
+    kubectl annotate gitrepository -n flux-system flux-system \
+        reconcile.fluxcd.io/requestedAt="$(date --iso-8601=seconds)" \
+        --overwrite >/dev/null
+    echo "Flux branch override set to: $branch"
+
+# Remove the Flux branch override and return to the default branch
+flux-branch-override-remove:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    kubectl delete configmap cluster-branch-override \
+        --namespace flux-system \
+        --ignore-not-found
+    kubectl annotate gitrepository -n flux-system flux-system \
+        reconcile.fluxcd.io/requestedAt="$(date --iso-8601=seconds)" \
+        --overwrite >/dev/null
+    echo "Flux branch override removed"
