@@ -1,0 +1,30 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - patch: |
+      - op: add
+        path: /spec/dependsOn
+        value: []
+      - op: add
+        path: /spec/interval
+        value: 1h
+      - op: add
+        path: /spec/prune
+        value: true
+      - op: add
+        path: /spec/sourceRef
+        value:
+          kind: GitRepository
+          name: flux-system
+          namespace: flux-system
+      - op: add
+        path: /spec/wait
+        value: false
+      - op: add
+        path: /spec/components
+        value: []
+    target:
+      kind: Kustomization
+      group: kustomize.toolkit.fluxcd.io

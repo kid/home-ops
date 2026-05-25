@@ -1,0 +1,26 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - patch: |
+      - op: add
+        path: /spec/dependsOn/-
+        value:
+          name: volsync
+          namespace: storage-system
+      - op: add
+        path: /spec/components/-
+        value: ../../../../components/volsync/
+      - op: add
+        path: /spec/postBuild/substitute/VOLSYNC_CAPACITY
+        value: 5Gi
+      - op: add
+        path: /spec/postBuild/substitute/VOLSYNC_PUID
+        value: "1000"
+      - op: add
+        path: /spec/postBuild/substitute/VOLSYNC_PGID
+        value: "1000"
+    target:
+      kind: Kustomization
+      group: kustomize.toolkit.fluxcd.io

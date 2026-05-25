@@ -5,25 +5,8 @@ kind: Kustomization
 metadata:
   name: prowlarr
 spec:
-  dependsOn:
-    - name: external-secrets
-      namespace: external-secrets
-    - name: volsync
-      namespace: storage-system
-  interval: 1h
   path: ./kubernetes/apps/media/prowlarr/app
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-    namespace: flux-system
   targetNamespace: media
-  wait: false
-  components:
-    - ../../../../components/volsync/
   postBuild:
     substitute:
       APP: prowlarr
-      VOLSYNC_CAPACITY: 5Gi
-      VOLSYNC_PUID: "1000"
-      VOLSYNC_PGID: "1000"
