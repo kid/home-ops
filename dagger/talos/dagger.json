@@ -1,6 +1,6 @@
 {
   "name": "talos",
-  "engineVersion": "v0.20.3",
+  "engineVersion": "v0.21.3",
   "sdk": {
     "source": "go"
   },
