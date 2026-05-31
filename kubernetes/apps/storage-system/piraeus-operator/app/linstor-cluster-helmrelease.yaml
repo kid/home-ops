@@ -48,10 +48,25 @@ spec:
                   operator: NotIn
                   values:
                     - talos0
+                    - talos2
         storagePools:
           - name: ssd
             zfsPool:
               zPool: piraeus-ssd
+            properties:
+              - name: StorDriver/ZfscreateOptions
+                value: -o volblocksize=4K
+            source:
+              hostDevices:
+                - /dev/vdb
+
+      - name: zfs-pool-talos2
+        nodeSelector:
+          kubernetes.io/hostname: talos2
+        storagePools:
+          - name: ssd
+            zfsPool:
+              zPool: ssd
             properties:
               - name: StorDriver/ZfscreateOptions
                 value: -o volblocksize=4K
