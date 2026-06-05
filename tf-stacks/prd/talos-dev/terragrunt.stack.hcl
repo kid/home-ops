@@ -1,6 +1,6 @@
 locals {
-  infra_module_version = "talos-infra-v1.4.0"
-  bgp_module_version   = "talos-bgp-v1.1.0"
+  infra_module_version = "main"
+  bgp_module_version   = "main"
 
   config = yamldecode(file("${get_repo_root()}/clusters/dev/talos/config.yaml"))
 
@@ -39,8 +39,7 @@ unit "infra" {
         memory     = 8192
         disk_size  = 100
         additional_disks = [
-          { size = 100 },
-          { size = 32 },
+          { size = 256 },
         ]
       } if lookup(node, "target", local.config.target) != "metal"
     }
