@@ -1,6 +1,6 @@
 #!/usr/bin/env -S just --justfile
 
-set quiet := true
+set quiet
 set shell := ['bash', '-euo', 'pipefail', '-c']
 
 terragrunt_args := "--non-interactive"
@@ -111,3 +111,6 @@ flux-branch-override-remove:
         reconcile.fluxcd.io/requestedAt="$(date --iso-8601=seconds)" \
         --overwrite >/dev/null
     echo "Flux branch override removed"
+
+run-vm host:
+  nix run -L '.#nixosConfigurations.{{host}}.config.system.build.vmWithDisko'
