@@ -17,15 +17,6 @@ apiVersion: v1alpha1
 kind: VolumeConfig
 name: EPHEMERAL
 provisioning:
-  minSize: 10GiB
-  maxSize: 10GiB
-  grow: false
----
-apiVersion: v1alpha1
-kind: UserVolumeConfig
-name: local-storage
-provisioning:
-  diskSelector:
-    match: "system_disk"
-  minSize: 10GB
-  maxSize: 100GB
+  minSize: 50GiB
+  maxSize: 100GiB
+  grow: true
