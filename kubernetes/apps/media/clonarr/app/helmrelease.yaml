@@ -16,7 +16,7 @@ spec:
           app:
             image:
               repository: ghcr.io/prophetse7en/clonarr
-              tag: v2.5.9@sha256:7541c15ad2400553e03ed2897ac79affb20bb622e9d2d8c296581c8ff0bd729b
+              tag: v3.2.1@sha256:287a33b415db4486758429c78d37348e8dd31fdda32d3ab42a12af2faba4cb9f
             command:
               - /usr/local/bin/clonarr
             env:
