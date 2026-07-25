@@ -10,7 +10,7 @@ data "routeros_ip_services" "all" {
 }
 
 resource "routeros_ip_service" "all" {
-  for_each    = { for svc in data.routeros_ip_services.all.services : svc.name => svc }
+  for_each    = { for svc in data.routeros_ip_services.all.services : svc.name => svc if svc.name != "reverse-proxy" }
   numbers     = each.key
   port        = each.value.port
   disabled    = !contains(local.enabled_services, each.key)
