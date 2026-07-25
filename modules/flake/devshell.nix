@@ -1,5 +1,5 @@
 # devShell, carried over from the pre-dendritic flake.nix. treefmt config
-# lives in modules/flake/formatter.nix.
+# lives in modules/flake/formatter.nix, git hooks in modules/flake/git-hooks.nix.
 _: {
   perSystem =
     { config, pkgs, ... }:
@@ -40,7 +40,10 @@ _: {
           nixd
         ];
 
-        inputsFrom = [ config.treefmt.build.devShell ];
+        inputsFrom = [
+          config.treefmt.build.devShell
+          config.pre-commit.devShell
+        ];
       };
     };
 }
