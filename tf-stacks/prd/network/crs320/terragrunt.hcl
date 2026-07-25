@@ -59,6 +59,7 @@ inputs = merge(
         untagged = local.vlans.Trusted.vlan_id
         tagged = [
           local.vlans.Management.vlan_id,
+          local.vlans.Talos.vlan_id,
           local.vlans.RosLab.vlan_id,
           local.vlans.LabTalos.vlan_id,
           local.vlans.LabTalosSvc.vlan_id,
