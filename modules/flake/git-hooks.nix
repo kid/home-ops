@@ -1,8 +1,4 @@
-# git-hooks-nix wires pre-commit-style git hooks. treefmt runs on
-# pre-commit (fast, auto-detected from modules/flake/formatter.nix since
-# `config.treefmt` exists); the full `nix flake check` — treefmt's own
-# flakeCheck plus checks.terragrunt — runs on pre-push so pushes can't
-# carry stale terragrunt leaves or unformatted files.
+# nix-flake-check runs on pre-push rather than pre-commit so commits stay fast.
 { inputs, ... }:
 {
   flake-file.inputs.git-hooks-nix = {
