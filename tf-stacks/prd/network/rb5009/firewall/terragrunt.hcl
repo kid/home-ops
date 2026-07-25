@@ -1,82 +1,197 @@
 include "root" {
-  path   = find_in_parent_folders("root.hcl")
-  expose = true
+  path = find_in_parent_folders("root.hcl")
 }
 
 include "provider_routeros" {
-  path   = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-  expose = true
+  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
 }
 
 terraform {
-  source                   = "${get_repo_root()}/tf-catalog//modules/ros/firewall"
+  source                   = "${get_repo_root()}/tf-catalog/modules/ros//firewall"
   copy_terraform_lock_file = false
 }
 
 dependencies {
-  paths = [".."]
+  paths = [
+    "../../rb5009",
+  ]
 }
 
-locals {
-  interface_lists = include.root.locals.env_config.locals.interface_lists
-  vlans           = include.root.locals.env_config.locals.vlans
+inputs = {
+  bridge_name = "bridge1"
+  dns_upstream_servers = [
+    "9.9.9.9",
+    "149.112.112.112",
+  ]
+  hostname              = "rb5009"
+  mgmt_interface_list   = "MANAGEMENT"
+  routeros_endpoint     = "10.99.0.1"
+  routeros_secrets_path = "${get_repo_root()}/secrets/prd/routeros.sops.yaml"
+  vlans = {
+    Guest = {
+      name    = "Guest"
+      vlan_id = 101
+    }
+    IotInternet = {
+      name    = "IotInternet"
+      vlan_id = 51
+    }
+    IotLocal = {
+      name    = "IotLocal"
+      vlan_id = 50
+    }
+    Management = {
+      name    = "Management"
+      vlan_id = 99
+    }
+    Media = {
+      name    = "Media"
+      vlan_id = 30
+    }
+    RosLab = {
+      name    = "RosLab"
+      vlan_id = 1991
+    }
+    Servers = {
+      name    = "Servers"
+      vlan_id = 10
+    }
+    Storage = {
+      name    = "Storage"
+      vlan_id = 20
+    }
+    Talos = {
+      name    = "Talos"
+      vlan_id = 40
+    }
+    Trusted = {
+      name    = "Trusted"
+      vlan_id = 100
+    }
+  }
+  vlans_forward_rules = {
+    Guest = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+    ]
+    IotInternet = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+    ]
+    IotLocal = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        disabled           = true
+        out_interface_list = "WAN"
+      },
+    ]
+    Management = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN from Management"
+        out_interface_list = "WAN"
+      },
+    ]
+    Media = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow cloudflared access to HomeAssistant"
+        dst_address = "10.0.10.101"
+        src_address = "10.0.30.11"
+      },
+    ]
+    RosLab = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+    ]
+    Servers = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+      {
+        action             = "accept"
+        comment            = "Allow access to all vlans"
+        out_interface_list = "all"
+      },
+    ]
+    Talos = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Traffic to load balancer ips"
+        dst_address = "10.0.42.0/24"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to crs320 for mikrotik-exporter"
+        dst_address = "10.99.0.2"
+        dst_port    = 8729
+        protocol    = "tcp"
+      },
+    ]
+    Trusted = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow access to Management"
+        out_interface = "Management"
+      },
+      {
+        action             = "accept"
+        comment            = "Allow access to all vlans"
+        out_interface_list = "all"
+      },
+    ]
+  }
+  vlans_input_rules = {
+    Talos = [
+      {
+        action      = "accept"
+        comment     = "Allow access to Management from Talos for external-dns"
+        dst_address = "10.99.0.1"
+        dst_port    = 443
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to Management from Talos for mikrotik-exporter"
+        dst_address = "10.99.0.1"
+        dst_port    = 8729
+        protocol    = "tcp"
+      },
+    ]
+    Trusted = [
+      {
+        action      = "accept"
+        comment     = "Allow access to Management from Trusted"
+        dst_address = "10.99.0.1"
+      },
+    ]
+  }
+  wan_interface_list = "WAN"
 }
-
-inputs = merge(
-  include.root.locals.base_inputs,
-  {
-    hostname          = "rb5009"
-    routeros_endpoint = "10.99.0.1"
-
-    vlans = { for name, vlan in local.vlans : name => vlan if lookup(vlan, "routed", true) }
-
-    vlans_input_rules = {
-      "${local.vlans.Trusted.name}" = [
-        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), comment = "Allow access to Management from Trusted" },
-      ]
-      "${local.vlans.Talos.name}" = [
-        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), dst_port = 443, protocol = "tcp", comment = "Allow access to Management from Talos for external-dns" },
-        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 1), dst_port = 8729, protocol = "tcp", comment = "Allow access to Management from Talos for mikrotik-exporter" },
-      ]
-    }
-
-    vlans_forward_rules = {
-      "${local.vlans.Management.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN from Management" },
-      ]
-      "${local.vlans.Servers.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
-        { action = "accept", out_interface_list = "all", comment = "Allow access to all vlans" }, # Because HomeAssistant lives here at the moment
-      ]
-      "${local.vlans.Media.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
-      ]
-      "${local.vlans.Media.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
-        { action = "accept", dst_address = "10.0.10.101", src_address = "10.0.30.11", comment = "Allow cloudflared access to HomeAssistant" },
-      ]
-      "${local.vlans.Talos.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
-        { action = "accept", dst_address = "10.0.42.0/24", comment = "Allow Traffic to load balancer ips" },
-        { action = "accept", dst_address = cidrhost(local.vlans.Management.cidr, 2), dst_port = 8729, protocol = "tcp", comment = "Allow access to crs320 for mikrotik-exporter" },
-      ]
-      "${local.vlans.IotLocal.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN", disabled = true },
-      ]
-      "${local.vlans.IotInternet.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
-      ]
-      "${local.vlans.Trusted.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
-        { action = "accept", out_interface = local.vlans.Management.name, comment = "Allow access to Management" },
-        { action = "accept", out_interface_list = "all", comment = "Allow access to all vlans" },
-      ]
-      "${local.vlans.Guest.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
-      ]
-      "${local.vlans.RosLab.name}" = [
-        { action = "accept", out_interface_list = "WAN", comment = "Allow WAN" },
-      ]
-    }
-  },
-)

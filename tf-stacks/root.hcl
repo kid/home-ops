@@ -1,28 +1,5 @@
 locals {
-  environment = local.env_config.locals.environment
-
-  cloudflare     = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/cloudflare.sops.yaml"))
-  proxmox_inputs = try(yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/proxmox.sops.yaml")), {})
-
-  env_config     = read_terragrunt_config(find_in_parent_folders("env.hcl"))
-  network_config = try(read_terragrunt_config(find_in_parent_folders("network.hcl")), { locals = {} })
-
-  hostname = try(regex("${local.environment}/network/(?P<hostname>\\w*)", path_relative_to_include()).hostname, null)
-
-  base_cfg = try(read_terragrunt_config(find_in_parent_folders("base.hcl")).locals, {})
-
-  base_inputs = merge(
-    {
-      routeros_secrets_path = "${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml"
-    },
-    try(local.base_cfg.shared_inputs, {}),
-    try(local.base_cfg.per_device_inputs[local.hostname], {}),
-  )
-
-  routeros_inputs = {
-    routeros_endpoint     = try(local.base_inputs.routeros_endpoint, null)
-    routeros_secrets_path = "${get_repo_root()}/secrets/${local.environment}/routeros.sops.yaml"
-  }
+  cloudflare = yamldecode(sops_decrypt_file("${get_repo_root()}/secrets/cloudflare.sops.yaml"))
 }
 
 remote_state {

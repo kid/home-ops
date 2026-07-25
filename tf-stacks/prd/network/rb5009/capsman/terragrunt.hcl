@@ -1,11 +1,9 @@
 include "root" {
-  path   = find_in_parent_folders("root.hcl")
-  expose = true
+  path = find_in_parent_folders("root.hcl")
 }
 
 include "provider_routeros" {
-  path   = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-  expose = true
+  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
 }
 
 terraform {
@@ -14,36 +12,40 @@ terraform {
 }
 
 dependencies {
-  paths = [".."]
+  paths = [
+    "../../rb5009",
+  ]
 }
 
-locals {
-  vlans = include.root.locals.env_config.locals.vlans
-}
-
-inputs = merge(
-  include.root.locals.base_inputs,
-  {
-    hostname           = "rb5009"
-    routeros_endpoint  = "10.99.0.1"
-    capsman_interfaces = [local.vlans.Management.name]
-
-    passphrase_groups = {
-      "${local.vlans.Trusted.name}" = {
-        vlan_id = local.vlans.Trusted.vlan_id
-      }
-      "${local.vlans.Guest.name}" = {
-        vlan_id  = local.vlans.Guest.vlan_id
-        isolated = true
-      }
-      "${local.vlans.IotLocal.name}" = {
-        vlan_id  = local.vlans.IotLocal.vlan_id
-        isolated = true
-      }
-      "${local.vlans.IotInternet.name}" = {
-        vlan_id  = local.vlans.IotInternet.vlan_id
-        isolated = true
-      }
+inputs = {
+  bridge_name = "bridge1"
+  capsman_interfaces = [
+    "Management",
+  ]
+  dns_upstream_servers = [
+    "9.9.9.9",
+    "149.112.112.112",
+  ]
+  hostname            = "rb5009"
+  mgmt_interface_list = "MANAGEMENT"
+  passphrase_groups = {
+    Guest = {
+      isolated = true
+      vlan_id  = 101
     }
-  },
-)
+    IotInternet = {
+      isolated = true
+      vlan_id  = 51
+    }
+    IotLocal = {
+      isolated = true
+      vlan_id  = 50
+    }
+    Trusted = {
+      vlan_id = 100
+    }
+  }
+  routeros_endpoint     = "10.99.0.1"
+  routeros_secrets_path = "${get_repo_root()}/secrets/prd/routeros.sops.yaml"
+  wan_interface_list    = "WAN"
+}

@@ -1,98 +1,22 @@
+# DO-NOT-EDIT. This file was auto-generated using github:vic/flake-file.
+# Use `nix run .#write-flake` to regenerate it.
 {
-  description = "Description for the project";
+  description = "home-ops";
+
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    treefmt-nix.url = "github:numtide/treefmt-nix";
-    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
-  };
-
-  outputs =
-    inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        inputs.treefmt-nix.flakeModule
-      ];
-
-      systems = [
-        "x86_64-linux"
-      ];
-
-      perSystem =
-        {
-          config,
-          pkgs,
-          ...
-        }:
-        {
-          treefmt = {
-            flakeCheck = true;
-            settings.excludes = [
-              "*.sops.*"
-            ];
-            programs = {
-              nixfmt.enable = true;
-              hclfmt.enable = true;
-              just.enable = true;
-              terraform.enable = true;
-              terraform.includes = [
-                "*.tofu"
-                "*.tfvars"
-                "*.tftest.hcl"
-              ];
-              yamlfmt.enable = true;
-              yamlfmt.settings = {
-                formatter = {
-                  indent = 2;
-                  indentless_arrays = false;
-                  include_document_start = true;
-                  eof_newline = true;
-                  trim_trailing_blank_lines = true;
-                  retain_line_breaks_single = true;
-                };
-              };
-            };
-          };
-          devShells.default = pkgs.mkShell {
-            packages = with pkgs; [
-              watch
-              just
-              yq
-              gum
-              expect
-              age
-              sops
-              opentofu
-              tofu-ls
-              terragrunt
-
-              go
-              gotestsum
-
-              talhelper
-              talosctl
-              kubectl
-              kubernetes-helm
-              cilium-cli
-              kustomize
-              kustomize-sops
-              kubectx
-              fluxcd
-              fluxcd-operator
-              fluxcd-operator-mcp
-              mcp-grafana
-              helmfile
-              kubevirt
-              nodejs
-
-              nil
-              nixd
-            ];
-
-            inputsFrom = [ config.treefmt.build.devShell ];
-
-          };
-        };
+    den.url = "github:denful/den";
+    flake-file.url = "github:vic/flake-file";
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
     };
+    import-tree.url = "github:vic/import-tree";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 }

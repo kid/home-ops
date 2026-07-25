@@ -1,11 +1,9 @@
 include "root" {
-  path   = find_in_parent_folders("root.hcl")
-  expose = true
+  path = find_in_parent_folders("root.hcl")
 }
 
 include "provider_routeros" {
-  path   = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-  expose = true
+  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
 }
 
 terraform {
@@ -14,99 +12,162 @@ terraform {
 }
 
 dependencies {
-  paths = ["../rb5009"]
+  paths = [
+    "../rb5009",
+  ]
 }
 
-locals {
-  interface_lists = include.root.locals.env_config.locals.interface_lists
-  vlans           = include.root.locals.env_config.locals.vlans
-  all_vlans       = [for vlan in local.vlans : vlan.vlan_id]
+inputs = {
+  bridge_name = "bridge1"
+  certificate_alt_names = [
+    "DNS:crs320",
+    "DNS:crs320.kidibox.net",
+    "IP:10.99.0.2",
+    "IP:192.168.88.1",
+  ]
+  dhcp_servers = {
+    ether17 = {
+      cidr        = "192.168.88.0/24"
+      dns_servers = []
+    }
+  }
+  dns_upstream_servers = [
+    "9.9.9.9",
+    "149.112.112.112",
+  ]
+  ethernet_interfaces = {
+    ether1 = {
+      command = "vulkan"
+      tagged = [
+        99,
+        40,
+        1991,
+        1040,
+        1042,
+        1100,
+      ]
+      untagged = 100
+    }
+    ether10 = {
+      comment  = "doorbell"
+      untagged = 50
+    }
+    ether11 = {
+      comment  = "petdoor"
+      untagged = 51
+    }
+    ether14 = {
+      comment  = "pve0-ipmi"
+      untagged = 99
+    }
+    ether16 = {
+      comment  = "pve1-ipmi"
+      untagged = 99
+    }
+    ether17 = {
+      bridge_port = false
+      comment     = "oob"
+      interface_lists = [
+        "MANAGEMENT",
+      ]
+    }
+    ether2 = {
+      comment  = "rb5009"
+      untagged = 99
+    }
+    ether7 = {
+      comment = "capxr1"
+      tagged = [
+        101,
+        51,
+        50,
+        1040,
+        1042,
+        1100,
+        99,
+        30,
+        1991,
+        10,
+        20,
+        40,
+        100,
+      ]
+    }
+    ether9 = {
+      comment = "capxr0"
+      tagged = [
+        101,
+        51,
+        50,
+        1040,
+        1042,
+        1100,
+        99,
+        30,
+        1991,
+        10,
+        20,
+        40,
+        100,
+      ]
+    }
+    sfp-sfpplus1 = {
+      comment = "uplink to rb5009"
+      tagged = [
+        101,
+        51,
+        50,
+        1040,
+        1042,
+        1100,
+        99,
+        30,
+        1991,
+        10,
+        20,
+        40,
+        100,
+      ]
+    }
+    sfp-sfpplus3 = {
+      comment  = "pve0"
+      untagged = 40
+    }
+    sfp-sfpplus4 = {
+      comment = "pve1"
+      tagged = [
+        101,
+        51,
+        50,
+        1040,
+        1042,
+        1100,
+        99,
+        30,
+        1991,
+        10,
+        20,
+        40,
+        100,
+      ]
+    }
+  }
+  hostname = "crs320"
+  ip_addresses = {
+    Management = "10.99.0.2/16"
+    ether17    = "192.168.88.1/24"
+  }
+  mgmt_interface_list   = "MANAGEMENT"
+  routeros_endpoint     = "10.99.0.2"
+  routeros_secrets_path = "${get_repo_root()}/secrets/prd/routeros.sops.yaml"
+  vlans = {
+    Management = {
+      interface_lists = [
+        "MANAGEMENT",
+      ]
+      name    = "Management"
+      vlan_id = 99
+    }
+  }
+  wan_interface_list = "WAN"
 }
-
-inputs = merge(
-  include.root.locals.base_inputs,
-  {
-    hostname          = "crs320"
-    routeros_endpoint = "10.99.0.2"
-
-    certificate_alt_names = [
-      "DNS:crs320",
-      "DNS:crs320.kidibox.net",
-      "IP:10.99.0.2",
-      "IP:192.168.88.1",
-    ]
-
-    vlans = {
-      Management = local.vlans.Management
-    }
-
-    ethernet_interfaces = {
-      sfp-sfpplus1 = {
-        comment = "uplink to rb5009"
-        tagged  = local.all_vlans
-      }
-      sfp-sfpplus3 = {
-        comment = "pve0"
-        # tagged  = local.all_vlans
-        untagged = local.vlans.Talos.vlan_id
-      }
-      sfp-sfpplus4 = {
-        comment = "pve1"
-        tagged  = local.all_vlans
-      }
-      ether1 = {
-        command  = "vulkan"
-        untagged = local.vlans.Trusted.vlan_id
-        tagged = [
-          local.vlans.Management.vlan_id,
-          local.vlans.Talos.vlan_id,
-          local.vlans.RosLab.vlan_id,
-          local.vlans.LabTalos.vlan_id,
-          local.vlans.LabTalosSvc.vlan_id,
-          local.vlans.LabTrusted.vlan_id,
-        ]
-      }
-      ether2 = {
-        command  = "rb5009"
-        untagged = local.vlans.Management.vlan_id
-      }
-      ether7 = {
-        comment = "capxr1"
-        tagged  = local.all_vlans
-      }
-      ether9 = {
-        comment = "capxr0"
-        tagged  = local.all_vlans
-      }
-      ether10 = {
-        comment  = "doorbell"
-        untagged = local.vlans.IotLocal.vlan_id
-      }
-      ether11 = {
-        comment  = "petdoor"
-        untagged = local.vlans.IotInternet.vlan_id
-      }
-      ether14 = {
-        comment  = "pve0-ipmi"
-        untagged = local.vlans.Management.vlan_id
-      }
-      ether16 = {
-        comment  = "pve1-ipmi"
-        untagged = local.vlans.Management.vlan_id
-      }
-      ether17 = { comment = "oob", bridge_port = false, interface_lists = [local.interface_lists.MANAGEMENT] }
-    }
-
-    ip_addresses = {
-      ether17                          = "192.168.88.1/24"
-      "${local.vlans.Management.name}" = "${cidrhost(local.vlans.Management.cidr, 2)}/${local.vlans.Management.prefix}"
-    }
-
-    dhcp_servers = {
-      ether17 = {
-        cidr        = "192.168.88.0/24"
-        dns_servers = []
-      }
-    }
-  },
-)

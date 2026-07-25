@@ -1,0 +1,56 @@
+# terragrunt-stacks class + collection policy.
+#
+# Modeled on nixopslab's modules/terranix/collect.nix host-to-terranix
+# policy: registers "terragrunt-stacks" as an aspect content class in the
+# "tf" namespace (modules/terragrunt/namespace.nix), and collects it —
+# across a device's aspect-includes chain (tf.<device>.includes = [
+# tf.ros-base tf.ros-capsman ... ]) — into
+# config.flake.terragruntStacks.<device>.<stack>.
+#
+# `terragruntInputs` is a reserved (non-class) aspect key: each device's own
+# self-aspect (modules/devices/*.nix) precomputes its per-stack {dependsOn,
+# inputs} data there (cidrhost() etc. need modules/network/lib.nix's
+# cidrLib, an ordinary module arg den's aspect-content functions can't see —
+# see modules/devices/rb5009.nix), and the thin, shared ros-<stack> aspects
+# (modules/network/aspects/ros-*.nix) just look it up by stack name.
+{
+  lib,
+  den,
+  tf,
+  ...
+}:
+{
+  den.reservedKeys = [ "terragruntInputs" ];
+
+  tf.classes."terragrunt-stacks" = { };
+
+  den.policies.device-to-terragrunt =
+    { device, ... }:
+    [
+      (den.lib.policy.instantiate {
+        name = "${device.name}-terragrunt";
+        class = "terragrunt-stacks";
+        # Each item in `modules` arrives den-wrapped as a NixOS-module-style
+        # { imports = [ <our plain attrset> ]; ... } (den hands this list
+        # straight to consumers like terranix's own lib.evalModules-based
+        # `modules` option; we want the plain data instead).
+        instantiate =
+          { modules, ... }:
+          lib.listToAttrs (
+            map (
+              m:
+              let
+                content = builtins.head m.imports;
+              in
+              lib.nameValuePair content.stack (removeAttrs content [ "stack" ])
+            ) modules
+          );
+        intoAttr = [
+          "terragruntStacks"
+          device.name
+        ];
+      })
+    ];
+
+  den.schema.device.includes = [ den.policies.device-to-terragrunt ];
+}
