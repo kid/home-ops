@@ -2,8 +2,7 @@
 # pre-dendritic flake.nix), plus den/flake-file/import-tree for the
 # dendritic module system used to generate tf-stacks/prd/network's
 # terragrunt.hcl leaves from Nix (see modules/terragrunt/*.nix).
-{ ... }:
-{
+_: {
   flake-file.description = "home-ops";
 
   flake-file.inputs = {

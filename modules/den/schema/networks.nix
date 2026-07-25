@@ -20,7 +20,7 @@
   options.den.networks = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
-        { name, config, ... }:
+        { name, ... }:
         {
           options = {
             name = lib.mkOption {

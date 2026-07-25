@@ -5,8 +5,7 @@
 # arithmetic needs modules/network/lib.nix's cidrLib, which den's aspect
 # content functions can't see (only entity-kind scope bindings like `device`
 # are — see modules/terragrunt/collect.nix).
-{ tf, ... }:
-{
+_: {
   tf.ros-base = {
     "terragrunt-stacks" =
       { device, ... }:

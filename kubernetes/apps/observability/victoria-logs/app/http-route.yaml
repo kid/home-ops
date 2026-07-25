@@ -12,16 +12,16 @@ spec:
       namespace: network-system
   rules:
     - filters:
-      - requestRedirect:
-          path:
-            replaceFullPath: /select/vmui/
-            type: ReplaceFullPath
-          statusCode: 302
-        type: RequestRedirect
+        - requestRedirect:
+            path:
+              replaceFullPath: /select/vmui/
+              type: ReplaceFullPath
+            statusCode: 302
+          type: RequestRedirect
       matches:
-      - path:
-          type: Exact
-          value: /
+        - path:
+            type: Exact
+            value: /
     - backendRefs:
         - name: vlsingle-victoria-logs
           namespace: observability

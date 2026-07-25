@@ -1,7 +1,6 @@
 # Shared "firewall" RouterOS stack aspect — see ros-base.nix for why this is
 # thin.
-{ tf, ... }:
-{
+_: {
   tf.ros-firewall = {
     "terragrunt-stacks" =
       { device, ... }:

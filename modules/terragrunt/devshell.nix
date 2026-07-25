@@ -39,7 +39,7 @@ let
     (lib.concatStrings (lib.replicate upLevels "../")) + toDevice;
 
   renderLeaf =
-    deviceName: stack: leaf:
+    _deviceName: stack: leaf:
     let
       dependenciesBlock = lib.optionalString (leaf.dependsOn != [ ]) ''
 

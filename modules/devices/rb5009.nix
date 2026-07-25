@@ -11,7 +11,6 @@
 #     winning (second) value — same observable result, not a fix.
 {
   lib,
-  den,
   tf,
   config,
   cidrLib,
@@ -20,7 +19,7 @@
 }:
 let
   environment = config.den.environments.prd;
-  networks = environment.networks;
+  inherit (environment) networks;
 
   allVlanIds = lib.mapAttrsToList (_: net: net.vlanId) networks;
   routedNetworks = lib.filterAttrs (_: net: net.routed) networks;
@@ -162,8 +161,8 @@ in
               };
             }
             // lib.mapAttrs (_: net: {
-              cidr = net.cidr;
-              domain = net.domain;
+              inherit (net) cidr;
+              inherit (net) domain;
               gateway = gatewayFor net;
               dns_servers = dnsServersFor net;
               ntp_servers = ntpServersFor net;

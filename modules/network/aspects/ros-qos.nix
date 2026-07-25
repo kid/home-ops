@@ -1,6 +1,5 @@
 # Shared "qos" RouterOS stack aspect — see ros-base.nix for why this is thin.
-{ tf, ... }:
-{
+_: {
   tf.ros-qos = {
     "terragrunt-stacks" =
       { device, ... }:

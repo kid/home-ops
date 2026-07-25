@@ -1,40 +1,9 @@
-# treefmt + devShell, carried over verbatim from the pre-dendritic flake.nix.
-{ inputs, ... }:
-{
-  imports = [ inputs.treefmt-nix.flakeModule ];
-
+# devShell, carried over from the pre-dendritic flake.nix. treefmt config
+# lives in modules/flake/formatter.nix.
+_: {
   perSystem =
     { config, pkgs, ... }:
     {
-      treefmt = {
-        flakeCheck = true;
-        settings.excludes = [
-          "*.sops.*"
-        ];
-        programs = {
-          nixfmt.enable = true;
-          hclfmt.enable = true;
-          just.enable = true;
-          terraform.enable = true;
-          terraform.includes = [
-            "*.tofu"
-            "*.tfvars"
-            "*.tftest.hcl"
-          ];
-          yamlfmt.enable = true;
-          yamlfmt.settings = {
-            formatter = {
-              indent = 2;
-              indentless_arrays = false;
-              include_document_start = true;
-              eof_newline = true;
-              trim_trailing_blank_lines = true;
-              retain_line_breaks_single = true;
-            };
-          };
-        };
-      };
-
       devShells.default = pkgs.mkShell {
         packages = with pkgs; [
           watch

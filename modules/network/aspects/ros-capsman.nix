@@ -1,7 +1,6 @@
 # Shared "capsman" RouterOS stack aspect — see ros-base.nix for why this is
 # thin.
-{ tf, ... }:
-{
+_: {
   tf.ros-capsman = {
     "terragrunt-stacks" =
       { device, ... }:

@@ -18,19 +18,17 @@ let
 in
 {
   # flake -> fleet: single fleet entity (fires at flake scope).
-  den.policies.to-fleet =
-    { self, ... }:
-    [
-      (resolve.to "fleet" {
-        fleet = {
-          name = "fleet";
-        };
-      })
-    ];
+  den.policies.to-fleet = _: [
+    (resolve.to "fleet" {
+      fleet = {
+        name = "fleet";
+      };
+    })
+  ];
 
   # fleet -> environments: fan out per registered environment.
   den.policies.fleet-to-envs =
-    { self, ... }:
+    _:
     lib.mapAttrsToList (
       _: env:
       resolve.to "environment" {

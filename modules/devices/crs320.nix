@@ -2,7 +2,6 @@
 # Single "base" stack, depends on rb5009's base stack.
 {
   lib,
-  den,
   tf,
   config,
   cidrLib,
@@ -11,7 +10,7 @@
 }:
 let
   environment = config.den.environments.prd;
-  networks = environment.networks;
+  inherit (environment) networks;
 
   allVlanIds = lib.mapAttrsToList (_: net: net.vlanId) networks;
 

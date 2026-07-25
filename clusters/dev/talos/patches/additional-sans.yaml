@@ -1,3 +1,4 @@
+---
 machine:
   certSANs:
     - k8s.${INTERNAL_DOMAIN}
