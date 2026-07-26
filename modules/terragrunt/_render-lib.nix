@@ -1,8 +1,9 @@
 # Nix -> HCL text renderer for a terragrunt.hcl leaf's `locals`/`inputs`
 # block bodies. No nixopslab precedent (terranix renders to Terraform's JSON
 # syntax, where any HCL-shaped value is just a JSON value); here we render
-# actual HCL text, since tf-catalog/modules/ros/* stay real Terraform
-# modules invoked via Terragrunt's `terraform.source`, not terranix.
+# actual HCL text, since the terragrunt-infra-catalog ros-* modules stay
+# real Terraform modules invoked via Terragrunt's `terraform.source` (as a
+# git ref), not terranix.
 #
 # `hcl.raw text` escapes the renderer for values that must stay a live HCL
 # expression rather than a value pre-computed by Nix — e.g.

@@ -2,12 +2,8 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-include "provider_routeros" {
-  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-}
-
 terraform {
-  source                   = "${get_repo_root()}/tf-catalog/modules/ros//base"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-base?ref=ros-base/v1.0.3"
   copy_terraform_lock_file = false
 }
 
@@ -157,9 +153,31 @@ inputs = {
     Management = "10.99.0.2/16"
     ether17    = "192.168.88.1/24"
   }
-  mgmt_interface_list   = "MANAGEMENT"
-  routeros_endpoint     = "10.99.0.2"
-  routeros_secrets_path = "${get_repo_root()}/secrets/prd/routeros.sops.yaml"
+  mgmt_interface_list = "MANAGEMENT"
+  op_item_routeros    = "CRS320 - admin"
+  op_vault            = "home-ops"
+  routeros_endpoint   = "10.99.0.2"
+  routeros_groups = {
+    external-dns = {
+      policies = []
+    }
+    metrics = {
+      policies = []
+    }
+  }
+  routeros_users = {
+    admin = {}
+    external-dns = {
+      group = "external-dns"
+    }
+    kid = {
+      group    = "full"
+      ssh_keys = []
+    }
+    metrics = {
+      group = "metrics"
+    }
+  }
   vlans = {
     Management = {
       interface_lists = [

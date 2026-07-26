@@ -9,7 +9,8 @@ _: {
       in
       {
         stack = "firewall";
-        moduleSource = "ros//firewall";
+        moduleSource = "ros-firewall";
+        moduleVersion = "1.0.3";
         inherit (stack) dependsOn inputs;
       };
   };

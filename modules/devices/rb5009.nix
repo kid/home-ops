@@ -14,7 +14,6 @@
   tf,
   config,
   cidrLib,
-  hcl,
   ...
 }:
 let
@@ -23,8 +22,6 @@ let
 
   allVlanIds = lib.mapAttrsToList (_: net: net.vlanId) networks;
   routedNetworks = lib.filterAttrs (_: net: net.routed) networks;
-
-  routerosSecretsPath = hcl.raw ''"''${get_repo_root()}/secrets/${environment.name}/routeros.sops.yaml"'';
 
   # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
   # network leaf via root.hcl's `base_inputs`, not just ros/base's own
@@ -40,13 +37,16 @@ let
     wan_interface_list = "WAN";
   };
 
+  # Every ros-* stack needs its own onepassword provider auth (1Password
+  # item titled "RB5009 - admin", vault "home-ops" — see the K8s
+  # ClusterSecretStore convention this mirrors).
   commonInputs = {
     hostname = "rb5009";
-    routeros_endpoint = "10.99.0.1";
-    routeros_secrets_path = routerosSecretsPath;
+    op_vault = "home-ops";
+    op_item_routeros = "RB5009 - admin";
   };
 
-  # Matches tf-catalog/modules/ros/base's `vlans` variable object shape
+  # Matches terragrunt-infra-catalog's ros-base module `vlans` variable object shape
   # (name, vlan_id, mtu?, interface_lists?).
   toVlanInput =
     net:
@@ -57,7 +57,7 @@ let
     // lib.optionalAttrs (net.mtu != null) { inherit (net) mtu; }
     // lib.optionalAttrs (net.interfaceLists != [ ]) { interface_lists = net.interfaceLists; };
 
-  # tf-catalog/modules/ros/firewall's `vlans` variable only wants name+vlan_id.
+  # terragrunt-infra-catalog's ros-firewall module `vlans` variable only wants name+vlan_id.
   toFirewallVlanInput = net: {
     inherit (net) name;
     vlan_id = net.vlanId;
@@ -109,6 +109,37 @@ in
             ];
 
             ntp_server_enabled = true;
+
+            routeros_endpoint = "10.99.0.1";
+
+            # TODO: fill in with the real (non-secret) values from
+            # secrets/prd/routeros.sops.yaml's groups/users sections before
+            # applying. Per-user passwords come from 1Password instead:
+            # admin reuses op_item_routeros above, every other user needs an
+            # item titled "RB5009 - user - <username>" in vault op_vault.
+            # DO NOT apply with these placeholders, it will destroy the
+            # users/groups/ssh keys currently on the router.
+            routeros_groups = {
+              "external-dns" = {
+                policies = [ ];
+              }; # TODO
+              metrics = {
+                policies = [ ];
+              }; # TODO
+            };
+            routeros_users = {
+              admin = { };
+              kid = {
+                group = "full"; # TODO verify
+                ssh_keys = [ ]; # TODO
+              };
+              "external-dns" = {
+                group = "external-dns";
+              }; # TODO verify
+              metrics = {
+                group = "metrics";
+              }; # TODO verify
+            };
 
             vlans = lib.mapAttrs (_: toVlanInput) networks;
 
@@ -292,6 +323,9 @@ in
           // commonInputs
           // {
             capsman_interfaces = [ networks.Management.name ];
+
+            # SSID (field "ssid") + one field per passphrase_groups key.
+            op_item_wifi = "RB5009 - wifi";
 
             passphrase_groups = {
               "${networks.Trusted.name}" = {

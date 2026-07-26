@@ -8,7 +8,8 @@ _: {
       in
       {
         stack = "dns";
-        moduleSource = "ros//dns";
+        moduleSource = "ros-dns";
+        moduleVersion = "1.0.2";
         inherit (stack) dependsOn inputs;
       };
   };

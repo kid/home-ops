@@ -9,7 +9,8 @@ _: {
       in
       {
         stack = "capsman";
-        moduleSource = "ros//capsman";
+        moduleSource = "ros-capsman";
+        moduleVersion = "1.1.2";
         inherit (stack) dependsOn inputs;
       };
   };

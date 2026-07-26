@@ -2,12 +2,8 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-include "provider_routeros" {
-  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-}
-
 terraform {
-  source                   = "${get_repo_root()}/tf-catalog/modules/ros//capsman"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-capsman?ref=ros-capsman/v1.1.2"
   copy_terraform_lock_file = false
 }
 
@@ -28,6 +24,9 @@ inputs = {
   ]
   hostname            = "rb5009"
   mgmt_interface_list = "MANAGEMENT"
+  op_item_routeros    = "RB5009 - admin"
+  op_item_wifi        = "RB5009 - wifi"
+  op_vault            = "home-ops"
   passphrase_groups = {
     Guest = {
       isolated = true
@@ -45,7 +44,5 @@ inputs = {
       vlan_id = 100
     }
   }
-  routeros_endpoint     = "10.99.0.1"
-  routeros_secrets_path = "${get_repo_root()}/secrets/prd/routeros.sops.yaml"
-  wan_interface_list    = "WAN"
+  wan_interface_list = "WAN"
 }

@@ -5,7 +5,6 @@
   tf,
   config,
   cidrLib,
-  hcl,
   ...
 }:
 let
@@ -13,8 +12,6 @@ let
   inherit (environment) networks;
 
   allVlanIds = lib.mapAttrsToList (_: net: net.vlanId) networks;
-
-  routerosSecretsPath = hcl.raw ''"''${get_repo_root()}/secrets/${environment.name}/routeros.sops.yaml"'';
 
   # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
   # network leaf via root.hcl's `base_inputs`, not just ros/base's own
@@ -30,7 +27,7 @@ let
     wan_interface_list = "WAN";
   };
 
-  # Matches tf-catalog/modules/ros/base's `vlans` variable object shape
+  # Matches terragrunt-infra-catalog's ros-base module `vlans` variable object shape
   # (name, vlan_id, mtu?, interface_lists?) — extra fields on
   # environment.networks entries (cidr, domain, …) are dropped anyway.
   toVlanInput =
@@ -63,8 +60,42 @@ in
         dependsOn = [ "rb5009" ];
         inputs = sharedInputs // {
           hostname = "crs320";
+
+          op_vault = "home-ops";
+          op_item_routeros = "CRS320 - admin";
+
           routeros_endpoint = "10.99.0.2";
-          routeros_secrets_path = routerosSecretsPath;
+
+          # Previously sourced from the SAME secrets/prd/routeros.sops.yaml
+          # as the rb5009 base stack (both ros-base stacks read that one
+          # file), so this must mirror rb5009's groups/users. TODO: fill in
+          # with the real (non-secret) values before applying. Per-user
+          # passwords come from 1Password instead: admin reuses
+          # op_item_routeros above, every other user needs an item titled
+          # "CRS320 - user - <username>" in vault op_vault. DO NOT apply
+          # with these placeholders, it will destroy the users/groups/ssh
+          # keys currently on the router.
+          routeros_groups = {
+            "external-dns" = {
+              policies = [ ];
+            }; # TODO
+            metrics = {
+              policies = [ ];
+            }; # TODO
+          };
+          routeros_users = {
+            admin = { };
+            kid = {
+              group = "full"; # TODO verify
+              ssh_keys = [ ]; # TODO
+            };
+            "external-dns" = {
+              group = "external-dns";
+            }; # TODO verify
+            metrics = {
+              group = "metrics";
+            }; # TODO verify
+          };
 
           certificate_alt_names = [
             "DNS:crs320"
@@ -91,8 +122,8 @@ in
               tagged = allVlanIds;
             };
             ether1 = {
-              # NB: "command" is not a field tf-catalog/modules/ros/base's
-              # ethernet_interfaces variable declares (it wants "comment") —
+              # NB: "command" is not a field terragrunt-infra-catalog's ros-base
+              # module ethernet_interfaces variable declares (it wants "comment") —
               # ported verbatim from the hand-written leaf, flagged to the
               # user rather than silently fixed.
               command = "vulkan";

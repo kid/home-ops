@@ -8,7 +8,8 @@ _: {
       in
       {
         stack = "qos";
-        moduleSource = "ros//qos";
+        moduleSource = "ros-qos";
+        moduleVersion = "1.0.2";
         inherit (stack) dependsOn inputs;
       };
   };

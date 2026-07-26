@@ -2,12 +2,8 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-include "provider_routeros" {
-  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-}
-
 terraform {
-  source                   = "${get_repo_root()}/tf-catalog/modules/ros//base"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-base?ref=ros-base/v1.0.3"
   copy_terraform_lock_file = false
 }
 
@@ -368,10 +364,32 @@ inputs = {
     ether7      = "192.168.88.1/24"
     ether8      = "192.168.100.2/24"
   }
-  mgmt_interface_list   = "MANAGEMENT"
-  ntp_server_enabled    = true
-  routeros_endpoint     = "10.99.0.1"
-  routeros_secrets_path = "${get_repo_root()}/secrets/prd/routeros.sops.yaml"
+  mgmt_interface_list = "MANAGEMENT"
+  ntp_server_enabled  = true
+  op_item_routeros    = "RB5009 - admin"
+  op_vault            = "home-ops"
+  routeros_endpoint   = "10.99.0.1"
+  routeros_groups = {
+    external-dns = {
+      policies = []
+    }
+    metrics = {
+      policies = []
+    }
+  }
+  routeros_users = {
+    admin = {}
+    external-dns = {
+      group = "external-dns"
+    }
+    kid = {
+      group    = "full"
+      ssh_keys = []
+    }
+    metrics = {
+      group = "metrics"
+    }
+  }
   vlans = {
     Guest = {
       name    = "Guest"

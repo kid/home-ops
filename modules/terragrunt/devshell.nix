@@ -63,12 +63,8 @@ let
         path = find_in_parent_folders("root.hcl")
       }
 
-      include "provider_routeros" {
-        path = "''${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-      }
-
       terraform {
-        source                   = "''${get_repo_root()}/tf-catalog/modules/${leaf.moduleSource}"
+        source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/${leaf.moduleSource}?ref=${leaf.moduleSource}/v${leaf.moduleVersion}"
         copy_terraform_lock_file = false
       }
       ${dependenciesBlock}

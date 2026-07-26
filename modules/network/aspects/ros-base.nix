@@ -14,7 +14,8 @@ _: {
       in
       {
         stack = "base";
-        moduleSource = "ros//base";
+        moduleSource = "ros-base";
+        moduleVersion = "1.0.3";
         inherit (stack) dependsOn inputs;
       };
   };

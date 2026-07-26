@@ -2,12 +2,8 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-include "provider_routeros" {
-  path = "${get_repo_root()}/tf-catalog/modules/_shared/provider-routeros.hcl"
-}
-
 terraform {
-  source                   = "${get_repo_root()}/tf-catalog/modules/ros//dns"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-dns?ref=ros-dns/v1.0.2"
   copy_terraform_lock_file = false
 }
 
@@ -55,9 +51,9 @@ inputs = {
     "9.9.9.9",
     "149.112.112.112",
   ]
-  hostname              = "rb5009"
-  mgmt_interface_list   = "MANAGEMENT"
-  routeros_endpoint     = "10.99.0.1"
-  routeros_secrets_path = "${get_repo_root()}/secrets/prd/routeros.sops.yaml"
-  wan_interface_list    = "WAN"
+  hostname            = "rb5009"
+  mgmt_interface_list = "MANAGEMENT"
+  op_item_routeros    = "RB5009 - admin"
+  op_vault            = "home-ops"
+  wan_interface_list  = "WAN"
 }
