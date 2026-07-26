@@ -115,7 +115,7 @@ in
             };
             "sfp-sfpplus3" = {
               comment = "pve0";
-              untagged = networks.Talos.vlanId;
+              untagged = networks.K3s.vlanId;
             };
             "sfp-sfpplus4" = {
               comment = "pve1";
@@ -130,7 +130,7 @@ in
               untagged = networks.Trusted.vlanId;
               tagged = [
                 networks.Management.vlanId
-                networks.Talos.vlanId
+                networks.K3s.vlanId
                 networks.RosLab.vlanId
                 networks.LabTalos.vlanId
                 networks.LabTalosSvc.vlanId

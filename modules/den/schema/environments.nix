@@ -27,14 +27,6 @@ in
 {
   config.den.schema.environment.isEntity = true;
 
-  # tf-stacks/prd/env.hcl: env_cidr = cidrsubnet("10.0.0.0/8", 1, 0) = "10.0.0.0/9"
-  # (deterministic — netnum 0 keeps the same base, just widens the prefix by
-  # one bit), tld = "home.kidibox.net".
-  config.den.environments.prd = {
-    domain = "home.kidibox.net";
-    cidrBase = "10.0.0.0/9";
-  };
-
   options.den.environments = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (

@@ -7,6 +7,10 @@
 
   inputs = {
     den.url = "github:denful/den";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     flake-file.url = "github:vic/flake-file";
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
@@ -16,7 +20,17 @@
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
+    nixhelm = {
+      url = "github:farcaller/nixhelm";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nixidy = {
+      url = "github:arnarg/nixidy";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nixos-anywhere.url = "github:nix-community/nixos-anywhere";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";

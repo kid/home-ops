@@ -404,20 +404,20 @@ in
                   comment = "Allow access to Management from Trusted";
                 }
               ];
-              "${networks.Talos.name}" = [
+              "${networks.K3s.name}" = [
                 {
                   action = "accept";
                   dst_address = cidrLib.cidrhost networks.Management.cidr 1;
                   dst_port = 443;
                   protocol = "tcp";
-                  comment = "Allow access to Management from Talos for external-dns";
+                  comment = "Allow access to Management from K3s for external-dns";
                 }
                 {
                   action = "accept";
                   dst_address = cidrLib.cidrhost networks.Management.cidr 1;
                   dst_port = 8729;
                   protocol = "tcp";
-                  comment = "Allow access to Management from Talos for mikrotik-exporter";
+                  comment = "Allow access to Management from K3s for mikrotik-exporter";
                 }
               ];
             };
@@ -459,7 +459,7 @@ in
                   comment = "Allow cloudflared access to HomeAssistant";
                 }
               ];
-              "${networks.Talos.name}" = [
+              "${networks.K3s.name}" = [
                 {
                   action = "accept";
                   out_interface_list = "WAN";

@@ -14,6 +14,9 @@
       flakeCheck = true;
       settings.excludes = [
         "*.sops.*"
+        # nixidy-generated (modules/flake/files.nix); nixidy has its own
+        # idempotent YAML output, no document-start marker — don't fight it.
+        "manifests/**"
       ];
       programs = {
         nixfmt.enable = true;

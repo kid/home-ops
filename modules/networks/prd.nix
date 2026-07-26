@@ -43,12 +43,6 @@ in
       domain = "media.${tld}";
     };
 
-    Talos = {
-      environment = "prd";
-      vlanId = 40;
-      domain = "talos.${tld}";
-    };
-
     IotLocal = {
       environment = "prd";
       vlanId = 50;

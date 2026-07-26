@@ -36,6 +36,10 @@ inputs = {
       name    = "IotLocal"
       vlan_id = 50
     }
+    K3s = {
+      name    = "K3s"
+      vlan_id = 40
+    }
     Management = {
       name    = "Management"
       vlan_id = 99
@@ -55,10 +59,6 @@ inputs = {
     Storage = {
       name    = "Storage"
       vlan_id = 20
-    }
-    Talos = {
-      name    = "Talos"
-      vlan_id = 40
     }
     Trusted = {
       name    = "Trusted"
@@ -86,6 +86,25 @@ inputs = {
         comment            = "Allow WAN"
         disabled           = true
         out_interface_list = "WAN"
+      },
+    ]
+    K3s = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Traffic to load balancer ips"
+        dst_address = "10.0.42.0/24"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to crs320 for mikrotik-exporter"
+        dst_address = "10.99.0.2"
+        dst_port    = 8729
+        protocol    = "tcp"
       },
     ]
     Management = [
@@ -127,25 +146,6 @@ inputs = {
         out_interface_list = "all"
       },
     ]
-    Talos = [
-      {
-        action             = "accept"
-        comment            = "Allow WAN"
-        out_interface_list = "WAN"
-      },
-      {
-        action      = "accept"
-        comment     = "Allow Traffic to load balancer ips"
-        dst_address = "10.0.42.0/24"
-      },
-      {
-        action      = "accept"
-        comment     = "Allow access to crs320 for mikrotik-exporter"
-        dst_address = "10.99.0.2"
-        dst_port    = 8729
-        protocol    = "tcp"
-      },
-    ]
     Trusted = [
       {
         action             = "accept"
@@ -165,17 +165,17 @@ inputs = {
     ]
   }
   vlans_input_rules = {
-    Talos = [
+    K3s = [
       {
         action      = "accept"
-        comment     = "Allow access to Management from Talos for external-dns"
+        comment     = "Allow access to Management from K3s for external-dns"
         dst_address = "10.99.0.1"
         dst_port    = 443
         protocol    = "tcp"
       },
       {
         action      = "accept"
-        comment     = "Allow access to Management from Talos for mikrotik-exporter"
+        comment     = "Allow access to Management from K3s for mikrotik-exporter"
         dst_address = "10.99.0.1"
         dst_port    = 8729
         protocol    = "tcp"
