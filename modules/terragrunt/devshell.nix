@@ -64,7 +64,9 @@ let
       }
 
       terraform {
-        source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/${leaf.moduleSource}?ref=${leaf.moduleSource}/v${leaf.moduleVersion}"
+        source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/${leaf.moduleSource}?ref=${
+          leaf.moduleRef or "${leaf.moduleSource}/v${leaf.moduleVersion}"
+        }"
         copy_terraform_lock_file = false
       }
       ${dependenciesBlock}

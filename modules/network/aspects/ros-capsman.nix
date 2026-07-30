@@ -11,6 +11,9 @@ _: {
         stack = "capsman";
         moduleSource = "ros-capsman";
         moduleVersion = "1.1.2";
+        # TODO: drop once terragrunt-infra-catalog's feat/onepassword-secrets
+        # is merged and released — pin moduleVersion to that release instead.
+        moduleRef = "feat/onepassword-secrets";
         inherit (stack) dependsOn inputs;
       };
   };

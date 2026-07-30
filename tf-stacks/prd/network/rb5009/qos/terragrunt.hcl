@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-qos?ref=ros-qos/v1.0.2"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-qos?ref=feat/onepassword-secrets"
   copy_terraform_lock_file = false
 }
 

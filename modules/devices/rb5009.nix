@@ -43,7 +43,7 @@ let
   commonInputs = {
     hostname = "rb5009";
     op_vault = "home-ops";
-    op_item_routeros = "RB5009 - admin";
+    op_item_routeros = "rb5009";
   };
 
   # Matches terragrunt-infra-catalog's ros-base module `vlans` variable object shape

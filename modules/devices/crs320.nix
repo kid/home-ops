@@ -62,7 +62,7 @@ in
           hostname = "crs320";
 
           op_vault = "home-ops";
-          op_item_routeros = "CRS320 - admin";
+          op_item_routeros = "crs320";
 
           routeros_endpoint = "10.99.0.2";
 

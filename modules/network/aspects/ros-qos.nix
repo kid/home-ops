@@ -10,6 +10,9 @@ _: {
         stack = "qos";
         moduleSource = "ros-qos";
         moduleVersion = "1.0.2";
+        # TODO: drop once terragrunt-infra-catalog's feat/onepassword-secrets
+        # is merged and released — pin moduleVersion to that release instead.
+        moduleRef = "feat/onepassword-secrets";
         inherit (stack) dependsOn inputs;
       };
   };
