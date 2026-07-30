@@ -33,14 +33,6 @@
         # { imports = [ <our plain attrset> ]; ... } (den hands this list
         # straight to consumers like terranix's own lib.evalModules-based
         # `modules` option; we want the plain data instead).
-        # TODO: this reads `m.imports`'s head as already-resolved plain data,
-        # which breaks the moment any ros-*.nix content function requests a
-        # den.quirks value as a named parameter — den defers that aspect's
-        # content into a wrapped module (__functor/__functionArgs) meant to
-        # be finalized by a real lib.evalModules pass, which this function
-        # never performs (confirmed empirically, see AGENTS.md). Revisit by
-        # routing `modules` through lib.evalModules here before extracting
-        # per-stack content, so quirks/pipe.collect can reach ros-*.nix.
         instantiate =
           { modules, ... }:
           lib.listToAttrs (
