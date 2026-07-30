@@ -126,7 +126,7 @@ jobs:
 
       - name: Update PR comment
         if: ${{ steps.diff.outputs.has_diff == 'true' }}
-        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: flux-diff/${{ matrix.cluster }}/${{ matrix.kind }}
           path: ${{ steps.diff.outputs.comment_file }}
@@ -134,7 +134,7 @@ jobs:
 
       - name: Delete stale PR comment
         if: ${{ steps.diff.outputs.has_diff == 'false' }}
-        uses: marocchino/sticky-pull-request-comment@0ea0beb66eb9baf113663a64ec522f60e49231c0 # v3.0.4
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: flux-diff/${{ matrix.cluster }}/${{ matrix.kind }}
           delete: true
