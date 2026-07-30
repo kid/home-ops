@@ -40,6 +40,7 @@
 
       users.mutableUsers = false;
       security.sudo.enable = true;
+      security.sudo.wheelNeedsPassword = false;
 
       services.openssh.enable = true;
 
@@ -53,6 +54,9 @@
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
     den.aspects.k3s-server
-    den.aspects.kid
   ];
+
+  # Grants kid's "admin" access-policy group (modules/users/kid.nix) onto
+  # this host — see modules/den/policies/users.nix for how this resolves.
+  fleet.user-access.by-host.prd-node1.groups = [ "admin" ];
 }

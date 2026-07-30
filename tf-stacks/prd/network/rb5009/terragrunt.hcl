@@ -366,25 +366,38 @@ inputs = {
   }
   mgmt_interface_list = "MANAGEMENT"
   ntp_server_enabled  = true
-  op_item_routeros    = "RB5009 - admin"
+  op_item_routeros    = "RB5009 - user - kid"
   op_vault            = "home-ops"
   routeros_endpoint   = "10.99.0.1"
   routeros_groups = {
     external-dns = {
-      policies = []
+      policies = [
+        "api",
+        "read",
+        "rest-api",
+        "write",
+      ]
     }
     metrics = {
-      policies = []
+      policies = [
+        "api",
+        "read",
+      ]
     }
   }
   routeros_users = {
-    admin = {}
+    admin = {
+      disabled = false
+    }
     external-dns = {
       group = "external-dns"
     }
     kid = {
-      group    = "full"
-      ssh_keys = []
+      group = "full"
+      ssh_keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan",
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13",
+      ]
     }
     metrics = {
       group = "metrics"

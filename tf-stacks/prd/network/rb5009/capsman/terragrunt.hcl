@@ -24,7 +24,7 @@ inputs = {
   ]
   hostname            = "rb5009"
   mgmt_interface_list = "MANAGEMENT"
-  op_item_routeros    = "RB5009 - admin"
+  op_item_routeros    = "RB5009 - user - kid"
   op_item_wifi        = "RB5009 - wifi"
   op_vault            = "home-ops"
   passphrase_groups = {

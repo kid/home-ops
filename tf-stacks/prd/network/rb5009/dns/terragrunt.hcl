@@ -53,7 +53,7 @@ inputs = {
   ]
   hostname            = "rb5009"
   mgmt_interface_list = "MANAGEMENT"
-  op_item_routeros    = "RB5009 - admin"
+  op_item_routeros    = "RB5009 - user - kid"
   op_vault            = "home-ops"
   wan_interface_list  = "WAN"
 }

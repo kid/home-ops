@@ -43,7 +43,7 @@ let
   commonInputs = {
     hostname = "rb5009";
     op_vault = "home-ops";
-    op_item_routeros = "rb5009";
+    op_item_routeros = "RB5009 - user - kid";
   };
 
   # Matches terragrunt-infra-catalog's ros-base module `vlans` variable object shape
@@ -112,34 +112,14 @@ in
 
             routeros_endpoint = "10.99.0.1";
 
-            # TODO: fill in with the real (non-secret) values from
-            # secrets/prd/routeros.sops.yaml's groups/users sections before
-            # applying. Per-user passwords come from 1Password instead:
-            # admin reuses op_item_routeros above, every other user needs an
-            # item titled "RB5009 - user - <username>" in vault op_vault.
-            # DO NOT apply with these placeholders, it will destroy the
-            # users/groups/ssh keys currently on the router.
-            routeros_groups = {
-              "external-dns" = {
-                policies = [ ];
-              }; # TODO
-              metrics = {
-                policies = [ ];
-              }; # TODO
-            };
-            routeros_users = {
-              admin = { };
-              kid = {
-                group = "full"; # TODO verify
-                ssh_keys = [ ]; # TODO
-              };
-              "external-dns" = {
-                group = "external-dns";
-              }; # TODO verify
-              metrics = {
-                group = "metrics";
-              }; # TODO verify
-            };
+            # routeros_groups/routeros_users are contributed centrally by
+            # modules/network/aspects/ros-base.nix, sourced from
+            # den.users.registry/den.groups — not hand-written per device
+            # anymore. Per-user passwords still come from 1Password: admin
+            # reuses op_item_routeros above, every other user needs an item
+            # titled "RB5009 - user - <username>" in vault op_vault.
+            # DO NOT apply with the still-TODO registry group/user data, it
+            # will destroy the users/groups/ssh keys currently on the router.
 
             vlans = lib.mapAttrs (_: toVlanInput) networks;
 

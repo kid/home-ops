@@ -62,40 +62,18 @@ in
           hostname = "crs320";
 
           op_vault = "home-ops";
-          op_item_routeros = "crs320";
+          op_item_routeros = "CRS320 - user - kid";
 
           routeros_endpoint = "10.99.0.2";
 
-          # Previously sourced from the SAME secrets/prd/routeros.sops.yaml
-          # as the rb5009 base stack (both ros-base stacks read that one
-          # file), so this must mirror rb5009's groups/users. TODO: fill in
-          # with the real (non-secret) values before applying. Per-user
-          # passwords come from 1Password instead: admin reuses
-          # op_item_routeros above, every other user needs an item titled
-          # "CRS320 - user - <username>" in vault op_vault. DO NOT apply
-          # with these placeholders, it will destroy the users/groups/ssh
-          # keys currently on the router.
-          routeros_groups = {
-            "external-dns" = {
-              policies = [ ];
-            }; # TODO
-            metrics = {
-              policies = [ ];
-            }; # TODO
-          };
-          routeros_users = {
-            admin = { };
-            kid = {
-              group = "full"; # TODO verify
-              ssh_keys = [ ]; # TODO
-            };
-            "external-dns" = {
-              group = "external-dns";
-            }; # TODO verify
-            metrics = {
-              group = "metrics";
-            }; # TODO verify
-          };
+          # routeros_groups/routeros_users are contributed centrally by
+          # modules/network/aspects/ros-base.nix, sourced from
+          # den.users.registry/den.groups — not hand-written per device
+          # anymore. Per-user passwords still come from 1Password: admin
+          # reuses op_item_routeros above, every other user needs an item
+          # titled "CRS320 - user - <username>" in vault op_vault.
+          # DO NOT apply with the still-TODO registry group/user data, it
+          # will destroy the users/groups/ssh keys currently on the router.
 
           certificate_alt_names = [
             "DNS:crs320"

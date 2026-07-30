@@ -5,12 +5,53 @@
 # arithmetic needs modules/network/lib.nix's cidrLib, which den's aspect
 # content functions can't see (only entity-kind scope bindings like `device`
 # are — see modules/terragrunt/collect.nix).
-_: {
+#
+# routeros_users/routeros_groups are merged in here instead, sourced
+# directly from den.users.registry/den.groups (modules/den/schema/users.nix,
+# groups.nix) — plain registry reads, not resolve.to/quirks, since this is a
+# single producer/single consumer relationship the same way
+# den.environments/den.networks are already read directly elsewhere in this
+# repo (see the plan for why the NixOS side, which needs quirks/pipes, is
+# different).
+{ den, lib, ... }:
+{
   tf.ros-base = {
     "terragrunt-stacks" =
       { device, ... }:
       let
         stack = device.aspect.terragruntInputs.base;
+
+        registryUsers = lib.filterAttrs (_: u: u.devices ? ${device.name}) den.users.registry;
+
+        routeros_users = {
+          # RouterOS's own built-in admin account — not a fleet user, always
+          # present on every device, tracked as-is (matches the original
+          # placeholder's `admin = {};`, plus disabled = false since this is
+          # the account the routeros provider itself authenticates as).
+          admin.disabled = false;
+        }
+        // lib.mapAttrs (
+          _: u:
+          let
+            devCfg = u.devices.${device.name};
+            sshKeys = if devCfg.sshKeys == null then u.sshKeys else devCfg.sshKeys;
+          in
+          {
+            inherit (devCfg) group;
+          }
+          // lib.optionalAttrs (sshKeys != [ ]) { ssh_keys = sshKeys; }
+        ) registryUsers;
+
+        # den.groups is global/non-duplicated, but not every device needs
+        # every group materialized as a RouterOS resource (e.g. a device
+        # with no external-dns user shouldn't get an external-dns group
+        # either) — only emit the groups actually referenced on this device.
+        referencedGroups = lib.unique (
+          lib.mapAttrsToList (_: u: u.devices.${device.name}.group) registryUsers
+        );
+        routeros_groups = lib.mapAttrs (_: g: { inherit (g) policies; }) (
+          lib.filterAttrs (name: _: lib.elem name referencedGroups) den.groups
+        );
       in
       {
         stack = "base";
@@ -19,7 +60,10 @@ _: {
         # TODO: drop once terragrunt-infra-catalog's feat/onepassword-secrets
         # is merged and released — pin moduleVersion to that release instead.
         moduleRef = "feat/onepassword-secrets";
-        inherit (stack) dependsOn inputs;
+        inherit (stack) dependsOn;
+        inputs = stack.inputs // {
+          inherit routeros_users routeros_groups;
+        };
       };
   };
 }
