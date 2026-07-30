@@ -20,7 +20,7 @@ let
   environment = config.den.environments.prd;
   inherit (environment) networks;
 
-  allVlanIds = lib.mapAttrsToList (_: net: net.vlanId) networks;
+  allVlanIds = lib.sort (a: b: a < b) (lib.mapAttrsToList (_: net: net.vlanId) networks);
   routedNetworks = lib.filterAttrs (_: net: net.routed) networks;
 
   # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd

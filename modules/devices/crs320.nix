@@ -11,7 +11,7 @@ let
   environment = config.den.environments.prd;
   inherit (environment) networks;
 
-  allVlanIds = lib.mapAttrsToList (_: net: net.vlanId) networks;
+  allVlanIds = lib.sort (a: b: a < b) (lib.mapAttrsToList (_: net: net.vlanId) networks);
 
   # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
   # network leaf via root.hcl's `base_inputs`, not just ros/base's own
@@ -106,7 +106,7 @@ in
               # user rather than silently fixed.
               command = "vulkan";
               untagged = networks.Trusted.vlanId;
-              tagged = [
+              tagged = lib.sort (a: b: a < b) [
                 networks.Management.vlanId
                 networks.K3s.vlanId
                 networks.RosLab.vlanId
