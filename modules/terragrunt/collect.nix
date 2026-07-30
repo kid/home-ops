@@ -1,10 +1,10 @@
 # terragrunt-stacks class + collection policy.
 #
 # Modeled on nixopslab's modules/terranix/collect.nix host-to-terranix
-# policy: registers "terragrunt-stacks" as an aspect content class in the
-# "tf" namespace (modules/terragrunt/namespace.nix), and collects it —
-# across a device's aspect-includes chain (tf.<device>.includes = [
-# tf.ros-base tf.ros-capsman ... ]) — into
+# policy: registers "terragrunt-stacks" as an aspect content class directly
+# on den.classes (no private namespace — see AGENTS.md), and collects it —
+# across a device's aspect-includes chain (den.aspects.<device>.includes = [
+# den.aspects.ros-base den.aspects.ros-capsman ... ]) — into
 # config.flake.terragruntStacks.<device>.<stack>.
 #
 # `terragruntInputs` is a reserved (non-class) aspect key: each device's own
@@ -21,7 +21,7 @@
 {
   den.reservedKeys = [ "terragruntInputs" ];
 
-  tf.classes."terragrunt-stacks" = { };
+  den.classes."terragrunt-stacks" = { };
 
   den.policies.device-to-terragrunt =
     { device, ... }:

@@ -2,42 +2,19 @@
 # Single "base" stack, depends on rb5009's base stack.
 {
   lib,
-  tf,
+  den,
   config,
   cidrLib,
   ...
 }:
 let
+  rosLib = import ../network/_ros-lib.nix { inherit lib; };
+  inherit (rosLib) toVlanInput sharedInputs;
+
   environment = config.den.environments.prd;
   inherit (environment) networks;
 
-  allVlanIds = lib.sort (a: b: a < b) (lib.mapAttrsToList (_: net: net.vlanId) networks);
-
-  # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
-  # network leaf via root.hcl's `base_inputs`, not just ros/base's own
-  # variables (Terraform just warns and ignores values for variables a
-  # module doesn't declare).
-  sharedInputs = {
-    bridge_name = "bridge1";
-    dns_upstream_servers = [
-      "9.9.9.9"
-      "149.112.112.112"
-    ];
-    mgmt_interface_list = "MANAGEMENT";
-    wan_interface_list = "WAN";
-  };
-
-  # Matches terragrunt-infra-catalog's ros-base module `vlans` variable object shape
-  # (name, vlan_id, mtu?, interface_lists?) — extra fields on
-  # environment.networks entries (cidr, domain, …) are dropped anyway.
-  toVlanInput =
-    net:
-    {
-      inherit (net) name;
-      vlan_id = net.vlanId;
-    }
-    // lib.optionalAttrs (net.mtu != null) { inherit (net) mtu; }
-    // lib.optionalAttrs (net.interfaceLists != [ ]) { interface_lists = net.interfaceLists; };
+  allVlanIds = rosLib.allVlanIds networks;
 in
 {
   den.devices.crs320 = {
@@ -50,10 +27,12 @@ in
       "IP:10.99.0.2"
       "IP:192.168.88.1"
     ];
+    managementHostNum = 2;
+    managementMac = "f4:1e:57:d1:75:94";
   };
 
-  tf.crs320 = {
-    includes = [ tf.ros-base ];
+  den.aspects.crs320 = {
+    includes = [ den.aspects.ros-base ];
 
     terragruntInputs = {
       base = {
@@ -61,7 +40,6 @@ in
         inputs = sharedInputs // {
           hostname = "crs320";
 
-          op_vault = "home-ops";
           op_item_routeros = "CRS320 - user - kid";
 
           routeros_endpoint = "10.99.0.2";
@@ -152,7 +130,7 @@ in
 
           ip_addresses = {
             ether17 = "192.168.88.1/24";
-            Management = "${cidrLib.cidrhost networks.Management.cidr 2}/${toString networks.Management.prefix}";
+            Management = "${cidrLib.cidrhost networks.Management.cidr config.den.devices.crs320.managementHostNum}/${toString networks.Management.prefix}";
           };
 
           dhcp_servers = {

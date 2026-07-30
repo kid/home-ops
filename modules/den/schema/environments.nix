@@ -13,7 +13,7 @@
 # Device aspects read `environment.networks.<name>` for vlan/cidr data.
 {
   lib,
-  tf,
+  den,
   config,
   cidrLib,
   ...
@@ -75,8 +75,8 @@ in
 
             aspect = lib.mkOption {
               type = lib.types.raw;
-              default = tf.${name} or { };
-              defaultText = "tf.<name>";
+              default = den.aspects.${name} or { };
+              defaultText = "den.aspects.<name>";
               description = "Aspect that configures this environment";
             };
           };

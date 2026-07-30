@@ -11,56 +11,27 @@
 #     winning (second) value — same observable result, not a fix.
 {
   lib,
-  tf,
+  den,
   config,
   cidrLib,
   ...
 }:
 let
+  rosLib = import ../network/_ros-lib.nix { inherit lib; };
+  inherit (rosLib) toVlanInput toFirewallVlanInput sharedInputs;
+
   environment = config.den.environments.prd;
   inherit (environment) networks;
 
-  allVlanIds = lib.sort (a: b: a < b) (lib.mapAttrsToList (_: net: net.vlanId) networks);
+  allVlanIds = rosLib.allVlanIds networks;
   routedNetworks = lib.filterAttrs (_: net: net.routed) networks;
-
-  # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
-  # network leaf via root.hcl's `base_inputs`, not just ros/base's own
-  # variables (Terraform just warns and ignores values for variables a
-  # module doesn't declare).
-  sharedInputs = {
-    bridge_name = "bridge1";
-    dns_upstream_servers = [
-      "9.9.9.9"
-      "149.112.112.112"
-    ];
-    mgmt_interface_list = "MANAGEMENT";
-    wan_interface_list = "WAN";
-  };
 
   # Every ros-* stack needs its own onepassword provider auth (1Password
   # item titled "RB5009 - admin", vault "home-ops" — see the K8s
   # ClusterSecretStore convention this mirrors).
   commonInputs = {
     hostname = "rb5009";
-    op_vault = "home-ops";
     op_item_routeros = "RB5009 - user - kid";
-  };
-
-  # Matches terragrunt-infra-catalog's ros-base module `vlans` variable object shape
-  # (name, vlan_id, mtu?, interface_lists?).
-  toVlanInput =
-    net:
-    {
-      inherit (net) name;
-      vlan_id = net.vlanId;
-    }
-    // lib.optionalAttrs (net.mtu != null) { inherit (net) mtu; }
-    // lib.optionalAttrs (net.interfaceLists != [ ]) { interface_lists = net.interfaceLists; };
-
-  # terragrunt-infra-catalog's ros-firewall module `vlans` variable only wants name+vlan_id.
-  toFirewallVlanInput = net: {
-    inherit (net) name;
-    vlan_id = net.vlanId;
   };
 
   cidrHostPrefixed = net: hostnum: "${cidrLib.cidrhost net.cidr hostnum}/${toString net.prefix}";
@@ -84,13 +55,13 @@ in
     ];
   };
 
-  tf.rb5009 = {
+  den.aspects.rb5009 = {
     includes = [
-      tf.ros-base
-      tf.ros-capsman
-      tf.ros-dns
-      tf.ros-firewall
-      tf.ros-qos
+      den.aspects.ros-base
+      den.aspects.ros-capsman
+      den.aspects.ros-dns
+      den.aspects.ros-firewall
+      den.aspects.ros-qos
     ];
 
     terragruntInputs = {
@@ -183,8 +154,8 @@ in
               "${networks.Management.name}" = [
                 {
                   name = "crs320";
-                  mac = "f4:1e:57:d1:75:94";
-                  address = cidrLib.cidrhost networks.Management.cidr 2;
+                  mac = config.den.devices.crs320.managementMac;
+                  address = cidrLib.cidrhost networks.Management.cidr config.den.devices.crs320.managementHostNum;
                 }
                 {
                   name = "capxr0";
@@ -452,7 +423,7 @@ in
                 }
                 {
                   action = "accept";
-                  dst_address = cidrLib.cidrhost networks.Management.cidr 2;
+                  dst_address = cidrLib.cidrhost networks.Management.cidr config.den.devices.crs320.managementHostNum;
                   dst_port = 8729;
                   protocol = "tcp";
                   comment = "Allow access to crs320 for mikrotik-exporter";

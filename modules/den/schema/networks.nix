@@ -13,7 +13,7 @@
 # from environment.cidrBase happens downstream, in env-to-networks, once a
 # network is actually resolved against its environment (a network doesn't
 # have a live handle to its environment entity at registry-definition time).
-{ lib, tf, ... }:
+{ lib, den, ... }:
 {
   config.den.schema.network.isEntity = true;
 
@@ -101,8 +101,8 @@
 
             aspect = lib.mkOption {
               type = lib.types.raw;
-              default = tf.${name} or { };
-              defaultText = "tf.<name>";
+              default = den.aspects.${name} or { };
+              defaultText = "den.aspects.<name>";
               description = "Aspect that configures this network";
             };
           };
