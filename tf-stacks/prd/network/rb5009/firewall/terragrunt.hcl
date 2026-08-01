@@ -115,7 +115,7 @@ inputs = {
     Management = [
       {
         action             = "accept"
-        comment            = "Allow WAN from Management"
+        comment            = "Allow WAN"
         out_interface_list = "WAN"
       },
     ]

@@ -11,12 +11,28 @@
 # replaces. Renaming it is real, live RouterOS infrastructure — see
 # tf-stacks/prd/network/rb5009/**/terragrunt.hcl after `write-terragrunt`
 # regen; requires a human-reviewed terragrunt plan before apply.
-{ den, ... }:
+{
+  den,
+  config,
+  cidrLib,
+  ...
+}:
+let
+  managementCidr = config.den.environments.prd.networks.Management.cidr;
+  # host 1 = rb5009's own address on each VLAN (matches rb5009.nix's own
+  # `cidrHostPrefixed net 1` for its Management address) — external-dns and
+  # the mikrotik-exporter scrape target both talk to the router itself, not
+  # crs320. The forward-chain mikrotik-exporter rule below is the only one
+  # that actually targets crs320's address.
+  rb5009MgmtAddr = cidrLib.cidrhost managementCidr 1;
+  crs320MgmtAddr = cidrLib.cidrhost managementCidr config.den.devices.crs320.managementHostNum;
+in
 {
   den.networks.K3s = {
     environment = "prd";
     vlanId = 40;
     domain = "k3s.home.kidibox.net";
+    internetAccess = true;
   };
 
   den.clusters.prd = {
@@ -58,5 +74,49 @@
   den.aspects.prd.includes = with den.aspects; [
     cilium
     coredns
+  ];
+
+  # Router-access rules this cluster's own infra needs (external-dns/
+  # mikrotik-exporter reaching crs320's management API, LB CIDR routing) —
+  # a `firewall` quirk fragment (den.quirks.firewall), collected onto rb5009
+  # by modules/den/policies/pipes.nix's device-collect-firewall and merged
+  # by modules/network/aspects/ros-firewall.nix into the K3s network's rule
+  # lists. Nothing here is specific to den.aspects.prd — any other cluster
+  # aspect (cilium, coredns, a future one) could contribute its own
+  # `firewall` fragment the same way.
+  den.aspects.prd.firewall = { cluster, ... }: [
+    {
+      inherit (cluster) network;
+      input = [
+        {
+          action = "accept";
+          dst_address = rb5009MgmtAddr;
+          dst_port = 443;
+          protocol = "tcp";
+          comment = "Allow access to Management from K3s for external-dns";
+        }
+        {
+          action = "accept";
+          dst_address = rb5009MgmtAddr;
+          dst_port = 8729;
+          protocol = "tcp";
+          comment = "Allow access to Management from K3s for mikrotik-exporter";
+        }
+      ];
+      forward = [
+        {
+          action = "accept";
+          dst_address = "10.0.42.0/24";
+          comment = "Allow Traffic to load balancer ips";
+        }
+        {
+          action = "accept";
+          dst_address = crs320MgmtAddr;
+          dst_port = 8729;
+          protocol = "tcp";
+          comment = "Allow access to crs320 for mikrotik-exporter";
+        }
+      ];
+    }
   ];
 }

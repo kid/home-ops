@@ -1,9 +1,18 @@
 # Handoff: making `terragrunt-stacks` support `den.quirks`/`pipe.collect`
 
-Status: not started. This is a design note for whoever picks this up next, not a plan that's
-been reviewed/approved for implementation — read it, re-verify the claims against the
-then-current den source (this repo's pinned rev may have moved on), and probably re-plan
-before touching code.
+**Status: resolved.** `modules/terragrunt/collect.nix`'s `instantiate` now routes through a real
+`lib.evalModules` pass (per stack-module, freeform-typed, `specialArgs = { inherit device
+firewall; }`), so quirks/`pipe.collect` do work against `"terragrunt-stacks"` now — see
+`modules/network/aspects/ros-firewall.nix`'s `{ device, firewall ? [ ], ... }:` for a real
+consumer, and `modules/network/aspects/network-internet-access.nix` / `modules/clusters/prd.nix`
+for producers. This answers this doc's own open question 3 ("does this repo actually need this
+at all") with a concrete yes: network-level "internet access" + cluster-level router-access
+firewall rules needed exactly this "many decoupled producers, one consumer" shape. The rest of
+this document is kept as-is below as the historical investigation record — it's still accurate
+about *why* the naive approach failed and what the fix required; see `AGENTS.md`'s "Network /
+Terragrunt" section for the current condensed summary, including two non-obvious gotchas hit
+while implementing the fix (an anonymous companion module in `modules`, and `pipe.collectAll`
+predicates needing to name their target entity kind).
 
 ## Context: why this file exists
 

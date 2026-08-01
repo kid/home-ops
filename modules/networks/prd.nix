@@ -22,12 +22,14 @@ in
       prefix = 16;
       domain = "mgmt.${tld}";
       interfaceLists = [ "MANAGEMENT" ];
+      internetAccess = true;
     };
 
     Servers = {
       environment = "prd";
       vlanId = 10;
       domain = "srv.${tld}";
+      internetAccess = true;
     };
 
     Storage = {
@@ -41,12 +43,14 @@ in
       environment = "prd";
       vlanId = 30;
       domain = "media.${tld}";
+      internetAccess = true;
     };
 
     IotLocal = {
       environment = "prd";
       vlanId = 50;
       domain = "iot-local.${tld}";
+      internetAccess = false;
     };
 
     IotInternet = {
@@ -55,12 +59,14 @@ in
       domain = "iot-internet.${tld}";
       dhcpDnsServers = dnsUpstreamServers;
       dhcpNtpServers = ntpUpstreamServers;
+      internetAccess = true;
     };
 
     Trusted = {
       environment = "prd";
       vlanId = 100;
       domain = "lan.${tld}";
+      internetAccess = true;
     };
 
     Guest = {
@@ -69,6 +75,7 @@ in
       domain = "iot.${tld}";
       dhcpDnsServers = dnsUpstreamServers;
       dhcpNtpServers = ntpUpstreamServers;
+      internetAccess = true;
     };
   };
 }

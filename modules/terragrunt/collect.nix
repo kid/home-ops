@@ -24,25 +24,65 @@
   den.classes."terragrunt-stacks" = { };
 
   den.policies.device-to-terragrunt =
-    { device, ... }:
+    {
+      device,
+      # Quirks a "terragrunt-stacks" content function might request. Policies
+      # (unlike class content functions) receive already-resolved den
+      # context directly, so `firewall` here is the plain, concrete,
+      # pipe-collected list (see device-collect-firewall in
+      # modules/den/policies/pipes.nix) — not a deferred/curried value. It's
+      # threaded into `specialArgs` below so a real per-stack evalModules
+      # pass can hand it straight to whichever content function names it,
+      # without falling back to `config._module.args.<name>` (which would
+      # recurse forever inside our isolated per-stack evalModules call,
+      # since nothing in that tiny module list defines it).
+      firewall ? [ ],
+      ...
+    }:
     [
       (den.lib.policy.instantiate {
         name = "${device.name}-terragrunt";
         class = "terragrunt-stacks";
         # Each item in `modules` arrives den-wrapped as a NixOS-module-style
-        # { imports = [ <our plain attrset> ]; ... } (den hands this list
-        # straight to consumers like terranix's own lib.evalModules-based
-        # `modules` option; we want the plain data instead).
+        # { imports = [ <our plain attrset, or a lib.setFunctionArgs-curried
+        # function if the aspect requested a den.quirks value> ]; ... }.
+        # Route each one through its own real evalModules pass (one per
+        # stack-module, not one shared call across the device's whole stack
+        # list — every aspect sets the same `stack` key to a different value,
+        # which a single shared evalModules call rejects as "option `stack'
+        # is defined multiple times") so a deferred quirk-consuming aspect
+        # actually gets invoked instead of read as raw, unresolved data. The
+        # freeform type lets ros-*.nix content functions keep returning
+        # plain attrsets — no options.* declarations needed anywhere.
         instantiate =
           { modules, ... }:
           lib.listToAttrs (
             map (
               m:
               let
-                content = builtins.head m.imports;
+                # `modules` isn't only real per-aspect content — den also
+                # injects an anonymous, key-less companion module alongside
+                # any quirk-requesting entry (requests `config` itself, to
+                # ambiguity-check the quirk against sibling producers; meant
+                # to run inside den's own full-scope evalModules pass, not
+                # this isolated per-stack one — evaluating it here recurses
+                # forever). Real per-aspect content always carries a `key`
+                # (confirmed empirically: every actual ros-*.nix stack entry
+                # has one, the auxiliary validator doesn't); skip anything
+                # without one.
+                evaluated = lib.evalModules {
+                  modules = [
+                    (builtins.head m.imports)
+                    { _module.freeformType = lib.types.attrsOf lib.types.raw; }
+                  ];
+                  specialArgs = {
+                    inherit device firewall;
+                  };
+                };
+                content = evaluated.config;
               in
               lib.nameValuePair content.stack (removeAttrs content [ "stack" ])
-            ) modules
+            ) (builtins.filter (m: m ? key) modules)
           );
         intoAttr = [
           "terragruntStacks"

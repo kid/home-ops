@@ -105,6 +105,17 @@
               defaultText = "den.aspects.<name>";
               description = "Aspect that configures this network";
             };
+
+            internetAccess = lib.mkOption {
+              type = lib.types.nullOr lib.types.bool;
+              default = null;
+              description = ''
+                Whether this network gets an auto-generated "Allow WAN" forward-chain rule
+                (modules/network/aspects/network-internet-access.nix). null = no rule at all
+                (e.g. Storage); true = enabled; false = declared but disabled (e.g. IotLocal,
+                not yet ready to go live).
+              '';
+            };
           };
         }
       )

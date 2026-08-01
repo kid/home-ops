@@ -348,6 +348,11 @@ in
           // {
             vlans = lib.mapAttrs (_: toFirewallVlanInput) routedNetworks;
 
+            # Only genuinely device/topology-specific rules stay here — the
+            # per-network "Allow WAN" rule (den.networks.<name>.internetAccess)
+            # and K3s's cluster-specific rules (den.aspects.prd.firewall, in
+            # modules/clusters/prd.nix) now arrive via the `firewall` quirk,
+            # merged in by modules/network/aspects/ros-firewall.nix.
             vlans_input_rules = {
               "${networks.Trusted.name}" = [
                 {
@@ -356,54 +361,17 @@ in
                   comment = "Allow access to Management from Trusted";
                 }
               ];
-              "${networks.K3s.name}" = [
-                {
-                  action = "accept";
-                  dst_address = cidrLib.cidrhost networks.Management.cidr 1;
-                  dst_port = 443;
-                  protocol = "tcp";
-                  comment = "Allow access to Management from K3s for external-dns";
-                }
-                {
-                  action = "accept";
-                  dst_address = cidrLib.cidrhost networks.Management.cidr 1;
-                  dst_port = 8729;
-                  protocol = "tcp";
-                  comment = "Allow access to Management from K3s for mikrotik-exporter";
-                }
-              ];
             };
 
             vlans_forward_rules = {
-              "${networks.Management.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN from Management";
-                }
-              ];
               "${networks.Servers.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN";
-                }
                 {
                   action = "accept";
                   out_interface_list = "all";
                   comment = "Allow access to all vlans"; # Because HomeAssistant lives here at the moment
                 }
               ];
-              # NB: the hand-written firewall/terragrunt.hcl defines this key
-              # ("Media") twice; HCL's object-constructor keeps only the last
-              # occurrence, so the first (WAN-only) rule set was already dead.
-              # Only the winning (second) value is encoded here.
               "${networks.Media.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN";
-                }
                 {
                   action = "accept";
                   dst_address = "10.0.10.101";
@@ -411,46 +379,7 @@ in
                   comment = "Allow cloudflared access to HomeAssistant";
                 }
               ];
-              "${networks.K3s.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN";
-                }
-                {
-                  action = "accept";
-                  dst_address = "10.0.42.0/24";
-                  comment = "Allow Traffic to load balancer ips";
-                }
-                {
-                  action = "accept";
-                  dst_address = cidrLib.cidrhost networks.Management.cidr config.den.devices.crs320.managementHostNum;
-                  dst_port = 8729;
-                  protocol = "tcp";
-                  comment = "Allow access to crs320 for mikrotik-exporter";
-                }
-              ];
-              "${networks.IotLocal.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN";
-                  disabled = true;
-                }
-              ];
-              "${networks.IotInternet.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN";
-                }
-              ];
               "${networks.Trusted.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN";
-                }
                 {
                   action = "accept";
                   out_interface = networks.Management.name;
@@ -460,13 +389,6 @@ in
                   action = "accept";
                   out_interface_list = "all";
                   comment = "Allow access to all vlans";
-                }
-              ];
-              "${networks.Guest.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN";
                 }
               ];
             };
