@@ -14,6 +14,13 @@ Terragrunt" section for the current condensed summary, including two non-obvious
 while implementing the fix (an anonymous companion module in `modules`, and `pipe.collectAll`
 predicates needing to name their target entity kind).
 
+**Naming note**: everywhere below, the `device` entity kind (`den.devices`, `{ device, ... }:`,
+`modules/devices/*.nix`) refers to what's since been renamed `routerosDevice`
+(`den.routerosDevices`, `{ routerosDevice, ... }:`, `modules/routerosDevices/*.nix`) — the name
+`den.devices`/`modules/devices/` was freed up for a separate, unrelated client-device registry.
+Left as-is below since this is a point-in-time record of the investigation as it actually
+happened.
+
 ## Context: why this file exists
 
 While improving `modules/network/` (den user-registry work, dropping the private `tf`

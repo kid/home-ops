@@ -18,7 +18,12 @@
 }:
 let
   rosLib = import ../network/_ros-lib.nix { inherit lib cidrLib; };
-  inherit (rosLib) toVlanInput toFirewallVlanInput sharedInputs;
+  inherit (rosLib)
+    toVlanInput
+    toFirewallVlanInput
+    sharedInputs
+    staticLeasesByNetwork
+    ;
 
   environment = config.den.environments.prd;
   inherit (environment) networks;
@@ -44,7 +49,7 @@ let
     net: if net.dhcpNtpServers != null then net.dhcpNtpServers else [ (cidrLib.cidrhost net.cidr 1) ];
 in
 {
-  den.devices.rb5009 = {
+  den.routerosDevices.rb5009 = {
     environment = "prd";
     hostname = "rb5009";
     routerosEndpoint = "10.99.0.1";
@@ -151,120 +156,7 @@ in
               ntp_servers = ntpServersFor net;
             }) routedNetworks;
 
-            dhcp_static_leases = {
-              "${networks.Management.name}" = [
-                {
-                  name = "crs320";
-                  mac = config.den.devices.crs320.managementMac;
-                  address = cidrLib.cidrhost networks.Management.cidr config.den.devices.crs320.managementHostNum;
-                }
-                {
-                  name = "capxr0";
-                  mac = "48:a9:8a:cc:6d:62";
-                  address = cidrLib.cidrhost networks.Management.cidr 10;
-                }
-                {
-                  name = "capxr1";
-                  mac = "48:a9:8a:ba:2a:6e";
-                  address = cidrLib.cidrhost networks.Management.cidr 11;
-                }
-                {
-                  name = "pve0-ipmi";
-                  mac = "d0:50:99:f7:ee:15";
-                  address = cidrLib.cidrhost networks.Management.cidr ((networks.Servers.vlanId * 256) + 10);
-                }
-                {
-                  name = "pikvm";
-                  mac = "dc:a6:32:06:69:9a";
-                  address = cidrLib.cidrhost networks.Management.cidr ((networks.Servers.vlanId * 256) + 11);
-                }
-              ];
-              "${networks.Servers.name}" = [
-                {
-                  name = "pve0";
-                  mac = "a6:34:58:9f:98:09";
-                  address = cidrLib.cidrhost networks.Servers.cidr 10;
-                }
-                {
-                  name = "pve1";
-                  mac = "be:4f:11:f4:ba:61";
-                  address = cidrLib.cidrhost networks.Servers.cidr 11;
-                }
-                {
-                  name = "homeassistant";
-                  mac = "52:54:00:93:9b:8f";
-                  address = cidrLib.cidrhost networks.Servers.cidr 101;
-                }
-              ];
-              "${networks.Media.name}" = [
-                {
-                  name = "cloudflared1";
-                  mac = "bc:24:11:bf:d2:cb";
-                  address = cidrLib.cidrhost networks.Media.cidr 11;
-                }
-                {
-                  name = "truenas";
-                  mac = "bc:24:11:9f:50:bf";
-                  address = cidrLib.cidrhost networks.Media.cidr 126;
-                }
-              ];
-              "${networks.Trusted.name}" = [
-                {
-                  name = "everything-presence-lite-20b1c4";
-                  mac = "08:d1:f9:20:b1:c4";
-                  address = cidrLib.cidrhost networks.Trusted.cidr 108;
-                }
-                {
-                  name = "prtsrv";
-                  mac = "bc:24:11:42:5b:fc";
-                  address = cidrLib.cidrhost networks.Trusted.cidr 137;
-                }
-                {
-                  name = "shield";
-                  mac = "48:b0:2d:18:ec:cd";
-                  address = cidrLib.cidrhost networks.Trusted.cidr 212;
-                }
-              ];
-              "${networks.IotLocal.name}" = [
-                {
-                  name = "doorbell";
-                  mac = "ec:71:db:26:a9:37";
-                  address = cidrLib.cidrhost networks.IotLocal.cidr 10;
-                }
-                {
-                  name = "litters camera";
-                  mac = "e0:01:c7:e4:e0:f3";
-                  address = cidrLib.cidrhost networks.IotLocal.cidr 11;
-                }
-                {
-                  name = "LGwebOSTV";
-                  mac = "f0:86:20:10:84:18";
-                  address = cidrLib.cidrhost networks.IotLocal.cidr 20;
-                }
-                {
-                  name = "denon";
-                  mac = "00:06:78:40:24:0a";
-                  address = cidrLib.cidrhost networks.IotLocal.cidr 21;
-                }
-                {
-                  name = "Somfy Box";
-                  mac = "88:12:ac:04:36:44";
-                  address = cidrLib.cidrhost networks.IotLocal.cidr 30;
-                }
-              ];
-              "${networks.IotInternet.name}" = [
-                {
-                  name = "roborock-vacuum-a38";
-                  mac = "b0:4a:39:98:1c:cb";
-                  address = cidrLib.cidrhost networks.IotInternet.cidr 30;
-                }
-                {
-                  name = "dreame_vacuum_r2465a";
-                  mac = "70:c9:32:4e:21:7d";
-                  address = cidrLib.cidrhost networks.IotInternet.cidr 31;
-                }
-              ];
-            };
+            dhcp_static_leases = staticLeasesByNetwork config.den.devices;
           };
       };
 

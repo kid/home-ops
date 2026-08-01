@@ -6,7 +6,7 @@
 # fans environment -> cluster, and den.schema.cluster's `aspect` field
 # (modules/den/schema/clusters.nix) already self-provides
 # `den.aspects.<cluster.name>` via den's built-in selfProvide mechanism —
-# the same convention already used for `network`/`device`/`environment` in
+# the same convention already used for `network`/`routerosDevice`/`environment` in
 # this repo, so no explicit "walk den.aspects by name" policy is needed.
 {
   lib,
@@ -27,7 +27,7 @@
 
   # Instantiate each cluster's collected k8s-manifests content into a real
   # nixidy environment, per system (mirrors modules/terragrunt/collect.nix's
-  # device-to-terragrunt: den.lib.policy.instantiate on a class, walking the
+  # routeros-device-to-terragrunt: den.lib.policy.instantiate on a class, walking the
   # cluster's own aspect-includes chain). Unlike that pipeline, nixidy's own
   # module system expects the den-wrapped `{ imports = [...]; }` module list
   # verbatim — no unwrapping to plain data here.

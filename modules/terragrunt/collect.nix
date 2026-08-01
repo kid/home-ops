@@ -3,16 +3,18 @@
 # Modeled on nixopslab's modules/terranix/collect.nix host-to-terranix
 # policy: registers "terragrunt-stacks" as an aspect content class directly
 # on den.classes (no private namespace — see AGENTS.md), and collects it —
-# across a device's aspect-includes chain (den.aspects.<device>.includes = [
-# den.aspects.ros-base den.aspects.ros-capsman ... ]) — into
-# config.flake.terragruntStacks.<device>.<stack>.
+# across a routerosDevice's aspect-includes chain
+# (den.aspects.<routerosDevice>.includes = [ den.aspects.ros-base
+# den.aspects.ros-capsman ... ]) — into
+# config.flake.terragruntStacks.<routerosDevice>.<stack>.
 #
 # `terragruntInputs` is a reserved (non-class) aspect key: each device's own
-# self-aspect (modules/devices/*.nix) precomputes its per-stack {dependsOn,
-# inputs} data there (cidrhost() etc. need modules/network/lib.nix's
-# cidrLib, an ordinary module arg den's aspect-content functions can't see —
-# see modules/devices/rb5009.nix), and the thin, shared ros-<stack> aspects
-# (modules/network/aspects/ros-*.nix) just look it up by stack name.
+# self-aspect (modules/routerosDevices/*.nix) precomputes its per-stack
+# {dependsOn, inputs} data there (cidrhost() etc. need modules/network/
+# lib.nix's cidrLib, an ordinary module arg den's aspect-content functions
+# can't see — see modules/routerosDevices/rb5009.nix), and the thin, shared
+# ros-<stack> aspects (modules/network/aspects/ros-*.nix) just look it up by
+# stack name.
 {
   lib,
   den,
@@ -23,13 +25,13 @@
 
   den.classes."terragrunt-stacks" = { };
 
-  den.policies.device-to-terragrunt =
+  den.policies.routeros-device-to-terragrunt =
     {
-      device,
+      routerosDevice,
       # Quirks a "terragrunt-stacks" content function might request. Policies
       # (unlike class content functions) receive already-resolved den
       # context directly, so `firewall` here is the plain, concrete,
-      # pipe-collected list (see device-collect-firewall in
+      # pipe-collected list (see routeros-device-collect-firewall in
       # modules/den/policies/pipes.nix) — not a deferred/curried value. It's
       # threaded into `specialArgs` below so a real per-stack evalModules
       # pass can hand it straight to whichever content function names it,
@@ -41,7 +43,7 @@
     }:
     [
       (den.lib.policy.instantiate {
-        name = "${device.name}-terragrunt";
+        name = "${routerosDevice.name}-terragrunt";
         class = "terragrunt-stacks";
         # Each item in `modules` arrives den-wrapped as a NixOS-module-style
         # { imports = [ <our plain attrset, or a lib.setFunctionArgs-curried
@@ -76,7 +78,7 @@
                     { _module.freeformType = lib.types.attrsOf lib.types.raw; }
                   ];
                   specialArgs = {
-                    inherit device firewall;
+                    inherit routerosDevice firewall;
                   };
                 };
                 content = evaluated.config;
@@ -86,10 +88,10 @@
           );
         intoAttr = [
           "terragruntStacks"
-          device.name
+          routerosDevice.name
         ];
       })
     ];
 
-  den.schema.device.includes = [ den.policies.device-to-terragrunt ];
+  den.schema.routerosDevice.includes = [ den.policies.routeros-device-to-terragrunt ];
 }

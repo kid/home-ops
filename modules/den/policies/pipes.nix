@@ -13,17 +13,17 @@ in
   # (den's findMatchingAll requires the predicate to name the target entity
   # kind as a real arg), which is what this actually was until now: silently
   # dead, since nothing has consumed `k3s-nodes` yet to notice. See
-  # device-collect-firewall below for how this was found.
+  # routeros-device-collect-firewall below for how this was found.
   den.policies.cluster-collect-k3s-nodes = _: [
     (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
 
   # Collects the `firewall` quirk (den.quirks.firewall — rule fragments
   # emitted by network/cluster/etc. aspects, see modules/den/quirks/
-  # firewall.nix) onto every device, exposed as the `firewall` list arg to
-  # any terragrunt-stacks module that names it (currently only
+  # firewall.nix) onto every RouterOS device, exposed as the `firewall` list
+  # arg to any terragrunt-stacks module that names it (currently only
   # modules/network/aspects/ros-firewall.nix, on rb5009).
-  den.policies.device-collect-firewall = _: [
+  den.policies.routeros-device-collect-firewall = _: [
     (pipe.from "firewall" [
       # Predicate arg names double as the entity-kind filter (den's
       # findMatchingAll requires a predicate's declared entity-kind args to
@@ -38,5 +38,5 @@ in
     ])
   ];
 
-  den.schema.device.includes = [ den.policies.device-collect-firewall ];
+  den.schema.routerosDevice.includes = [ den.policies.routeros-device-collect-firewall ];
 }

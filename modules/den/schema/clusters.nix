@@ -2,7 +2,7 @@
 #
 # Ported from nixopslab's modules/den/schema/clusters.nix. A cluster is a
 # k3s Kubernetes cluster (NixOS hosts, not RouterOS devices) — a sibling
-# entity to `network`/`device` under `environment`, sharing the same
+# entity to `network`/`routerosDevice` under `environment`, sharing the same
 # `den.environments.<name>` (see modules/den/policies/fleet.nix's
 # `env-to-clusters`).
 #

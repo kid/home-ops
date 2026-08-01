@@ -13,7 +13,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13"
     ];
-    devices.rb5009.group = "full"; # TODO verify, ported from existing placeholder
-    devices.crs320.group = "full"; # TODO verify, ported from existing placeholder
+    routerosDevices.rb5009.group = "full"; # TODO verify, ported from existing placeholder
+    routerosDevices.crs320.group = "full"; # TODO verify, ported from existing placeholder
   };
 }

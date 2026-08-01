@@ -133,17 +133,32 @@ inputs = {
   dhcp_static_leases = {
     IotInternet = [
       {
-        address = "10.0.51.30"
-        mac     = "b0:4a:39:98:1c:cb"
-        name    = "roborock-vacuum-a38"
-      },
-      {
         address = "10.0.51.31"
         mac     = "70:c9:32:4e:21:7d"
         name    = "dreame_vacuum_r2465a"
       },
+      {
+        address = "10.0.51.30"
+        mac     = "b0:4a:39:98:1c:cb"
+        name    = "roborock-vacuum-a38"
+      },
     ]
     IotLocal = [
+      {
+        address = "10.0.50.20"
+        mac     = "f0:86:20:10:84:18"
+        name    = "LGwebOSTV"
+      },
+      {
+        address = "10.0.50.30"
+        mac     = "88:12:ac:04:36:44"
+        name    = "Somfy Box"
+      },
+      {
+        address = "10.0.50.21"
+        mac     = "00:06:78:40:24:0a"
+        name    = "denon"
+      },
       {
         address = "10.0.50.10"
         mac     = "ec:71:db:26:a9:37"
@@ -154,28 +169,8 @@ inputs = {
         mac     = "e0:01:c7:e4:e0:f3"
         name    = "litters camera"
       },
-      {
-        address = "10.0.50.20"
-        mac     = "f0:86:20:10:84:18"
-        name    = "LGwebOSTV"
-      },
-      {
-        address = "10.0.50.21"
-        mac     = "00:06:78:40:24:0a"
-        name    = "denon"
-      },
-      {
-        address = "10.0.50.30"
-        mac     = "88:12:ac:04:36:44"
-        name    = "Somfy Box"
-      },
     ]
     Management = [
-      {
-        address = "10.99.0.2"
-        mac     = "f4:1e:57:d1:75:94"
-        name    = "crs320"
-      },
       {
         address = "10.99.0.10"
         mac     = "48:a9:8a:cc:6d:62"
@@ -187,14 +182,19 @@ inputs = {
         name    = "capxr1"
       },
       {
-        address = "10.99.10.10"
-        mac     = "d0:50:99:f7:ee:15"
-        name    = "pve0-ipmi"
+        address = "10.99.0.2"
+        mac     = "f4:1e:57:d1:75:94"
+        name    = "crs320"
       },
       {
         address = "10.99.10.11"
         mac     = "dc:a6:32:06:69:9a"
         name    = "pikvm"
+      },
+      {
+        address = "10.99.10.10"
+        mac     = "d0:50:99:f7:ee:15"
+        name    = "pve0-ipmi"
       },
     ]
     Media = [
@@ -211,6 +211,11 @@ inputs = {
     ]
     Servers = [
       {
+        address = "10.0.10.101"
+        mac     = "52:54:00:93:9b:8f"
+        name    = "homeassistant"
+      },
+      {
         address = "10.0.10.10"
         mac     = "a6:34:58:9f:98:09"
         name    = "pve0"
@@ -219,11 +224,6 @@ inputs = {
         address = "10.0.10.11"
         mac     = "be:4f:11:f4:ba:61"
         name    = "pve1"
-      },
-      {
-        address = "10.0.10.101"
-        mac     = "52:54:00:93:9b:8f"
-        name    = "homeassistant"
       },
     ]
     Trusted = [

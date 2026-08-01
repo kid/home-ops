@@ -2,9 +2,9 @@
 _: {
   den.aspects.ros-dns = {
     "terragrunt-stacks" =
-      { device, ... }:
+      { routerosDevice, ... }:
       let
-        stack = device.aspect.terragruntInputs.dns;
+        stack = routerosDevice.aspect.terragruntInputs.dns;
       in
       {
         stack = "dns";

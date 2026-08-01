@@ -1,10 +1,11 @@
 # Fleet topology policies.
 #
-# Wires the scope tree: flake -> fleet -> environment -> {network, device,
-# cluster}. Adapted from nix-config's modules/den/policies/fleet.nix (itself
-# the model nixopslab's environment.nix points at), dropping the
-# user-access/grant machinery — not needed for a fleet of RouterOS devices —
-# and walking den.devices/den.networks instead of den.hosts.
+# Wires the scope tree: flake -> fleet -> environment -> {network,
+# routerosDevice, cluster}. Adapted from nix-config's modules/den/policies/
+# fleet.nix (itself the model nixopslab's environment.nix points at),
+# dropping the user-access/grant machinery — not needed for a fleet of
+# RouterOS devices — and walking den.routerosDevices/den.networks instead of
+# den.hosts.
 {
   lib,
   den,
@@ -36,18 +37,18 @@ in
       }
     ) environments;
 
-  # environment -> devices: walk den.devices whose environment matches.
-  den.policies.env-to-devices =
+  # environment -> routerosDevices: walk den.routerosDevices whose environment matches.
+  den.policies.env-to-routeros-devices =
     { environment, ... }:
     lib.concatMap (
-      deviceName:
+      routerosDeviceName:
       let
-        deviceCfg = den.devices.${deviceName};
+        routerosDeviceCfg = den.routerosDevices.${routerosDeviceName};
       in
-      lib.optionals (deviceCfg.environment == environment.name) [
-        (resolve.to "device" { device = deviceCfg; })
+      lib.optionals (routerosDeviceCfg.environment == environment.name) [
+        (resolve.to "routerosDevice" { routerosDevice = routerosDeviceCfg; })
       ]
-    ) (builtins.attrNames den.devices);
+    ) (builtins.attrNames den.routerosDevices);
 
   # environment -> networks: walk den.networks whose environment matches.
   # A future entity kind (e.g. a k3s cluster) could contribute its own VLAN
@@ -81,7 +82,7 @@ in
   den.schema.flake.includes = [ den.policies.to-fleet ];
   den.schema.fleet.includes = [ den.policies.fleet-to-envs ];
   den.schema.environment.includes = [
-    den.policies.env-to-devices
+    den.policies.env-to-routeros-devices
     den.policies.env-to-networks
     den.policies.env-to-clusters
   ];

@@ -1,20 +1,35 @@
-# Device entity schema and instance registry.
+# Network client-device registry — a Proxmox host, a camera, a vacuum robot,
+# ... anything with a known MAC/host-number/VLAN, used to derive
+# `dhcp_static_leases` dynamically (modules/network/_ros-lib.nix's
+# `staticLeasesByNetwork`, wired in modules/routerosDevices/rb5009.nix).
 #
-# A RouterOS device (rb5009, crs320, …) — deliberately its own den entity
-# kind rather than den.hosts (den's builtin NixOS/home-manager host entity),
-# so a future Talos/NixOS host migration into this repo doesn't collide with
-# it. den.devices.<name>.includes = [ ros-base ros-capsman ... ] (via the
-# .aspect field below, looked up from den.aspects.<name> — same convention
-# clusters.nix already uses) contributes `terragrunt-stacks` class content,
-# collected by modules/terragrunt/collect.nix.
-{ lib, den, ... }:
+# Deliberately flat/non-entity — no isEntity, no resolve.to/scope-tree walk
+# — same reasoning already established for den.users.registry (see
+# AGENTS.md's "Users" section): a single registry, read directly by a single
+# consumer, no "many decoupled producers" problem to solve.
+#
+# Not to be confused with `den.routerosDevices` (modules/den/schema/
+# routerosDevices.nix) — the RouterOS boxes (rb5009, crs320) themselves,
+# a real scope-tree entity kind with its own Terraform/Terragrunt stacks.
 {
-  config.den.schema.device.isEntity = true;
-
+  lib,
+  config,
+  cidrLib,
+  ...
+}:
+let
+  # `config` inside the submodule below is that device's own resolved config
+  # (shadowing this one) — capture the flake-root config here so `address`'s
+  # `default` can still reach den.networks/den.environments, same pattern
+  # modules/den/schema/environments.nix uses for its own computed `networks`
+  # field.
+  rootConfig = config;
+in
+{
   options.den.devices = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
-        { name, ... }:
+        { name, config, ... }:
         {
           options = {
             name = lib.mkOption {
@@ -23,59 +38,40 @@
               description = "Device name";
             };
 
-            environment = lib.mkOption {
+            network = lib.mkOption {
               type = lib.types.str;
-              description = "Name of the den.environments entry this device belongs to";
+              description = "Name of the den.networks entry this device is on";
             };
 
-            hostname = lib.mkOption {
+            hostNum = lib.mkOption {
+              type = lib.types.ints.unsigned;
+              description = "Host number within the network's CIDR (can be an arbitrary computed expression, e.g. for a device whose address encodes a different VLAN's numbering scheme)";
+            };
+
+            mac = lib.mkOption {
               type = lib.types.str;
-              default = name;
-              description = "RouterOS hostname (system identity)";
+              description = "MAC address";
             };
 
-            routerosEndpoint = lib.mkOption {
+            # Resolved directly here (not left to every consumer to redo
+            # cidrLib.cidrhost themselves) — consumers just read
+            # config.den.devices.<name>.address.
+            address = lib.mkOption {
               type = lib.types.str;
-              description = "Address (host[:port] or URL) the routeros provider connects to";
-            };
-
-            certificateAltNames = lib.mkOption {
-              type = lib.types.listOf lib.types.str;
-              default = [ ];
-              description = "Subject alt names for this device's TLS certificate";
-            };
-
-            # This device's own address/MAC on the Management VLAN, if it's
-            # directly addressable there — the single source of truth for
-            # other devices that need to reference it (e.g. rb5009's
-            # dhcp_static_leases/firewall-rule entries for crs320), instead
-            # of duplicating the literal. Single producer (this device's own
-            # declaration) / single consumer (whichever device reads it) —
-            # a plain field read, not resolve.to/quirks, same reasoning as
-            # den.users.registry (see AGENTS.md's Users section).
-            managementHostNum = lib.mkOption {
-              type = lib.types.nullOr lib.types.ints.unsigned;
-              default = null;
-              description = "This device's own host-number on the Management VLAN";
-            };
-
-            managementMac = lib.mkOption {
-              type = lib.types.nullOr lib.types.str;
-              default = null;
-              description = "This device's own MAC address on the Management VLAN";
-            };
-
-            aspect = lib.mkOption {
-              type = lib.types.raw;
-              default = den.aspects.${name} or { };
-              defaultText = "den.aspects.<name>";
-              description = "Aspect that configures this device";
+              default =
+                let
+                  networkCfg = rootConfig.den.networks.${config.network};
+                  envNetworks = rootConfig.den.environments.${networkCfg.environment}.networks;
+                in
+                cidrLib.cidrhost envNetworks.${config.network}.cidr config.hostNum;
+              defaultText = "cidrLib.cidrhost <network's resolved cidr> hostNum";
+              description = "Resolved IP address (network.cidr host'd at hostNum)";
             };
           };
         }
       )
     );
     default = { };
-    description = "RouterOS device entity registry for den";
+    description = "Network client device registry (hostname/MAC/host-number/VLAN) — used to derive dhcp_static_leases";
   };
 }

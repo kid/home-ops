@@ -64,7 +64,9 @@ let
         # host-side access-grant machinery above — read directly by
         # modules/network/aspects/ros-base.nix (see plan for why this
         # doesn't go through resolve.to/quirks like the NixOS side does).
-        devices = lib.mkOption {
+        # Keyed by den.routerosDevices.<name> name (not den.devices, the
+        # unrelated network client-device registry).
+        routerosDevices = lib.mkOption {
           type = lib.types.attrsOf (
             lib.types.submodule {
               options = {

@@ -15,9 +15,12 @@ let
   inherit (environment) networks;
 
   allVlanIds = rosLib.allVlanIds networks;
+
+  managementHostNum = 2;
+  managementMac = "f4:1e:57:d1:75:94";
 in
 {
-  den.devices.crs320 = {
+  den.routerosDevices.crs320 = {
     environment = "prd";
     hostname = "crs320";
     routerosEndpoint = "10.99.0.2";
@@ -27,8 +30,16 @@ in
       "IP:10.99.0.2"
       "IP:192.168.88.1"
     ];
-    managementHostNum = 2;
-    managementMac = "f4:1e:57:d1:75:94";
+  };
+
+  # crs320's own entry in the network client-device registry — its
+  # Management-VLAN address/MAC, the single source of truth other
+  # routerosDevices/aspects reference (e.g. rb5009's dhcp_static_leases/
+  # firewall-rule entries for crs320, via config.den.devices.crs320).
+  den.devices.crs320 = {
+    network = "Management";
+    hostNum = managementHostNum;
+    mac = managementMac;
   };
 
   den.aspects.crs320 = {
@@ -126,7 +137,7 @@ in
 
           ip_addresses = {
             ether17 = "192.168.88.1/24";
-            Management = "${cidrLib.cidrhost networks.Management.cidr config.den.devices.crs320.managementHostNum}/${toString networks.Management.prefix}";
+            Management = "${config.den.devices.crs320.address}/${toString networks.Management.prefix}";
           };
 
           dhcp_servers = {

@@ -1,8 +1,8 @@
 # Renders config.flake.terragruntStacks (modules/terragrunt/collect.nix) to
-# tf-stacks/<env>/network/<device>/[<stack>/]terragrunt.hcl, exposed as
-# `nix run .#write-terragrunt` (mirrors apps.write-manifests/write-terraform
-# elsewhere in the dendritic ecosystem) + `checks.terragrunt` (diffs
-# generated vs. committed, like checks.terraform/checks.cluster-inventory).
+# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl, exposed
+# as `nix run .#write-terragrunt` (mirrors apps.write-manifests/
+# write-terraform elsewhere in the dendritic ecosystem) + `checks.terragrunt`
+# (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
 {
   config,
   lib,
@@ -12,34 +12,34 @@
 let
   inherit (import ./_render-lib.nix { inherit lib; }) toValue;
 
-  devicesByName = config.den.devices;
+  routerosDevicesByName = config.den.routerosDevices;
 
   leafRelPath =
-    deviceName: stack:
+    routerosDeviceName: stack:
     let
-      envName = devicesByName.${deviceName}.environment;
+      envName = routerosDevicesByName.${routerosDeviceName}.environment;
     in
     if stack == "base" then
-      "tf-stacks/${envName}/network/${deviceName}/terragrunt.hcl"
+      "tf-stacks/${envName}/network/${routerosDeviceName}/terragrunt.hcl"
     else
-      "tf-stacks/${envName}/network/${deviceName}/${stack}/terragrunt.hcl";
+      "tf-stacks/${envName}/network/${routerosDeviceName}/${stack}/terragrunt.hcl";
 
-  # Every stack's directory sits one level (base: network/<device>/) or two
-  # levels (non-base: network/<device>/<stack>/) below `network/`; a
-  # dependency always targets another device's *base* stack, which always
-  # lives directly at network/<toDevice>/.
-  relPathToDeviceBase =
+  # Every stack's directory sits one level (base: network/<routerosDevice>/)
+  # or two levels (non-base: network/<routerosDevice>/<stack>/) below
+  # `network/`; a dependency always targets another device's *base* stack,
+  # which always lives directly at network/<toRouterosDevice>/.
+  relPathToRouterosDeviceBase =
     {
       fromStack,
-      toDevice,
+      toRouterosDevice,
     }:
     let
       upLevels = if fromStack == "base" then 1 else 2;
     in
-    (lib.concatStrings (lib.replicate upLevels "../")) + toDevice;
+    (lib.concatStrings (lib.replicate upLevels "../")) + toRouterosDevice;
 
   renderLeaf =
-    _deviceName: stack: leaf:
+    _routerosDeviceName: stack: leaf:
     let
       dependenciesBlock = lib.optionalString (leaf.dependsOn != [ ]) ''
 
@@ -47,10 +47,10 @@ let
           paths = ${
             toValue (
               map (
-                toDevice:
-                relPathToDeviceBase {
+                toRouterosDevice:
+                relPathToRouterosDeviceBase {
                   fromStack = stack;
-                  inherit toDevice;
+                  inherit toRouterosDevice;
                 }
               ) leaf.dependsOn
             )
@@ -75,10 +75,10 @@ let
 
   allLeaves = lib.flatten (
     lib.mapAttrsToList (
-      deviceName: stacks:
+      routerosDeviceName: stacks:
       lib.mapAttrsToList (stack: leaf: {
-        path = leafRelPath deviceName stack;
-        content = renderLeaf deviceName stack leaf;
+        path = leafRelPath routerosDeviceName stack;
+        content = renderLeaf routerosDeviceName stack leaf;
       }) stacks
     ) (config.flake.terragruntStacks or { })
   );

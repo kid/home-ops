@@ -25,7 +25,7 @@ let
   # crs320. The forward-chain mikrotik-exporter rule below is the only one
   # that actually targets crs320's address.
   rb5009MgmtAddr = cidrLib.cidrhost managementCidr 1;
-  crs320MgmtAddr = cidrLib.cidrhost managementCidr config.den.devices.crs320.managementHostNum;
+  crs320MgmtAddr = config.den.devices.crs320.address;
 in
 {
   den.networks.K3s = {
@@ -79,7 +79,7 @@ in
   # Router-access rules this cluster's own infra needs (external-dns/
   # mikrotik-exporter reaching crs320's management API, LB CIDR routing) —
   # a `firewall` quirk fragment (den.quirks.firewall), collected onto rb5009
-  # by modules/den/policies/pipes.nix's device-collect-firewall and merged
+  # by modules/den/policies/pipes.nix's routeros-device-collect-firewall and merged
   # by modules/network/aspects/ros-firewall.nix into the K3s network's rule
   # lists. Nothing here is specific to den.aspects.prd — any other cluster
   # aspect (cilium, coredns, a future one) could contribute its own

@@ -4,7 +4,7 @@
 #
 # Only covers *custom* RouterOS groups. Built-in groups (full, write, read)
 # already exist on every router and are referenced by name in
-# den.users.registry.<name>.devices.<device>.group without needing an entry
+# den.users.registry.<name>.routerosDevices.<device>.group without needing an entry
 # here — same as today's placeholder, which never declares "full" either.
 { lib, ... }:
 {

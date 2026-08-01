@@ -3,9 +3,9 @@
 _: {
   den.aspects.ros-capsman = {
     "terragrunt-stacks" =
-      { device, ... }:
+      { routerosDevice, ... }:
       let
-        stack = device.aspect.terragruntInputs.capsman;
+        stack = routerosDevice.aspect.terragruntInputs.capsman;
       in
       {
         stack = "capsman";

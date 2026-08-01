@@ -2,9 +2,9 @@
 _: {
   den.aspects.ros-qos = {
     "terragrunt-stacks" =
-      { device, ... }:
+      { routerosDevice, ... }:
       let
-        stack = device.aspect.terragruntInputs.qos;
+        stack = routerosDevice.aspect.terragruntInputs.qos;
       in
       {
         stack = "qos";
