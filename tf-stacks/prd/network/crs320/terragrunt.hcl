@@ -37,10 +37,6 @@ inputs = {
       tagged = [
         40,
         99,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
       untagged = 100
     }
@@ -83,10 +79,6 @@ inputs = {
         99,
         100,
         101,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
     }
     ether9 = {
@@ -101,10 +93,6 @@ inputs = {
         99,
         100,
         101,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
     }
     sfp-sfpplus1 = {
@@ -119,15 +107,10 @@ inputs = {
         99,
         100,
         101,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
     }
     sfp-sfpplus3 = {
-      comment  = "pve0"
-      untagged = 40
+      comment = "pve0"
     }
     sfp-sfpplus4 = {
       comment = "pve1"
@@ -141,10 +124,6 @@ inputs = {
         99,
         100,
         101,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
     }
   }
@@ -175,20 +154,23 @@ inputs = {
   }
   routeros_users = {
     admin = {
-      disabled = false
+      disabled = true
     }
     external-dns = {
-      group = "external-dns"
+      group         = "external-dns"
+      password_item = "CRS320 - user - external-dns"
     }
     kid = {
-      group = "full"
+      group         = "full"
+      password_item = "CRS320 - user - kid"
       ssh_keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan",
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13",
       ]
     }
     metrics = {
-      group = "metrics"
+      group         = "metrics"
+      password_item = "CRS320 - user - metrics"
     }
   }
   vlans = {

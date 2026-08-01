@@ -91,15 +91,6 @@ inputs = {
         "10.0.30.1",
       ]
     }
-    RosLab = {
-      cidr        = "192.168.89.0/24"
-      dns_servers = []
-      domain      = null
-      gateway     = "0.0.0.0"
-      ntp_servers = [
-        "192.168.89.1",
-      ]
-    }
     Servers = {
       cidr = "10.0.10.0/24"
       dns_servers = [
@@ -270,10 +261,6 @@ inputs = {
         99,
         100,
         101,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
     }
     ether2 = {
@@ -292,10 +279,6 @@ inputs = {
         99,
         100,
         101,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
     }
     ether4 = {
@@ -310,10 +293,6 @@ inputs = {
         99,
         100,
         101,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
     }
     ether7 = {
@@ -342,10 +321,6 @@ inputs = {
         99,
         100,
         101,
-        1040,
-        1042,
-        1100,
-        1991,
       ]
     }
   }
@@ -357,7 +332,6 @@ inputs = {
     K3s         = "10.0.40.1/24"
     Management  = "10.99.0.1/16"
     Media       = "10.0.30.1/24"
-    RosLab      = "192.168.89.1/24"
     Servers     = "10.0.10.1/24"
     Storage     = "10.0.20.1/24"
     Trusted     = "10.0.100.1/24"
@@ -387,20 +361,23 @@ inputs = {
   }
   routeros_users = {
     admin = {
-      disabled = false
+      disabled = true
     }
     external-dns = {
-      group = "external-dns"
+      group         = "external-dns"
+      password_item = "RB5009 - user - external-dns"
     }
     kid = {
-      group = "full"
+      group         = "full"
+      password_item = "RB5009 - user - kid"
       ssh_keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan",
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13",
       ]
     }
     metrics = {
-      group = "metrics"
+      group         = "metrics"
+      password_item = "RB5009 - user - metrics"
     }
   }
   vlans = {
@@ -420,18 +397,6 @@ inputs = {
       name    = "K3s"
       vlan_id = 40
     }
-    LabTalos = {
-      name    = "LabTalos"
-      vlan_id = 1040
-    }
-    LabTalosSvc = {
-      name    = "LabTalosSvc"
-      vlan_id = 1042
-    }
-    LabTrusted = {
-      name    = "LabTrusted"
-      vlan_id = 1100
-    }
     Management = {
       interface_lists = [
         "MANAGEMENT",
@@ -442,10 +407,6 @@ inputs = {
     Media = {
       name    = "Media"
       vlan_id = 30
-    }
-    RosLab = {
-      name    = "RosLab"
-      vlan_id = 1991
     }
     Servers = {
       name    = "Servers"

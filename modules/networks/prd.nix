@@ -70,31 +70,5 @@ in
       dhcpDnsServers = dnsUpstreamServers;
       dhcpNtpServers = ntpUpstreamServers;
     };
-
-    LabTalos = {
-      environment = "prd";
-      vlanId = 1040;
-      routed = false;
-    };
-
-    LabTalosSvc = {
-      environment = "prd";
-      vlanId = 1042;
-      routed = false;
-    };
-
-    LabTrusted = {
-      environment = "prd";
-      vlanId = 1100;
-      routed = false;
-    };
-
-    RosLab = {
-      environment = "prd";
-      vlanId = 1991;
-      cidr = "192.168.89.0/24";
-      dhcpGateway = "0.0.0.0";
-      dhcpDnsServers = [ ];
-    };
   };
 }

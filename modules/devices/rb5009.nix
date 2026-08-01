@@ -17,7 +17,7 @@
   ...
 }:
 let
-  rosLib = import ../network/_ros-lib.nix { inherit lib; };
+  rosLib = import ../network/_ros-lib.nix { inherit lib cidrLib; };
   inherit (rosLib) toVlanInput toFirewallVlanInput sharedInputs;
 
   environment = config.den.environments.prd;
@@ -26,9 +26,10 @@ let
   allVlanIds = rosLib.allVlanIds networks;
   routedNetworks = lib.filterAttrs (_: net: net.routed) networks;
 
-  # Every ros-* stack needs its own onepassword provider auth (1Password
-  # item titled "RB5009 - admin", vault "home-ops" — see the K8s
-  # ClusterSecretStore convention this mirrors).
+  # Every ros-* stack needs its own onepassword provider auth — the routeros
+  # provider connects as whichever fleet user op_item_routeros names
+  # (currently kid, not admin; vault "home-ops", mirrors the K8s
+  # ClusterSecretStore convention).
   commonInputs = {
     hostname = "rb5009";
     op_item_routeros = "RB5009 - user - kid";
@@ -462,13 +463,6 @@ in
                 }
               ];
               "${networks.Guest.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "WAN";
-                  comment = "Allow WAN";
-                }
-              ];
-              "${networks.RosLab.name}" = [
                 {
                   action = "accept";
                   out_interface_list = "WAN";

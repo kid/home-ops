@@ -24,20 +24,20 @@
         registryUsers = lib.filterAttrs (_: u: u.devices ? ${device.name}) den.users.registry;
 
         routeros_users = {
-          # RouterOS's own built-in admin account — not a fleet user, always
-          # present on every device, tracked as-is (matches the original
-          # placeholder's `admin = {};`, plus disabled = false since this is
-          # the account the routeros provider itself authenticates as).
-          admin.disabled = false;
+          # No password_item: op_item_routeros now names whichever fleet
+          # user the provider connects as, not admin, so admin's password
+          # must stay unmanaged rather than reuse that item.
+          admin.disabled = true;
         }
         // lib.mapAttrs (
-          _: u:
+          username: u:
           let
             devCfg = u.devices.${device.name};
             sshKeys = if devCfg.sshKeys == null then u.sshKeys else devCfg.sshKeys;
           in
           {
             inherit (devCfg) group;
+            password_item = "${lib.toUpper device.name} - user - ${username}";
           }
           // lib.optionalAttrs (sshKeys != [ ]) { ssh_keys = sshKeys; }
         ) registryUsers;

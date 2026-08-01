@@ -8,7 +8,7 @@
   ...
 }:
 let
-  rosLib = import ../network/_ros-lib.nix { inherit lib; };
+  rosLib = import ../network/_ros-lib.nix { inherit lib cidrLib; };
   inherit (rosLib) toVlanInput sharedInputs;
 
   environment = config.den.environments.prd;
@@ -71,7 +71,7 @@ in
             };
             "sfp-sfpplus3" = {
               comment = "pve0";
-              untagged = networks.K3s.vlanId;
+              # untagged = networks.K3s.vlanId;
             };
             "sfp-sfpplus4" = {
               comment = "pve1";
@@ -87,10 +87,6 @@ in
               tagged = lib.sort (a: b: a < b) [
                 networks.Management.vlanId
                 networks.K3s.vlanId
-                networks.RosLab.vlanId
-                networks.LabTalos.vlanId
-                networks.LabTalosSvc.vlanId
-                networks.LabTrusted.vlanId
               ];
             };
             ether2 = {

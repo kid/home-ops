@@ -3,7 +3,7 @@
 # (the mechanism that auto-imports everything under modules/ as a
 # flake-parts module) skips any path containing `/_` by design, so this is
 # an ordinary Nix file, imported directly, not a dendritic module.
-{ lib }:
+{ lib, cidrLib }:
 {
   allVlanIds = networks: lib.sort (a: b: a < b) (lib.mapAttrsToList (_: net: net.vlanId) networks);
 
@@ -18,10 +18,14 @@
     // lib.optionalAttrs (net.mtu != null) { inherit (net) mtu; }
     // lib.optionalAttrs (net.interfaceLists != [ ]) { interface_lists = net.interfaceLists; };
 
-  # terragrunt-infra-catalog's ros-firewall module `vlans` variable only wants name+vlan_id.
+  # terragrunt-infra-catalog's ros-firewall module `vlans` variable — address
+  # is the router's own IP on this VLAN (host 1, same as rb5009.nix's own
+  # ip_addresses), used to scope firewall's per-VLAN self-access rules
+  # instead of querying the live device for it.
   toFirewallVlanInput = net: {
     inherit (net) name;
     vlan_id = net.vlanId;
+    address = cidrLib.cidrhost net.cidr 1;
   };
 
   # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
