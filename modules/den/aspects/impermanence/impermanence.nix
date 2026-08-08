@@ -12,6 +12,13 @@
   den.aspects.impermanence = {
     includes = [ den.aspects.impermanence.persist-collector ];
 
+    # sshd's host key — without this, wipeRootOnBoot regenerates it every
+    # boot, changing the host's SSH identity on each reboot.
+    persist.files = [
+      "/etc/ssh/ssh_host_ed25519_key"
+      "/etc/ssh/ssh_host_ed25519_key.pub"
+    ];
+
     settings = {
       wipeRootOnBoot = lib.mkOption {
         type = lib.types.bool;
@@ -27,6 +34,14 @@
 
     nixos = {
       imports = [ inputs.impermanence.nixosModules.impermanence ];
+
+      # ed25519 only — no RSA host key.
+      services.openssh.hostKeys = lib.mkForce [
+        {
+          path = "/etc/ssh/ssh_host_ed25519_key";
+          type = "ed25519";
+        }
+      ];
 
       environment.persistence."/cache" = {
         enable = true;
