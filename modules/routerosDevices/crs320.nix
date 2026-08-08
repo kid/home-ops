@@ -81,8 +81,12 @@ in
               tagged = allVlanIds;
             };
             "sfp-sfpplus3" = {
-              comment = "pve0";
-              # untagged = networks.K3s.vlanId;
+              comment = "node1";
+              untagged = networks.Servers.vlanId;
+              tagged = lib.sort (a: b: a < b) [
+                networks.Storage.vlanId
+                networks.K3s.vlanId
+              ];
             };
             "sfp-sfpplus4" = {
               comment = "pve1";
@@ -121,7 +125,7 @@ in
               untagged = networks.IotInternet.vlanId;
             };
             ether14 = {
-              comment = "pve0-ipmi";
+              comment = "node1-ipmi";
               untagged = networks.Management.vlanId;
             };
             ether16 = {

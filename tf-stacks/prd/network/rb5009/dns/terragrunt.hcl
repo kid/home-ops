@@ -31,9 +31,6 @@ inputs = {
     "prowlarr.kidibox.net" = {
       address = "10.0.30.110"
     }
-    "pve0.kidibox.net" = {
-      address = "10.0.10.10"
-    }
     "pve1.kidibox.net" = {
       address = "10.0.10.11"
     }

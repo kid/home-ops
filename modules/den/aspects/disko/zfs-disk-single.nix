@@ -6,7 +6,7 @@
 #
 # `settings.device_id` must be set per-host to the target machine's real
 # stable disk identifier (e.g. "/dev/disk/by-id/nvme-..."), confirmed once
-# the real hardware is known — see modules/hosts/prd-node1.nix.
+# the real hardware is known — see modules/hosts/node1.nix.
 { den, lib, ... }:
 let
   emptySnapshot =

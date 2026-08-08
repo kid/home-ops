@@ -17,14 +17,9 @@
       hostNum = 11;
       mac = "48:a9:8a:ba:2a:6e";
     };
-    # pve0-ipmi/pikvm encode the Servers VLAN id into their Management-space
-    # host number (physically on Management, logically tied to per-server
+    # pikvm encodes the Servers VLAN id into its Management-space host
+    # number (physically on Management, logically tied to per-server
     # numbering on Servers) — ported as-is, not a fix.
-    pve0-ipmi = {
-      network = "Management";
-      hostNum = (den.networks.Servers.vlanId * 256) + 10;
-      mac = "d0:50:99:f7:ee:15";
-    };
     pikvm = {
       network = "Management";
       hostNum = (den.networks.Servers.vlanId * 256) + 11;
@@ -32,11 +27,6 @@
     };
 
     # Servers
-    pve0 = {
-      network = "Servers";
-      hostNum = 10;
-      mac = "a6:34:58:9f:98:09";
-    };
     pve1 = {
       network = "Servers";
       hostNum = 11;

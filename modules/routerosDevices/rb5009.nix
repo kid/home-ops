@@ -198,9 +198,6 @@ in
           // commonInputs
           // {
             dns_static_records = {
-              "pve0.kidibox.net" = {
-                address = "10.0.10.10";
-              };
               "pve1.kidibox.net" = {
                 address = "10.0.10.11";
               };

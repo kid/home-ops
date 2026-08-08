@@ -170,6 +170,13 @@ inputs = {
         name    = "litters camera"
       },
     ]
+    K3s = [
+      {
+        address = "10.0.40.10"
+        mac     = "d0:50:99:fe:51:b5"
+        name    = "node1-k3s"
+      },
+    ]
     Management = [
       {
         address = "10.99.0.10"
@@ -187,14 +194,14 @@ inputs = {
         name    = "crs320"
       },
       {
+        address = "10.99.10.10"
+        mac     = "d0:50:99:f7:ee:15"
+        name    = "node1-ipmi"
+      },
+      {
         address = "10.99.10.11"
         mac     = "dc:a6:32:06:69:9a"
         name    = "pikvm"
-      },
-      {
-        address = "10.99.10.10"
-        mac     = "d0:50:99:f7:ee:15"
-        name    = "pve0-ipmi"
       },
     ]
     Media = [
@@ -217,13 +224,20 @@ inputs = {
       },
       {
         address = "10.0.10.10"
-        mac     = "a6:34:58:9f:98:09"
-        name    = "pve0"
+        mac     = "d0:50:99:fe:51:b5"
+        name    = "node1"
       },
       {
         address = "10.0.10.11"
         mac     = "be:4f:11:f4:ba:61"
         name    = "pve1"
+      },
+    ]
+    Storage = [
+      {
+        address = "10.0.20.10"
+        mac     = "d0:50:99:fe:51:b5"
+        name    = "node1-storage"
       },
     ]
     Trusted = [
