@@ -21,6 +21,15 @@
 #   "no unpack platforms defined" without this).
 {
   den.aspects.k3s-containerd = {
+    # /var/lib/containerd is intentionally absent here: on zfs-disk-single
+    # hosts it's its own dataset (see zfs-disk-single.nix), so it survives
+    # wipeRootOnBoot untouched and a bind-mount here would shadow it.
+    # /var/lib/cni is containerd's go-cni result/IPAM cache — generic to
+    # whichever CNI plugin is in use, so it's kept regardless of Cilium vs.
+    # anything else. (Not persisting podman/docker paths like kidibox's
+    # containerd.nix does: home-ops runs neither.)
+    persist.directories = [ "/var/lib/cni" ];
+
     nixos = {
       systemd.services.k3s.requires = [ "containerd.service" ];
 
