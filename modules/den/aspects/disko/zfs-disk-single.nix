@@ -15,10 +15,14 @@ in
 {
   den.aspects.disko.zfs-disk-single.root.nixos = {
     boot.supportedFilesystems = [ "zfs" ];
+    # mkDefault throughout: disko's own vmVariantWithDisko (used by
+    # vmWithDisko, see modules/hosts/test-vm.nix) needs to override these to
+    # import by uuid and force-import, since /dev/disk/by-id is empty in
+    # qemu VMs.
     boot.zfs = {
-      devNodes = "/dev/disk/by-id";
-      forceImportRoot = false;
-      forceImportAll = false;
+      devNodes = lib.mkDefault "/dev/disk/by-id";
+      forceImportRoot = lib.mkDefault false;
+      forceImportAll = lib.mkDefault false;
     };
     services.zfs = {
       autoScrub.enable = true;
@@ -166,6 +170,16 @@ in
         fileSystems."/home".neededForBoot = true;
         fileSystems."/persist".neededForBoot = true;
         fileSystems."/cache".neededForBoot = true;
+
+        # system.build.vmWithDisko rebuilds fileSystems from scratch under
+        # virtualisation.fileSystems (see disko's docs/interactive-vm.md) —
+        # the neededForBoot overrides above don't carry over into it, so
+        # impermanence's own assertion (persist/cache must be neededForBoot)
+        # needs re-stating here too.
+        virtualisation.vmVariantWithDisko.virtualisation.fileSystems = {
+          "/persist".neededForBoot = true;
+          "/cache".neededForBoot = true;
+        };
       };
   };
 }

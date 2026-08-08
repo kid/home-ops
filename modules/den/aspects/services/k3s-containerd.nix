@@ -8,11 +8,17 @@
 # NixOS's containerd module already defaults root/state/grpc.address to
 # containerd's own built-in paths, and — since boot.zfs.enabled is true on
 # zfs-disk-single hosts — already puts zfs on containerd's PATH and
-# defaults the snapshotter to "zfs". The one default worth overriding is
-# cni.bin_dir: the module points it at a static nix-store cni-plugins
-# package (bridge/loopback/etc, no cilium-cni), but Cilium's own DaemonSet
-# installs its CNI binary into /opt/cni/bin at runtime — containerd needs
-# to look there instead to find it.
+# defaults the CRI snapshotter to "zfs". Two defaults still need overriding:
+#
+# - cni.bin_dir: the module points it at a static nix-store cni-plugins
+#   package (bridge/loopback/etc, no cilium-cni), but Cilium's own DaemonSet
+#   installs its CNI binary into /opt/cni/bin at runtime — containerd needs
+#   to look there instead to find it.
+# - transfer.v1.local.unpack_config: the CRI snapshotter default doesn't
+#   extend to the transfer plugin's unpacker, which only knows how to
+#   unpack layers for snapshotters it has an explicit entry for (verified
+#   against a real pull: `ctr images pull --snapshotter zfs` fails with
+#   "no unpack platforms defined" without this).
 {
   den.aspects.k3s-containerd = {
     nixos = {
@@ -20,7 +26,15 @@
 
       virtualisation.containerd = {
         enable = true;
-        settings.plugins."io.containerd.grpc.v1.cri".cni.bin_dir = "/opt/cni/bin";
+        settings.plugins = {
+          "io.containerd.grpc.v1.cri".cni.bin_dir = "/opt/cni/bin";
+          "io.containerd.transfer.v1.local".unpack_config = [
+            {
+              platform = "linux/amd64";
+              snapshotter = "zfs";
+            }
+          ];
+        };
       };
     };
   };

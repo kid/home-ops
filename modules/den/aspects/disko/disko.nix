@@ -7,7 +7,12 @@
 { inputs, ... }:
 {
   flake-file.inputs.disko = {
-    url = "github:nix-community/disko";
+    # Pinned to nix-community/disko#1277 (unmerged): fixes make-disk-image.nix
+    # passing an aggregated module tree as vmTools' `kernel` arg, which broke
+    # against a nixpkgs vmTools API change (kernel/kernelModules split) —
+    # needed for system.build.vmWithDisko (see modules/hosts/test-vm.nix).
+    # Switch back to nix-community/disko once merged upstream.
+    url = "github:AlexLov/disko/6747342da148f6cb28c8405a70fe00455a0ba027";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 

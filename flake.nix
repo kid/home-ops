@@ -8,7 +8,7 @@
   inputs = {
     den.url = "github:denful/den";
     disko = {
-      url = "github:nix-community/disko";
+      url = "github:AlexLov/disko/6747342da148f6cb28c8405a70fe00455a0ba027";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-file.url = "github:vic/flake-file";
