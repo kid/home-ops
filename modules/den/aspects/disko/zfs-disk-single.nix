@@ -135,32 +135,11 @@ in
                 options.mountpoint = "legacy";
               };
 
-              # containerd's data root (see den.aspects.k3s-containerd). Its
-              # own dataset, not nested under local/root, so it survives
-              # wipeRootOnBoot untouched.
-              "local/containerd" = {
-                type = "zfs_fs";
-                mountpoint = "/var/lib/containerd";
-                options = {
-                  mountpoint = "legacy";
-                  atime = "off";
-                  recordsize = "128K";
-                };
-              };
-
-              # The zfs snapshotter requires its root to BE a zfs dataset
-              # mountpoint (not merely a directory on one), so it gets a
-              # dedicated child dataset at exactly the plugin's path; each
-              # image layer becomes a CoW dataset under it.
-              "local/containerd/snapshotter" = {
-                type = "zfs_fs";
-                mountpoint = "/var/lib/containerd/io.containerd.snapshotter.v1.zfs";
-                options = {
-                  mountpoint = "legacy";
-                  atime = "off";
-                  recordsize = "128K";
-                };
-              };
+              # containerd's datasets (local/containerd + its snapshotter
+              # child) are declared by den.aspects.k3s-containerd via the
+              # `datasets` quirk instead of here — see
+              # modules/den/aspects/disko/zfs-datasets-collector.nix. That
+              # lets disko-zfs create them post-install, without a reformat.
             };
           };
         };

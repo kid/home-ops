@@ -1,8 +1,8 @@
 # System containerd for k3s (replaces k3s's embedded one), so the zfs
 # snapshotter can be used — image layers become their own CoW datasets
-# under modules/den/aspects/disko/zfs-disk-single.nix's local/containerd
-# datasets, living outside the nix store where nix-collect-garbage can
-# never reap them. k3s is pointed here via k3s.nix's
+# under the local/containerd datasets declared below (via the `datasets`
+# quirk, applied by disko-zfs), living outside the nix store where
+# nix-collect-garbage can never reap them. k3s is pointed here via k3s.nix's
 # --container-runtime-endpoint flag.
 #
 # NixOS's containerd module already defaults root/state/grpc.address to
@@ -21,14 +21,39 @@
 #   "no unpack platforms defined" without this).
 {
   den.aspects.k3s-containerd = {
-    # /var/lib/containerd is intentionally absent here: on zfs-disk-single
-    # hosts it's its own dataset (see zfs-disk-single.nix), so it survives
-    # wipeRootOnBoot untouched and a bind-mount here would shadow it.
+    # /var/lib/containerd is intentionally absent from persist.directories:
+    # it's its own dataset (declared below via the `datasets` quirk, see
+    # zfs-datasets-collector.nix), so it survives wipeRootOnBoot untouched
+    # and a bind-mount here would shadow it.
     # /var/lib/cni is containerd's go-cni result/IPAM cache — generic to
     # whichever CNI plugin is in use, so it's kept regardless of Cilium vs.
     # anything else. (Not persisting podman/docker paths like kidibox's
     # containerd.nix does: home-ops runs neither.)
     persist.directories = [ "/var/lib/cni" ];
+
+    # containerd's data root gets its own dataset, not nested under
+    # local/root, so it survives wipeRootOnBoot untouched.
+    datasets."zroot/local/containerd" = {
+      mountpoint = "/var/lib/containerd";
+      properties = {
+        mountpoint = "legacy";
+        atime = "off";
+        recordsize = "128K";
+      };
+    };
+
+    # The zfs snapshotter requires its root to BE a zfs dataset mountpoint
+    # (not merely a directory on one), so it gets a dedicated child dataset
+    # at exactly the plugin's path; each image layer becomes a CoW dataset
+    # under it.
+    datasets."zroot/local/containerd/snapshotter" = {
+      mountpoint = "/var/lib/containerd/io.containerd.snapshotter.v1.zfs";
+      properties = {
+        mountpoint = "legacy";
+        atime = "off";
+        recordsize = "128K";
+      };
+    };
 
     nixos = {
       systemd.services.k3s.requires = [ "containerd.service" ];
