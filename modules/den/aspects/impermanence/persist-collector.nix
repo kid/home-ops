@@ -4,7 +4,7 @@
 # modules/den/aspects/impermanence/persist-collector.nix. `persist`/`cache`
 # are special module args den auto-injects — each is the list of every
 # included aspect's own top-level `persist`/`cache` attrset (e.g.
-# modules/den/aspects/services/k3s.nix's `persist.directories = [...]`).
+# modules/den/aspects/services/k3s/k3s.nix's `persist.directories = [...]`).
 {
   den.aspects.impermanence.persist-collector = {
     nixos =

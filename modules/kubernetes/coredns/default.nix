@@ -1,5 +1,5 @@
 # CoreDNS, replacing the one k3s would otherwise ship
-# (modules/den/aspects/services/k3s.nix passes --disable=coredns). Adapted
+# (modules/den/aspects/services/k3s/k3s.nix passes --disable=coredns). Adapted
 # from nixopslab's modules/kubernetes/coredns/default.nix — pins
 # service.clusterIP to cluster.networks.services.assignments.coredns so it
 # matches the fixed address k3s's own --service-cidr flag expects kubelets

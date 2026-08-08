@@ -1,5 +1,5 @@
 # Cilium CNI, configured for kube-proxy replacement + native routing to
-# match modules/den/aspects/services/k3s.nix's k3s flags
+# match modules/den/aspects/services/k3s/k3s.nix's k3s flags
 # (--flannel-backend=none --disable-network-policy --disable-kube-proxy).
 # Adapted from nixopslab's modules/kubernetes/cilium/default.nix — reads
 # cluster.networks.pods.cidr directly into Helm values, the clearest example

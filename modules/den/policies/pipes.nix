@@ -5,7 +5,7 @@ let
 in
 {
   # Collects the `k3s-nodes` quirk (emitted per-host by
-  # modules/den/aspects/services/k3s.nix, {hostname; localASN;}) up into
+  # modules/den/aspects/services/k3s/k3s.nix, {hostname; localASN;}) up into
   # cluster scope, exposed as the `k3s-nodes` list arg to any k8s-manifests
   # module in that cluster (e.g. modules/kubernetes/cilium/bgp.nix, for
   # per-node CiliumBGPClusterConfig generation).

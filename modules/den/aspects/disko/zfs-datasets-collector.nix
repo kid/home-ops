@@ -3,7 +3,7 @@
 # disko-zfs, mirroring impermanence/persist-collector.nix's `persist`/`cache`
 # collection. `datasets` is a den-injected special module arg — the list of
 # every included aspect's own top-level `datasets` attrset (e.g.
-# modules/den/aspects/services/k3s-containerd.nix's
+# modules/den/aspects/services/k3s/containerd.nix's
 # `datasets."zroot/local/containerd" = { ... }`).
 #
 # disko-zfs only creates/manages the ZFS dataset and its properties — unlike
