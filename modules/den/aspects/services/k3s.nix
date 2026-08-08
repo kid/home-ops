@@ -10,12 +10,19 @@
 # Emits the `k3s-nodes` quirk ({hostname; localASN;}), collected cluster-side
 # by modules/den/policies/pipes.nix's cluster-collect-k3s-nodes — consumed
 # once modules/kubernetes/cilium/bgp.nix lands (Phase 5).
-{ config, lib, ... }:
+{
+  config,
+  den,
+  lib,
+  ...
+}:
 let
   clusters = config.den.clusters or { };
 in
 {
   den.aspects.k3s-server = {
+    includes = [ den.aspects.k3s-containerd ];
+
     k3s-nodes =
       { host, ... }:
       {
@@ -50,6 +57,12 @@ in
             "--disable=local-storage"
             "--cluster-cidr=${podCIDR}"
             "--service-cidr=${serviceCIDR}"
+            # Bare path, NOT unix://…: k3s forwards this to the kubelet's
+            # legacy cadvisor --containerd flag, which dials it verbatim —
+            # with a scheme the dial fails and cadvisor silently falls
+            # back, losing per-container metrics. The kubelet normalizes
+            # the bare path for CRI itself.
+            "--container-runtime-endpoint=/run/containerd/containerd.sock"
           ];
         };
 
