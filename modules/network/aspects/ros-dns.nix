@@ -10,9 +10,11 @@ _: {
         stack = "dns";
         moduleSource = "ros-dns";
         moduleVersion = "1.0.2";
-        # TODO: drop once terragrunt-infra-catalog's feat/onepassword-secrets
-        # is merged and released — pin moduleVersion to that release instead.
-        moduleRef = "feat/onepassword-secrets";
+        # TODO: drop once terragrunt-infra-catalog cuts a ros-dns release
+        # containing #41 (1Password auth migration, merged but unreleased —
+        # no fix:/feat: commit triggered semantic-release) — pin
+        # moduleVersion to that release instead.
+        moduleRef = "6cfae877ca29ef8453912356d008e287489404f9";
         inherit (stack) dependsOn inputs;
       };
   };
