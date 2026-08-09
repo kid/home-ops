@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-dns?ref=6cfae877ca29ef8453912356d008e287489404f9"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-dns?ref=ros-dns/v2.0.0"
   copy_terraform_lock_file = false
 }
 

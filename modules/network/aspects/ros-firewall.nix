@@ -37,12 +37,7 @@
       {
         stack = "firewall";
         moduleSource = "ros-firewall";
-        moduleVersion = "1.0.3";
-        # TODO: drop once terragrunt-infra-catalog cuts a ros-firewall
-        # release containing #41 (1Password auth migration, merged but
-        # unreleased — no fix:/feat: commit triggered semantic-release) —
-        # pin moduleVersion to that release instead.
-        moduleRef = "6cfae877ca29ef8453912356d008e287489404f9";
+        moduleVersion = "2.0.0";
         inherit (stack) dependsOn;
         inputs = stack.inputs // {
           vlans_input_rules = mergeDir "input" stack.inputs.vlans_input_rules;
