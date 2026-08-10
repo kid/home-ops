@@ -304,7 +304,7 @@ in
       # addresses) come from the `bgp`/`k3s-nodes` quirks collected in
       # modules/network/aspects/ros-bgp.nix, not from anything precomputed
       # here.
-      ros-bgp = {
+      bgp = {
         dependsOn = [ "rb5009" ];
         inputs = sharedInputs // commonInputs;
       };

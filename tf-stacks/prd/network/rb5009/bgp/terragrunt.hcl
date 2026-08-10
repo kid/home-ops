@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-bgp?ref=ros-bgp/v1.0.0"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-bgp?ref=ros-bgp/v2.0.0"
   copy_terraform_lock_file = false
 }
 
@@ -14,7 +14,7 @@ dependencies {
 }
 
 inputs = {
-  bgp_hold_time      = "90s"
+  bgp_hold_time      = "1m30s"
   bgp_keepalive_time = "30s"
   bgp_local_asn      = 64512
   bgp_remote_asn     = 64513

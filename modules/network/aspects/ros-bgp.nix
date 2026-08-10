@@ -17,6 +17,33 @@
 # bgp_remote_asn (Cilium's ASN) applied to every node connection — there's
 # no per-peer ASN, matching Cilium's own single-bgpInstance design.
 { lib, ... }:
+let
+  # RouterOS echoes duration values back in its own canonical form (e.g.
+  # 90 seconds reads back as "1m30s", not "90s") — the ebogdum/routeros
+  # provider's plugin-framework-based consistency check treats a
+  # non-canonical value we send as a post-apply drift and errors ("provider
+  # produced inconsistent result"). Send the canonical form ourselves.
+  formatRouterosDuration =
+    totalSeconds:
+    let
+      w = totalSeconds / 604800;
+      afterW = totalSeconds - (w * 604800);
+      d = afterW / 86400;
+      afterD = afterW - (d * 86400);
+      h = afterD / 3600;
+      afterH = afterD - (h * 3600);
+      m = afterH / 60;
+      s = afterH - (m * 60);
+      segmentsWithoutSeconds =
+        lib.optional (w > 0) "${toString w}w"
+        ++ lib.optional (d > 0) "${toString d}d"
+        ++ lib.optional (h > 0) "${toString h}h"
+        ++ lib.optional (m > 0) "${toString m}m";
+    in
+    lib.concatStrings (
+      segmentsWithoutSeconds ++ lib.optional (s > 0 || segmentsWithoutSeconds == [ ]) "${toString s}s"
+    );
+in
 {
   den.aspects.ros-bgp = {
     "terragrunt-stacks" =
@@ -27,7 +54,7 @@
         ...
       }:
       let
-        stack = routerosDevice.aspect.terragruntInputs.ros-bgp;
+        stack = routerosDevice.aspect.terragruntInputs.bgp;
 
         # Flatten each `bgp` fragment's peers down to the ones actually
         # targeting this device — mirrors ros-firewall.nix's per-network
@@ -55,17 +82,17 @@
         );
       in
       {
-        stack = "ros-bgp";
+        stack = "bgp";
         moduleSource = "ros-bgp";
-        moduleVersion = "1.0.0";
+        moduleVersion = "2.0.0";
         inherit (stack) dependsOn;
         inputs = stack.inputs // {
           cluster_name = conn.name;
           bgp_local_asn = conn.asn;
           bgp_remote_asn = conn.localAsn;
           bgp_router_id = conn.ip;
-          bgp_hold_time = "${toString conn.holdTimeSeconds}s";
-          bgp_keepalive_time = "${toString conn.keepAliveTimeSeconds}s";
+          bgp_hold_time = formatRouterosDuration conn.holdTimeSeconds;
+          bgp_keepalive_time = formatRouterosDuration conn.keepAliveTimeSeconds;
           inherit nodes;
         };
       };
