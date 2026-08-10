@@ -7,9 +7,12 @@
 # the cluster entity as the single source of truth pattern already used
 # throughout this repo's network/device fleet.
 #
-# Emits the `k3s-nodes` quirk ({hostname; localASN;}), collected cluster-side
-# by modules/den/policies/pipes.nix's cluster-collect-k3s-nodes — consumed
-# once modules/kubernetes/cilium/bgp.nix lands (Phase 5).
+# Emits the `k3s-nodes` quirk ({hostname; address;}), collected onto
+# rb5009 by modules/den/policies/pipes.nix's
+# routeros-device-collect-k3s-nodes (consumed by modules/network/aspects/
+# ros-bgp.nix, to build its per-node BGP connections) — `address` is this
+# host's own IP on the K3s VLAN, read from the `<hostname>-k3s` den.devices
+# entry every k3s host declares (see modules/hosts/node1.nix).
 {
   config,
   den,
@@ -27,7 +30,11 @@ in
       { host, ... }:
       {
         hostname = host.name;
-        localASN = host.bgp.localAsn or null;
+        # null for hosts with no `<hostname>-k3s` den.devices entry (e.g.
+        # test-vm, a throwaway QEMU smoke-test host with no real network
+        # attachment) — modules/network/aspects/ros-bgp.nix filters these
+        # out rather than feeding a bogus peer IP to RouterOS.
+        address = (config.den.devices."${host.name}-k3s" or { }).address or null;
       };
 
     persist.directories = [

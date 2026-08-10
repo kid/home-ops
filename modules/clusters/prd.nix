@@ -26,6 +26,12 @@ let
   # that actually targets crs320's address.
   rb5009MgmtAddr = cidrLib.cidrhost managementCidr 1;
   crs320MgmtAddr = config.den.devices.crs320.address;
+
+  # Cilium's LoadBalancer IP pool, BGP-advertised to rb5009 — shared
+  # between den.clusters.prd.networks.loadBalancer (read by
+  # modules/kubernetes/cilium/bgp.nix) and the firewall forward-rule
+  # below, so the two can't drift apart.
+  lbCidr = "10.0.42.0/24";
 in
 {
   den.networks.K3s = {
@@ -49,15 +55,22 @@ in
         description = "k3s service overlay network";
         assignments.coredns = "172.42.0.10";
       };
+      loadBalancer = {
+        cidr = lbCidr;
+        description = "Cilium BGP-advertised LoadBalancer IP pool";
+      };
     };
 
-    bgp.peers = [
-      {
-        name = "rb5009";
-        ip = "10.0.40.1";
-        asn = 64512;
-      }
-    ];
+    bgp = {
+      localAsn = 64513;
+      peers = [
+        {
+          name = "rb5009";
+          ip = "10.0.40.1";
+          asn = 64512;
+        }
+      ];
+    };
 
     nixidy = {
       repository = "https://github.com/kid/home-ops.git";
@@ -67,14 +80,36 @@ in
   };
 
   # Minimal app set for this pass (Phase 4 de-risking) — deliberately not
-  # cilium-bgp/argocd/cert-manager/external-secrets/openebs/sops-operator
-  # yet. See modules/den/aspects/services/k3s-bootstrap.nix (not ported this
-  # pass) for why: nixidy's bootstrapManifest assumes ArgoCD exists
-  # downstream, so that whole systemd-unit apply chain waits for Phase 5.
+  # argocd/cert-manager/external-secrets/openebs/sops-operator yet (cilium-bgp
+  # landed in Phase 5). See modules/den/aspects/services/k3s-bootstrap.nix
+  # (not ported this pass) for why the rest waits: nixidy's bootstrapManifest
+  # assumes ArgoCD exists downstream, so that whole systemd-unit apply chain
+  # waits for a future phase.
   den.aspects.prd.includes = with den.aspects; [
     cilium
+    cilium-bgp
     coredns
   ];
+
+  # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
+  # quirks/bgp.nix), collected onto rb5009 by modules/den/policies/
+  # pipes.nix's routeros-device-collect-bgp and consumed by
+  # modules/network/aspects/ros-bgp.nix. Parallels den.aspects.prd.firewall
+  # just below: a cluster contributes a small data fragment, the RouterOS
+  # side merges fragments from however many clusters/networks apply.
+  den.aspects.prd.bgp =
+    { cluster, ... }:
+    [
+      {
+        inherit (cluster) name;
+        inherit (cluster.bgp)
+          localAsn
+          peers
+          holdTimeSeconds
+          keepAliveTimeSeconds
+          ;
+      }
+    ];
 
   # Router-access rules this cluster's own infra needs (external-dns/
   # mikrotik-exporter reaching crs320's management API, LB CIDR routing) —
@@ -102,11 +137,18 @@ in
           protocol = "tcp";
           comment = "Allow access to Management from K3s for mikrotik-exporter";
         }
+        {
+          action = "accept";
+          dst_address = (builtins.head cluster.bgp.peers).ip;
+          dst_port = 179;
+          protocol = "tcp";
+          comment = "Allow BGP from k3s nodes to rb5009 for Cilium";
+        }
       ];
       forward = [
         {
           action = "accept";
-          dst_address = "10.0.42.0/24";
+          dst_address = lbCidr;
           comment = "Allow Traffic to load balancer ips";
         }
         {

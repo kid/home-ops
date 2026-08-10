@@ -96,6 +96,28 @@
               description = "BGP peers this cluster's CNI advertises pod/service routes to";
             };
 
+            bgp.localAsn = lib.mkOption {
+              type = lib.types.int;
+              description = "Local ASN this cluster's CNI (Cilium) BGP instance advertises as, when peering with bgp.peers";
+            };
+
+            # Single source of truth for BGP session timers, fed to both
+            # the RouterOS side (terragrunt-infra-catalog's talos-bgp
+            # module's bgp_hold_time/bgp_keepalive_time) and Cilium's own
+            # CiliumBGPPeerConfig.spec.timers — see modules/network/
+            # aspects/ros-bgp.nix and modules/kubernetes/cilium/bgp.nix.
+            bgp.holdTimeSeconds = lib.mkOption {
+              type = lib.types.int;
+              default = 90;
+              description = "BGP hold time (seconds), applied identically on both BGP peers";
+            };
+
+            bgp.keepAliveTimeSeconds = lib.mkOption {
+              type = lib.types.int;
+              default = 30;
+              description = "BGP keepalive time (seconds), applied identically on both BGP peers";
+            };
+
             storage = lib.mkOption {
               type = lib.types.attrsOf (
                 lib.types.submodule {

@@ -35,6 +35,8 @@ _: {
 
             bpf.masquerade = true;
 
+            bgpControlPlane.enabled = true;
+
             operator.replicas = 1;
           };
         };

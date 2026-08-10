@@ -1,6 +1,6 @@
-# Quirk metadata registration, ported verbatim from nixopslab's
-# modules/den/quirks/k3s-nodes.nix. Collected cluster-side by
-# modules/den/policies/pipes.nix's cluster-collect-k3s-nodes.
+# Quirk metadata registration. Collected onto every RouterOS device by
+# modules/den/policies/pipes.nix's routeros-device-collect-k3s-nodes,
+# consumed by modules/network/aspects/ros-bgp.nix.
 {
-  den.quirks.k3s-nodes.description = "k3s node info for BGP config generation";
+  den.quirks.k3s-nodes.description = "k3s node info (hostname, K3s-VLAN address) for RouterOS BGP config generation";
 }

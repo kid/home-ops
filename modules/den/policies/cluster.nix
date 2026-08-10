@@ -57,6 +57,5 @@
 
   den.schema.cluster.includes = [
     den.policies.cluster-to-nixidy
-    den.policies.cluster-collect-k3s-nodes
   ];
 }

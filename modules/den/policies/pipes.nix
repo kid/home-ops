@@ -4,20 +4,6 @@ let
   inherit (den.lib.policy) pipe;
 in
 {
-  # Collects the `k3s-nodes` quirk (emitted per-host by
-  # modules/den/aspects/services/k3s/k3s.nix, {hostname; localASN;}) up into
-  # cluster scope, exposed as the `k3s-nodes` list arg to any k8s-manifests
-  # module in that cluster (e.g. modules/kubernetes/cilium/bgp.nix, for
-  # per-node CiliumBGPClusterConfig generation).
-  # `host` is the entity kind — a bare `_: true` predicate matches nothing
-  # (den's findMatchingAll requires the predicate to name the target entity
-  # kind as a real arg), which is what this actually was until now: silently
-  # dead, since nothing has consumed `k3s-nodes` yet to notice. See
-  # routeros-device-collect-firewall below for how this was found.
-  den.policies.cluster-collect-k3s-nodes = _: [
-    (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
-  ];
-
   # Collects the `firewall` quirk (den.quirks.firewall — rule fragments
   # emitted by network/cluster/etc. aspects, see modules/den/quirks/
   # firewall.nix) onto every RouterOS device, exposed as the `firewall` list
@@ -38,5 +24,27 @@ in
     ])
   ];
 
-  den.schema.routerosDevice.includes = [ den.policies.routeros-device-collect-firewall ];
+  # Collects the `k3s-nodes` quirk (emitted per-host by
+  # modules/den/aspects/services/k3s/k3s.nix, {hostname; address;}) onto
+  # every RouterOS device, exposed as the `k3s-nodes` list arg to
+  # modules/network/aspects/ros-bgp.nix (to build its per-node BGP
+  # connections). `host` is the entity kind — a bare `_: true` predicate
+  # would match nothing, see routeros-device-collect-firewall above.
+  den.policies.routeros-device-collect-k3s-nodes = _: [
+    (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
+  ];
+
+  # Collects the `bgp` quirk (den.quirks.bgp — cluster-level BGP instance
+  # parameters, see modules/den/quirks/bgp.nix) onto every RouterOS
+  # device, exposed as the `bgp` list arg to modules/network/aspects/
+  # ros-bgp.nix.
+  den.policies.routeros-device-collect-bgp = _: [
+    (pipe.from "bgp" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
+  ];
+
+  den.schema.routerosDevice.includes = [
+    den.policies.routeros-device-collect-firewall
+    den.policies.routeros-device-collect-k3s-nodes
+    den.policies.routeros-device-collect-bgp
+  ];
 }

@@ -178,6 +178,13 @@ inputs = {
         dst_port    = 8729
         protocol    = "tcp"
       },
+      {
+        action      = "accept"
+        comment     = "Allow BGP from k3s nodes to rb5009 for Cilium"
+        dst_address = "10.0.40.1"
+        dst_port    = 179
+        protocol    = "tcp"
+      },
     ]
     Trusted = [
       {
