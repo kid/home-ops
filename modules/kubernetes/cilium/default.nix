@@ -35,10 +35,6 @@ _: {
 
             operator.replicas = 1;
 
-            # Hubble's server cert issued by cert-manager (modules/kubernetes/
-            # cert-manager/default.nix's hubble-ca-issuer ClusterIssuer)
-            # instead of Helm's own genSignedCert, which re-randomizes
-            # cilium-ca and hubble-server-certs on every render.
             hubble.tls.auto = {
               method = "certmanager";
               certManagerIssuerRef = {
