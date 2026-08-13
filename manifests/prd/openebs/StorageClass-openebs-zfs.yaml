@@ -6,6 +6,6 @@ metadata:
     storageclass.kubernetes.io/is-default-class: "true"
   name: openebs-zfs
 parameters:
-  poolname: zroot/k8s
+  poolname: zroot/openebs
 provisioner: zfs.csi.openebs.io
 volumeBindingMode: WaitForFirstConsumer

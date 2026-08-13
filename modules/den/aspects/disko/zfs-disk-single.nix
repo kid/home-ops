@@ -91,7 +91,7 @@ in
             postCreateHook = emptySnapshot "zroot";
 
             datasets = {
-              k8s = {
+              openebs = {
                 type = "zfs_fs";
                 options.mountpoint = "none";
               };
