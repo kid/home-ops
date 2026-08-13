@@ -81,12 +81,16 @@ in
 
   # Phase 6: argocd joins the app set now that modules/den/aspects/services/
   # k3s/bootstrap.nix actually applies these manifests to the live cluster
-  # and hands off to ArgoCD via manifests/prd/bootstrap.yaml. cert-manager/
-  # external-secrets/openebs/sops-operator remain deliberately out of scope
-  # for this pass.
+  # and hands off to ArgoCD via manifests/prd/bootstrap.yaml. cert-manager
+  # joins too, but only for Cilium's Hubble mTLS (modules/kubernetes/cilium/
+  # hubble-tls.nix) — Helm's own cert generation isn't idempotent across
+  # renders. external-secrets/openebs/sops-operator remain deliberately out
+  # of scope for this pass.
   den.aspects.prd.includes = with den.aspects; [
     cilium
     cilium-bgp
+    cilium-hubble-tls
+    cert-manager
     coredns
     argocd
   ];

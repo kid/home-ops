@@ -1,23 +1,29 @@
 # k3s bootstrap aspect — oneshot systemd services that apply manifests on
 # first boot. Ported from nixopslab's modules/den/aspects/services/
 # k3s-bootstrap.nix, scoped down to this repo's Phase 6 app set (cilium +
-# coredns + argocd — no cert-manager/external-secrets/sops-operator/openebs
+# coredns + argocd + cert-manager — no external-secrets/sops-operator/openebs
 # yet, see modules/clusters/prd.nix).
 #
 # Bakes the generated manifests into the NixOS image via `self` (the flake
 # source is a store path), so no git clone is needed on the node.
 #
 # Wave ordering:
-#   0. k3s-bootstrap-namespaces — all Namespace resources from all apps
-#                                  (cilium, coredns, argocd)
-#   1. k3s-bootstrap-crds       — all CustomResourceDefinition resources from all apps,
-#                                  wait for Established before proceeding
-#   2. k3s-bootstrap-cilium     — Cilium core manifests, wait for operator
-#                                  (operator registers Cilium CRDs at startup),
-#                                  then apply Cilium custom resources
-#   3. k3s-bootstrap-coredns    — CoreDNS deployment; ArgoCD needs cluster DNS to
-#                                  resolve the git repository on first sync
-#   4. k3s-bootstrap-argocd     — ArgoCD + self-managing Application
+#   0. k3s-bootstrap-namespaces    — all Namespace resources from all apps
+#                                     (cilium, coredns, argocd, cert-manager)
+#   1. k3s-bootstrap-crds          — all CustomResourceDefinition resources from all apps,
+#                                     wait for Established before proceeding
+#   2. k3s-bootstrap-cilium        — Cilium core manifests, wait for operator
+#                                     (operator registers Cilium CRDs at startup),
+#                                     then apply Cilium custom resources
+#   3. k3s-bootstrap-cert-manager  — cert-manager + the Hubble CA/ClusterIssuer
+#                                     it signs (modules/kubernetes/cilium/hubble-tls.nix);
+#                                     must come after cilium since cert-manager's pods
+#                                     need CNI to schedule (unlike cilium-agent, which
+#                                     runs hostNetwork and mounts Hubble's cert as
+#                                     `optional`, so it doesn't block on this wave)
+#   4. k3s-bootstrap-coredns       — CoreDNS deployment; ArgoCD needs cluster DNS to
+#                                     resolve the git repository on first sync
+#   5. k3s-bootstrap-argocd        — ArgoCD + self-managing Application
 #
 # Cilium does not ship CRDs in its Helm chart; the cilium-operator registers
 # them at runtime. Applying Cilium*.yaml CRs before the operator is ready
@@ -39,6 +45,7 @@
         ciliumDir = manifestPath "cilium";
         corednsDir = manifestPath "coredns";
         argocdDir = manifestPath "argocd";
+        certManagerDir = manifestPath "cert-manager";
         bootstrapFile = manifestPath "bootstrap.yaml";
         waitForApi = ''
           echo "Waiting for k3s API server..."
@@ -69,7 +76,7 @@
                 echo "Applying all Namespace resources..."
                 declare -a files
                 while IFS= read -r f; do files+=("-f" "$f"); done < <(
-                  find ${ciliumDir} ${corednsDir} ${argocdDir} -name "Namespace-*.yaml" | sort
+                  find ${ciliumDir} ${corednsDir} ${argocdDir} ${certManagerDir} -name "Namespace-*.yaml" | sort
                 )
                 [[ ''${#files[@]} -gt 0 ]] && \
                   kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${files[@]}"
@@ -105,7 +112,7 @@
                 echo "Applying all CRDs..."
                 declare -a files
                 while IFS= read -r f; do files+=("-f" "$f"); done < <(
-                  find ${ciliumDir} ${argocdDir} -name "CustomResourceDefinition-*.yaml" | sort
+                  find ${ciliumDir} ${argocdDir} ${certManagerDir} -name "CustomResourceDefinition-*.yaml" | sort
                 )
                 [[ ''${#files[@]} -gt 0 ]] && \
                   kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${files[@]}"
@@ -115,6 +122,16 @@
                   crd/applications.argoproj.io \
                   crd/applicationsets.argoproj.io \
                   crd/appprojects.argoproj.io \
+                  --timeout=60s
+
+                echo "Waiting for cert-manager CRDs to be established..."
+                kubectl wait --for=condition=Established \
+                  crd/certificates.cert-manager.io \
+                  crd/issuers.cert-manager.io \
+                  crd/clusterissuers.cert-manager.io \
+                  crd/certificaterequests.cert-manager.io \
+                  crd/orders.acme.cert-manager.io \
+                  crd/challenges.acme.cert-manager.io \
                   --timeout=60s
 
                 echo "CRDs ready."
@@ -195,9 +212,14 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 3: CoreDNS — must be up before ArgoCD so its git sync can resolve hostnames
-          k3s-bootstrap-coredns = {
-            description = "Bootstrap CoreDNS cluster DNS";
+          # Wave 3: cert-manager — after cilium, since cert-manager's own pods
+          # need CNI to schedule. Once its webhook is up, apply the Hubble
+          # self-signed CA + ClusterIssuer (modules/kubernetes/cilium/
+          # hubble-tls.nix) and wait for the CA to be signed, so Cilium's
+          # hubble-server-certs Certificate (applied in wave 2) has a
+          # working issuer to resolve against.
+          k3s-bootstrap-cert-manager = {
+            description = "Bootstrap cert-manager and the Hubble CA";
             after = [
               "k3s.service"
               "k3s-bootstrap-cilium.service"
@@ -205,6 +227,64 @@
             requires = [
               "k3s.service"
               "k3s-bootstrap-cilium.service"
+            ];
+            path = [
+              pkgs.kubectl
+              pkgs.findutils
+            ];
+            environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              ExecStart = pkgs.writeShellScript "k3s-bootstrap-cert-manager" ''
+                set -e
+
+                if kubectl get deployment -n cert-manager cert-manager >/dev/null 2>&1; then
+                  echo "cert-manager already installed, skipping bootstrap."
+                  exit 0
+                fi
+
+                echo "Applying cert-manager core manifests..."
+                declare -a core_files
+                while IFS= read -r f; do core_files+=("-f" "$f"); done < <(
+                  find ${certManagerDir} -name "*.yaml" \
+                    ! -name "ClusterIssuer-*.yaml" ! -name "Certificate-*.yaml" | sort
+                )
+                [[ ''${#core_files[@]} -gt 0 ]] && \
+                  kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${core_files[@]}"
+
+                echo "Waiting for cert-manager rollout..."
+                kubectl rollout status -n cert-manager deployment/cert-manager --timeout=120s
+                kubectl rollout status -n cert-manager deployment/cert-manager-webhook --timeout=120s
+                kubectl rollout status -n cert-manager deployment/cert-manager-cainjector --timeout=120s
+
+                echo "Applying Hubble CA issuer chain..."
+                declare -a issuer_files
+                while IFS= read -r f; do issuer_files+=("-f" "$f"); done < <(
+                  find ${certManagerDir} -name "ClusterIssuer-*.yaml" -o -name "Certificate-*.yaml" | sort
+                )
+                [[ ''${#issuer_files[@]} -gt 0 ]] && \
+                  kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${issuer_files[@]}"
+
+                echo "Waiting for the Hubble CA to be signed..."
+                kubectl wait --for=condition=Ready certificate/hubble-ca -n cert-manager --timeout=60s
+
+                echo "cert-manager bootstrap complete."
+              '';
+            };
+            wantedBy = [ "multi-user.target" ];
+          };
+
+          # Wave 4: CoreDNS — must be up before ArgoCD so its git sync can resolve hostnames
+          k3s-bootstrap-coredns = {
+            description = "Bootstrap CoreDNS cluster DNS";
+            after = [
+              "k3s.service"
+              "k3s-bootstrap-cert-manager.service"
+            ];
+            requires = [
+              "k3s.service"
+              "k3s-bootstrap-cert-manager.service"
             ];
             path = [ pkgs.kubectl ];
             environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
@@ -233,7 +313,7 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 4: ArgoCD — depends on CoreDNS for git hostname resolution
+          # Wave 5: ArgoCD — depends on CoreDNS for git hostname resolution
           k3s-bootstrap-argocd = {
             description = "Bootstrap ArgoCD and hand off to GitOps";
             after = [

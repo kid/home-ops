@@ -38,6 +38,19 @@ _: {
             bgpControlPlane.enabled = true;
 
             operator.replicas = 1;
+
+            # Hubble's server cert issued by cert-manager (modules/kubernetes/
+            # cilium/hubble-tls.nix's hubble-ca-issuer ClusterIssuer) instead
+            # of Helm's own genSignedCert, which re-randomizes cilium-ca and
+            # hubble-server-certs on every render.
+            hubble.tls.auto = {
+              method = "certmanager";
+              certManagerIssuerRef = {
+                group = "cert-manager.io";
+                kind = "ClusterIssuer";
+                name = "hubble-ca-issuer";
+              };
+            };
           };
         };
       };
