@@ -61,7 +61,7 @@ spec:
               name: socket-dir
         - args:
             - --v=5
-          image: registry.k8s.io/sig-storage/snapshot-controller:v8.2.0
+          image: registry.k8s.io/sig-storage/snapshot-controller:v8.6.0
           imagePullPolicy: IfNotPresent
           name: snapshot-controller
           resources: {}
