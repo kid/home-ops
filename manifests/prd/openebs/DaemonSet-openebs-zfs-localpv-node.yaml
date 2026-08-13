@@ -46,7 +46,7 @@ spec:
                   fieldPath: spec.nodeName
             - name: NODE_DRIVER
               value: openebs-zfs
-          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.13.0
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.17.0
           imagePullPolicy: IfNotPresent
           lifecycle:
             preStop:
