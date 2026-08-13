@@ -84,8 +84,8 @@ in
   # and hands off to ArgoCD via manifests/prd/bootstrap.yaml. cert-manager
   # joins too, but only for Cilium's Hubble mTLS (modules/kubernetes/cilium/
   # hubble-tls.nix) — Helm's own cert generation isn't idempotent across
-  # renders. external-secrets/openebs/sops-operator remain deliberately out
-  # of scope for this pass.
+  # renders. external-secrets/sops-operator remain deliberately out of
+  # scope for this pass.
   den.aspects.prd.includes = with den.aspects; [
     gateway-api-crds
     cilium
@@ -94,6 +94,7 @@ in
     cert-manager
     coredns
     argocd
+    openebs
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/

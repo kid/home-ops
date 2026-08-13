@@ -1,0 +1,11 @@
+allowVolumeExpansion: true
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  name: openebs-zfs
+parameters:
+  poolname: zroot/k8s
+provisioner: zfs.csi.openebs.io
+volumeBindingMode: WaitForFirstConsumer

@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: openebs-zfs-controller
+    chart: zfs-localpv-2.10.1
+    component: openebs-zfs-controller
+    heritage: Helm
+    openebs.io/component-name: openebs-zfs-controller
+    openebs.io/version: 2.10.1
+    release: openebs
+    role: openebs-zfs
+  name: openebs-zfs-localpv-controller
+  namespace: openebs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openebs-zfs-controller
+      component: openebs-zfs-controller
+      release: openebs
+  template:
+    metadata:
+      labels:
+        app: openebs-zfs-controller
+        chart: zfs-localpv-2.10.1
+        component: openebs-zfs-controller
+        heritage: Helm
+        name: openebs-zfs-controller
+        openebs.io/component-name: openebs-zfs-controller
+        openebs.io/logging: "true"
+        openebs.io/version: 2.10.1
+        release: openebs
+        role: openebs-zfs
+    spec:
+      containers:
+        - args:
+            - --v=5
+            - --csi-address=$(ADDRESS)
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          image: registry.k8s.io/sig-storage/csi-resizer:v1.13.2
+          imagePullPolicy: IfNotPresent
+          name: csi-resizer
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/csi/sockets/pluginproxy/
+              name: socket-dir
+        - args:
+            - --csi-address=$(ADDRESS)
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          image: registry.k8s.io/sig-storage/csi-snapshotter:v8.2.0
+          imagePullPolicy: IfNotPresent
+          name: csi-snapshotter
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/csi/sockets/pluginproxy/
+              name: socket-dir
+        - args:
+            - --v=5
+          image: registry.k8s.io/sig-storage/snapshot-controller:v8.2.0
+          imagePullPolicy: IfNotPresent
+          name: snapshot-controller
+          resources: {}
+        - args:
+            - --csi-address=$(ADDRESS)
+            - --v=5
+            - --feature-gates=Topology=true
+            - --strict-topology
+            - --enable-capacity=true
+            - --extra-create-metadata=true
+            - --default-fstype=ext4
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          image: registry.k8s.io/sig-storage/csi-provisioner:v5.2.0
+          imagePullPolicy: IfNotPresent
+          name: csi-provisioner
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/csi/sockets/pluginproxy/
+              name: socket-dir
+        - args:
+            - --endpoint=$(OPENEBS_CSI_ENDPOINT)
+            - --plugin=$(OPENEBS_CONTROLLER_DRIVER)
+          env:
+            - name: OPENEBS_CONTROLLER_DRIVER
+              value: controller
+            - name: OPENEBS_CSI_ENDPOINT
+              value: unix:///var/lib/csi/sockets/pluginproxy/csi.sock
+            - name: OPENEBS_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPENEBS_IO_INSTALLER_TYPE
+              value: zfs-localpv-helm
+            - name: OPENEBS_IO_ENABLE_ANALYTICS
+              value: "true"
+            - name: OPENEBS_IO_ENABLE_BACKUP_GC
+              value: "false"
+          image: docker.io/openebs/zfs-driver:2.10.1
+          imagePullPolicy: IfNotPresent
+          name: openebs-zfs-plugin
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/csi/sockets/pluginproxy/
+              name: socket-dir
+      priorityClassName: openebs-zfs-csi-controller-critical
+      serviceAccountName: openebs-zfs-controller-sa
+      volumes:
+        - emptyDir: {}
+          name: socket-dir
