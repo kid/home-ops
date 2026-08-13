@@ -16,6 +16,10 @@
   ],
   ignorePaths: [
     '**/resources/**',
+    // nixidy-generated, regenerated from modules/kubernetes/**/*.nix via
+    // `nix run .#write-manifests` — never hand-edit, and a version bump
+    // here alone would just get overwritten on the next regen.
+    'manifests/prd/**',
   ],
   suppressNotifications: [
     "prEditedNotification",
