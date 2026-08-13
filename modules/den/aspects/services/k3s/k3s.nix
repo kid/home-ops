@@ -1,11 +1,10 @@
-# k3s server aspect. Ported verbatim from nixopslab's
-# modules/den/aspects/services/k3s.nix. Single-node only (clusterInit=true
-# unconditionally) — multi-node join-token logic is future work, only
-# needed if/when a second host joins the `prd` cluster (see plan decision
-# #5). CIDRs come from the host's own cluster (config.den.clusters.<name>,
-# cross-referenced via the freeform host.k3s.clusterName field), matching
-# the cluster entity as the single source of truth pattern already used
-# throughout this repo's network/device fleet.
+# k3s server aspect. Single-node only (clusterInit=true unconditionally) —
+# multi-node join-token logic is future work, only needed if/when a second
+# host joins the `prd` cluster. CIDRs come from the host's own cluster
+# (config.den.clusters.<name>, cross-referenced via the freeform
+# host.k3s.clusterName field), matching the cluster entity as the single
+# source of truth pattern already used throughout this repo's
+# network/device fleet.
 #
 # Emits the `k3s-nodes` quirk ({hostname; address;}), collected onto
 # rb5009 by modules/den/policies/pipes.nix's

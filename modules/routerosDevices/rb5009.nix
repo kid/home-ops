@@ -1,7 +1,6 @@
-# rb5009 — ported verbatim from tf-stacks/prd/network/rb5009/{terragrunt.hcl,
-# capsman,dns,firewall,qos}/terragrunt.hcl.
+# rb5009's Terragrunt stack inputs (base/capsman/dns/firewall/qos).
 #
-# Two pre-existing quirks ported as-is (not silently fixed, per the plan):
+# Two intentional quirks, not bugs to fix:
 #   - qos has no `dependencies` block, unlike its capsman/dns/firewall
 #     siblings (all of which depend on this device's own base stack).
 #   - the original firewall leaf's `vlans_forward_rules` HCL object literal
@@ -285,9 +284,8 @@ in
           };
       };
 
-      # NB: no `dependsOn` — unlike capsman/dns/firewall, qos does not
-      # depend on this device's own base stack in the hand-written HCL
-      # either. Preserved as-is (see file header).
+      # NB: no `dependsOn`, matching the file header's note on this
+      # intentional quirk.
       qos = {
         dependsOn = [ ];
         inputs =

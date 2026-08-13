@@ -1,8 +1,7 @@
 # k3s bootstrap aspect — oneshot systemd services that apply manifests on
-# first boot. Ported from nixopslab's modules/den/aspects/services/
-# k3s-bootstrap.nix, scoped down to this repo's Phase 6 app set (cilium +
-# gateway-api-crds + coredns + argocd + cert-manager — no external-secrets/
-# sops-operator/openebs yet, see modules/clusters/prd.nix).
+# first boot, scoped to the app set in modules/clusters/prd.nix's
+# den.aspects.prd.includes (cilium + gateway-api-crds + coredns + argocd +
+# cert-manager).
 #
 # Bakes the generated manifests into the NixOS image via `self` (the flake
 # source is a store path), so no git clone is needed on the node.

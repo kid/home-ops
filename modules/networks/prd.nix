@@ -1,7 +1,6 @@
-# prd environment's VLANs — ported verbatim from tf-stacks/prd/env.hcl's
-# `vlans_array`. cidr is computed downstream (environment.networks, in
-# modules/den/schema/environments.nix) from environment.cidrBase + vlanId/
-# prefix; RosLab keeps its historical explicit override instead.
+# prd environment's VLANs. cidr is computed downstream
+# (environment.networks, in modules/den/schema/environments.nix) from
+# environment.cidrBase + vlanId/prefix.
 let
   tld = "home.kidibox.net";
 

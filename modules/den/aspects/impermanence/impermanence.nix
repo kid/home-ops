@@ -1,5 +1,4 @@
-# Impermanent-root aspect. Ported from nixopslab's
-# modules/den/aspects/impermanence/impermanence.nix.
+# Impermanent-root aspect.
 {
   den,
   inputs,

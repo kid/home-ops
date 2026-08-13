@@ -1,17 +1,14 @@
-# Cluster entity schema and instance registry.
-#
-# Ported from nixopslab's modules/den/schema/clusters.nix. A cluster is a
-# k3s Kubernetes cluster (NixOS hosts, not RouterOS devices) — a sibling
-# entity to `network`/`routerosDevice` under `environment`, sharing the same
+# Cluster entity schema and instance registry. A cluster is a k3s
+# Kubernetes cluster (NixOS hosts, not RouterOS devices) — a sibling entity
+# to `network`/`routerosDevice` under `environment`, sharing the same
 # `den.environments.<name>` (see modules/den/policies/fleet.nix's
 # `env-to-clusters`).
 #
-# Deviates from nixopslab in one place: `network` (a string referencing an
-# existing `den.networks.<name>` entry) replaces nixopslab's standalone
-# `vlanId` int — home-ops already has a richer VLAN/CIDR entity nixopslab
-# has no equivalent of, so a cluster resolves its real VLAN/CIDR via
+# `network` (a string referencing an existing `den.networks.<name>` entry)
+# resolves this cluster's real VLAN/CIDR via
 # `config.den.networks.${cluster.network}` /
-# `environment.networks.${cluster.network}` instead of duplicating that data.
+# `environment.networks.${cluster.network}`, rather than duplicating that
+# data as a standalone field.
 { lib, den, ... }:
 {
   config.den.schema.cluster.isEntity = true;

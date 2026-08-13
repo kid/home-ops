@@ -3,9 +3,6 @@
 # modules/den/policies/cluster.nix's cluster-to-nixidy) against the
 # committed `manifests/<rootPath>/` directory — same drift-check-and-sync
 # pattern as this repo's own checks.terragrunt/apps.write-terragrunt.
-# Ported from nixopslab's modules/flake/files.nix (there implemented as
-# plain runCommand/writeShellApplication, not via the sini/files flake
-# module its README mentions).
 { lib, self, ... }:
 {
   perSystem =

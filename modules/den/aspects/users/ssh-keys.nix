@@ -1,8 +1,6 @@
 # Provisions authorized SSH keys for a resolved { host, user } scope.
-#
-# Ported from den's own official templates/fleet-demo/modules/aspects/users/ssh-keys.nix
-# (github:denful/den) — writes directly to the real NixOS option path; no
-# `.user`-class auto-forwarding involved once on the full registry pattern.
+# Writes directly to the real NixOS option path — no `.user`-class
+# auto-forwarding involved.
 _: {
   den.aspects.ssh-keys.includes = [
     (

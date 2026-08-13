@@ -1,4 +1,4 @@
-# Quirk-collection pipes. Ported from nixopslab's modules/den/policies/pipes.nix.
+# Quirk-collection pipes.
 { den, ... }:
 let
   inherit (den.lib.policy) pipe;

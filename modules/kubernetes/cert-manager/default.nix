@@ -1,5 +1,4 @@
-# cert-manager, ported from nixopslab's modules/kubernetes/cert-manager/
-# default.nix. Installed so Cilium can issue Hubble's mTLS certs through it
+# cert-manager. Installed so Cilium can issue Hubble's mTLS certs through it
 # (modules/kubernetes/cilium/hubble-tls.nix) instead of Helm's own
 # genCA/genSignedCert, which re-randomizes on every render and made
 # manifests/prd/cilium's certs non-idempotent.

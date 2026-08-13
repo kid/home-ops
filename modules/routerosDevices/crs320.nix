@@ -1,5 +1,5 @@
-# crs320 — ported verbatim from tf-stacks/prd/network/crs320/terragrunt.hcl.
-# Single "base" stack, depends on rb5009's base stack.
+# crs320's Terragrunt stack input. Single "base" stack, depends on rb5009's
+# base stack.
 {
   lib,
   den,
@@ -94,9 +94,8 @@ in
             };
             ether1 = {
               # NB: "command" is not a field terragrunt-infra-catalog's ros-base
-              # module ethernet_interfaces variable declares (it wants "comment") —
-              # ported verbatim from the hand-written leaf, flagged to the
-              # user rather than silently fixed.
+              # module ethernet_interfaces variable declares (it wants "comment")
+              # — the module silently ignores it. Intentional, not a bug to fix.
               command = "vulkan";
               untagged = networks.Trusted.vlanId;
               tagged = lib.sort (a: b: a < b) [

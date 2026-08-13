@@ -1,15 +1,12 @@
-# User access grants + resolution policy.
+# User access grants + resolution policy. Resolves den.users.registry
+# entries onto hosts whose granted access-policy groups
+# (fleet.user-access.by-host) intersect the user's own `groups`. Replaces
+# den's built-in host-to-users policy — host.users.<name> inline
+# declarations don't scale to a real fleet the way a standalone registry +
+# grants does.
 #
-# Ported from den's own official templates/fleet-demo/modules/policies/fleet.nix
-# (github:denful/den) — resolves den.users.registry entries onto hosts whose
-# granted access-policy groups (fleet.user-access.by-host) intersect the
-# user's own `groups`. Replaces den's built-in host-to-users policy, same as
-# the reference template does (host.users.<name> inline declarations don't
-# scale to a real fleet the way a standalone registry + grants does).
-#
-# by-environment grants (the other half of the reference template) are
-# intentionally not ported yet — this repo's hosts don't carry an
-# `environment` field, and there's only one host today. Add
+# by-environment grants are not implemented — this repo's hosts don't carry
+# an `environment` field, and there's only one host today. Add
 # fleet.user-access.by-environment the same way once that's needed.
 {
   lib,

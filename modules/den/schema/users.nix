@@ -1,10 +1,7 @@
-# User entity schema and registry.
-#
-# Ported from den's own official templates/fleet-demo/modules/users.nix
-# (github:denful/den) — the standalone-registry + access-grant pattern den's
-# own reference example uses for a real fleet, replacing the simpler
-# built-in host.users.<name> inline declaration + host-to-users policy (see
-# modules/den/policies/users.nix, which excludes host-to-users).
+# User entity schema and registry: a standalone registry + access-grant
+# pattern, replacing the simpler built-in host.users.<name> inline
+# declaration + host-to-users policy (see modules/den/policies/users.nix,
+# which excludes host-to-users).
 { lib, den, ... }:
 let
   registryUserType = lib.types.submodule (
@@ -61,9 +58,10 @@ let
         };
 
         # RouterOS device membership + per-device data. Not part of the
-        # host-side access-grant machinery above — read directly by
-        # modules/network/aspects/ros-base.nix (see plan for why this
-        # doesn't go through resolve.to/quirks like the NixOS side does).
+        # host-side access-grant machinery above — den.users.registry is a
+        # flat, non-entity registry (a single producer read directly by
+        # modules/network/aspects/ros-base.nix, not walked via the scope
+        # tree the NixOS side's resolve.to/quirks machinery uses).
         # Keyed by den.routerosDevices.<name> name (not den.devices, the
         # unrelated network client-device registry).
         routerosDevices = lib.mkOption {
