@@ -1,7 +1,8 @@
-# OpenEBS ZFS-LocalPV, using node1's existing zroot/openebs dataset as the
-# pool. The driver only zfs-creates child datasets per PV under this
-# parent — it never creates the parent itself, which is why the dataset is
-# declared in modules/den/aspects/disko/zfs-disk-single.nix, not here.
+# OpenEBS ZFS-LocalPV, using node1's zroot/openebs dataset as the pool. The
+# driver only zfs-creates child datasets per PV under this parent — it
+# never creates the parent itself, which is why the dataset is requested
+# separately, via modules/den/aspects/services/k3s/openebs.nix's `datasets`
+# quirk (den.aspects.k3s-openebs, included on node1).
 _: {
   den.aspects.openebs.k8s-manifests =
     { charts, ... }:

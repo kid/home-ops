@@ -91,11 +91,6 @@ in
             postCreateHook = emptySnapshot "zroot";
 
             datasets = {
-              openebs = {
-                type = "zfs_fs";
-                options.mountpoint = "none";
-              };
-
               reserved = {
                 type = "zfs_fs";
                 options = {
