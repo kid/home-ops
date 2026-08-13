@@ -68,6 +68,18 @@
               snapshotter = "zfs";
             }
           ];
+          # containerd's implicit default "runc" runtime entry carries its
+          # own snapshotter (defaulting to "overlayfs") independently of the
+          # top-level CRI snapshotter above. kubelet's image pulls go through
+          # that per-runtime entry and silently pull with overlayfs unless
+          # it's pinned here too — fails with "no unpack platforms defined"
+          # since only a zfs unpack_config is declared. `ctr images pull
+          # --snapshotter zfs` (this file's original verification) bypasses
+          # the per-runtime lookup entirely, so it didn't catch this.
+          "io.containerd.grpc.v1.cri".containerd.runtimes.runc = {
+            runtime_type = "io.containerd.runc.v2";
+            snapshotter = "zfs";
+          };
         };
       };
     };
