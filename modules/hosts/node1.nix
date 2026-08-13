@@ -102,6 +102,7 @@
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
     den.aspects.k3s-server
+    den.aspects.k3s-bootstrap
   ];
 
   # Grants kid's "admin" access-policy group (modules/users/kid.nix) onto

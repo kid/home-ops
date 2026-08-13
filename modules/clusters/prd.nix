@@ -79,16 +79,16 @@ in
     };
   };
 
-  # Minimal app set for this pass (Phase 4 de-risking) — deliberately not
-  # argocd/cert-manager/external-secrets/openebs/sops-operator yet (cilium-bgp
-  # landed in Phase 5). See modules/den/aspects/services/k3s-bootstrap.nix
-  # (not ported this pass) for why the rest waits: nixidy's bootstrapManifest
-  # assumes ArgoCD exists downstream, so that whole systemd-unit apply chain
-  # waits for a future phase.
+  # Phase 6: argocd joins the app set now that modules/den/aspects/services/
+  # k3s/bootstrap.nix actually applies these manifests to the live cluster
+  # and hands off to ArgoCD via manifests/prd/bootstrap.yaml. cert-manager/
+  # external-secrets/openebs/sops-operator remain deliberately out of scope
+  # for this pass.
   den.aspects.prd.includes = with den.aspects; [
     cilium
     cilium-bgp
     coredns
+    argocd
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
