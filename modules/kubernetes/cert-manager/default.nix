@@ -3,14 +3,31 @@
 # render and made manifests/prd/cilium's certs non-idempotent.
 #
 # ClusterIssuer/Certificate aren't core Kubernetes types, so nixidy has no
-# built-in typed options for them — _crds.nix (generated, see its own
-# header) provides them, so the self-signed CA + ClusterIssuer chain below
-# is real Nix, not embedded YAML.
+# built-in typed options for them — generators.fromChartCRDModule (a module
+# arg nixidy's mkEnv auto-injects) generates them live from the chart's own
+# CRDs, no committed file needed, so the self-signed CA + ClusterIssuer
+# chain below is real Nix, not embedded YAML. extraOpts is required: the
+# chart gates its CRDs behind crds.enabled (default false, same as the
+# Helm release's own values below), and kindFilter matches nothing if the
+# chart is templated without it.
 _: {
   den.aspects.cert-manager.k8s-manifests =
-    { charts, ... }:
+    { charts, generators, ... }:
     {
-      nixidy.applicationImports = [ ./_crds.nix ];
+      nixidy.applicationImports = [
+        (generators.fromChartCRDModule {
+          name = "cert-manager";
+          chart = charts.jetstack.cert-manager;
+          kindFilter = [
+            "Certificate"
+            "ClusterIssuer"
+          ];
+          extraOpts = [
+            "--set"
+            "crds.enabled=true"
+          ];
+        })
+      ];
 
       applications.cert-manager = {
         namespace = "cert-manager";
