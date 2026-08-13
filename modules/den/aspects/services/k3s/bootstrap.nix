@@ -18,11 +18,12 @@
 #                                     then apply Cilium custom resources. Skipped (fast
 #                                     no-op) on hosts without den.aspects.k3s-cilium.
 #   3. k3s-bootstrap-cert-manager  — cert-manager + the Hubble CA/ClusterIssuer
-#                                     it signs (modules/kubernetes/cilium/hubble-tls.nix);
-#                                     must come after cilium since cert-manager's pods
-#                                     need CNI to schedule (unlike cilium-agent, which
-#                                     runs hostNetwork and mounts Hubble's cert as
-#                                     `optional`, so it doesn't block on this wave)
+#                                     it signs (modules/kubernetes/cert-manager/
+#                                     default.nix); must come after cilium since
+#                                     cert-manager's pods need CNI to schedule
+#                                     (unlike cilium-agent, which runs hostNetwork
+#                                     and mounts Hubble's cert as `optional`, so it
+#                                     doesn't block on this wave)
 #   4. k3s-bootstrap-coredns       — CoreDNS deployment; ArgoCD needs cluster DNS to
 #                                     resolve the git repository on first sync
 #   5. k3s-bootstrap-argocd        — ArgoCD + self-managing Application

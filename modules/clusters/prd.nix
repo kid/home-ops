@@ -80,14 +80,13 @@ in
   };
 
   # cert-manager is included only for Cilium's Hubble mTLS
-  # (modules/kubernetes/cilium/hubble-tls.nix) — Helm's own cert generation
-  # isn't idempotent across renders. external-secrets/sops-operator remain
-  # out of scope.
+  # (modules/kubernetes/cert-manager/default.nix) — Helm's own cert
+  # generation isn't idempotent across renders. external-secrets/sops-operator
+  # remain out of scope.
   den.aspects.prd.includes = with den.aspects; [
     gateway-api-crds
     cilium
     cilium-bgp
-    cilium-hubble-tls
     cert-manager
     coredns
     argocd
