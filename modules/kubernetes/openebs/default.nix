@@ -11,8 +11,24 @@ _: {
         namespace = "openebs";
         createNamespace = true;
 
+        # Pins the chart's own bundled CSI sidecars forward to their latest
+        # same-major releases — the chart (2.10.1) hasn't moved its own
+        # pins in over a year. Stops at the sidecars' latest major
+        # (csi-resizer v2, csi-provisioner v6): openebs hasn't adopted
+        # either upstream, so there's no real-world validation against
+        # zfs-driver, and both promote VolumeAttributesClass to
+        # default-on GA — deliberately deferred, not overlooked.
         helm.releases.openebs = {
           chart = charts.openebs.zfs-localpv;
+          values = {
+            zfsNode.driverRegistrar.image.tag = "v2.17.0";
+            zfsController = {
+              resizer.image.tag = "v1.14.0";
+              provisioner.image.tag = "v5.3.0";
+              snapshotter.image.tag = "v8.6.0";
+              snapshotController.image.tag = "v8.6.0";
+            };
+          };
         };
 
         resources.storageClasses.openebs-zfs = {
