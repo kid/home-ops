@@ -87,6 +87,7 @@ in
   # renders. external-secrets/openebs/sops-operator remain deliberately out
   # of scope for this pass.
   den.aspects.prd.includes = with den.aspects; [
+    gateway-api-crds
     cilium
     cilium-bgp
     cilium-hubble-tls

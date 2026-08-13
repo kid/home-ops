@@ -1,8 +1,8 @@
 # k3s bootstrap aspect — oneshot systemd services that apply manifests on
 # first boot. Ported from nixopslab's modules/den/aspects/services/
 # k3s-bootstrap.nix, scoped down to this repo's Phase 6 app set (cilium +
-# coredns + argocd + cert-manager — no external-secrets/sops-operator/openebs
-# yet, see modules/clusters/prd.nix).
+# gateway-api-crds + coredns + argocd + cert-manager — no external-secrets/
+# sops-operator/openebs yet, see modules/clusters/prd.nix).
 #
 # Bakes the generated manifests into the NixOS image via `self` (the flake
 # source is a store path), so no git clone is needed on the node.
@@ -10,11 +10,14 @@
 # Wave ordering:
 #   0. k3s-bootstrap-namespaces    — all Namespace resources from all apps
 #                                     (cilium, coredns, argocd, cert-manager)
-#   1. k3s-bootstrap-crds          — all CustomResourceDefinition resources from all apps,
-#                                     wait for Established before proceeding
+#   1. k3s-bootstrap-crds          — all CustomResourceDefinition resources from all apps
+#                                     (including the upstream Gateway API CRDs, modules/
+#                                     kubernetes/cilium/gateway-api-crds.nix), wait for
+#                                     Established before proceeding
 #   2. k3s-bootstrap-cilium        — Cilium core manifests, wait for operator
 #                                     (operator registers Cilium CRDs at startup),
-#                                     then apply Cilium custom resources
+#                                     then apply Cilium custom resources. Skipped (fast
+#                                     no-op) on hosts without den.aspects.k3s-cilium.
 #   3. k3s-bootstrap-cert-manager  — cert-manager + the Hubble CA/ClusterIssuer
 #                                     it signs (modules/kubernetes/cilium/hubble-tls.nix);
 #                                     must come after cilium since cert-manager's pods
@@ -30,11 +33,11 @@
 # causes "no kind is registered" errors, hence the split in wave 2.
 #
 # Each service is idempotent: exits early if already installed.
-{ self, ... }:
+{ self, den, ... }:
 {
   den.aspects.k3s-bootstrap = {
     nixos =
-      { pkgs, ... }:
+      { host, pkgs, ... }:
       let
         manifestPath =
           name:
@@ -43,10 +46,12 @@
             name = "k3s-prd-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
           };
         ciliumDir = manifestPath "cilium";
+        gatewayApiCrdsDir = manifestPath "gateway-api-crds";
         corednsDir = manifestPath "coredns";
         argocdDir = manifestPath "argocd";
         certManagerDir = manifestPath "cert-manager";
         bootstrapFile = manifestPath "bootstrap.yaml";
+        hasCilium = host.hasAspect den.aspects.k3s-cilium;
         waitForApi = ''
           echo "Waiting for k3s API server..."
           until kubectl get nodes >/dev/null 2>&1; do
@@ -112,7 +117,7 @@
                 echo "Applying all CRDs..."
                 declare -a files
                 while IFS= read -r f; do files+=("-f" "$f"); done < <(
-                  find ${ciliumDir} ${argocdDir} ${certManagerDir} -name "CustomResourceDefinition-*.yaml" | sort
+                  find ${ciliumDir} ${gatewayApiCrdsDir} ${argocdDir} ${certManagerDir} -name "CustomResourceDefinition-*.yaml" | sort
                 )
                 [[ ''${#files[@]} -gt 0 ]] && \
                   kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${files[@]}"
@@ -132,6 +137,16 @@
                   crd/certificaterequests.cert-manager.io \
                   crd/orders.acme.cert-manager.io \
                   crd/challenges.acme.cert-manager.io \
+                  --timeout=60s
+
+                echo "Waiting for Gateway API CRDs to be established..."
+                kubectl wait --for=condition=Established \
+                  crd/gatewayclasses.gateway.networking.k8s.io \
+                  crd/gateways.gateway.networking.k8s.io \
+                  crd/httproutes.gateway.networking.k8s.io \
+                  crd/grpcroutes.gateway.networking.k8s.io \
+                  crd/referencegrants.gateway.networking.k8s.io \
+                  crd/backendtlspolicies.gateway.networking.k8s.io \
                   --timeout=60s
 
                 echo "CRDs ready."
@@ -165,49 +180,56 @@
             serviceConfig = {
               Type = "oneshot";
               RemainAfterExit = true;
-              ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" ''
-                set -e
+              ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" (
+                if !hasCilium then
+                  ''
+                    echo "This host has no den.aspects.k3s-cilium — Cilium isn't its CNI, skipping bootstrap."
+                  ''
+                else
+                  ''
+                    set -e
 
-                if kubectl get daemonset -n kube-system cilium >/dev/null 2>&1; then
-                  echo "Cilium already installed, skipping bootstrap."
-                  exit 0
-                fi
+                    if kubectl get daemonset -n kube-system cilium >/dev/null 2>&1; then
+                      echo "Cilium already installed, skipping bootstrap."
+                      exit 0
+                    fi
 
-                echo "Applying Cilium core manifests..."
-                declare -a core_files
-                while IFS= read -r f; do core_files+=("-f" "$f"); done < <(
-                  find ${ciliumDir} -name "*.yaml" ! -name "Cilium*.yaml" | sort
-                )
-                [[ ''${#core_files[@]} -gt 0 ]] && \
-                  kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${core_files[@]}"
+                    echo "Applying Cilium core manifests..."
+                    declare -a core_files
+                    while IFS= read -r f; do core_files+=("-f" "$f"); done < <(
+                      find ${ciliumDir} -name "*.yaml" ! -name "Cilium*.yaml" | sort
+                    )
+                    [[ ''${#core_files[@]} -gt 0 ]] && \
+                      kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${core_files[@]}"
 
-                echo "Waiting for Cilium DaemonSet to be ready..."
-                kubectl rollout status -n kube-system daemonset/cilium --timeout=300s
+                    echo "Waiting for Cilium DaemonSet to be ready..."
+                    kubectl rollout status -n kube-system daemonset/cilium --timeout=300s
 
-                echo "Waiting for Cilium operator to be ready..."
-                kubectl rollout status -n kube-system deployment/cilium-operator --timeout=120s
+                    echo "Waiting for Cilium operator to be ready..."
+                    kubectl rollout status -n kube-system deployment/cilium-operator --timeout=120s
 
-                echo "Waiting for Cilium CRDs to be established..."
-                until kubectl get crd ciliumloadbalancerippools.cilium.io >/dev/null 2>&1; do
-                  sleep 5
-                done
-                kubectl wait --for=condition=Established \
-                  crd/ciliumloadbalancerippools.cilium.io \
-                  crd/ciliumbgpclusterconfigs.cilium.io \
-                  crd/ciliumbgppeerconfigs.cilium.io \
-                  crd/ciliumbgpadvertisements.cilium.io \
-                  --timeout=60s
+                    echo "Waiting for Cilium CRDs to be established..."
+                    until kubectl get crd ciliumloadbalancerippools.cilium.io >/dev/null 2>&1; do
+                      sleep 5
+                    done
+                    kubectl wait --for=condition=Established \
+                      crd/ciliumloadbalancerippools.cilium.io \
+                      crd/ciliumbgpclusterconfigs.cilium.io \
+                      crd/ciliumbgppeerconfigs.cilium.io \
+                      crd/ciliumbgpadvertisements.cilium.io \
+                      --timeout=60s
 
-                echo "Applying Cilium custom resources..."
-                declare -a cr_files
-                while IFS= read -r f; do cr_files+=("-f" "$f"); done < <(
-                  find ${ciliumDir} -name "Cilium*.yaml" | sort
-                )
-                [[ ''${#cr_files[@]} -gt 0 ]] && \
-                  kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${cr_files[@]}"
+                    echo "Applying Cilium custom resources..."
+                    declare -a cr_files
+                    while IFS= read -r f; do cr_files+=("-f" "$f"); done < <(
+                      find ${ciliumDir} -name "Cilium*.yaml" | sort
+                    )
+                    [[ ''${#cr_files[@]} -gt 0 ]] && \
+                      kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${cr_files[@]}"
 
-                echo "Cilium bootstrap complete."
-              '';
+                    echo "Cilium bootstrap complete."
+                  ''
+              );
             };
             wantedBy = [ "multi-user.target" ];
           };

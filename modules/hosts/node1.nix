@@ -101,6 +101,7 @@
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
     den.aspects.k3s-server
+    den.aspects.k3s-cilium
     den.aspects.k3s-bootstrap
   ];
 

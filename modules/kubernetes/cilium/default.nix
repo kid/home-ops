@@ -37,6 +37,10 @@ _: {
 
             bgpControlPlane.enabled = true;
 
+            # Ingress duty, replacing traefik. Requires gateway-api-crds.nix's
+            # CRDs applied first (see bootstrap.nix's wave ordering).
+            gatewayAPI.enabled = true;
+
             operator.replicas = 1;
 
             # Hubble's server cert issued by cert-manager (modules/kubernetes/

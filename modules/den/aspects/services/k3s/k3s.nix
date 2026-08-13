@@ -16,7 +16,6 @@
 {
   config,
   den,
-  lib,
   ...
 }:
 let
@@ -56,12 +55,14 @@ in
           enable = true;
           role = "server";
           clusterInit = true;
-          extraFlags = lib.concatStringsSep " " [
-            "--flannel-backend=none"
-            "--disable-network-policy"
-            "--disable-kube-proxy"
+          # CNI-agnostic disables only — CNI-dependent flags live in the
+          # sibling den.aspects.k3s-cilium aspect instead. A plain list, not
+          # a concatStringsSep string: extraFlags accepts `listOf str`, and
+          # multiple aspects setting it concatenate automatically.
+          extraFlags = [
             "--disable=coredns"
             "--disable=local-storage"
+            "--disable=metrics-server"
             "--cluster-cidr=${podCIDR}"
             "--service-cidr=${serviceCIDR}"
             # Bare path, NOT unix://…: k3s forwards this to the kubelet's
@@ -72,11 +73,6 @@ in
             "--container-runtime-endpoint=/run/containerd/containerd.sock"
           ];
         };
-
-        # Cilium's own BPF datapath replaces k3s's default firewall/kube-proxy
-        # setup; k3s's iptables must speak nft to match Cilium's nftables use.
-        networking.firewall.enable = lib.mkForce false;
-        networking.nftables.enable = true;
 
         boot.kernelModules = [
           "br_netfilter"
