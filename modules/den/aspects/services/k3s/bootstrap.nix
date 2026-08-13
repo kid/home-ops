@@ -236,8 +236,8 @@
 
           # Wave 3: cert-manager — after cilium, since cert-manager's own pods
           # need CNI to schedule. Once its webhook is up, apply the Hubble
-          # self-signed CA + ClusterIssuer (modules/kubernetes/cilium/
-          # hubble-tls.nix) and wait for the CA to be signed, so Cilium's
+          # self-signed CA + ClusterIssuer (modules/kubernetes/cert-manager/
+          # default.nix) and wait for the CA to be signed, so Cilium's
           # hubble-server-certs Certificate (applied in wave 2) has a
           # working issuer to resolve against.
           k3s-bootstrap-cert-manager = {
