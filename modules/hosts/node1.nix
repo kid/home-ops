@@ -87,8 +87,6 @@
       i18n.defaultLocale = "en_US.UTF-8";
 
       users.mutableUsers = false;
-      security.sudo.enable = true;
-      security.sudo.wheelNeedsPassword = false;
 
       services.openssh.enable = true;
 
@@ -98,6 +96,7 @@
     };
 
   den.aspects.node1.includes = [
+    den.aspects.base
     den.aspects.disko.zfs-disk-single
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
