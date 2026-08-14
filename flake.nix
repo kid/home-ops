@@ -7,7 +7,6 @@
 
   inputs = {
     den.url = "github:denful/den";
-    deploy-rs.url = "github:serokell/deploy-rs";
     disko = {
       url = "github:AlexLov/disko/6747342da148f6cb28c8405a70fe00455a0ba027";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -31,6 +30,7 @@
     };
     impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
+    nh.url = "github:nix-community/nh";
     nixhelm = {
       url = "github:farcaller/nixhelm";
       inputs.nixpkgs.follows = "nixpkgs";

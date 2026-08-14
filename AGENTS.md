@@ -16,7 +16,8 @@ surface.
 - `nix run .#write-terragrunt` — regenerate `tf-stacks/prd/network/**/terragrunt.hcl` from Nix. Run after editing any `"terragrunt-stacks"` aspect content or a device's `terragruntInputs`.
 - `nix run .#write-manifests` — regenerate `manifests/prd/**` from nixidy. Run after editing any `k8s-manifests` aspect content.
 - `nix run .#nixos-anywhere-install <host> <ssh-target>` — kexec-based remote NixOS install straight onto real hardware for a `den.hosts` entry (e.g. `nixos-anywhere-install node1 root@10.0.10.10`).
-- `deploy .#node1` — ongoing config push to an already-installed `den.hosts` entry over SSH (host must first exist via `nixos-anywhere-install`). Hosts opt in via `fleet.deploy-rs.targets.<name>` (not every `den.hosts` entry — `test-vm` isn't). `deploy .#node1 --dry-activate` previews the activation without switching; magic-rollback (on by default) auto-reverts if the host becomes unreachable after activation.
+- `deploy <host> [switch|boot|test|build]` (mode defaults to `switch`) — ongoing config push to an already-installed `den.hosts` entry over SSH via `nh os <mode> --target-host`, e.g. `deploy node1` or `deploy node1 boot` (host must first exist via `nixos-anywhere-install`). Hosts opt in via `fleet.nh.targets.<name>` (not every `den.hosts` entry — `test-vm` isn't).
+- `write-terragrunt`, `write-manifests`, `nixos-anywhere-install`, `deploy`, `write-flake`, `write-lock`, `write-inputs` are all available directly as commands inside `nix develop`, not just via `nix run .#<name>`.
 - `treefmt` — formats everything (`nixfmt`, `deadnix`, `statix`, `hclfmt`, `terraform` for `*.tofu`/`*.tfvars`/`*.tftest.hcl`, `yamlfmt`, `just`). `*.sops.*` and `manifests/**` are excluded. Runs automatically pre-commit via git-hooks-nix; the full `nix flake check` runs pre-push instead (kept off pre-commit for speed).
 - `.pre-commit-config.yaml` is a generated symlink into the Nix store — never hand-edit it.
 - Terragrunt `plan`/`apply` happen by hand, from inside `tf-stacks/prd/network/<device>[/<stack>]/`, only after `write-terragrunt` + human review of the diff. Never automate an apply.
@@ -51,7 +52,7 @@ Known gotchas in this system, worth knowing before you hit them again:
 - NixOS content aspects needing `{ host, user }` context (e.g. `modules/den/aspects/users/{define-user,ssh-keys}.nix`) must be wired via `den.schema.user.includes`, **not** a host's own `den.aspects.<host>.includes` — the host's own aspect chain only has `{ host }` bound, so a function requiring `user` silently never fires there. If a registry user's NixOS account renders empty, check this first.
 - `den.schema.user.classes` needs a default (`lib.mkDefault [ ]`, set in `modules/den/schema/users.nix`) — several of den's own built-in batteries read `user.classes` unconditionally and crash if it's unset.
 - Files named `_foo.nix` (e.g. `modules/network/_ros-lib.nix`, `modules/terragrunt/_render-lib.nix`) are plain `import`ed libs, not modules — the leading underscore makes `import-tree` skip them. Don't drop the underscore, or they'll be auto-imported as broken flake-parts modules.
-- `modules/flake/deploy-rs.nix` derives deploy targets from `config.flake.nixosConfigurations` — don't hand-list a host's NixOS modules a second time there; opt a host in via `fleet.deploy-rs.targets.<name>` on its own file instead.
+- `modules/flake/nh-deploy.nix` builds deploy targets via `nh os --target-host`/`-H` against `config.flake.nixosConfigurations` — don't hand-list a host's NixOS modules a second time there; opt a host in via `fleet.nh.targets.<name>` on its own file instead.
 
 ## RouterOS / Terragrunt
 
@@ -65,4 +66,4 @@ Known gotchas in this system, worth knowing before you hit them again:
 
 - `modules/clusters/prd.nix`'s `den.aspects.prd.includes` lists which app aspects apply to the `prd` k3s cluster (currently `cilium`, `cilium-bgp`, `cilium-hubble-tls`, `cert-manager`, `coredns`, `argocd`). Each app aspect (`modules/kubernetes/<app>/default.nix`) contributes `k8s-manifests` content — nixidy-flavored NixOS-module options, not raw YAML.
 - Rendered to `manifests/prd/**`, applied once by `modules/den/aspects/services/k3s/bootstrap.nix`, after which ArgoCD (itself one of the app aspects) takes over syncing the rest of the app set from git.
-- The cluster runs on `modules/hosts/node1.nix` — a bare-metal box installed via `nixos-anywhere`, doubling as k3s node, Incus VM host, and NFS storage, and kept up to date via `deploy-rs` after initial install.
+- The cluster runs on `modules/hosts/node1.nix` — a bare-metal box installed via `nixos-anywhere`, doubling as k3s node, Incus VM host, and NFS storage, and kept up to date via `nh --target-host` (`deploy` in the devshell) after initial install.

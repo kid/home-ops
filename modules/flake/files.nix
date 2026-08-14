@@ -6,7 +6,12 @@
 { lib, self, ... }:
 {
   perSystem =
-    { system, pkgs, ... }:
+    {
+      system,
+      pkgs,
+      config,
+      ...
+    }:
     let
       envs = self.nixidyEnvs.${system} or { };
 
@@ -27,21 +32,21 @@
             + "\ntouch $out"
           );
 
+      packages.write-manifests = pkgs.writeShellApplication {
+        name = "write-manifests";
+        runtimeInputs = [ pkgs.rsync ];
+        text = lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (name: env: ''
+            echo "==> Writing ${name} manifests to ${targetDirFor env}..."
+            mkdir -p "${targetDirFor env}"
+            rsync -rlL --checksum --delete --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
+          '') envs
+        );
+      };
+
       apps.write-manifests = {
         type = "app";
-        program = "${
-          pkgs.writeShellApplication {
-            name = "write-manifests";
-            runtimeInputs = [ pkgs.rsync ];
-            text = lib.concatStringsSep "\n" (
-              lib.mapAttrsToList (name: env: ''
-                echo "==> Writing ${name} manifests to ${targetDirFor env}..."
-                mkdir -p "${targetDirFor env}"
-                rsync -rlL --checksum --delete --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
-              '') envs
-            );
-          }
-        }/bin/write-manifests";
+        program = "${config.packages.write-manifests}/bin/write-manifests";
       };
     };
 }

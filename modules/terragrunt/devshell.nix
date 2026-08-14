@@ -85,7 +85,7 @@ let
 in
 {
   perSystem =
-    { pkgs, ... }:
+    { pkgs, config, ... }:
     let
       # treefmt's hclfmt formatter (modules/flake/devshell.nix) covers *.hcl
       # repo-wide, so the committed leaves must already be hclfmt-clean —
@@ -98,21 +98,21 @@ in
         '';
     in
     {
+      packages.write-terragrunt = pkgs.writeShellApplication {
+        name = "write-terragrunt";
+        # Copies each leaf's formatted derivation into place (rather than
+        # a heredoc) so the written byte content matches
+        # checks.terragrunt's own comparison target exactly.
+        text = lib.concatMapStrings (leaf: ''
+          echo "==> Writing ${leaf.path}..."
+          mkdir -p "$(dirname "${leaf.path}")"
+          install -m 644 "${formattedLeaf leaf}" "${leaf.path}"
+        '') allLeaves;
+      };
+
       apps.write-terragrunt = {
         type = "app";
-        program = "${
-          pkgs.writeShellApplication {
-            name = "write-terragrunt";
-            # Copies each leaf's formatted derivation into place (rather than
-            # a heredoc) so the written byte content matches
-            # checks.terragrunt's own comparison target exactly.
-            text = lib.concatMapStrings (leaf: ''
-              echo "==> Writing ${leaf.path}..."
-              mkdir -p "$(dirname "${leaf.path}")"
-              install -m 644 "${formattedLeaf leaf}" "${leaf.path}"
-            '') allLeaves;
-          }
-        }/bin/write-terragrunt";
+        program = "${config.packages.write-terragrunt}/bin/write-terragrunt";
       };
 
       checks.terragrunt =

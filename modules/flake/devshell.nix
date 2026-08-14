@@ -4,7 +4,6 @@ _: {
   perSystem =
     {
       config,
-      inputs',
       pkgs,
       ...
     }:
@@ -46,7 +45,15 @@ _: {
             nil
             nixd
           ]
-          ++ [ inputs'.deploy-rs.packages.deploy-rs ];
+          ++ [
+            config.packages.deploy
+            config.packages.nixos-anywhere-install
+            config.packages.write-manifests
+            config.packages.write-terragrunt
+            config.packages.write-flake
+            config.packages.write-lock
+            config.packages.write-inputs
+          ];
 
         inputsFrom = [
           config.treefmt.build.devShell

@@ -110,12 +110,5 @@
   # this host — see modules/den/policies/users.nix for how this resolves.
   fleet.user-access.by-host.node1.groups = [ "admin" ];
 
-  # Opts node1 into deploy-rs (modules/flake/deploy-rs.nix) for ongoing
-  # `deploy` config pushes. SSH in as kid (wheel + passwordless sudo via
-  # modules/den/aspects/base/security.nix) rather than root directly;
-  # deploy-rs sudos to root itself for the profile activation.
-  fleet.deploy-rs.targets.node1 = {
-    hostname = config.den.devices.node1.address;
-    sshUser = "kid";
-  };
+  fleet.nh.targets.node1.hostname = config.den.devices.node1.address;
 }
