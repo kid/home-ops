@@ -7,6 +7,7 @@
 
   inputs = {
     den.url = "github:denful/den";
+    deploy-rs.url = "github:serokell/deploy-rs";
     disko = {
       url = "github:AlexLov/disko/6747342da148f6cb28c8405a70fe00455a0ba027";
       inputs.nixpkgs.follows = "nixpkgs";

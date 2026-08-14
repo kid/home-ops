@@ -1,7 +1,7 @@
 # node1 — bare-metal box for the `prd` cluster: k3s node, Incus VM host, and
 # NFS storage. Installs directly onto real hardware via nixos-anywhere
 # (`nix run .#nixos-anywhere-install`, modules/flake/nixos-anywhere.nix).
-{ den, ... }:
+{ den, config, ... }:
 {
   den.hosts.x86_64-linux.node1 = {
     k3s.clusterName = "prd";
@@ -109,4 +109,13 @@
   # Grants kid's "admin" access-policy group (modules/users/kid.nix) onto
   # this host — see modules/den/policies/users.nix for how this resolves.
   fleet.user-access.by-host.node1.groups = [ "admin" ];
+
+  # Opts node1 into deploy-rs (modules/flake/deploy-rs.nix) for ongoing
+  # `deploy` config pushes. SSH in as kid (wheel + passwordless sudo via
+  # modules/den/aspects/base/security.nix) rather than root directly;
+  # deploy-rs sudos to root itself for the profile activation.
+  fleet.deploy-rs.targets.node1 = {
+    hostname = config.den.devices.node1.address;
+    sshUser = "kid";
+  };
 }
