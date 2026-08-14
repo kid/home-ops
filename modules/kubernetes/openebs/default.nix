@@ -23,11 +23,16 @@ _: {
           values = {
             analytics.enabled = false;
 
+            # renovate: datasource=docker depName=registry.k8s.io/sig-storage/csi-node-driver-registrar
             zfsNode.driverRegistrar.image.tag = "v2.17.0";
             zfsController = {
+              # renovate: datasource=docker depName=registry.k8s.io/sig-storage/csi-resizer
               resizer.image.tag = "v1.14.0";
+              # renovate: datasource=docker depName=registry.k8s.io/sig-storage/csi-provisioner
               provisioner.image.tag = "v5.3.0";
+              # renovate: datasource=docker depName=registry.k8s.io/sig-storage/csi-snapshotter
               snapshotter.image.tag = "v8.6.0";
+              # renovate: datasource=docker depName=registry.k8s.io/sig-storage/snapshot-controller
               snapshotController.image.tag = "v8.6.0";
             };
           };

@@ -43,6 +43,7 @@ in
                 src = pkgs.fetchFromGitHub {
                   owner = "argoproj";
                   repo = "argo-cd";
+                  # renovate: datasource=github-releases depName=argoproj/argo-cd
                   rev = "v3.4.4";
                   hash = "sha256-I3udVhmPpOA2Lf1mkJqG+d+mGpfM16HIKBkEnTiAw0c=";
                 };

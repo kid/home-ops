@@ -30,4 +30,43 @@
   kubernetes: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
+  // Tracks version pins hand-written directly in modules/kubernetes/**/*.nix
+  // (Helm values, fetchFromGitHub revs) that the yaml-only managers above
+  // can't see. Each pin needs a `# renovate: datasource=... depName=...`
+  // comment on the line above it — see those files for examples. Pins
+  // paired with a Nix `hash` (fetchFromGitHub) will still need that hash
+  // updated by hand after Renovate bumps `rev`: the hosted app can't run
+  // postUpgradeTasks to recompute it, so `nix flake check` will fail with
+  // a hash mismatch until it's fixed.
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^modules/kubernetes/.*\\.nix$/"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?\\s+\\S+\\s*=\\s*\"(?<currentValue>[^\"]+)\";",
+      ],
+    },
+  ],
+  // Beta: lets Renovate propose a bump PR for individual flake.lock inputs.
+  // Scoped to nixhelm only for now — that's the only lever available for
+  // keeping charts.<repo>.<chart> versions (cilium, cert-manager, coredns,
+  // openebs's own driver) current, since none of those are literal
+  // strings anywhere in this repo. A nixhelm bump changes every chart it
+  // packages at once and, like the customManagers pins above, will fail
+  // checks.manifests until `nix run .#write-manifests` is re-run and
+  // committed alongside it.
+  nix: {
+    enabled: true,
+  },
+  packageRules: [
+    {
+      matchManagers: ["nix"],
+      enabled: false,
+    },
+    {
+      matchManagers: ["nix"],
+      matchDepNames: ["nixhelm"],
+      enabled: true,
+    },
+  ],
 }
