@@ -18,7 +18,7 @@ _: {
           owner = "kubernetes-sigs";
           repo = "gateway-api";
           # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
-          rev = "v1.4.1";
+          rev = "v1.6.1";
           hash = "sha256-/GHyikcC2QGDN0ndpY6/xvSEEnpSsLrNU+lFElCKBs8=";
         };
         path = "config/crd";
