@@ -106,7 +106,7 @@ spec:
             - name: OPENEBS_IO_INSTALLER_TYPE
               value: zfs-localpv-helm
             - name: OPENEBS_IO_ENABLE_ANALYTICS
-              value: "true"
+              value: "false"
             - name: OPENEBS_IO_ENABLE_BACKUP_GC
               value: "false"
           image: docker.io/openebs/zfs-driver:2.10.1

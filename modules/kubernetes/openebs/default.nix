@@ -21,6 +21,8 @@ _: {
         helm.releases.openebs = {
           chart = charts.openebs.zfs-localpv;
           values = {
+            analytics.enabled = false;
+
             zfsNode.driverRegistrar.image.tag = "v2.17.0";
             zfsController = {
               resizer.image.tag = "v1.14.0";
