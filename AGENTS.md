@@ -27,7 +27,6 @@ surface.
 - `modules/`: the dendritic Nix module tree — everything below lives here.
 - `tf-stacks/`: `root.hcl` (SOPS-decrypted Cloudflare R2 remote-state config) plus the generated `prd/network/**/terragrunt.hcl` leaves.
 - `manifests/prd/`: nixidy-generated Kubernetes manifests, synced to the live cluster by ArgoCD.
-- `kubernetes/` and `clusters/dev/`: **legacy**, the pre-dendritic Talos+Flux setup that `prd` (see below) replaces. Don't use them as a pattern reference for new work.
 - `secrets/`: SOPS-encrypted files (`cloudflare.sops.yaml`, per-environment `routeros.sops.yaml`, `proxmox.sops.yaml`). RouterOS device auth itself has moved off SOPS onto 1Password vault/item references (`op_vault`, `op_item_routeros`, etc. in each device's inputs) — per-user passwords live only in 1Password, never in Nix.
 
 ## The `den` entity/aspect model
