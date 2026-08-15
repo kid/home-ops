@@ -1,5 +1,7 @@
-# Renders config.flake.terragruntStacks (modules/terragrunt/collect.nix) to
-# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl, exposed
+# Renders config.flake.terragruntStacks (modules/terragrunt/collect.nix,
+# modules/terragrunt/onepassword-items.nix) to
+# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl or
+# tf-stacks/<env>/<stack>/terragrunt.hcl for cluster-sourced stacks, exposed
 # as `nix run .#write-terragrunt` (mirrors apps.write-manifests/
 # write-terraform elsewhere in the dendritic ecosystem) + `checks.terragrunt`
 # (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
@@ -13,16 +15,27 @@ let
   inherit (import ./_render-lib.nix { inherit lib; }) toValue;
 
   routerosDevicesByName = config.den.routerosDevices;
+  clustersByName = config.den.clusters;
 
+  # terragruntStacks is keyed by entity name, mixing routerosDevice-sourced
+  # (network/<device>/[<stack>/]) and cluster-sourced (<stack>/, flat —
+  # there's exactly one stack name per cluster today) leaves. Names never
+  # collide between the two entity kinds (rb5009/crs320 vs. prd).
   leafRelPath =
-    routerosDeviceName: stack:
-    let
-      envName = routerosDevicesByName.${routerosDeviceName}.environment;
-    in
-    if stack == "base" then
-      "tf-stacks/${envName}/network/${routerosDeviceName}/terragrunt.hcl"
+    entityName: stack:
+    if routerosDevicesByName ? ${entityName} then
+      let
+        envName = routerosDevicesByName.${entityName}.environment;
+      in
+      if stack == "base" then
+        "tf-stacks/${envName}/network/${entityName}/terragrunt.hcl"
+      else
+        "tf-stacks/${envName}/network/${entityName}/${stack}/terragrunt.hcl"
     else
-      "tf-stacks/${envName}/network/${routerosDeviceName}/${stack}/terragrunt.hcl";
+      let
+        envName = clustersByName.${entityName}.environment;
+      in
+      "tf-stacks/${envName}/${stack}/terragrunt.hcl";
 
   # Every stack's directory sits one level (base: network/<routerosDevice>/)
   # or two levels (non-base: network/<routerosDevice>/<stack>/) below
@@ -39,7 +52,7 @@ let
     (lib.concatStrings (lib.replicate upLevels "../")) + toRouterosDevice;
 
   renderLeaf =
-    _routerosDeviceName: stack: leaf:
+    _entityName: stack: leaf:
     let
       dependenciesBlock = lib.optionalString (leaf.dependsOn != [ ]) ''
 
@@ -57,6 +70,20 @@ let
           }
         }
       '';
+
+      # localModule (a tf-modules/<name> dir in this repo, e.g. the
+      # onepassword-items stack) vs. the git-catalog-sourced modules every
+      # RouterOS stack uses. get_repo_root() is a Terragrunt function,
+      # evaluated against the real checkout at run time — deliberately not
+      # a Nix interpolation (''${ escapes it), same reasoning _render-lib.nix
+      # documents for hcl.raw.
+      sourceBlock =
+        if leaf ? localModule then
+          ''source                   = "''${get_repo_root()}/tf-modules/${leaf.localModule}"''
+        else
+          ''source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/${leaf.moduleSource}?ref=${
+            leaf.moduleRef or "${leaf.moduleSource}/v${leaf.moduleVersion}"
+          }"'';
     in
     ''
       include "root" {
@@ -64,9 +91,7 @@ let
       }
 
       terraform {
-        source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/${leaf.moduleSource}?ref=${
-          leaf.moduleRef or "${leaf.moduleSource}/v${leaf.moduleVersion}"
-        }"
+        ${sourceBlock}
         copy_terraform_lock_file = false
       }
       ${dependenciesBlock}
@@ -75,10 +100,10 @@ let
 
   allLeaves = lib.flatten (
     lib.mapAttrsToList (
-      routerosDeviceName: stacks:
+      entityName: stacks:
       lib.mapAttrsToList (stack: leaf: {
-        path = leafRelPath routerosDeviceName stack;
-        content = renderLeaf routerosDeviceName stack leaf;
+        path = leafRelPath entityName stack;
+        content = renderLeaf entityName stack leaf;
       }) stacks
     ) (config.flake.terragruntStacks or { })
   );
