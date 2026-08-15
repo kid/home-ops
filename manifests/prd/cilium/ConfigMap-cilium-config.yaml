@@ -10,11 +10,12 @@ data:
   bpf-events-policy-verdict-enabled: "true"
   bpf-events-trace-enabled: "true"
   bpf-lb-acceleration: disabled
-  bpf-lb-algorithm-annotation: "false"
+  bpf-lb-algorithm-annotation: "true"
   bpf-lb-external-clusterip: "false"
   bpf-lb-map-max: "65536"
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
+  bpf-lb-sock-hostns-only: "true"
   bpf-lb-source-range-all-types: "false"
   bpf-map-dynamic-size-ratio: "0.0025"
   bpf-policy-map-max: "16384"
@@ -27,6 +28,7 @@ data:
   cluster-pool-ipv4-cidr: 172.40.0.0/16
   cluster-pool-ipv4-mask-size: "24"
   clustermesh-cache-ttl: 0s
+  clustermesh-default-global-namespace: "true"
   clustermesh-enable-endpoint-sync: "false"
   clustermesh-enable-mcs-api: "false"
   clustermesh-mcs-api-install-crds: "true"
@@ -34,8 +36,10 @@ data:
   cni-log-file: /var/run/cilium/cilium-cni.log
   custom-cni-conf: "false"
   datapath-mode: veth
+  datapath-plugins-state-dir: /var/run/cilium/plugins
   debug: "false"
   default-lb-service-ipam: lbipam
+  devices: ""
   direct-routing-skip-unreachable: "false"
   dnsproxy-enable-transparent-mode: "true"
   dnsproxy-socket-linger-timeout: "10"
@@ -46,8 +50,10 @@ data:
   enable-bgp-legacy-origin-attribute: "false"
   enable-bpf-clock-probe: "false"
   enable-bpf-masquerade: "true"
+  enable-datapath-plugins: "false"
   enable-drift-checker: "true"
   enable-dynamic-config: "true"
+  enable-dynamic-source-lookup-nodeport: "false"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
   enable-envoy-config: "true"
@@ -86,14 +92,18 @@ data:
   enable-well-known-identities: "false"
   enable-xt-socket-fallback: "true"
   envoy-access-log-buffer-size: "4096"
+  envoy-access-log-enabled: "true"
   envoy-base-id: "0"
   envoy-config-retry-interval: 15s
   envoy-keep-cap-netbindservice: "false"
+  envoy-node-locality-enabled: "false"
+  envoy-xds-mode: ads
   external-envoy-proxy: "true"
   gateway-api-hostnetwork-enabled: "false"
   gateway-api-hostnetwork-nodelabelselector: ""
   gateway-api-secrets-namespace: cilium-secrets
   gateway-api-service-externaltrafficpolicy: Cluster
+  gateway-api-use-remote-address: "true"
   gateway-api-xff-num-trusted-hops: "0"
   health-check-icmp-failure-threshold: "3"
   http-retry-count: "3"
@@ -141,6 +151,7 @@ data:
   preallocate-bpf-maps: "false"
   procfs: /host/proc
   proxy-cluster-max-connections: "1024"
+  proxy-cluster-max-pending-requests: "1024"
   proxy-cluster-max-requests: "1024"
   proxy-connect-timeout: "2"
   proxy-idle-timeout-seconds: "60"

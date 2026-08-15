@@ -17,52 +17,29 @@
 # (standard) is enough again, no need for the broader `experimental`
 # channel this time.
 #
-# One more wrinkle: Cilium 1.19.6's gateway-api client is still hardcoded
-# to look up TLSRoute at "gateway.networking.k8s.io/v1alpha2" specifically
-# ("no matches for kind \"TLSRoute\" in version
-# \"gateway.networking.k8s.io/v1alpha2\"") — it hasn't caught up to the v1
-# promotion. v1.6.1's CRD keeps v1alpha2 declared (for the same
-# stored-version reason v1 must stay declared) but sets served: false on
-# it. The transformer below flips it back to served: true so both Cilium
-# (needs v1alpha2 served) and the pre-existing storedVersions (needs v1
-# declared) are satisfied at once. Safe: the CRD has no conversion
-# webhook (strategy: None), and v1alpha2 was TLSRoute's only served
-# version for years before this promotion — this just re-enables a
-# version the schema has always fully supported.
+# Cilium 1.20.0 itself moved from Gateway API v1.4 to v1.6.1 (its release
+# notes: "Cilium moves from Gateway API v1.4 to v1.6.1"), and its
+# gateway-api client now looks up TLSRoute via the real
+# sigs.k8s.io/gateway-api/apis/v1 package instead of v1alpha2 — see
+# modules/kubernetes/cilium/default.nix's chart pin bump, done together
+# with this. No CRD-serving workaround needed as a result.
 #
 # The Renovate annotation below tracks this independently of Cilium's own
 # version — check the Cilium release notes for its required Gateway API
 # CRD version before merging a bump here, don't take it on trust.
 _: {
   den.aspects.gateway-api-crds.k8s-manifests =
-    { pkgs, lib, ... }:
+    { pkgs, ... }:
     {
-      applications.gateway-api-crds.kustomize.applications.gateway-api-crds = {
-        kustomization = {
-          src = pkgs.fetchFromGitHub {
-            owner = "kubernetes-sigs";
-            repo = "gateway-api";
-            # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
-            rev = "v1.6.1";
-            hash = "sha256-Hq3vaCQRSRFjya76qRYw4/BcH00Wu5wE6UQACrjKJSk=";
-          };
-          path = "config/crd";
+      applications.gateway-api-crds.kustomize.applications.gateway-api-crds.kustomization = {
+        src = pkgs.fetchFromGitHub {
+          owner = "kubernetes-sigs";
+          repo = "gateway-api";
+          # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
+          rev = "v1.6.1";
+          hash = "sha256-Hq3vaCQRSRFjya76qRYw4/BcH00Wu5wE6UQACrjKJSk=";
         };
-
-        transformer = map (
-          manifest:
-          if
-            manifest.kind == "CustomResourceDefinition"
-            && manifest.metadata.name == "tlsroutes.gateway.networking.k8s.io"
-          then
-            lib.recursiveUpdate manifest {
-              spec.versions = map (
-                version: if version.name == "v1alpha2" then version // { served = true; } else version
-              ) manifest.spec.versions;
-            }
-          else
-            manifest
-        );
+        path = "config/crd";
       };
     };
 }
