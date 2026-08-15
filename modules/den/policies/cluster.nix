@@ -55,7 +55,44 @@
       }
     ) (lib.unique config.systems);
 
+  # Cluster -> openbao-items collection policy. Unlike cluster-to-nixidy,
+  # this needs plain Nix data (not a real nixidy module list), so it follows
+  # modules/terragrunt/collect.nix's routeros-device-to-terragrunt technique
+  # instead: a real per-aspect lib.evalModules pass (den also injects an
+  # anonymous, key-less companion module alongside any quirk-requesting
+  # entry — filter on `m ? key`, per that file's own comment). Unlike
+  # terragrunt-stacks, openbao-items content needs no per-entry key to
+  # disambiguate by (Terraform's own vault_kv_secret_v2 `for_each` keys by
+  # secret path) — just a flat list of every included aspect's item spec.
+  den.policies.cluster-to-openbao-items =
+    { cluster, ... }:
+    [
+      (den.lib.policy.instantiate {
+        name = "${cluster.name}-openbao-items";
+        class = "openbao-items";
+        instantiate =
+          { modules, ... }:
+          map (
+            m:
+            (lib.evalModules {
+              modules = [
+                (builtins.head m.imports)
+                { _module.freeformType = lib.types.attrsOf lib.types.raw; }
+              ];
+              specialArgs = {
+                inherit cluster;
+              };
+            }).config
+          ) (builtins.filter (m: m ? key) modules);
+        intoAttr = [
+          "openbaoItems"
+          cluster.name
+        ];
+      })
+    ];
+
   den.schema.cluster.includes = [
     den.policies.cluster-to-nixidy
+    den.policies.cluster-to-openbao-items
   ];
 }

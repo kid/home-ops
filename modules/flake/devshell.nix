@@ -22,6 +22,8 @@ _: {
             opentofu
             tofu-ls
             terragrunt
+            openbao
+            secretspec
 
             go
             gotestsum

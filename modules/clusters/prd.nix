@@ -81,8 +81,9 @@ in
 
   # cert-manager is included only for Cilium's Hubble mTLS
   # (modules/kubernetes/cert-manager/default.nix) — Helm's own cert
-  # generation isn't idempotent across renders. external-secrets/sops-operator
-  # remain out of scope.
+  # generation isn't idempotent across renders. external-secrets reads from
+  # OpenBao (modules/kubernetes/{openbao,external-secrets}/default.nix);
+  # sops-operator remains out of scope.
   den.aspects.prd.includes = with den.aspects; [
     gateway-api-crds
     cilium
@@ -91,6 +92,8 @@ in
     coredns
     argocd
     openebs
+    openbao
+    external-secrets
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/

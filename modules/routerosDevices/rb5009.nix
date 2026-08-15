@@ -225,6 +225,13 @@ in
               "doorbell.iot.home.kidibox.net" = {
                 address = "10.0.101.100";
               };
+              # Fixed LoadBalancer IP modules/kubernetes/openbao/default.nix
+              # reserves (io.cilium/lb-ipam-ips) — gives tf-modules/
+              # openbao-config and tf-modules/openbao-items a stable address
+              # to configure OpenBao at, without needing external-dns.
+              "openbao.kidibox.net" = {
+                address = "10.0.42.10";
+              };
             };
           };
       };

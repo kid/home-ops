@@ -25,6 +25,9 @@ inputs = {
     "ha.kidibox.net" = {
       address = "10.0.10.101"
     }
+    "openbao.kidibox.net" = {
+      address = "10.0.42.10"
+    }
     "plex.kidibox.net" = {
       address = "10.0.30.100"
     }
