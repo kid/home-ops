@@ -10,7 +10,23 @@
 # chart gates its CRDs behind crds.enabled (default false, same as the
 # Helm release's own values below), and kindFilter matches nothing if the
 # chart is templated without it.
-_: {
+let
+  secretsLib = import ../_secrets-lib.nix;
+
+  # Prototype for the shared secret-declaration convention
+  # (modules/kubernetes/_secrets-lib.nix): proves a real, externally-sourced
+  # secret flows Terraform -> 1Password -> ESO -> an in-cluster Secret. Not
+  # yet consumed by a ClusterIssuer (ACME DNS-01 is a separate follow-up) —
+  # this only exercises the plumbing.
+  cloudflareDnsApiToken = {
+    title = "cloudflare-dns-api-token";
+    category = "password";
+    fields = [ { name = "token"; } ];
+  };
+in
+{
+  den.aspects.cert-manager."onepassword-items" = secretsLib.mkOnePasswordItem cloudflareDnsApiToken;
+
   den.aspects.cert-manager.k8s-manifests =
     { charts, generators, ... }:
     {
@@ -65,6 +81,15 @@ _: {
         };
 
         resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
+
+        resources.externalSecrets.cloudflare-dns-api-token.spec = {
+          secretStoreRef = {
+            kind = "ClusterSecretStore";
+            name = "onepassword";
+          };
+          target.creationPolicy = "Owner";
+          data = secretsLib.mkExternalSecretData cloudflareDnsApiToken;
+        };
       };
     };
 }
