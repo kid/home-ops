@@ -55,7 +55,44 @@
       }
     ) (lib.unique config.systems);
 
+  # Cluster -> onepassword-items collection policy. Unlike cluster-to-nixidy,
+  # this needs plain Nix data (not a real nixidy module list), so it follows
+  # modules/terragrunt/collect.nix's routeros-device-to-terragrunt technique
+  # instead: a real per-aspect lib.evalModules pass (den also injects an
+  # anonymous, key-less companion module alongside any quirk-requesting
+  # entry — filter on `m ? key`, per that file's own comment). Unlike
+  # terragrunt-stacks, onepassword-items content needs no per-entry key to
+  # disambiguate by (Terraform's own onepassword_item `for_each` keys by
+  # item title) — just a flat list of every included aspect's item spec.
+  den.policies.cluster-to-onepassword-items =
+    { cluster, ... }:
+    [
+      (den.lib.policy.instantiate {
+        name = "${cluster.name}-onepassword-items";
+        class = "onepassword-items";
+        instantiate =
+          { modules, ... }:
+          map (
+            m:
+            (lib.evalModules {
+              modules = [
+                (builtins.head m.imports)
+                { _module.freeformType = lib.types.attrsOf lib.types.raw; }
+              ];
+              specialArgs = {
+                inherit cluster;
+              };
+            }).config
+          ) (builtins.filter (m: m ? key) modules);
+        intoAttr = [
+          "onepasswordItems"
+          cluster.name
+        ];
+      })
+    ];
+
   den.schema.cluster.includes = [
     den.policies.cluster-to-nixidy
+    den.policies.cluster-to-onepassword-items
   ];
 }
