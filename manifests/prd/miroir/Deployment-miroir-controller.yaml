@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: miroir
+    app.kubernetes.io/name: miroir
+  name: miroir-controller
+  namespace: miroir-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: miroir
+      app.kubernetes.io/name: miroir
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: miroir
+        app.kubernetes.io/name: miroir
+    spec:
+      containers:
+        - args:
+            - --mode=controller
+            - --csi-socket=/csi/csi.sock
+            - --provision-timeout=120s
+            - --overcommit-ratio=2
+            - --free-space-ratio=20
+            - --auto-tie-breaker=true
+            - --drbd-port-base=7000
+            - --zap-log-level=info
+            - --zap-encoder=json
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: ghcr.io/home-operations/miroir-controller@sha256:81c2b8c540be13df100f6e6e8ee91b8f622f8c1e2f123f503281d598d0e25d32
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+            initialDelaySeconds: 10
+          name: controller
+          ports:
+            - containerPort: 8081
+              name: metrics
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: metrics
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+        - args:
+            - --csi-address=/csi/csi.sock
+            - --timeout=120s
+            - --leader-election=false
+            - --default-fstype=ext4
+            - --extra-create-metadata
+          image: registry.k8s.io/sig-storage/csi-provisioner:v6.3.0
+          name: csi-provisioner
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+        - args:
+            - --csi-address=/csi/csi.sock
+            - --timeout=120s
+            - --leader-election=false
+          image: registry.k8s.io/sig-storage/csi-snapshotter:v8.6.0
+          name: csi-snapshotter
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+        - args:
+            - --csi-address=/csi/csi.sock
+            - --timeout=120s
+            - --leader-election=false
+          image: registry.k8s.io/sig-storage/csi-resizer:v2.2.1
+          name: csi-resizer
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+      priorityClassName: system-cluster-critical
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: miroir-controller
+      tolerations:
+        - effect: NoExecute
+          key: node.kubernetes.io/unreachable
+          operator: Exists
+          tolerationSeconds: 5
+      volumes:
+        - emptyDir: {}
+          name: socket-dir

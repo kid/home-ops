@@ -1,0 +1,153 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubernetes.io/component: agent
+    app.kubernetes.io/instance: miroir
+    app.kubernetes.io/name: miroir
+  name: miroir-agent
+  namespace: miroir-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: agent
+      app.kubernetes.io/instance: miroir
+      app.kubernetes.io/name: miroir
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: agent
+        app.kubernetes.io/instance: miroir
+        app.kubernetes.io/name: miroir
+    spec:
+      containers:
+        - args:
+            - --mode=agent
+            - --csi-socket=/csi/csi.sock
+            - --metrics-bind-address=:9810
+            - --pool-stats-interval=60s
+            - --volume-workers=4
+            - --zap-log-level=info
+            - --zap-encoder=json
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          image: ghcr.io/home-operations/miroir-agent@sha256:2d43d418c8929fe28aedaf8cfd306f1fe4be39f3dd1f521942b135b19ebe133c
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - if [ -f /run/miroir/cordoned ]; then drbdadm secondary all --force 2>/dev/null; sleep 5; fi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: agent
+          ports:
+            - containerPort: 9810
+              name: metrics
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+            - mountPath: /var/lib/kubelet
+              mountPropagation: Bidirectional
+              name: kubelet
+            - mountPath: /dev
+              name: dev
+            - mountPath: /run/udev
+              name: run-udev
+              readOnly: true
+            - mountPath: /run/lvm
+              name: run-lvm
+            - mountPath: /lib/modules
+              name: modules
+              readOnly: true
+            - mountPath: /etc/drbd.d
+              name: drbd-cfg
+            - mountPath: /etc/drbd.d/global_common.conf
+              name: drbd-global-conf
+              readOnly: true
+              subPath: global_common.conf
+        - args:
+            - --csi-address=/csi/csi.sock
+            - --kubelet-registration-path=/var/lib/kubelet/plugins/miroir.home-operations.com/csi.sock
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.17.0
+          name: node-driver-registrar
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              cpu: 5m
+              memory: 16Mi
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+            - mountPath: /registration
+              name: registration
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      hostPID: true
+      priorityClassName: system-node-critical
+      serviceAccountName: miroir-agent
+      terminationGracePeriodSeconds: 60
+      tolerations:
+        - operator: Exists
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet/plugins/miroir.home-operations.com
+            type: DirectoryOrCreate
+          name: socket-dir
+        - hostPath:
+            path: /var/lib/kubelet/plugins_registry
+            type: Directory
+          name: registration
+        - hostPath:
+            path: /var/lib/kubelet
+            type: Directory
+          name: kubelet
+        - hostPath:
+            path: /dev
+            type: Directory
+          name: dev
+        - hostPath:
+            path: /run/udev
+            type: Directory
+          name: run-udev
+        - hostPath:
+            path: /run/lvm
+            type: DirectoryOrCreate
+          name: run-lvm
+        - hostPath:
+            path: /lib/modules
+          name: modules
+        - hostPath:
+            path: /var/lib/miroir-drbd.d
+            type: DirectoryOrCreate
+          name: drbd-cfg
+        - configMap:
+            items:
+              - key: global_common.conf
+                path: global_common.conf
+            name: miroir-drbd-conf
+          name: drbd-global-conf
