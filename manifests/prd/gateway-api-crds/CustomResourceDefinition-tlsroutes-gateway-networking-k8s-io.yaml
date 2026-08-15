@@ -1375,7 +1375,7 @@ spec:
           required:
             - spec
           type: object
-      served: false
+      served: true
       storage: false
       subresources:
         status: {}
