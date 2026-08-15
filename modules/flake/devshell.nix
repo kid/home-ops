@@ -1,26 +1,13 @@
 # devShell, carried over from the pre-dendritic flake.nix. treefmt config
 # lives in modules/flake/formatter.nix, git hooks in modules/flake/git-hooks.nix.
-{ inputs, ... }: {
+_: {
   perSystem =
     {
       config,
       pkgs,
-      lib,
-      system,
       ...
     }:
     {
-      # 1password-cli is unfree; flake-parts' own nixpkgs module (module/
-      # nixpkgs.nix) sets perSystem's `pkgs` via `_module.args.pkgs =
-      # mkOptionDefault (...)`, so redefining it here (repo-wide, not just
-      # this file — `pkgs` is a single per-system arg) overrides that
-      # default. Scoped to exactly this one package rather than a blanket
-      # `allowUnfree = true`.
-      _module.args.pkgs = import inputs.nixpkgs {
-        inherit system;
-        config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "1password-cli" ];
-      };
-
       devShells.default = pkgs.mkShell {
         packages =
           with pkgs;
@@ -35,7 +22,7 @@
             opentofu
             tofu-ls
             terragrunt
-            _1password-cli
+            openbao
             secretspec
 
             go

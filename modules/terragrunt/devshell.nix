@@ -84,9 +84,21 @@ let
           ''source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/${leaf.moduleSource}?ref=${
             leaf.moduleRef or "${leaf.moduleSource}/v${leaf.moduleVersion}"
           }"'';
+
+      # A leaf that needs a human secret at plan/apply time (e.g. OpenBao's
+      # own root token — never delivered onto node1, only ever decrypted on
+      # a human's machine) declares sopsFile/sopsLocalName; its `inputs` then
+      # references `local.<sopsLocalName>.<key>` via hcl.raw. Mirrors
+      # root.hcl's own `locals { cloudflare = yamldecode(sops_decrypt_file(...)) }`.
+      localsBlock = lib.optionalString (leaf ? sopsFile) ''
+        locals {
+          ${leaf.sopsLocalName} = yamldecode(sops_decrypt_file("''${get_repo_root()}/${leaf.sopsFile}"))
+        }
+
+      '';
     in
     ''
-      include "root" {
+      ${localsBlock}include "root" {
         path = find_in_parent_folders("root.hcl")
       }
 

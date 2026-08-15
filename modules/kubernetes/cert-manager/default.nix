@@ -15,17 +15,16 @@ let
 
   # Prototype for the shared secret-declaration convention
   # (modules/kubernetes/_secrets-lib.nix): proves a real, externally-sourced
-  # secret flows Terraform -> 1Password -> ESO -> an in-cluster Secret. Not
+  # secret flows Terraform -> OpenBao -> ESO -> an in-cluster Secret. Not
   # yet consumed by a ClusterIssuer (ACME DNS-01 is a separate follow-up) —
   # this only exercises the plumbing.
   cloudflareDnsApiToken = {
-    title = "cloudflare-dns-api-token";
-    category = "password";
+    path = "cert-manager/cloudflare-dns-api-token";
     fields = [ { name = "token"; } ];
   };
 in
 {
-  den.aspects.cert-manager."onepassword-items" = secretsLib.mkOnePasswordItem cloudflareDnsApiToken;
+  den.aspects.cert-manager."openbao-items" = secretsLib.mkOpenBaoItem cloudflareDnsApiToken;
 
   den.aspects.cert-manager.k8s-manifests =
     { charts, generators, ... }:
@@ -85,7 +84,7 @@ in
         resources.externalSecrets.cloudflare-dns-api-token.spec = {
           secretStoreRef = {
             kind = "ClusterSecretStore";
-            name = "onepassword";
+            name = "openbao";
           };
           target.creationPolicy = "Owner";
           data = secretsLib.mkExternalSecretData cloudflareDnsApiToken;
