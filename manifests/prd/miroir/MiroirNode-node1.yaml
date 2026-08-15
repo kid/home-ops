@@ -1,0 +1,9 @@
+apiVersion: miroir.home-operations.com/v1alpha1
+kind: MiroirNode
+metadata:
+  name: node1
+spec:
+  pools:
+    - name: default
+      zfs:
+        dataset: zroot/miroir

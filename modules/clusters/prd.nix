@@ -90,7 +90,7 @@ in
     cert-manager
     coredns
     argocd
-    openebs
+    miroir
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/

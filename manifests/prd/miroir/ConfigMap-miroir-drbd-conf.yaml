@@ -1,0 +1,26 @@
+apiVersion: v1
+data:
+  global_common.conf: |
+    global {
+        usage-count no;
+        udev-always-use-vnr;
+    }
+    common {
+        handlers {}
+        startup {}
+        options {}
+        disk {
+            on-io-error detach;
+            c-min-rate 10M;
+        }
+        net {
+            verify-alg crc32c;
+        }
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: miroir
+    app.kubernetes.io/name: miroir
+  name: miroir-drbd-conf
+  namespace: miroir-system
