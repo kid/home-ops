@@ -28,9 +28,14 @@
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    haumea = {
+      url = "github:nix-community/haumea/v0.2.2";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
     nh.url = "github:nix-community/nh";
+    nix-kube-generators.url = "github:farcaller/nix-kube-generators";
     nixhelm = {
       url = "github:farcaller/nixhelm";
       inputs.nixpkgs.follows = "nixpkgs";

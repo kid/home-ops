@@ -2,8 +2,7 @@
 # install them, and gatewayAPI.enabled (cilium/default.nix) silently no-ops
 # without them. Own applications.gateway-api-crds entry, not folded into
 # applications.cilium, so bumping this doesn't couple to the Cilium chart.
-# v1.4.1 matches what Cilium 1.19.6 (nixhelm's charts.cilium.cilium)
-# requires. `config/crd`, not `config/crd/standard`: the latter has no
+# v1.4.1 matches what Cilium 1.19.6 (charts.cilium.cilium) requires. `config/crd`, not `config/crd/standard`: the latter has no
 # kustomization.yaml of its own.
 #
 # The Renovate annotation below tracks this independently of Cilium's own

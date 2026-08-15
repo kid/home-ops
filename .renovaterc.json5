@@ -52,13 +52,12 @@
     },
   ],
   // Beta: lets Renovate propose a bump PR for individual flake.lock inputs.
-  // Scoped to nixhelm only for now — that's the only lever available for
-  // keeping charts.<repo>.<chart> versions (cilium, cert-manager, coredns,
-  // openebs's own driver) current, since none of those are literal
-  // strings anywhere in this repo. A nixhelm bump changes every chart it
-  // packages at once and, like the customManagers pins above, will fail
-  // checks.manifests until `nix run .#write-manifests` is re-run and
-  // committed alongside it.
+  // Scoped to nixhelm only for now — chart versions themselves
+  // (charts/<org>/<chart>/default.nix) are no longer tracked here at all,
+  // since they're literal strings bumped by the scheduled
+  // .github/workflows/update-helm-charts.yaml job instead. This lever just
+  // keeps nixhelm's own helmupdater CLI (modules/flake/devshell.nix)
+  // current.
   nix: {
     enabled: true,
   },

@@ -5,6 +5,7 @@ _: {
     {
       config,
       pkgs,
+      inputs',
       ...
     }:
     {
@@ -53,6 +54,8 @@ _: {
             config.packages.write-flake
             config.packages.write-lock
             config.packages.write-inputs
+
+            inputs'.nixhelm.packages.helmupdater
           ];
 
         inputsFrom = [
