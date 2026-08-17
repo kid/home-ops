@@ -1,7 +1,19 @@
-# nix run .#nixos-anywhere-install <host> <ip> — kexec-based remote NixOS
-# install over SSH, directly onto real hardware (no VM, no Terraform-created
-# shell). The only "apply this to real infrastructure" surface this repo's
-# NixOS/cluster work introduces; does nothing until run by hand.
+# nix run .#nixos-anywhere-install <host> <ip> [--dry-run] — kexec-based
+# remote NixOS install over SSH, directly onto real hardware. The only
+# "apply this to real infrastructure" surface this repo's NixOS/cluster work
+# introduces; does nothing until run by hand.
+#
+# Restructured to follow kidibox/nix-config's pkgs/by-name/nix-flake-install
+# (see modules/flake/provision-host-key.nix's header for the broader
+# context): auto-provisions the host's SSH key if it isn't committed yet,
+# then injects it via --extra-files so the host has its real, final identity
+# from first boot. The payload lands at persist/etc/ssh/, not etc/ssh/ —
+# nix-community/impermanence (modules/den/aspects/impermanence/
+# persist-collector.nix) bind-mounts /etc/ssh/ssh_host_ed25519_key FROM
+# /persist/etc/ssh/ssh_host_ed25519_key, so that's the real storage location
+# extra-files needs to land on; /etc/ssh/... itself is just the bind-mount
+# target, reset on every boot. Confirmed against our own impermanence
+# wiring, not assumed from kidibox's (different) impermanence setup.
 { inputs, ... }:
 {
   flake-file.inputs.nixos-anywhere.url = "github:nix-community/nixos-anywhere";
@@ -24,12 +36,51 @@
         runtimeInputs = [
           inputs.nixos-anywhere.packages.${system}.default
           pkgs.util-linux
+          pkgs.sops
+          config.packages.provision-host-key
         ];
         text = ''
-          host=''${1:?usage: nixos-anywhere-install <host> <ssh-target, e.g. root@10.0.40.10>}
-          target=''${2:?usage: nixos-anywhere-install <host> <ssh-target, e.g. root@10.0.40.10>}
+          dry_run=false
+          args=()
+          for arg in "$@"; do
+            if [[ "$arg" == "--dry-run" ]]; then
+              dry_run=true
+            else
+              args+=("$arg")
+            fi
+          done
+          set -- "''${args[@]+"''${args[@]}"}"
+
+          host=''${1:?usage: nixos-anywhere-install <host> <ssh-target, e.g. root@10.0.40.10> [--dry-run]}
+          target=''${2:?usage: nixos-anywhere-install <host> <ssh-target, e.g. root@10.0.40.10> [--dry-run]}
+
+          sops_file="secrets/hosts/$host/ssh_host_ed25519_key.sops.json"
+          pub_file="secrets/hosts/$host/ssh_host_ed25519_key.pub"
+
+          if [[ ! -f "$sops_file" ]]; then
+            echo "==> No committed SSH host key for $host, provisioning one..."
+            provision-host-key "$host"
+          fi
+
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+
+          echo "==> Decrypting SSH host key for $host..."
+          install -d -m755 "$tmp/persist/etc/ssh"
+          sops --decrypt --input-type binary --output-type binary "$sops_file" > "$tmp/persist/etc/ssh/ssh_host_ed25519_key"
+          chmod 600 "$tmp/persist/etc/ssh/ssh_host_ed25519_key"
+          cp "$pub_file" "$tmp/persist/etc/ssh/ssh_host_ed25519_key.pub"
+          chmod 644 "$tmp/persist/etc/ssh/ssh_host_ed25519_key.pub"
+
+          nixos_anywhere_args=(--flake ".#$host" "$target" --extra-files "$tmp")
+
+          if [[ "$dry_run" == true ]]; then
+            echo "[DRY RUN] Would run: nixos-anywhere ''${nixos_anywhere_args[*]}"
+            exit 0
+          fi
+
           echo "==> Installing NixOS host '$host' onto $target via nixos-anywhere..."
-          nixos-anywhere --flake ".#$host" "$target"
+          nixos-anywhere "''${nixos_anywhere_args[@]}"
         '';
       };
 
