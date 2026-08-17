@@ -1,7 +1,8 @@
-# Generates .sops.yaml from Nix instead of hand-maintaining it: two static
-# human recipients, plus one path-scoped rule per host that has a committed
-# SSH key (modules/flake/provision-host-key.nix). `.sops.yaml` becomes
-# generated output, like manifests/prd/** and tf-stacks/prd/**.
+# Generates .sops.yaml from Nix instead of hand-maintaining it: human
+# recipients sourced from den.users.registry, plus one path-scoped rule per
+# host that has a committed SSH key (modules/flake/provision-host-key.nix).
+# `.sops.yaml` becomes generated output, like manifests/prd/** and
+# tf-stacks/prd/**.
 #
 # pkgs.formats.yaml renders the attrset straight to YAML — no hand-built
 # templating needed, unlike _render-lib.nix's HCL renderer.
@@ -12,19 +13,10 @@
   ...
 }:
 let
-  # The source of truth for these two recipients — previously only present
-  # as literal strings inside the hand-maintained .sops.yaml.
-  humans = [
-    {
-      name = "kid-vulkan";
-      key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan";
-    }
-    {
-      name = "kid-fw13";
-      key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13";
-    }
-  ];
-  humanKeys = map (h: h.key) humans;
+  # Every registry user's sshKeys, not just kid's — a service account (e.g.
+  # external-dns, metrics) has none, so this naturally stays human-only
+  # without singling out a user by name.
+  humanKeys = lib.unique (lib.concatMap (u: u.sshKeys) (lib.attrValues config.den.users.registry));
 
   secretsDir = ../../secrets;
   hostPubKeyPath = host: secretsDir + "/hosts/${host}/ssh_host_ed25519_key.pub";
