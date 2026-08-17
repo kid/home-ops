@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sops-operator
+  namespace: argocd
+spec:
+  destination:
+    namespace: sops-operator
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./manifests/prd/sops-operator
+    repoURL: https://github.com/kid/home-ops.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: sops-operator
+    app.kubernetes.io/name: sops-operator
+  name: sops-operator
+  namespace: sops-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: sops-operator
+      app.kubernetes.io/name: sops-operator
+  template:
+    metadata:
+      annotations:
+        projectcapsule.dev/crds-size-hash: 37121b04fb1ef72cc442b65ff22fb486551c565e0bef042cb37da35fbbb9303a
+      labels:
+        app.kubernetes.io/instance: sops-operator
+        app.kubernetes.io/name: sops-operator
+    spec:
+      containers:
+        - args:
+            - --zap-log-level=4
+            - --enable-pprof=false
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: ghcr.io/peak-scale/sops-operator:0.0.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 10080
+          name: sops-operator
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 10080
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /tmp
+              name: sops-volume
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: sops-operator
+      volumes:
+        - emptyDir:
+            sizeLimit: 500Mi
+          name: sops-volume
