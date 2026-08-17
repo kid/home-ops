@@ -10,7 +10,31 @@
 # chart gates its CRDs behind crds.enabled (default false, same as the
 # Helm release's own values below), and kindFilter matches nothing if the
 # chart is templated without it.
-_: {
+{ lib, ... }:
+let
+  secretsLib = import ../_secrets-lib.nix { inherit lib; };
+
+  # Prototype for the shared SopsSecret convention
+  # (modules/kubernetes/_secrets-lib.nix): proves a real, externally-sourced
+  # secret flows local value file -> Nix -> sops-encrypted SopsSecret ->
+  # sops-operator -> an in-cluster Secret. Not yet consumed by a
+  # ClusterIssuer (ACME DNS-01 is a separate follow-up) — this only
+  # exercises the plumbing. Fill the real value locally at
+  # secrets/values/cert-manager/cloudflare-dns-api-token/token (gitignored)
+  # before running `nix run .#write-manifests` to get a real, non-empty
+  # ciphertext.
+  cloudflareDnsApiToken = secretsLib.mkSopsSecretYaml {
+    namespace = "cert-manager";
+    name = "cloudflare-dns-api-token";
+    fields = [
+      {
+        name = "token";
+        valuePath = "cert-manager/cloudflare-dns-api-token/token";
+      }
+    ];
+  };
+in
+{
   den.aspects.cert-manager.k8s-manifests =
     { charts, generators, ... }:
     {
@@ -65,6 +89,8 @@ _: {
         };
 
         resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
+
+        yamls = [ cloudflareDnsApiToken ];
       };
     };
 }

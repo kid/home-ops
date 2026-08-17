@@ -58,10 +58,25 @@ let
     ];
   };
 
+  # sops-operator (modules/kubernetes/sops-operator/default.nix) decrypts
+  # SopsSecret manifests in-cluster using only the cluster's own sops-age
+  # key — so a SopsSecret rendered under that cluster's manifest root needs
+  # that key as a recipient too, not just the humans-only catch-all every
+  # other committed file gets.
+  clusterManifestsRule = cluster: {
+    path_regex = "${config.den.clusters.${cluster}.nixidy.rootPath}/.*SopsSecret-.*\\.ya?ml$";
+    key_groups = [
+      {
+        age = humanKeys ++ [ (lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))) ];
+      }
+    ];
+  };
+
   sopsConfig = {
     creation_rules =
       map hostRule provisionedHosts
       ++ map clusterRule provisionedClusters
+      ++ map clusterManifestsRule provisionedClusters
       ++ [
         {
           key_groups = [ { age = humanKeys; } ];

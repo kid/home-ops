@@ -12,10 +12,12 @@
 # pinned tag, same fetchFromGitHub-for-a-non-cataloged-source pattern
 # modules/kubernetes/argocd/default.nix already uses for a kustomize base.
 #
-# SopsProvider/SopsSecret aren't core Kubernetes types, so nixidy has no
-# built-in typed options for them — generators.fromChartCRDModule (the same
-# technique cert-manager/external-secrets use) generates them live from the
-# chart's own CRDs.
+# SopsProvider isn't a core Kubernetes type, so nixidy has no built-in typed
+# option for it — generators.fromChartCRDModule (the same technique
+# cert-manager/external-secrets use) generates it live from the chart's own
+# CRD. SopsSecret is deliberately *not* typed this way — see
+# modules/kubernetes/_secrets-lib.nix's header for why (its CRD schema
+# requires a `sops` block that only exists after encryption).
 _: {
   den.aspects.sops-operator.k8s-manifests =
     { pkgs, generators, ... }:
@@ -33,10 +35,7 @@ _: {
         (generators.fromChartCRDModule {
           name = "sops-operator";
           inherit chart;
-          kindFilter = [
-            "SopsProvider"
-            "SopsSecret"
-          ];
+          kindFilter = [ "SopsProvider" ];
         })
       ];
 
@@ -52,7 +51,16 @@ _: {
           match.kind = "SopsSecret";
           postProcess = {
             runtimeInputs = [ pkgs.sops ];
-            command = _: "sops --encrypt --input-type yaml --output-type yaml /dev/stdin";
+            # --filename-override: sops picks a .sops.yaml creation_rule by
+            # matching path_regex against a real file path. Piping through
+            # /dev/stdin gives it none, so without this it silently falls
+            # through to the humans-only catch-all rule instead of the
+            # cluster-scoped one (modules/flake/sops-config.nix's
+            # clusterManifestsRule) — confirmed by inspecting a real
+            # encrypted output file, which had exactly that: no cluster key.
+            command =
+              _:
+              ''sops --encrypt --input-type yaml --output-type yaml --filename-override "$TARGET_PATH" /dev/stdin'';
           };
         }
       ];

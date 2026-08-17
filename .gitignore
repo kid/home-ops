@@ -21,3 +21,9 @@ talosconfig
 kubeconfig
 
 .agents/
+
+# Local plaintext secret values for the sops-operator design (modules/
+# kubernetes/_secrets-lib.nix) — read at Nix-eval time and immediately
+# re-encrypted via nixidy's postProcess before anything is committed; the
+# plaintext itself must never touch git.
+/secrets/values/
