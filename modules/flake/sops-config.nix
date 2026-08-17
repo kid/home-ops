@@ -3,9 +3,8 @@
 # SSH key (modules/flake/provision-host-key.nix). `.sops.yaml` becomes
 # generated output, like manifests/prd/** and tf-stacks/prd/**.
 #
-# JSON is valid YAML 1.2, so builtins.toJSON + `yq -y` (JSON-in, YAML-out) is
-# enough to render — no hand-built YAML templating needed, unlike
-# _render-lib.nix's HCL renderer.
+# pkgs.formats.yaml renders the attrset straight to YAML — no hand-built
+# templating needed, unlike _render-lib.nix's HCL renderer.
 {
   config,
   lib,
@@ -60,10 +59,7 @@ in
   perSystem =
     { pkgs, config, ... }:
     let
-      sopsConfigJson = pkgs.writeText "sops-config.json" (builtins.toJSON sopsConfig);
-      renderedSopsYaml = pkgs.runCommandLocal "sops-config-rendered" {
-        nativeBuildInputs = [ pkgs.yq ];
-      } "yq -y . ${sopsConfigJson} > $out";
+      renderedSopsYaml = (pkgs.formats.yaml { }).generate "sops-config.yaml" sopsConfig;
     in
     {
       packages.write-sops-config = pkgs.writeShellApplication {
