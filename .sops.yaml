@@ -1,15 +1,6 @@
 creation_rules:
   - key_groups:
       - age:
-          - age146tlu0sxyhruen9k800szpfr0na5mrm3udl4qqkpx7lp7msw7fssz55qaj
-          - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo
-            kid@vulkan
-          - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb
-            kid@fw13
-    path_regex: clusters/lab/.+.sops.ya?ml
-    unencrypted_regex: ^(apiVersion|metadata|kind|type)$
-  - key_groups:
-      - age:
           - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo
             kid@vulkan
           - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb

@@ -1,9 +1,7 @@
-# Generates .sops.yaml from Nix instead of hand-maintaining it — mirrors
-# kidibox/nix-config's modules/den/kubernetes/sops-config.nix (creation_rules
-# derived from its cluster registry), adapted to this repo's flatter model:
-# two static human recipients, plus one path-scoped rule per host that has a
-# committed SSH key (modules/flake/provision-host-key.nix). `.sops.yaml`
-# becomes generated output, like manifests/prd/** and tf-stacks/prd/**.
+# Generates .sops.yaml from Nix instead of hand-maintaining it: two static
+# human recipients, plus one path-scoped rule per host that has a committed
+# SSH key (modules/flake/provision-host-key.nix). `.sops.yaml` becomes
+# generated output, like manifests/prd/** and tf-stacks/prd/**.
 #
 # JSON is valid YAML 1.2, so builtins.toJSON + `yq -y` (JSON-in, YAML-out) is
 # enough to render — no hand-built YAML templating needed, unlike
@@ -50,26 +48,7 @@ let
   };
 
   sopsConfig = {
-    creation_rules = [
-      # Preserved verbatim from the previously hand-maintained file — not
-      # derived from anything, currently unused (no file matches this
-      # path), kept so generating this file doesn't silently drop existing
-      # behavior nobody asked to remove.
-      {
-        path_regex = "clusters/lab/.+.sops.ya?ml";
-        unencrypted_regex = "^(apiVersion|metadata|kind|type)$";
-        key_groups = [
-          {
-            age = [
-              "age146tlu0sxyhruen9k800szpfr0na5mrm3udl4qqkpx7lp7msw7fssz55qaj"
-            ]
-            ++ humanKeys;
-          }
-        ];
-      }
-    ]
-    ++ map hostRule provisionedHosts
-    ++ [
+    creation_rules = map hostRule provisionedHosts ++ [
       {
         key_groups = [ { age = humanKeys; } ];
       }

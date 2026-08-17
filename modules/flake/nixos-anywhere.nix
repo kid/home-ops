@@ -3,17 +3,14 @@
 # "apply this to real infrastructure" surface this repo's NixOS/cluster work
 # introduces; does nothing until run by hand.
 #
-# Restructured to follow kidibox/nix-config's pkgs/by-name/nix-flake-install
-# (see modules/flake/provision-host-key.nix's header for the broader
-# context): auto-provisions the host's SSH key if it isn't committed yet,
-# then injects it via --extra-files so the host has its real, final identity
-# from first boot. The payload lands at persist/etc/ssh/, not etc/ssh/ —
-# nix-community/impermanence (modules/den/aspects/impermanence/
-# persist-collector.nix) bind-mounts /etc/ssh/ssh_host_ed25519_key FROM
-# /persist/etc/ssh/ssh_host_ed25519_key, so that's the real storage location
-# extra-files needs to land on; /etc/ssh/... itself is just the bind-mount
-# target, reset on every boot. Confirmed against our own impermanence
-# wiring, not assumed from kidibox's (different) impermanence setup.
+# Auto-provisions the host's SSH key if it isn't committed yet (see
+# modules/flake/provision-host-key.nix), then injects it via --extra-files
+# so the host has its real, final identity from first boot. The payload
+# lands at persist/etc/ssh/, not etc/ssh/ — nix-community/impermanence
+# (modules/den/aspects/impermanence/persist-collector.nix) bind-mounts
+# /etc/ssh/ssh_host_ed25519_key FROM /persist/etc/ssh/ssh_host_ed25519_key,
+# so that's the real storage location extra-files needs to land on;
+# /etc/ssh/... itself is just the bind-mount target, reset on every boot.
 { inputs, ... }:
 {
   flake-file.inputs.nixos-anywhere.url = "github:nix-community/nixos-anywhere";

@@ -1,12 +1,10 @@
 # nix run .#provision-host-key <host> — generates an ed25519 SSH host key
 # locally, encrypts the private half with sops (binary mode — the payload is
 # raw PEM bytes, not YAML/JSON structured data), and commits both the
-# ciphertext and the plaintext public key to secrets/hosts/<host>/. Mirrors
-# kidibox/nix-config's pkgs/by-name/generate-host-keys, adapted from a
-# YubiKey-backed age recipient to this repo's existing sops recipients
-# (kid-vulkan/kid-fw13, .sops.yaml) — encryption only needs their public
-# halves, already present in .sops.yaml, so this needs no new key material
-# of its own to run.
+# ciphertext and the plaintext public key to secrets/hosts/<host>/. Uses this
+# repo's existing sops recipients (kid-vulkan/kid-fw13, .sops.yaml) —
+# encryption only needs their public halves, already present in .sops.yaml,
+# so this needs no new key material of its own to run.
 #
 # modules/flake/nixos-anywhere.nix consumes the committed key at install
 # time, injecting it via nixos-anywhere --extra-files so the host has its
