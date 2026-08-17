@@ -1,9 +1,8 @@
 # Shared per-app SopsSecret declaration convention for the sops-operator
-# design (modules/kubernetes/sops-operator/default.nix). Unlike the
-# Terraform-driven designs on the external-secrets-1password/-openbao
-# branches, there's no "shape vs value" split here: a plaintext value is
-# read from a LOCAL, gitignored file (secrets/values/**, see .gitignore) at
-# Nix-eval time, built straight into the SopsSecret's stringData, and
+# design (modules/kubernetes/sops-operator/default.nix). There's no "shape
+# vs value" split here: a plaintext value is read from a LOCAL, gitignored
+# file (secrets/values/**, see .gitignore) at Nix-eval time, built straight
+# into the SopsSecret's stringData, and
 # immediately re-encrypted by nixidy's own objectTransforms postProcess
 # (sops --encrypt) the moment `nix run .#write-manifests` runs — the
 # plaintext itself never touches the committed tree, only real ciphertext

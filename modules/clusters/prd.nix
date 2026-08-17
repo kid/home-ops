@@ -82,10 +82,7 @@ in
   # cert-manager is included only for Cilium's Hubble mTLS
   # (modules/kubernetes/cert-manager/default.nix) — Helm's own cert
   # generation isn't idempotent across renders. sops-operator provides
-  # Kubernetes secrets (modules/kubernetes/sops-operator/default.nix, one of
-  # three alternative designs under evaluation — see the
-  # external-secrets-1password/external-secrets-openbao branches for the
-  # other two).
+  # Kubernetes secrets (modules/kubernetes/sops-operator/default.nix).
   den.aspects.prd.includes = with den.aspects; [
     gateway-api-crds
     cilium

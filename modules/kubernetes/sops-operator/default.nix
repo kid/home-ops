@@ -1,6 +1,4 @@
-# sops-operator (peak-scale/sops-operator), an alternative to the
-# ESO+1Password (external-secrets-1password branch) and ESO+OpenBao
-# (external-secrets-openbao branch) designs: SopsSecret manifests are
+# sops-operator (peak-scale/sops-operator): SopsSecret manifests are
 # committed to git as real ciphertext (encrypted at `nixidy switch` time via
 # the objectTransforms postProcess rule below), and this operator decrypts
 # them in-cluster using the cluster's own sops-age key (modules/flake/
