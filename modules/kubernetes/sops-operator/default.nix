@@ -2,10 +2,10 @@
 # ESO+1Password (external-secrets-1password branch) and ESO+OpenBao
 # (external-secrets-openbao branch) designs: SopsSecret manifests are
 # committed to git as real ciphertext (encrypted at `nixidy switch` time via
-# modules/nixidy/default.nix's objectTransforms postProcess rule, not here),
-# and this operator decrypts them in-cluster using the cluster's own sops-age
-# key (modules/flake/provision-cluster-key.nix, seeded into the cluster by
-# modules/den/aspects/services/k3s/sops-operator.nix).
+# the objectTransforms postProcess rule below), and this operator decrypts
+# them in-cluster using the cluster's own sops-age key (modules/flake/
+# provision-cluster-key.nix, seeded into the cluster by modules/den/aspects/
+# services/k3s/sops-operator.nix).
 #
 # Chart isn't in nixhelm's catalog — fetched directly from the upstream repo
 # (a real Helm chart lives at charts/sops-operator/ in-repo there) at a
@@ -38,6 +38,23 @@ _: {
             "SopsSecret"
           ];
         })
+      ];
+
+      # Environment-wide (not applications.sops-operator-scoped), since any
+      # app aspect can declare its own SopsSecret and needs the same
+      # encryption applied. postProcess only runs via the real `nixidy
+      # switch`/`nixidy apply` CLI (modules/flake/files.nix), never inside a
+      # sandboxed Nix build — it needs real `sops` + the committed
+      # .sops.yaml's public recipients, neither available in a build sandbox.
+      nixidy.objectTransforms = [
+        {
+          name = "encrypt-sops-secrets";
+          match.kind = "SopsSecret";
+          postProcess = {
+            runtimeInputs = [ pkgs.sops ];
+            command = _: "sops --encrypt --input-type yaml --output-type yaml /dev/stdin";
+          };
+        }
       ];
 
       applications.sops-operator = {

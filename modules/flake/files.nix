@@ -3,7 +3,22 @@
 # modules/den/policies/cluster.nix's cluster-to-nixidy) against the
 # committed `manifests/<rootPath>/` directory — same drift-check-and-sync
 # pattern as this repo's own checks.terragrunt/apps.write-terragrunt.
-{ lib, self, ... }:
+#
+# write-manifests runs the real `nixidy switch` CLI (not just a sandboxed
+# build+rsync of environmentPackage) so objectTransforms.postProcess rules
+# actually run — specifically modules/kubernetes/sops-operator/default.nix's
+# sops --encrypt rule for SopsSecret objects. postProcess needs real `sops`
+# + network/host access nixidy deliberately keeps outside any Nix build
+# sandbox, so it can only run here (human-run, via `nix run`), never inside
+# checks.manifests's sandboxed comparison — that check instead excludes
+# SopsSecret-*.yaml from its diff (expected to differ: committed = real
+# ciphertext, environmentPackage = never-postprocessed plaintext).
+{
+  inputs,
+  lib,
+  self,
+  ...
+}:
 {
   perSystem =
     {
@@ -23,7 +38,7 @@
           (
             lib.concatStringsSep "\n" (
               lib.mapAttrsToList (_: env: ''
-                if ! diff -rq "${self}/${targetDirFor env}" "${env.environmentPackage}"; then
+                if ! diff -rq --exclude='SopsSecret-*.yaml' "${self}/${targetDirFor env}" "${env.environmentPackage}"; then
                   echo "${targetDirFor env} is stale — run: nix run .#write-manifests" >&2
                   exit 1
                 fi
@@ -34,12 +49,20 @@
 
       packages.write-manifests = pkgs.writeShellApplication {
         name = "write-manifests";
-        runtimeInputs = [ pkgs.rsync ];
+        runtimeInputs = [
+          inputs.nixidy.packages.${system}.default
+          pkgs.nix
+          pkgs.sops
+        ];
+        # NIXIDY_POST_PROCESS_APPROVE=1: skips nixidy's own interactive
+        # confirmation prompt before running postProcess commands. The only
+        # one that exists is this repo's own `sops --encrypt` rule, not a
+        # third-party app's arbitrary command — same trust level already
+        # extended to every other write-* command in this repo.
         text = lib.concatStringsSep "\n" (
           lib.mapAttrsToList (name: env: ''
-            echo "==> Writing ${name} manifests to ${targetDirFor env}..."
-            mkdir -p "${targetDirFor env}"
-            rsync -rlL --checksum --delete --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
+            echo "==> Switching ${name} (writes ${targetDirFor env})..."
+            NIXIDY_POST_PROCESS_APPROVE=1 nixidy switch ".#${name}"
           '') envs
         );
       };
