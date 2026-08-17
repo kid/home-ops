@@ -49,11 +49,28 @@ let
     cluster: builtins.pathExists (clusterPubKeyPath cluster)
   ) clusterNames;
 
+  allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
+
+  # A cluster's member hosts (host.k3s.clusterName == cluster) that have
+  # their own committed key, in provisioned-host key order — sops-nix
+  # (modules/den/aspects/services/k3s/sops-operator.nix) decrypts the
+  # cluster's own sops-age key on each such host, using that host's own
+  # persisted SSH key as its decryption identity, so this file needs each
+  # member host's pubkey as a recipient too, not just the cluster's own key.
+  clusterMemberHostKeys =
+    cluster:
+    map (host: lib.removeSuffix "\n" (builtins.readFile (hostPubKeyPath host))) (
+      builtins.filter (host: (allHosts.${host}.k3s.clusterName or null) == cluster) provisionedHosts
+    );
+
   clusterRule = cluster: {
     path_regex = "secrets/clusters/${cluster}/.*";
     key_groups = [
       {
-        age = humanKeys ++ [ (lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))) ];
+        age =
+          humanKeys
+          ++ [ (lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))) ]
+          ++ clusterMemberHostKeys cluster;
       }
     ];
   };
