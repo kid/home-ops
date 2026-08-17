@@ -1,8 +1,9 @@
 # Generates .sops.yaml from Nix instead of hand-maintaining it: human
 # recipients sourced from den.users.registry, plus one path-scoped rule per
-# host that has a committed SSH key (modules/flake/provision-host-key.nix).
-# `.sops.yaml` becomes generated output, like manifests/prd/** and
-# tf-stacks/prd/**.
+# host that has a committed SSH key (modules/flake/provision-host-key.nix)
+# and one per cluster that has a committed age key
+# (modules/flake/provision-cluster-key.nix). `.sops.yaml` becomes generated
+# output, like manifests/prd/** and tf-stacks/prd/**.
 #
 # pkgs.formats.yaml renders the attrset straight to YAML — no hand-built
 # templating needed, unlike _render-lib.nix's HCL renderer.
@@ -38,12 +39,34 @@ let
     ];
   };
 
-  sopsConfig = {
-    creation_rules = map hostRule provisionedHosts ++ [
+  # den.clusters is a flat registry (not per-system, unlike den.hosts —
+  # clusters aren't tied to one architecture).
+  clusterNames = builtins.attrNames (config.den.clusters or { });
+  clusterPubKeyPath = cluster: secretsDir + "/clusters/${cluster}/sops-age-key.pub";
+
+  # Same "not provisioned yet -> no rule, no error" behavior as hostRule.
+  provisionedClusters = builtins.filter (
+    cluster: builtins.pathExists (clusterPubKeyPath cluster)
+  ) clusterNames;
+
+  clusterRule = cluster: {
+    path_regex = "secrets/clusters/${cluster}/.*";
+    key_groups = [
       {
-        key_groups = [ { age = humanKeys; } ];
+        age = humanKeys ++ [ (lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))) ];
       }
     ];
+  };
+
+  sopsConfig = {
+    creation_rules =
+      map hostRule provisionedHosts
+      ++ map clusterRule provisionedClusters
+      ++ [
+        {
+          key_groups = [ { age = humanKeys; } ];
+        }
+      ];
     stores.yaml.indent = 2;
   };
 in

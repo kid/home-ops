@@ -106,6 +106,7 @@
     den.aspects.k3s-openebs
     den.aspects.k3s-miroir
     den.aspects.power-saving
+    den.aspects.k3s-sops-operator
   ];
 
   # Grants kid's "admin" access-policy group (modules/users/kid.nix) onto

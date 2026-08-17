@@ -21,6 +21,16 @@ creation_rules:
     - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb 
       kid@fw13
+    - age1crlwx4k0eaq666fa8dqpq3k9rhkm8qvwf3ewuum8s8hmrzrm55fsl3tk8h
+  path_regex: secrets/clusters/prd/.*
+- key_groups:
+  - age:
+    - ssh-ed25519 
+      AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo 
+      kid@vulkan
+    - ssh-ed25519 
+      AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb 
+      kid@fw13
 stores:
   yaml:
     indent: 2
