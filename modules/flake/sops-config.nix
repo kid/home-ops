@@ -80,8 +80,17 @@ let
   # key — so a SopsSecret rendered under that cluster's manifest root needs
   # that key as a recipient too, not just the humans-only catch-all every
   # other committed file gets.
+  #
+  # encrypted_regex/mac_only_encrypted: required by sops-operator itself
+  # (https://github.com/peak-scale/sops-operator/blob/main/docs/usage.md#generate-sops-configuration)
+  # — only spec.secrets[].data/stringData values get encrypted, so
+  # apiVersion/kind/metadata stay cleartext (kubectl/the operator need
+  # those to even route the object before decryption), and re-rendering
+  # non-secret fields doesn't invalidate the MAC of the encrypted ones.
   clusterManifestsRule = cluster: {
     path_regex = "${config.den.clusters.${cluster}.nixidy.rootPath}/.*SopsSecret-.*\\.ya?ml$";
+    encrypted_regex = "^(data|stringData)$";
+    mac_only_encrypted = true;
     key_groups = [
       {
         age = humanKeys ++ [ (lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))) ];

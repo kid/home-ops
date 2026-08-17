@@ -4,17 +4,18 @@
 # committed `manifests/<rootPath>/` directory — same drift-check-and-sync
 # pattern as this repo's own checks.terragrunt/apps.write-terragrunt.
 #
-# write-manifests runs the real `nixidy switch` CLI (not just a sandboxed
-# build+rsync of environmentPackage) so objectTransforms.postProcess rules
-# actually run — specifically modules/kubernetes/sops-operator/default.nix's
-# sops --encrypt rule for SopsSecret objects. postProcess needs real `sops`
-# + network/host access nixidy deliberately keeps outside any Nix build
-# sandbox, so it can only run here (human-run, via `nix run`), never inside
-# checks.manifests's sandboxed comparison — that check instead excludes
-# SopsSecret-*.yaml from its diff (expected to differ: committed = real
-# ciphertext, environmentPackage = never-postprocessed plaintext).
+# write-manifests builds+rsyncs each env's sandboxed environmentPackage
+# (SopsSecret objects render with an empty stringData — nixidy's build
+# only sees git-tracked/staged files, never a real secret value), then
+# merges in real values for real: for each rendered SopsSecret-*.yaml, it
+# looks up secrets/clusters/<cluster>/<namespace>/<name>.sops.json (see
+# modules/kubernetes/_secrets-lib.nix) by that file's own metadata, decrypts
+# it, splices the result into .spec.secrets[0].stringData, and re-encrypts
+# the whole file in place with sops. checks.manifests's sandboxed
+# comparison excludes SopsSecret-*.yaml from its diff (expected to differ:
+# committed = real ciphertext, environmentPackage = empty-stringData
+# plaintext).
 {
-  inputs,
   lib,
   self,
   ...
@@ -22,9 +23,9 @@
 {
   perSystem =
     {
-      system,
       pkgs,
       config,
+      system,
       ...
     }:
     let
@@ -50,19 +51,30 @@
       packages.write-manifests = pkgs.writeShellApplication {
         name = "write-manifests";
         runtimeInputs = [
-          inputs.nixidy.packages.${system}.default
-          pkgs.nix
+          pkgs.rsync
           pkgs.sops
+          pkgs.yq
+          pkgs.findutils
         ];
-        # NIXIDY_POST_PROCESS_APPROVE=1: skips nixidy's own interactive
-        # confirmation prompt before running postProcess commands. The only
-        # one that exists is this repo's own `sops --encrypt` rule, not a
-        # third-party app's arbitrary command — same trust level already
-        # extended to every other write-* command in this repo.
         text = lib.concatStringsSep "\n" (
           lib.mapAttrsToList (name: env: ''
-            echo "==> Switching ${name} (writes ${targetDirFor env})..."
-            NIXIDY_POST_PROCESS_APPROVE=1 nixidy switch ".#${name}"
+            echo "==> Writing ${name} manifests to ${targetDirFor env}..."
+            mkdir -p "${targetDirFor env}"
+            rsync -rlL --checksum --delete --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
+
+            echo "==> Encrypting SopsSecret values for ${name}..."
+            while IFS= read -r -d "" f; do
+              namespace=$(yq -r '.metadata.namespace' "$f")
+              secretName=$(yq -r '.metadata.name' "$f")
+              valueFile="secrets/clusters/${name}/$namespace/$secretName.sops.json"
+              if [ -f "$valueFile" ]; then
+                value=$(sops --decrypt --input-type json --output-type json "$valueFile")
+                # shellcheck disable=SC2016 # $v is a jq variable, not a shell one
+                yq -y --argjson v "$value" '.spec.secrets[0].stringData = $v' "$f" > "$f.tmp"
+                mv "$f.tmp" "$f"
+              fi
+              sops --encrypt --input-type yaml --output-type yaml -i "$f"
+            done < <(find "${targetDirFor env}" -name 'SopsSecret-*.yaml' -print0)
           '') envs
         );
       };

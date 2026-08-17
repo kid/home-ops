@@ -1,9 +1,10 @@
 # sops-operator (peak-scale/sops-operator): SopsSecret manifests are
-# committed to git as real ciphertext (encrypted at `nixidy switch` time via
-# the objectTransforms postProcess rule below), and this operator decrypts
-# them in-cluster using the cluster's own sops-age key (modules/flake/
-# provision-cluster-key.nix, seeded into the cluster by modules/den/aspects/
-# services/k3s/sops-operator.nix).
+# committed to git as real ciphertext (encrypted by `nix run .#write-manifests`,
+# modules/flake/files.nix, after it merges in each secret's real value from
+# a committed file under secrets/ — see modules/kubernetes/_secrets-lib.nix),
+# and this operator decrypts them in-cluster using the cluster's own
+# sops-age key (modules/flake/provision-cluster-key.nix, seeded into the
+# cluster by modules/den/aspects/services/k3s/sops-operator.nix).
 #
 # Chart isn't in nixhelm's catalog — fetched directly from the upstream repo
 # (a real Helm chart lives at charts/sops-operator/ in-repo there) at a
@@ -35,32 +36,6 @@ _: {
           inherit chart;
           kindFilter = [ "SopsProvider" ];
         })
-      ];
-
-      # Environment-wide (not applications.sops-operator-scoped), since any
-      # app aspect can declare its own SopsSecret and needs the same
-      # encryption applied. postProcess only runs via the real `nixidy
-      # switch`/`nixidy apply` CLI (modules/flake/files.nix), never inside a
-      # sandboxed Nix build — it needs real `sops` + the committed
-      # .sops.yaml's public recipients, neither available in a build sandbox.
-      nixidy.objectTransforms = [
-        {
-          name = "encrypt-sops-secrets";
-          match.kind = "SopsSecret";
-          postProcess = {
-            runtimeInputs = [ pkgs.sops ];
-            # --filename-override: sops picks a .sops.yaml creation_rule by
-            # matching path_regex against a real file path. Piping through
-            # /dev/stdin gives it none, so without this it silently falls
-            # through to the humans-only catch-all rule instead of the
-            # cluster-scoped one (modules/flake/sops-config.nix's
-            # clusterManifestsRule) — confirmed by inspecting a real
-            # encrypted output file, which had exactly that: no cluster key.
-            command =
-              _:
-              ''sops --encrypt --input-type yaml --output-type yaml --filename-override "$TARGET_PATH" /dev/stdin'';
-          };
-        }
       ];
 
       applications.sops-operator = {

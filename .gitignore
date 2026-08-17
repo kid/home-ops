@@ -22,8 +22,13 @@ kubeconfig
 
 .agents/
 
-# Local plaintext secret values for the sops-operator design (modules/
-# kubernetes/_secrets-lib.nix) — read at Nix-eval time and immediately
-# re-encrypted via nixidy's postProcess before anything is committed; the
-# plaintext itself must never touch git.
-/secrets/values/
+# Decrypted scratch copies of committed secrets/clusters/*/**/*.sops.json
+# files (modules/kubernetes/_secrets-lib.nix, modules/flake/files.nix) —
+# written by `nix run .#write-manifests`, read at Nix-eval time, and
+# immediately re-encrypted via nixidy's postProcess; the plaintext itself
+# must never touch git. secrets/clusters/ also holds committed .pub and
+# .sops.* ciphertext, so only the decrypted siblings are ignored here.
+/secrets/clusters/*/**
+!/secrets/clusters/*/**/
+!/secrets/clusters/*/**/*.pub
+!/secrets/clusters/*/**/*.sops.*

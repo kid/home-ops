@@ -10,28 +10,24 @@
 # chart gates its CRDs behind crds.enabled (default false, same as the
 # Helm release's own values below), and kindFilter matches nothing if the
 # chart is templated without it.
-{ lib, ... }:
 let
-  secretsLib = import ../_secrets-lib.nix { inherit lib; };
+  secretsLib = import ../_secrets-lib.nix;
 
   # Prototype for the shared SopsSecret convention
   # (modules/kubernetes/_secrets-lib.nix): proves a real, externally-sourced
-  # secret flows local value file -> Nix -> sops-encrypted SopsSecret ->
-  # sops-operator -> an in-cluster Secret. Not yet consumed by a
-  # ClusterIssuer (ACME DNS-01 is a separate follow-up) — this only
-  # exercises the plumbing. Fill the real value locally at
-  # secrets/values/cert-manager/cloudflare-dns-api-token/token (gitignored)
-  # before running `nix run .#write-manifests` to get a real, non-empty
-  # ciphertext.
+  # secret flows committed ciphertext -> write-manifests -> sops-encrypted
+  # SopsSecret -> sops-operator -> an in-cluster Secret. Not yet consumed by
+  # a ClusterIssuer (ACME DNS-01 is a separate follow-up) — this only
+  # exercises the plumbing. To provide the real value (namespace/name below
+  # must match the file path — that's how write-manifests finds it):
+  #   mkdir -p secrets/clusters/prd/cert-manager
+  #   echo '{"token": "<value>"}' > secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
+  #   sops -e -i --input-type json --output-type json \
+  #     secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
+  # then commit it and run `nix run .#write-manifests`.
   cloudflareDnsApiToken = secretsLib.mkSopsSecretYaml {
     namespace = "cert-manager";
     name = "cloudflare-dns-api-token";
-    fields = [
-      {
-        name = "token";
-        valuePath = "cert-manager/cloudflare-dns-api-token/token";
-      }
-    ];
   };
 in
 {
