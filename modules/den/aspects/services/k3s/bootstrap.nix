@@ -1,17 +1,21 @@
 # k3s bootstrap aspect — oneshot systemd services that apply manifests on
-# first boot, scoped to the app set in modules/clusters/prd.nix's
-# den.aspects.prd.includes (cilium + gateway-api-crds + coredns + argocd +
-# cert-manager).
+# first boot. Waves 0 and 1 sweep every app's rendered output under
+# manifests/prd/ for Namespace/CRD resources, whatever the app — cheap and
+# safe to apply early even for apps (miroir, sops-operator) whose own
+# workloads are left for ArgoCD to bring up later. Waves 2 onward apply a
+# specific, hand-picked subset of apps whose workloads the rest of the
+# chain (or the node itself) needs up before ArgoCD takes over: cilium +
+# cert-manager + coredns + argocd.
 #
 # Bakes the generated manifests into the NixOS image via `self` (the flake
 # source is a store path), so no git clone is needed on the node.
 #
 # Wave ordering:
-#   0. k3s-bootstrap-namespaces    — all Namespace resources from all apps
-#                                     (cilium, coredns, argocd, cert-manager)
-#   1. k3s-bootstrap-crds          — all CustomResourceDefinition resources from all apps
-#                                     (including the upstream Gateway API CRDs, modules/
-#                                     kubernetes/cilium/gateway-api-crds.nix), wait for
+#   0. k3s-bootstrap-namespaces    — all Namespace resources, every app
+#   1. k3s-bootstrap-crds          — all CustomResourceDefinition resources, every
+#                                     app (including the upstream Gateway API CRDs,
+#                                     modules/kubernetes/cilium/gateway-api-crds.nix),
+#                                     wait for the ones later waves need to be
 #                                     Established before proceeding
 #   2. k3s-bootstrap-cilium        — Cilium core manifests, wait for operator
 #                                     (operator registers Cilium CRDs at startup),
@@ -46,11 +50,18 @@
             name = "k3s-prd-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
           };
         ciliumDir = manifestPath "cilium";
-        gatewayApiCrdsDir = manifestPath "gateway-api-crds";
         corednsDir = manifestPath "coredns";
         argocdDir = manifestPath "argocd";
         certManagerDir = manifestPath "cert-manager";
         bootstrapFile = manifestPath "bootstrap.yaml";
+        # Every app's rendered output, namespaces and CRDs included — used by
+        # waves 0 and 1 below so a new app (e.g. miroir, sops-operator) gets
+        # its Namespace/CRD resources swept up automatically, instead of
+        # each needing its own dir added to a hand-maintained list here.
+        allManifestsDir = builtins.path {
+          path = self + "/manifests/prd";
+          name = "k3s-prd-all";
+        };
         hasCilium = host.hasAspect den.aspects.k3s-cilium;
         waitForApi = ''
           echo "Waiting for k3s API server..."
@@ -81,7 +92,7 @@
                 echo "Applying all Namespace resources..."
                 declare -a files
                 while IFS= read -r f; do files+=("-f" "$f"); done < <(
-                  find ${ciliumDir} ${corednsDir} ${argocdDir} ${certManagerDir} -name "Namespace-*.yaml" | sort
+                  find ${allManifestsDir} -name "Namespace-*.yaml" | sort
                 )
                 [[ ''${#files[@]} -gt 0 ]] && \
                   kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${files[@]}"
@@ -117,7 +128,7 @@
                 echo "Applying all CRDs..."
                 declare -a files
                 while IFS= read -r f; do files+=("-f" "$f"); done < <(
-                  find ${ciliumDir} ${gatewayApiCrdsDir} ${argocdDir} ${certManagerDir} -name "CustomResourceDefinition-*.yaml" | sort
+                  find ${allManifestsDir} -name "CustomResourceDefinition-*.yaml" | sort
                 )
                 [[ ''${#files[@]} -gt 0 ]] && \
                   kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${files[@]}"
@@ -147,6 +158,13 @@
                   crd/grpcroutes.gateway.networking.k8s.io \
                   crd/referencegrants.gateway.networking.k8s.io \
                   crd/backendtlspolicies.gateway.networking.k8s.io \
+                  --timeout=60s
+
+                echo "Waiting for sops-operator CRDs to be established..."
+                kubectl wait --for=condition=Established \
+                  crd/sopssecrets.addons.projectcapsule.dev \
+                  crd/globalsopssecrets.addons.projectcapsule.dev \
+                  crd/sopsproviders.addons.projectcapsule.dev \
                   --timeout=60s
 
                 echo "CRDs ready."
