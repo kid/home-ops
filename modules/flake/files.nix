@@ -9,8 +9,9 @@
 # only sees git-tracked/staged files, never a real secret value), then
 # merges in real values for real: for each rendered SopsSecret-*.yaml, it
 # looks up secrets/clusters/<cluster>/<namespace>/<name>.sops.json (see
-# modules/kubernetes/_secrets-lib.nix) by that file's own metadata, decrypts
-# it, splices the result into .spec.secrets[0].stringData, and re-encrypts
+# den.clusters.<name>.methods.mkSopsSecret, modules/kubernetes/sops-operator/
+# default.nix) by that file's own metadata, decrypts it, splices the result
+# into .spec.secrets[0].stringData, and re-encrypts
 # the whole file in place with sops. checks.manifests's sandboxed
 # comparison excludes SopsSecret-*.yaml from its diff (expected to differ:
 # committed = real ciphertext, environmentPackage = empty-stringData

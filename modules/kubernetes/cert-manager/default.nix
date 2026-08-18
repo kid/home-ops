@@ -10,29 +10,34 @@
 # chart gates its CRDs behind crds.enabled (default false, same as the
 # Helm release's own values below), and kindFilter matches nothing if the
 # chart is templated without it.
-let
-  secretsLib = import ../_secrets-lib.nix;
-
-  # Prototype for the shared SopsSecret convention
-  # (modules/kubernetes/_secrets-lib.nix): proves a real, externally-sourced
-  # secret flows committed ciphertext -> write-manifests -> sops-encrypted
-  # SopsSecret -> sops-operator -> an in-cluster Secret. Not yet consumed by
-  # a ClusterIssuer (ACME DNS-01 is a separate follow-up) — this only
-  # exercises the plumbing. To provide the real value (namespace/name below
-  # must match the file path — that's how write-manifests finds it):
-  #   mkdir -p secrets/clusters/prd/cert-manager
-  #   echo '{"token": "<value>"}' > secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
-  #   sops -e -i --input-type json --output-type json \
-  #     secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
-  # then commit it and run `nix run .#write-manifests`.
-  cloudflareDnsApiToken = secretsLib.mkSopsSecretYaml {
-    namespace = "cert-manager";
-    name = "cloudflare-dns-api-token";
-  };
-in
-{
+_: {
   den.aspects.cert-manager.k8s-manifests =
-    { charts, generators, ... }:
+    {
+      charts,
+      generators,
+      cluster,
+      ...
+    }:
+    let
+      # Prototype for the shared SopsSecret convention
+      # (den.clusters.<name>.methods.mkSopsSecret, set by
+      # modules/kubernetes/sops-operator/default.nix): proves a real,
+      # externally-sourced secret flows committed ciphertext ->
+      # write-manifests -> sops-encrypted SopsSecret -> sops-operator -> an
+      # in-cluster Secret. Not yet consumed by a ClusterIssuer (ACME DNS-01
+      # is a separate follow-up) — this only exercises the plumbing. To
+      # provide the real value (namespace/name below must match the file
+      # path — that's how write-manifests finds it):
+      #   mkdir -p secrets/clusters/prd/cert-manager
+      #   echo '{"token": "<value>"}' > secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
+      #   sops -e -i --input-type json --output-type json \
+      #     secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
+      # then commit it and run `nix run .#write-manifests`.
+      cloudflareDnsApiToken = cluster.methods.mkSopsSecret {
+        namespace = "cert-manager";
+        name = "cloudflare-dns-api-token";
+      };
+    in
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
