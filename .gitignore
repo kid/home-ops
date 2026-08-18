@@ -23,11 +23,7 @@ kubeconfig
 .agents/
 
 # secrets/clusters/ holds only committed .pub keys and .sops/.sops.*
-# ciphertext (modules/flake/provision-cluster-key.nix, _secrets-lib.nix) —
-# nothing else should ever land there. This is a safety net, not an active
-# mechanism: `nix run .#write-manifests` decrypts values straight into a
-# shell variable, never to disk, but a manual `sops --decrypt` for
-# inspection shouldn't accidentally get committed either.
+# ciphertext — a safety net against a stray manual decrypt getting added.
 /secrets/clusters/*/**
 !/secrets/clusters/*/**/
 !/secrets/clusters/*/**/*.pub
