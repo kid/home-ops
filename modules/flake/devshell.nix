@@ -20,6 +20,7 @@ _: {
             expect
             age
             sops
+            openssh
             opentofu
             tofu-ls
             terragrunt
@@ -49,8 +50,10 @@ _: {
           ++ [
             config.packages.deploy
             config.packages.nixos-anywhere-install
+            config.packages.provision-host-key
             config.packages.write-manifests
             config.packages.write-terragrunt
+            config.packages.write-sops-config
             config.packages.write-flake
             config.packages.write-lock
             config.packages.write-inputs
