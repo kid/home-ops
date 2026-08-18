@@ -105,6 +105,7 @@
     den.aspects.k3s-bootstrap
     den.aspects.k3s-openebs
     den.aspects.k3s-miroir
+    den.aspects.power-saving
   ];
 
   # Grants kid's "admin" access-policy group (modules/users/kid.nix) onto
