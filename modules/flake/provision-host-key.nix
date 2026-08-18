@@ -23,7 +23,7 @@
         text = ''
           host=''${1:?usage: provision-host-key <host>}
           host_dir="secrets/hosts/$host"
-          sops_file="$host_dir/ssh_host_ed25519_key.sops.binary"
+          sops_file="$host_dir/ssh_host_ed25519_key.sops"
           pub_file="$host_dir/ssh_host_ed25519_key.pub"
 
           if [[ -f "$sops_file" ]]; then

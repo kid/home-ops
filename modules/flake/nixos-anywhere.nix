@@ -51,7 +51,7 @@
           host=''${1:?usage: nixos-anywhere-install <host> <ssh-target, e.g. root@10.0.40.10> [--dry-run]}
           target=''${2:?usage: nixos-anywhere-install <host> <ssh-target, e.g. root@10.0.40.10> [--dry-run]}
 
-          sops_file="secrets/hosts/$host/ssh_host_ed25519_key.sops.binary"
+          sops_file="secrets/hosts/$host/ssh_host_ed25519_key.sops"
           pub_file="secrets/hosts/$host/ssh_host_ed25519_key.pub"
 
           if [[ ! -f "$sops_file" ]]; then
