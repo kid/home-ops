@@ -37,7 +37,7 @@
         imports = [ inputs.sops-nix.nixosModules.sops ];
 
         sops.secrets.sops-operator-age-key = {
-          sopsFile = ../../../../../secrets/clusters/${clusterName}/sops-age-key.sops.binary;
+          sopsFile = ../../../../../secrets/clusters/${clusterName}/sops-age-key.sops;
           format = "binary";
         };
 

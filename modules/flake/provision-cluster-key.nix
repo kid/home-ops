@@ -6,9 +6,9 @@
 # sops-operator/default.nix) — age-native, not an SSH key, since
 # sops-operator only accepts age/PGP/Vault-transit keys.
 #
-# modules/flake/nixos-anywhere.nix stages the decrypted private key
-# alongside the target host's own SSH key when that host is a k3s node for
-# this cluster, delivered via nixos-anywhere --extra-files during install.
+# sops-nix (modules/den/aspects/services/k3s/sops-operator.nix) decrypts
+# the committed private key on each cluster-member host, declaratively, on
+# every activation — not a one-time nixos-anywhere --extra-files payload.
 {
   perSystem =
     { pkgs, config, ... }:
@@ -22,7 +22,7 @@
         text = ''
           cluster=''${1:?usage: provision-cluster-key <cluster>}
           cluster_dir="secrets/clusters/$cluster"
-          sops_file="$cluster_dir/sops-age-key.sops.binary"
+          sops_file="$cluster_dir/sops-age-key.sops"
           pub_file="$cluster_dir/sops-age-key.pub"
 
           if [[ -f "$sops_file" ]]; then
