@@ -21,3 +21,11 @@ talosconfig
 kubeconfig
 
 .agents/
+
+# secrets/clusters/ holds only committed .pub keys and .sops/.sops.*
+# ciphertext — a safety net against a stray manual decrypt getting added.
+/secrets/clusters/*/**
+!/secrets/clusters/*/**/
+!/secrets/clusters/*/**/*.pub
+!/secrets/clusters/*/**/*.sops
+!/secrets/clusters/*/**/*.sops.*

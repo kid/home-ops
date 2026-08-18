@@ -1,0 +1,9 @@
+apiVersion: addons.projectcapsule.dev/v1alpha1
+kind: SopsProvider
+metadata:
+  name: prd
+spec:
+  keys:
+    - matchLabels: {}
+  sops:
+    - matchLabels: {}

@@ -140,6 +140,12 @@
               defaultText = "den.aspects.<name>";
               description = "Aspect that configures this cluster (its app-catalog includes)";
             };
+
+            methods = lib.mkOption {
+              type = lib.types.attrsOf lib.types.raw;
+              default = { };
+              description = "Named callables contributed by aspects this cluster includes";
+            };
           };
         }
       )

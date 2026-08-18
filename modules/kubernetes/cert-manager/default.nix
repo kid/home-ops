@@ -12,7 +12,21 @@
 # chart is templated without it.
 _: {
   den.aspects.cert-manager.k8s-manifests =
-    { charts, generators, ... }:
+    {
+      charts,
+      generators,
+      cluster,
+      ...
+    }:
+    let
+      # namespace/name must match
+      # secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
+      # (write-manifests finds the value by that path).
+      cloudflareDnsApiToken = cluster.methods.mkSopsSecret {
+        namespace = "cert-manager";
+        name = "cloudflare-dns-api-token";
+      };
+    in
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -65,6 +79,8 @@ _: {
         };
 
         resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
+
+        yamls = [ cloudflareDnsApiToken ];
       };
     };
 }

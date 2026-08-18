@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: sops-operator
+    app.kubernetes.io/name: sops-operator
+  name: sops-operator
+  namespace: sops-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: sops-operator
+subjects:
+  - kind: ServiceAccount
+    name: sops-operator
+    namespace: sops-operator
