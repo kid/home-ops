@@ -19,20 +19,9 @@ _: {
       ...
     }:
     let
-      # Prototype for the shared SopsSecret convention
-      # (den.clusters.<name>.methods.mkSopsSecret, set by
-      # modules/kubernetes/sops-operator/default.nix): proves a real,
-      # externally-sourced secret flows committed ciphertext ->
-      # write-manifests -> sops-encrypted SopsSecret -> sops-operator -> an
-      # in-cluster Secret. Not yet consumed by a ClusterIssuer (ACME DNS-01
-      # is a separate follow-up) — this only exercises the plumbing. To
-      # provide the real value (namespace/name below must match the file
-      # path — that's how write-manifests finds it):
-      #   mkdir -p secrets/clusters/prd/cert-manager
-      #   echo '{"token": "<value>"}' > secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
-      #   sops -e -i --input-type json --output-type json \
-      #     secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
-      # then commit it and run `nix run .#write-manifests`.
+      # namespace/name must match
+      # secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
+      # (write-manifests finds the value by that path).
       cloudflareDnsApiToken = cluster.methods.mkSopsSecret {
         namespace = "cert-manager";
         name = "cloudflare-dns-api-token";

@@ -1,21 +1,11 @@
-# checks.manifests + apps.write-manifests: diffs/syncs each cluster's built
-# nixidy manifest tree (config.flake.nixidyEnvs.<system>.<cluster>, from
-# modules/den/policies/cluster.nix's cluster-to-nixidy) against the
-# committed `manifests/<rootPath>/` directory — same drift-check-and-sync
-# pattern as this repo's own checks.terragrunt/apps.write-terragrunt.
+# checks.manifests/write-manifests: diff/sync each cluster's built nixidy
+# tree against manifests/<rootPath>/.
 #
-# write-manifests builds+rsyncs each env's sandboxed environmentPackage
-# (SopsSecret objects render with an empty stringData — nixidy's build
-# only sees git-tracked/staged files, never a real secret value), then
-# merges in real values for real: for each rendered SopsSecret-*.yaml, it
-# looks up secrets/clusters/<cluster>/<namespace>/<name>.sops.json (see
-# den.clusters.<name>.methods.mkSopsSecret, modules/kubernetes/sops-operator/
-# default.nix) by that file's own metadata, decrypts it, splices the result
-# into .spec.secrets[0].stringData, and re-encrypts
-# the whole file in place with sops. checks.manifests's sandboxed
-# comparison excludes SopsSecret-*.yaml from its diff (expected to differ:
-# committed = real ciphertext, environmentPackage = empty-stringData
-# plaintext).
+# write-manifests also merges real secret values after the sandboxed build
+# (which only ever sees empty stringData): for each SopsSecret-*.yaml it
+# decrypts secrets/clusters/<cluster>/<namespace>/<name>.sops.json and
+# re-encrypts in place. checks.manifests excludes SopsSecret-*.yaml from
+# its diff since that ciphertext is never reproduced by the sandboxed build.
 {
   lib,
   self,

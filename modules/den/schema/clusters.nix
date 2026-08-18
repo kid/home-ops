@@ -144,13 +144,7 @@
             methods = lib.mkOption {
               type = lib.types.attrsOf lib.types.raw;
               default = { };
-              description = ''
-                Named callables contributed by aspects this cluster includes
-                (e.g. methods.mkSopsSecret from
-                modules/kubernetes/sops-operator/default.nix, when that
-                aspect is included) — a cluster without the aspect just
-                doesn't have the corresponding method.
-              '';
+              description = "Named callables contributed by aspects this cluster includes";
             };
           };
         }
