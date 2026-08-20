@@ -1,11 +1,11 @@
 # k3s bootstrap aspect — oneshot systemd services that apply manifests on
 # first boot. Waves 0 and 1 sweep every app's rendered output under
 # manifests/prd/ for Namespace/CRD resources, whatever the app — cheap and
-# safe to apply early even for apps (miroir, sops-operator) whose own
-# workloads are left for ArgoCD to bring up later. Waves 2 onward apply a
-# specific, hand-picked subset of apps whose workloads the rest of the
-# chain (or the node itself) needs up before ArgoCD takes over: cilium +
-# cert-manager + coredns + argocd.
+# safe to apply early even for apps (miroir) whose own workloads are left
+# for ArgoCD to bring up later. Waves 2 onward apply a specific,
+# hand-picked subset of apps whose workloads the rest of the chain (or the
+# node itself) needs up before ArgoCD takes over: cilium + coredns +
+# sops-operator + cert-manager + argocd.
 #
 # Bakes the generated manifests into the NixOS image via `self` (the flake
 # source is a store path), so no git clone is needed on the node.
@@ -21,16 +21,26 @@
 #                                     (operator registers Cilium CRDs at startup),
 #                                     then apply Cilium custom resources. Skipped (fast
 #                                     no-op) on hosts without den.aspects.k3s-cilium.
-#   3. k3s-bootstrap-cert-manager  — cert-manager + the Hubble CA/ClusterIssuer
+#   3. k3s-bootstrap-coredns       — CoreDNS deployment; every wave after this one
+#                                     needs cluster DNS to resolve external hosts
+#                                     (image registries, the ACME/Cloudflare API
+#                                     cert-manager talks to, RouterOS for
+#                                     external-dns once ArgoCD brings it up later) —
+#                                     ArgoCD itself needs it to resolve the git repo
+#   4. k3s-bootstrap-sops-operator — sops-operator controller
+#                                     (modules/kubernetes/sops-operator/default.nix);
+#                                     must come after coredns and before
+#                                     cert-manager, so the controller is already
+#                                     running and watching by the time cert-manager
+#                                     applies the SopsSecret CR its letsencrypt-prod
+#                                     ClusterIssuer depends on
+#   5. k3s-bootstrap-cert-manager  — cert-manager + the Hubble CA/ClusterIssuer
 #                                     it signs (modules/kubernetes/cert-manager/
-#                                     default.nix); must come after cilium since
-#                                     cert-manager's pods need CNI to schedule
-#                                     (unlike cilium-agent, which runs hostNetwork
-#                                     and mounts Hubble's cert as `optional`, so it
-#                                     doesn't block on this wave)
-#   4. k3s-bootstrap-coredns       — CoreDNS deployment; ArgoCD needs cluster DNS to
-#                                     resolve the git repository on first sync
-#   5. k3s-bootstrap-argocd        — ArgoCD + self-managing Application
+#                                     default.nix); must come after sops-operator so
+#                                     the cloudflare-dns-api-token Secret referenced
+#                                     by letsencrypt-prod is reconcilable as soon as
+#                                     its SopsSecret CR is applied
+#   6. k3s-bootstrap-argocd        — ArgoCD + self-managing Application
 #
 # Cilium does not ship CRDs in its Helm chart; the cilium-operator registers
 # them at runtime. Applying Cilium*.yaml CRs before the operator is ready
@@ -50,6 +60,7 @@
             name = "k3s-prd-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
           };
         ciliumDir = manifestPath "cilium";
+        sopsOperatorDir = manifestPath "sops-operator";
         corednsDir = manifestPath "coredns";
         argocdDir = manifestPath "argocd";
         certManagerDir = manifestPath "cert-manager";
@@ -252,14 +263,12 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 3: cert-manager — after cilium, since cert-manager's own pods
-          # need CNI to schedule. Once its webhook is up, apply the Hubble
-          # self-signed CA + ClusterIssuer (modules/kubernetes/cert-manager/
-          # default.nix) and wait for the CA to be signed, so Cilium's
-          # hubble-server-certs Certificate (applied in wave 2) has a
-          # working issuer to resolve against.
-          k3s-bootstrap-cert-manager = {
-            description = "Bootstrap cert-manager and the Hubble CA";
+          # Wave 3: CoreDNS — after cilium (needs CNI to schedule); every later
+          # wave needs cluster DNS to resolve external hosts (image registries,
+          # cert-manager's ACME/Cloudflare calls, external-dns's RouterOS calls
+          # once ArgoCD brings it up, ArgoCD's own git-repo resolution).
+          k3s-bootstrap-coredns = {
+            description = "Bootstrap CoreDNS cluster DNS";
             after = [
               "k3s.service"
               "k3s-bootstrap-cilium.service"
@@ -267,6 +276,95 @@
             requires = [
               "k3s.service"
               "k3s-bootstrap-cilium.service"
+            ];
+            path = [ pkgs.kubectl ];
+            environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              ExecStart = pkgs.writeShellScript "k3s-bootstrap-coredns" ''
+                set -e
+
+                if kubectl get deployment -n kube-system coredns >/dev/null 2>&1; then
+                  echo "CoreDNS already installed, skipping bootstrap."
+                  exit 0
+                fi
+
+                echo "Applying CoreDNS manifests..."
+                kubectl apply \
+                  --server-side --force-conflicts --field-manager=argocd-controller \
+                  -f ${corednsDir}
+
+                echo "Waiting for CoreDNS deployment to be ready..."
+                kubectl rollout status -n kube-system deployment/coredns --timeout=120s
+
+                echo "CoreDNS bootstrap complete."
+              '';
+            };
+            wantedBy = [ "multi-user.target" ];
+          };
+
+          # Wave 4: sops-operator — after coredns. Must be running before
+          # cert-manager (wave 5) applies the SopsSecret CR for
+          # cloudflare-dns-api-token, so the controller is already watching and
+          # can reconcile that CR into a real Secret by the time
+          # letsencrypt-prod's ClusterIssuer references it — without this, the
+          # ClusterIssuer is applied before anything exists to decrypt its
+          # Secret.
+          k3s-bootstrap-sops-operator = {
+            description = "Bootstrap sops-operator";
+            after = [
+              "k3s.service"
+              "k3s-bootstrap-coredns.service"
+            ];
+            requires = [
+              "k3s.service"
+              "k3s-bootstrap-coredns.service"
+            ];
+            path = [ pkgs.kubectl ];
+            environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              ExecStart = pkgs.writeShellScript "k3s-bootstrap-sops-operator" ''
+                set -e
+
+                if kubectl get deployment -n sops-operator sops-operator >/dev/null 2>&1; then
+                  echo "sops-operator already installed, skipping bootstrap."
+                  exit 0
+                fi
+
+                echo "Applying sops-operator manifests..."
+                kubectl apply \
+                  --server-side --force-conflicts --field-manager=argocd-controller \
+                  -f ${sopsOperatorDir}
+
+                echo "Waiting for sops-operator rollout..."
+                kubectl rollout status -n sops-operator deployment/sops-operator --timeout=120s
+
+                echo "sops-operator bootstrap complete."
+              '';
+            };
+            wantedBy = [ "multi-user.target" ];
+          };
+
+          # Wave 5: cert-manager — after sops-operator (its controller must
+          # already be running so the cloudflare-dns-api-token SopsSecret CR
+          # below is reconcilable as soon as it's applied) and, transitively,
+          # cilium (cert-manager's own pods need CNI to schedule). Once its
+          # webhook is up, apply the Hubble self-signed CA + ClusterIssuer
+          # (modules/kubernetes/cert-manager/default.nix) and wait for the CA
+          # to be signed, so Cilium's hubble-server-certs Certificate (applied
+          # in wave 2) has a working issuer to resolve against.
+          k3s-bootstrap-cert-manager = {
+            description = "Bootstrap cert-manager and the Hubble CA";
+            after = [
+              "k3s.service"
+              "k3s-bootstrap-sops-operator.service"
+            ];
+            requires = [
+              "k3s.service"
+              "k3s-bootstrap-sops-operator.service"
             ];
             path = [
               pkgs.kubectl
@@ -315,54 +413,17 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 4: CoreDNS — must be up before ArgoCD so its git sync can resolve hostnames
-          k3s-bootstrap-coredns = {
-            description = "Bootstrap CoreDNS cluster DNS";
-            after = [
-              "k3s.service"
-              "k3s-bootstrap-cert-manager.service"
-            ];
-            requires = [
-              "k3s.service"
-              "k3s-bootstrap-cert-manager.service"
-            ];
-            path = [ pkgs.kubectl ];
-            environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-            serviceConfig = {
-              Type = "oneshot";
-              RemainAfterExit = true;
-              ExecStart = pkgs.writeShellScript "k3s-bootstrap-coredns" ''
-                set -e
-
-                if kubectl get deployment -n kube-system coredns >/dev/null 2>&1; then
-                  echo "CoreDNS already installed, skipping bootstrap."
-                  exit 0
-                fi
-
-                echo "Applying CoreDNS manifests..."
-                kubectl apply \
-                  --server-side --force-conflicts --field-manager=argocd-controller \
-                  -f ${corednsDir}
-
-                echo "Waiting for CoreDNS deployment to be ready..."
-                kubectl rollout status -n kube-system deployment/coredns --timeout=120s
-
-                echo "CoreDNS bootstrap complete."
-              '';
-            };
-            wantedBy = [ "multi-user.target" ];
-          };
-
-          # Wave 5: ArgoCD — depends on CoreDNS for git hostname resolution
+          # Wave 6: ArgoCD — after cert-manager; CoreDNS (wave 3) is already up by
+          # now too, satisfying ArgoCD's own need to resolve the git repository
           k3s-bootstrap-argocd = {
             description = "Bootstrap ArgoCD and hand off to GitOps";
             after = [
               "k3s.service"
-              "k3s-bootstrap-coredns.service"
+              "k3s-bootstrap-cert-manager.service"
             ];
             requires = [
               "k3s.service"
-              "k3s-bootstrap-coredns.service"
+              "k3s-bootstrap-cert-manager.service"
             ];
             path = [ pkgs.kubectl ];
             environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
