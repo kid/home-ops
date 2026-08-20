@@ -2,6 +2,9 @@
 # NFS storage. Installs directly onto real hardware via nixos-anywhere
 # (`nix run .#nixos-anywhere-install`, modules/flake/nixos-anywhere.nix).
 { den, config, ... }:
+let
+  nodeAddress = config.den.devices.node1.address;
+in
 {
   den.hosts.x86_64-linux.node1 = {
     k3s.clusterName = "prd";
@@ -37,6 +40,10 @@
     {
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
+
+      services.k3s.extraFlags = [
+        "--node-label=kidibox.net/egress-gateway=true"
+      ];
 
       networking.hostId = lib.mkDefault "795500d2";
 
@@ -88,7 +95,15 @@
 
       users.mutableUsers = false;
 
-      services.openssh.enable = true;
+      services.openssh = {
+        enable = true;
+        listenAddresses = [
+          {
+            addr = nodeAddress;
+            port = 22;
+          }
+        ];
+      };
 
       system.stateVersion = "26.05";
 
