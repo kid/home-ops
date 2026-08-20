@@ -80,6 +80,20 @@ _: {
 
         resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
 
+        resources.clusterIssuers.letsencrypt-prod.spec.acme = {
+          server = "https://acme-v02.api.letsencrypt.org/directory";
+          email = "arnaud.rebts@gmail.com";
+          privateKeySecretRef.name = "letsencrypt-prod-account-key";
+          solvers = [
+            {
+              dns01.cloudflare.apiTokenSecretRef = {
+                name = "cloudflare-dns-api-token";
+                key = "token";
+              };
+            }
+          ];
+        };
+
         yamls = [ cloudflareDnsApiToken ];
       };
     };
