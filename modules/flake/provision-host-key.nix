@@ -7,15 +7,9 @@
 # halves, already present in .sops.yaml, so this needs no new key material
 # of its own to run.
 #
-# The age-pub file matters because sops's own "ssh-ed25519 ..." recipient
-# support (filippo.io/age/agessh, used when a human decrypts locally via
-# SOPS_AGE_SSH_PRIVATE_KEY_FILE) and sops-nix's host-side decrypt
-# (Mic92/ssh-to-age, used by sops-install-secrets on the host itself) derive
-# *different* X25519 keys from the same ed25519 SSH key — ciphertext
-# encrypted for the raw "ssh-ed25519 ..." string can never be decrypted by
-# sops-nix on that host. Anything sops-nix itself must decrypt (modules/
-# flake/sops-config.nix's clusterMemberHostKeys) needs the host's converted
-# age1... key as its recipient instead, matching sops-nix's own README.
+# age-pub exists because sops's raw "ssh-ed25519 ..." recipients and
+# sops-nix's host-side decrypt derive different X25519 keys from the same
+# SSH key — sops-nix needs the age1... form as its recipient.
 #
 # modules/flake/nixos-anywhere.nix consumes the committed key at install
 # time, injecting it via nixos-anywhere --extra-files so the host has its

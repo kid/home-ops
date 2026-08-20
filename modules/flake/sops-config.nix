@@ -58,13 +58,8 @@ let
   # cluster's own sops-age key on each such host, using that host's own
   # persisted SSH key as its decryption identity, so this file needs each
   # member host's key as a recipient too, not just the cluster's own key.
-  #
-  # Uses each host's age-converted pubkey (ssh_host_ed25519_key.age-pub,
-  # modules/flake/provision-host-key.nix), not its raw ssh-ed25519 pubkey:
-  # sops-nix's host-side decrypt (Mic92/ssh-to-age) and sops's own
-  # "ssh-ed25519 ..." recipient support (filippo.io/age/agessh, meant for a
-  # human decrypting locally) derive different X25519 keys from the same
-  # SSH key, so the raw pubkey would never actually be decryptable here.
+  # Uses each host's age-pub (provision-host-key.nix), not its raw
+  # ssh-ed25519 pubkey — sops-nix derives a different X25519 key from that.
   clusterMemberHostKeys =
     cluster:
     map (host: lib.removeSuffix "\n" (builtins.readFile (hostAgePubKeyPath host))) (
