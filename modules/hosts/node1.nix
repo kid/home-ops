@@ -40,6 +40,7 @@
 
       services.k3s.extraFlags = [
         "--node-label=kidibox.net/egress-gateway=true"
+        "--node-label=kidibox.net/ssh-servers-only=true"
       ];
 
       networking.hostId = lib.mkDefault "795500d2";
@@ -92,6 +93,8 @@
 
       users.mutableUsers = false;
 
+      # NixOS's firewall is force-disabled on k3s hosts — SSH is restricted via
+      # a Cilium host-firewall policy instead (cilium/host-firewall.nix).
       services.openssh.enable = true;
 
       system.stateVersion = "26.05";

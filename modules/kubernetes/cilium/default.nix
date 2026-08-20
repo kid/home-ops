@@ -28,6 +28,16 @@ _: {
             bpf.masquerade = true;
             egressGateway.enabled = true;
 
+            # Explicit, not auto-detected: node1 is multi-homed and Cilium's
+            # own device auto-detection has already picked the wrong
+            # interface for us twice today (pod egress, k3s node-ip).
+            devices = [
+              "enp36s0f1"
+              "storage"
+              "k3s"
+            ];
+            hostFirewall.enabled = true;
+
             bgpControlPlane.enabled = true;
 
             # Ingress duty, replacing traefik. Requires gateway-api-crds.nix's
