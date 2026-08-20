@@ -26,6 +26,7 @@ _: {
             };
 
             bpf.masquerade = true;
+            egressGateway.enabled = true;
 
             bgpControlPlane.enabled = true;
 

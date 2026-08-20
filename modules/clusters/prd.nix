@@ -88,6 +88,7 @@ in
     gateway-api-crds
     cilium
     cilium-bgp
+    cilium-egress-gateway
     cert-manager
     coredns
     argocd

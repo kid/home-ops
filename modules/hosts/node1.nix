@@ -38,6 +38,10 @@
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
+      services.k3s.extraFlags = [
+        "--node-label=kidibox.net/egress-gateway=true"
+      ];
+
       networking.hostId = lib.mkDefault "795500d2";
 
       networking.hostName = "node1";

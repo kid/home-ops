@@ -1,0 +1,14 @@
+apiVersion: cilium.io/v2
+kind: CiliumEgressGatewayPolicy
+metadata:
+  name: egress-gateway
+spec:
+  destinationCIDRs:
+    - 0.0.0.0/0
+  egressGateway:
+    interface: k3s
+    nodeSelector:
+      matchLabels:
+        kidibox.net/egress-gateway: "true"
+  selectors:
+    - podSelector: {}
