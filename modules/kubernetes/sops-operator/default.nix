@@ -47,6 +47,8 @@ _: {
           inherit chart;
           values = {
             crds.install = true;
+            # renovate: datasource=docker depName=ghcr.io/peak-scale/sops-operator
+            image.tag = "0.10.1@sha256:1da9b716b79210f51b1c757b4d5c3bab57df9fdc74e67f2fa274d33603492fd4";
           };
         };
 

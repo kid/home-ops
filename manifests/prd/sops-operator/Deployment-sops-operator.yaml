@@ -29,7 +29,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: ghcr.io/peak-scale/sops-operator:0.0.0
+          image: ghcr.io/peak-scale/sops-operator:0.10.1@sha256:1da9b716b79210f51b1c757b4d5c3bab57df9fdc74e67f2fa274d33603492fd4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
