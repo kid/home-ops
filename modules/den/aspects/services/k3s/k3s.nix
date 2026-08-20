@@ -42,12 +42,18 @@ in
     ];
 
     nixos =
-      { host, pkgs, ... }:
+      {
+        host,
+        lib,
+        pkgs,
+        ...
+      }:
       let
         clusterName = host.k3s.clusterName or "prd";
         cluster = clusters.${clusterName};
         podCIDR = cluster.networks.pods.cidr;
         serviceCIDR = cluster.networks.services.cidr;
+        nodeIp = (config.den.devices."${host.name}-k3s" or { }).address or null;
       in
       {
         services.k3s = {
@@ -70,7 +76,8 @@ in
             # back, losing per-container metrics. The kubelet normalizes
             # the bare path for CRI itself.
             "--container-runtime-endpoint=/run/containerd/containerd.sock"
-          ];
+          ]
+          ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}";
         };
 
         boot.kernelModules = [

@@ -28,6 +28,8 @@ _: {
             bpf.masquerade = true;
             egressGateway.enabled = true;
 
+            devices = [ "k3s" ];
+
             bgpControlPlane.enabled = true;
 
             # Ingress duty, replacing traefik. Requires gateway-api-crds.nix's
