@@ -93,8 +93,6 @@
 
       users.mutableUsers = false;
 
-      # NixOS's firewall is force-disabled on k3s hosts — SSH is restricted via
-      # a Cilium host-firewall policy instead (cilium/host-firewall.nix).
       services.openssh.enable = true;
 
       system.stateVersion = "26.05";

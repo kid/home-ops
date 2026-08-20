@@ -53,10 +53,6 @@ in
         cluster = clusters.${clusterName};
         podCIDR = cluster.networks.pods.cidr;
         serviceCIDR = cluster.networks.services.cidr;
-        # Pin node-ip to this host's own K3s-VLAN address (same value the
-        # k3s-nodes quirk above uses) — hosts here are multi-homed, and
-        # k3s's own auto-detection isn't stable across reboots, which
-        # breaks etcd (its persisted peer URL stops matching).
         nodeIp = (config.den.devices."${host.name}-k3s" or { }).address or null;
       in
       {

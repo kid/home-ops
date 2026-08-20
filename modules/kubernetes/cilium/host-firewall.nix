@@ -1,6 +1,3 @@
-# Same reason as egress-gateway.nix: CiliumClusterwideNetworkPolicy is a
-# native Cilium CRD, not bundled in the chart's own crds/, so raw YAML
-# instead of generators.fromChartCRDModule.
 { config, ... }:
 let
   serversCidr = config.den.environments.prd.networks.Servers.cidr;
