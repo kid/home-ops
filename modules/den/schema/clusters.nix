@@ -59,6 +59,11 @@
               description = "This cluster's k3s overlay networks (pods/services), keyed by purpose";
             };
 
+            domain = lib.mkOption {
+              type = lib.types.str;
+              description = "Public domain this cluster's DNS-record-managing apps (e.g. external-dns) operate against";
+            };
+
             nixidy = lib.mkOption {
               type = lib.types.submodule {
                 options = {
