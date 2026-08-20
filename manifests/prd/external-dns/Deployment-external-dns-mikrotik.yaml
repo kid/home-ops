@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/name: external-dns
+  name: external-dns-mikrotik
+  namespace: external-dns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: external-dns
+      app.kubernetes.io/name: external-dns
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: external-dns
+        app.kubernetes.io/name: external-dns
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - --log-level=info
+            - --log-format=text
+            - --interval=1m
+            - --source=gateway-httproute
+            - --source=service
+            - --source=crd
+            - --policy=sync
+            - --registry=txt
+            - --txt-owner-id=prd
+            - --txt-prefix=k8s.
+            - --domain-filter=kidibox.net
+            - --provider=webhook
+            - --managed-record-types=A
+            - --managed-record-types=CNAME
+            - --managed-record-types=TXT
+          image: registry.k8s.io/external-dns/external-dns:v0.21.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: external-dns
+          ports:
+            - containerPort: 7979
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+        - env:
+            - name: MIKROTIK_DEFAULT_TTL
+              value: "1800"
+            - name: MIKROTIK_DEFAULT_COMMENT
+              value: Managed by ExternalDNS
+            - name: MIKROTIK_BASEURL
+              value: https://10.99.0.1:443
+            - name: MIKROTIK_USERNAME
+              value: external-dns
+            - name: MIKROTIK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: MIKROTIK_PASSWORD
+                  name: mikrotik-credentials
+            - name: MIKROTIK_SKIP_TLS_VERIFY
+              value: "true"
+          image: ghcr.io/mirceanton/external-dns-provider-mikrotik:v1.6.3@sha256:5794c1572153346e030a7de898e58c1fb81e6bd2f3eea563aabfa6d64ed199e0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /healthz
+              port: http-webhook
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: webhook
+          ports:
+            - containerPort: 8080
+              name: http-webhook
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /readyz
+              port: http-webhook
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+      securityContext:
+        fsGroup: 65534
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: external-dns-mikrotik

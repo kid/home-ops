@@ -44,6 +44,7 @@ in
   den.clusters.prd = {
     environment = "prd";
     network = "K3s";
+    domain = "kidibox.net";
 
     networks = {
       pods = {
@@ -92,6 +93,7 @@ in
     argocd
     miroir
     sops-operator
+    external-dns
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
