@@ -21,6 +21,7 @@ let
 
   secretsDir = ../../secrets;
   hostPubKeyPath = host: secretsDir + "/hosts/${host}/ssh_host_ed25519_key.pub";
+  hostAgePubKeyPath = host: secretsDir + "/hosts/${host}/ssh_host_ed25519_key.age-pub";
 
   hostNames = lib.unique (
     lib.concatMap (system: builtins.attrNames (config.den.hosts.${system} or { })) config.systems
@@ -56,11 +57,17 @@ let
   # (modules/den/aspects/services/k3s/sops-operator.nix) decrypts the
   # cluster's own sops-age key on each such host, using that host's own
   # persisted SSH key as its decryption identity, so this file needs each
-  # member host's pubkey as a recipient too, not just the cluster's own key.
+  # member host's key as a recipient too, not just the cluster's own key.
+  # Uses each host's age-pub (provision-host-key.nix), not its raw
+  # ssh-ed25519 pubkey — sops-nix derives a different X25519 key from that.
   clusterMemberHostKeys =
     cluster:
-    map (host: lib.removeSuffix "\n" (builtins.readFile (hostPubKeyPath host))) (
-      builtins.filter (host: (allHosts.${host}.k3s.clusterName or null) == cluster) provisionedHosts
+    map (host: lib.removeSuffix "\n" (builtins.readFile (hostAgePubKeyPath host))) (
+      builtins.filter (
+        host:
+        (allHosts.${host}.k3s.clusterName or null) == cluster
+        && builtins.pathExists (hostAgePubKeyPath host)
+      ) provisionedHosts
     );
 
   clusterRule = cluster: {
