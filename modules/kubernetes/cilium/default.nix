@@ -28,12 +28,7 @@ _: {
             bpf.masquerade = true;
             egressGateway.enabled = true;
 
-            devices = [
-              "enp36s0f1"
-              "storage"
-              "k3s"
-            ];
-            hostFirewall.enabled = true;
+            devices = [ "k3s" ];
 
             bgpControlPlane.enabled = true;
 

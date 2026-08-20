@@ -2,21 +2,23 @@
 # flags and firewall settings that only make sense when Cilium is the
 # host's CNI. Only hosts that actually run Cilium should include this.
 _: {
-  den.aspects.k3s-cilium.nixos =
-    { lib, ... }:
-    {
-      services.k3s.extraFlags = [
-        "--flannel-backend=none"
-        "--disable-network-policy"
-        "--disable-kube-proxy"
-        # traefik -> Cilium Gateway API, servicelb -> Cilium BGP LB
-        "--disable=traefik"
-        "--disable=servicelb"
-      ];
+  den.aspects.k3s-cilium.nixos = _: {
+    services.k3s.extraFlags = [
+      "--flannel-backend=none"
+      "--disable-network-policy"
+      "--disable-kube-proxy"
+      # traefik -> Cilium Gateway API, servicelb -> Cilium BGP LB
+      "--disable=traefik"
+      "--disable=servicelb"
+    ];
 
-      # Cilium's own BPF datapath replaces k3s's default firewall/kube-proxy
-      # setup; k3s's iptables must speak nft to match Cilium's nftables use.
-      networking.firewall.enable = lib.mkForce false;
-      networking.nftables.enable = true;
-    };
+    networking.firewall.trustedInterfaces = [
+      "k3s"
+      "cilium_net"
+      "cilium_host"
+      "cilium_vxlan"
+      "lxc*"
+    ];
+    networking.nftables.enable = true;
+  };
 }

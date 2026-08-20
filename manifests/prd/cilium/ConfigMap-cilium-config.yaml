@@ -39,7 +39,7 @@ data:
   datapath-plugins-state-dir: /var/run/cilium/plugins
   debug: "false"
   default-lb-service-ipam: lbipam
-  devices: enp36s0f1 storage k3s
+  devices: k3s
   direct-routing-skip-unreachable: "false"
   dnsproxy-enable-transparent-mode: "true"
   dnsproxy-socket-linger-timeout: "10"
@@ -66,7 +66,7 @@ data:
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
-  enable-host-firewall: "true"
+  enable-host-firewall: "false"
   enable-hubble: "true"
   enable-ipv4: "true"
   enable-ipv4-big-tcp: "false"

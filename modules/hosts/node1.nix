@@ -40,7 +40,6 @@
 
       services.k3s.extraFlags = [
         "--node-label=kidibox.net/egress-gateway=true"
-        "--node-label=kidibox.net/ssh-servers-only=true"
       ];
 
       networking.hostId = lib.mkDefault "795500d2";
@@ -93,7 +92,11 @@
 
       users.mutableUsers = false;
 
-      services.openssh.enable = true;
+      services.openssh = {
+        enable = true;
+        openFirewall = false;
+      };
+      networking.firewall.interfaces."enp36s0f1".allowedTCPPorts = [ 22 ];
 
       system.stateVersion = "26.05";
 
