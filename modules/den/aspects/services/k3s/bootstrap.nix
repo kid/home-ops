@@ -1,42 +1,7 @@
-# k3s bootstrap aspect — oneshot systemd services that apply manifests on
-# first boot. Waves 0 and 1 sweep every app's rendered output under
-# manifests/prd/ for Namespace/CRD resources, whatever the app — cheap and
-# safe to apply early even for apps (miroir, sops-operator) whose own
-# workloads are left for ArgoCD to bring up later. Waves 2 onward apply a
-# specific, hand-picked subset of apps whose workloads the rest of the
-# chain (or the node itself) needs up before ArgoCD takes over: cilium +
-# cert-manager + coredns + argocd.
-#
-# Bakes the generated manifests into the NixOS image via `self` (the flake
-# source is a store path), so no git clone is needed on the node.
-#
-# Wave ordering:
-#   0. k3s-bootstrap-namespaces    — all Namespace resources, every app
-#   1. k3s-bootstrap-crds          — all CustomResourceDefinition resources, every
-#                                     app (including the upstream Gateway API CRDs,
-#                                     modules/kubernetes/cilium/gateway-api-crds.nix),
-#                                     wait for the ones later waves need to be
-#                                     Established before proceeding
-#   2. k3s-bootstrap-cilium        — Cilium core manifests, wait for operator
-#                                     (operator registers Cilium CRDs at startup),
-#                                     then apply Cilium custom resources. Skipped (fast
-#                                     no-op) on hosts without den.aspects.k3s-cilium.
-#   3. k3s-bootstrap-cert-manager  — cert-manager + the Hubble CA/ClusterIssuer
-#                                     it signs (modules/kubernetes/cert-manager/
-#                                     default.nix); must come after cilium since
-#                                     cert-manager's pods need CNI to schedule
-#                                     (unlike cilium-agent, which runs hostNetwork
-#                                     and mounts Hubble's cert as `optional`, so it
-#                                     doesn't block on this wave)
-#   4. k3s-bootstrap-coredns       — CoreDNS deployment; ArgoCD needs cluster DNS to
-#                                     resolve the git repository on first sync
-#   5. k3s-bootstrap-argocd        — ArgoCD + self-managing Application
-#
-# Cilium does not ship CRDs in its Helm chart; the cilium-operator registers
-# them at runtime. Applying Cilium*.yaml CRs before the operator is ready
-# causes "no kind is registered" errors, hence the split in wave 2.
-#
-# Each service is idempotent: exits early if already installed.
+# k3s bootstrap: oneshot systemd services applying manifests baked into the image via `self`.
+# Wave order: namespaces, CRDs, cilium, coredns, sops-operator, cert-manager, argocd.
+# sops-operator must already be watching before cert-manager applies its SopsSecret CR.
+# Cilium's operator registers its own CRDs at runtime — not shipped in the chart.
 { self, den, ... }:
 {
   den.aspects.k3s-bootstrap = {
@@ -50,14 +15,12 @@
             name = "k3s-prd-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
           };
         ciliumDir = manifestPath "cilium";
+        sopsOperatorDir = manifestPath "sops-operator";
         corednsDir = manifestPath "coredns";
         argocdDir = manifestPath "argocd";
         certManagerDir = manifestPath "cert-manager";
         bootstrapFile = manifestPath "bootstrap.yaml";
-        # Every app's rendered output, namespaces and CRDs included — used by
-        # waves 0 and 1 below so a new app (e.g. miroir, sops-operator) gets
-        # its Namespace/CRD resources swept up automatically, instead of
-        # each needing its own dir added to a hand-maintained list here.
+        # Swept generically by waves 0-1 so a new app's Namespace/CRDs need no list entry here.
         allManifestsDir = builtins.path {
           path = self + "/manifests/prd";
           name = "k3s-prd-all";
@@ -72,7 +35,6 @@
       in
       {
         systemd.services = {
-          # Wave 0: create all Namespace resources before any workloads
           k3s-bootstrap-namespaces = {
             description = "Bootstrap namespaces for all applications";
             after = [ "k3s.service" ];
@@ -103,7 +65,6 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 1: apply all CRDs and wait for them to be Established
           k3s-bootstrap-crds = {
             description = "Bootstrap CRDs for all applications";
             after = [
@@ -173,13 +134,7 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 2: Cilium CNI
-          #
-          # Cilium's Helm chart ships no CRDs — the cilium-operator registers
-          # them at startup. We therefore split the apply in two:
-          #   a) Core manifests (everything except Cilium* custom resources)
-          #   b) Wait for cilium-operator rollout (CRDs now Established)
-          #   c) Cilium custom resources (CiliumBGP*, CiliumLoadBalancerIPPool)
+          # Applies core manifests, waits for the operator, then Cilium custom resources.
           k3s-bootstrap-cilium = {
             description = "Bootstrap Cilium CNI";
             after = [
@@ -252,14 +207,8 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 3: cert-manager — after cilium, since cert-manager's own pods
-          # need CNI to schedule. Once its webhook is up, apply the Hubble
-          # self-signed CA + ClusterIssuer (modules/kubernetes/cert-manager/
-          # default.nix) and wait for the CA to be signed, so Cilium's
-          # hubble-server-certs Certificate (applied in wave 2) has a
-          # working issuer to resolve against.
-          k3s-bootstrap-cert-manager = {
-            description = "Bootstrap cert-manager and the Hubble CA";
+          k3s-bootstrap-coredns = {
+            description = "Bootstrap CoreDNS cluster DNS";
             after = [
               "k3s.service"
               "k3s-bootstrap-cilium.service"
@@ -267,6 +216,80 @@
             requires = [
               "k3s.service"
               "k3s-bootstrap-cilium.service"
+            ];
+            path = [ pkgs.kubectl ];
+            environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              ExecStart = pkgs.writeShellScript "k3s-bootstrap-coredns" ''
+                set -e
+
+                if kubectl get deployment -n kube-system coredns >/dev/null 2>&1; then
+                  echo "CoreDNS already installed, skipping bootstrap."
+                  exit 0
+                fi
+
+                echo "Applying CoreDNS manifests..."
+                kubectl apply \
+                  --server-side --force-conflicts --field-manager=argocd-controller \
+                  -f ${corednsDir}
+
+                echo "Waiting for CoreDNS deployment to be ready..."
+                kubectl rollout status -n kube-system deployment/coredns --timeout=120s
+
+                echo "CoreDNS bootstrap complete."
+              '';
+            };
+            wantedBy = [ "multi-user.target" ];
+          };
+
+          k3s-bootstrap-sops-operator = {
+            description = "Bootstrap sops-operator";
+            after = [
+              "k3s.service"
+              "k3s-bootstrap-coredns.service"
+            ];
+            requires = [
+              "k3s.service"
+              "k3s-bootstrap-coredns.service"
+            ];
+            path = [ pkgs.kubectl ];
+            environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              ExecStart = pkgs.writeShellScript "k3s-bootstrap-sops-operator" ''
+                set -e
+
+                if kubectl get deployment -n sops-operator sops-operator >/dev/null 2>&1; then
+                  echo "sops-operator already installed, skipping bootstrap."
+                  exit 0
+                fi
+
+                echo "Applying sops-operator manifests..."
+                kubectl apply \
+                  --server-side --force-conflicts --field-manager=argocd-controller \
+                  -f ${sopsOperatorDir}
+
+                echo "Waiting for sops-operator rollout..."
+                kubectl rollout status -n sops-operator deployment/sops-operator --timeout=120s
+
+                echo "sops-operator bootstrap complete."
+              '';
+            };
+            wantedBy = [ "multi-user.target" ];
+          };
+
+          k3s-bootstrap-cert-manager = {
+            description = "Bootstrap cert-manager and the Hubble CA";
+            after = [
+              "k3s.service"
+              "k3s-bootstrap-sops-operator.service"
+            ];
+            requires = [
+              "k3s.service"
+              "k3s-bootstrap-sops-operator.service"
             ];
             path = [
               pkgs.kubectl
@@ -315,54 +338,15 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 4: CoreDNS — must be up before ArgoCD so its git sync can resolve hostnames
-          k3s-bootstrap-coredns = {
-            description = "Bootstrap CoreDNS cluster DNS";
-            after = [
-              "k3s.service"
-              "k3s-bootstrap-cert-manager.service"
-            ];
-            requires = [
-              "k3s.service"
-              "k3s-bootstrap-cert-manager.service"
-            ];
-            path = [ pkgs.kubectl ];
-            environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-            serviceConfig = {
-              Type = "oneshot";
-              RemainAfterExit = true;
-              ExecStart = pkgs.writeShellScript "k3s-bootstrap-coredns" ''
-                set -e
-
-                if kubectl get deployment -n kube-system coredns >/dev/null 2>&1; then
-                  echo "CoreDNS already installed, skipping bootstrap."
-                  exit 0
-                fi
-
-                echo "Applying CoreDNS manifests..."
-                kubectl apply \
-                  --server-side --force-conflicts --field-manager=argocd-controller \
-                  -f ${corednsDir}
-
-                echo "Waiting for CoreDNS deployment to be ready..."
-                kubectl rollout status -n kube-system deployment/coredns --timeout=120s
-
-                echo "CoreDNS bootstrap complete."
-              '';
-            };
-            wantedBy = [ "multi-user.target" ];
-          };
-
-          # Wave 5: ArgoCD — depends on CoreDNS for git hostname resolution
           k3s-bootstrap-argocd = {
             description = "Bootstrap ArgoCD and hand off to GitOps";
             after = [
               "k3s.service"
-              "k3s-bootstrap-coredns.service"
+              "k3s-bootstrap-cert-manager.service"
             ];
             requires = [
               "k3s.service"
-              "k3s-bootstrap-coredns.service"
+              "k3s-bootstrap-cert-manager.service"
             ];
             path = [ pkgs.kubectl ];
             environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
