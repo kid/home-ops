@@ -89,6 +89,7 @@ in
     cilium-egress-gateway
     cert-manager
     coredns
+    apps-gateway
     argocd
     miroir
     sops-operator
