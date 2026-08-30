@@ -1,52 +1,7 @@
-# k3s bootstrap aspect — oneshot systemd services that apply manifests on
-# first boot. Waves 0 and 1 sweep every app's rendered output under
-# manifests/prd/ for Namespace/CRD resources, whatever the app — cheap and
-# safe to apply early even for apps (miroir) whose own workloads are left
-# for ArgoCD to bring up later. Waves 2 onward apply a specific,
-# hand-picked subset of apps whose workloads the rest of the chain (or the
-# node itself) needs up before ArgoCD takes over: cilium + coredns +
-# sops-operator + cert-manager + argocd.
-#
-# Bakes the generated manifests into the NixOS image via `self` (the flake
-# source is a store path), so no git clone is needed on the node.
-#
-# Wave ordering:
-#   0. k3s-bootstrap-namespaces    — all Namespace resources, every app
-#   1. k3s-bootstrap-crds          — all CustomResourceDefinition resources, every
-#                                     app (including the upstream Gateway API CRDs,
-#                                     modules/kubernetes/cilium/gateway-api-crds.nix),
-#                                     wait for the ones later waves need to be
-#                                     Established before proceeding
-#   2. k3s-bootstrap-cilium        — Cilium core manifests, wait for operator
-#                                     (operator registers Cilium CRDs at startup),
-#                                     then apply Cilium custom resources. Skipped (fast
-#                                     no-op) on hosts without den.aspects.k3s-cilium.
-#   3. k3s-bootstrap-coredns       — CoreDNS deployment; every wave after this one
-#                                     needs cluster DNS to resolve external hosts
-#                                     (image registries, the ACME/Cloudflare API
-#                                     cert-manager talks to, RouterOS for
-#                                     external-dns once ArgoCD brings it up later) —
-#                                     ArgoCD itself needs it to resolve the git repo
-#   4. k3s-bootstrap-sops-operator — sops-operator controller
-#                                     (modules/kubernetes/sops-operator/default.nix);
-#                                     must come after coredns and before
-#                                     cert-manager, so the controller is already
-#                                     running and watching by the time cert-manager
-#                                     applies the SopsSecret CR its letsencrypt-prod
-#                                     ClusterIssuer depends on
-#   5. k3s-bootstrap-cert-manager  — cert-manager + the Hubble CA/ClusterIssuer
-#                                     it signs (modules/kubernetes/cert-manager/
-#                                     default.nix); must come after sops-operator so
-#                                     the cloudflare-dns-api-token Secret referenced
-#                                     by letsencrypt-prod is reconcilable as soon as
-#                                     its SopsSecret CR is applied
-#   6. k3s-bootstrap-argocd        — ArgoCD + self-managing Application
-#
-# Cilium does not ship CRDs in its Helm chart; the cilium-operator registers
-# them at runtime. Applying Cilium*.yaml CRs before the operator is ready
-# causes "no kind is registered" errors, hence the split in wave 2.
-#
-# Each service is idempotent: exits early if already installed.
+# k3s bootstrap: oneshot systemd services applying manifests baked into the image via `self`.
+# Wave order: namespaces, CRDs, cilium, coredns, sops-operator, cert-manager, argocd.
+# sops-operator must already be watching before cert-manager applies its SopsSecret CR.
+# Cilium's operator registers its own CRDs at runtime — not shipped in the chart.
 { self, den, ... }:
 {
   den.aspects.k3s-bootstrap = {
@@ -65,10 +20,7 @@
         argocdDir = manifestPath "argocd";
         certManagerDir = manifestPath "cert-manager";
         bootstrapFile = manifestPath "bootstrap.yaml";
-        # Every app's rendered output, namespaces and CRDs included — used by
-        # waves 0 and 1 below so a new app (e.g. miroir, sops-operator) gets
-        # its Namespace/CRD resources swept up automatically, instead of
-        # each needing its own dir added to a hand-maintained list here.
+        # Swept generically by waves 0-1 so a new app's Namespace/CRDs need no list entry here.
         allManifestsDir = builtins.path {
           path = self + "/manifests/prd";
           name = "k3s-prd-all";
@@ -83,7 +35,6 @@
       in
       {
         systemd.services = {
-          # Wave 0: create all Namespace resources before any workloads
           k3s-bootstrap-namespaces = {
             description = "Bootstrap namespaces for all applications";
             after = [ "k3s.service" ];
@@ -114,7 +65,6 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 1: apply all CRDs and wait for them to be Established
           k3s-bootstrap-crds = {
             description = "Bootstrap CRDs for all applications";
             after = [
@@ -184,13 +134,7 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 2: Cilium CNI
-          #
-          # Cilium's Helm chart ships no CRDs — the cilium-operator registers
-          # them at startup. We therefore split the apply in two:
-          #   a) Core manifests (everything except Cilium* custom resources)
-          #   b) Wait for cilium-operator rollout (CRDs now Established)
-          #   c) Cilium custom resources (CiliumBGP*, CiliumLoadBalancerIPPool)
+          # Applies core manifests, waits for the operator, then Cilium custom resources.
           k3s-bootstrap-cilium = {
             description = "Bootstrap Cilium CNI";
             after = [
@@ -263,10 +207,6 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 3: CoreDNS — after cilium (needs CNI to schedule); every later
-          # wave needs cluster DNS to resolve external hosts (image registries,
-          # cert-manager's ACME/Cloudflare calls, external-dns's RouterOS calls
-          # once ArgoCD brings it up, ArgoCD's own git-repo resolution).
           k3s-bootstrap-coredns = {
             description = "Bootstrap CoreDNS cluster DNS";
             after = [
@@ -304,13 +244,6 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 4: sops-operator — after coredns. Must be running before
-          # cert-manager (wave 5) applies the SopsSecret CR for
-          # cloudflare-dns-api-token, so the controller is already watching and
-          # can reconcile that CR into a real Secret by the time
-          # letsencrypt-prod's ClusterIssuer references it — without this, the
-          # ClusterIssuer is applied before anything exists to decrypt its
-          # Secret.
           k3s-bootstrap-sops-operator = {
             description = "Bootstrap sops-operator";
             after = [
@@ -348,14 +281,6 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 5: cert-manager — after sops-operator (its controller must
-          # already be running so the cloudflare-dns-api-token SopsSecret CR
-          # below is reconcilable as soon as it's applied) and, transitively,
-          # cilium (cert-manager's own pods need CNI to schedule). Once its
-          # webhook is up, apply the Hubble self-signed CA + ClusterIssuer
-          # (modules/kubernetes/cert-manager/default.nix) and wait for the CA
-          # to be signed, so Cilium's hubble-server-certs Certificate (applied
-          # in wave 2) has a working issuer to resolve against.
           k3s-bootstrap-cert-manager = {
             description = "Bootstrap cert-manager and the Hubble CA";
             after = [
@@ -413,8 +338,6 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          # Wave 6: ArgoCD — after cert-manager; CoreDNS (wave 3) is already up by
-          # now too, satisfying ArgoCD's own need to resolve the git repository
           k3s-bootstrap-argocd = {
             description = "Bootstrap ArgoCD and hand off to GitOps";
             after = [
