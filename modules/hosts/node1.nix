@@ -74,6 +74,26 @@
             "k3s"
           ];
           linkConfig.MTUBytes = den.networks.Storage.mtu;
+          # Mirror the gateway into its own table, used only for traffic
+          # arriving on this interface (below) — keeps the rpfilter check
+          # for management/SSH correct even if main's routes get polluted.
+          routes = [
+            {
+              routeConfig = {
+                Gateway = config.den.environments.prd.networks.Servers.gateway;
+                Table = 100;
+              };
+            }
+          ];
+          routingPolicyRules = [
+            {
+              routingPolicyRuleConfig = {
+                IncomingInterface = "enp36s0f1";
+                Table = 100;
+                Priority = 30;
+              };
+            }
+          ];
         };
         "30-storage" = {
           matchConfig.Name = "storage";
