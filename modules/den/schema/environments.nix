@@ -57,8 +57,7 @@ in
                   ownNetworks = lib.filterAttrs (_: net: net.environment == config.name) rootConfig.den.networks;
                   withComputedCidr =
                     net:
-                    net
-                    // {
+                    let
                       cidr =
                         if !net.routed then
                           null
@@ -66,6 +65,16 @@ in
                           net.cidr
                         else
                           cidrLib.cidrsubnet config.cidrBase (net.prefix - envPrefixLength) net.vlanId;
+                      methods = lib.optionalAttrs (cidr != null) {
+                        host = hostnum: cidrLib.cidrhost cidr hostnum;
+                      };
+                    in
+                    net
+                    // {
+                      inherit cidr methods;
+                    }
+                    // lib.optionalAttrs (cidr != null) {
+                      gateway = if net.dhcpGateway != null then net.dhcpGateway else methods.host 1;
                     };
                 in
                 lib.mapAttrs (_: withComputedCidr) ownNetworks;

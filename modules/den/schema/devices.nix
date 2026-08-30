@@ -14,7 +14,6 @@
 {
   lib,
   config,
-  cidrLib,
   ...
 }:
 let
@@ -54,7 +53,7 @@ in
             };
 
             # Resolved directly here (not left to every consumer to redo
-            # cidrLib.cidrhost themselves) — consumers just read
+            # network.methods.host themselves) — consumers just read
             # config.den.devices.<name>.address.
             address = lib.mkOption {
               type = lib.types.str;
@@ -63,8 +62,8 @@ in
                   networkCfg = rootConfig.den.networks.${config.network};
                   envNetworks = rootConfig.den.environments.${networkCfg.environment}.networks;
                 in
-                cidrLib.cidrhost envNetworks.${config.network}.cidr config.hostNum;
-              defaultText = "cidrLib.cidrhost <network's resolved cidr> hostNum";
+                envNetworks.${config.network}.methods.host config.hostNum;
+              defaultText = "<network's resolved methods.host> hostNum";
               description = "Resolved IP address (network.cidr host'd at hostNum)";
             };
           };

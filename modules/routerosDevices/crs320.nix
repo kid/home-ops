@@ -4,11 +4,10 @@
   lib,
   den,
   config,
-  cidrLib,
   ...
 }:
 let
-  rosLib = import ../network/_ros-lib.nix { inherit lib cidrLib; };
+  rosLib = import ../network/_ros-lib.nix { inherit lib; };
   inherit (rosLib) toVlanInput sharedInputs;
 
   environment = config.den.environments.prd;
