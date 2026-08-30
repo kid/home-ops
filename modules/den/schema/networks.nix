@@ -111,7 +111,7 @@
               default = null;
               description = ''
                 Whether this network gets an auto-generated "Allow WAN" forward-chain rule
-                (modules/network/aspects/network-internet-access.nix). null = no rule at all
+                (modules/den/aspects/network/internet-access.nix). null = no rule at all
                 (e.g. Storage); true = enabled; false = declared but disabled (e.g. IotLocal,
                 not yet ready to go live).
               '';

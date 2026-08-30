@@ -1,6 +1,6 @@
 # RouterOS group registry — data-only, no isEntity (mirrors nix-config's own
 # groups.nix: groups don't get resolved into the scope tree, they're plain
-# data consumed directly by modules/network/aspects/ros-base.nix).
+# data consumed directly by modules/den/aspects/routeros/base.nix).
 #
 # Only covers *custom* RouterOS groups. Built-in groups (full, write, read)
 # already exist on every router and are referenced by name in

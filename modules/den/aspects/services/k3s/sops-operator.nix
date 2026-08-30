@@ -10,7 +10,7 @@
 #
 # A standalone oneshot, not joined to the k3s-bootstrap wave (modules/den/
 # aspects/services/k3s/bootstrap.nix) — sops-operator itself is an
-# ArgoCD-synced app (modules/kubernetes/sops-operator/default.nix), not
+# ArgoCD-synced app (modules/den/aspects/kubernetes/sops-operator/default.nix), not
 # part of that bootstrap chain. Its CRDs are registered by that chain's own
 # wave 1 though, since cert-manager's manifests include a SopsSecret CR.
 {

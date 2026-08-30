@@ -107,7 +107,7 @@
             # the RouterOS side (terragrunt-infra-catalog's talos-bgp
             # module's bgp_hold_time/bgp_keepalive_time) and Cilium's own
             # CiliumBGPPeerConfig.spec.timers — see modules/network/
-            # aspects/ros-bgp.nix and modules/kubernetes/cilium/bgp.nix.
+            # aspects/routeros/bgp.nix and modules/den/aspects/kubernetes/cilium/bgp.nix.
             bgp.holdTimeSeconds = lib.mkOption {
               type = lib.types.int;
               default = 90;

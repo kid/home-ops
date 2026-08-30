@@ -13,7 +13,7 @@
 #
 # Also mirrors those entries into virtualisation.vmVariantWithDisko, for the
 # same reason zfs-disk-single.nix does it for /persist and /cache:
-# system.build.vmWithDisko (see modules/hosts/test-vm.nix) rebuilds
+# system.build.vmWithDisko (see modules/den/hosts/test-vm.nix) rebuilds
 # fileSystems from scratch under virtualisation.fileSystems, and only
 # datasets declared through disko.devices get carried over automatically —
 # confirmed by booting test-vm: without this mirror, disko-zfs still creates
