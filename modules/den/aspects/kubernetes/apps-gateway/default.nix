@@ -1,14 +1,5 @@
-# Shared Gateway API entry point for cluster.domain apps: one Gateway with
-# a wildcard HTTPS listener, backed by one wildcard cert-manager
-# Certificate (letsencrypt-prod already does Cloudflare DNS-01, so a
-# wildcard SAN works). Typed resources.gateways/certificates.* come from
-# gateway-api-crds.nix's and cert-manager/default.nix's
-# nixidy.applicationImports — merged in globally once those aspects are
-# included, no need to re-import here.
-#
-# Future apps don't need their own Gateway or Certificate: just attach an
-# HTTPRoute (or GRPCRoute) to this Gateway's "https" listener and call
-# cluster.methods.mkAppHostname "name" for the hostname.
+# Shared Gateway API entry point for cluster.domain apps — wildcard
+# Certificate + Gateway once, HTTPRoute per app after.
 { config, ... }:
 {
   den.clusters.prd.methods.mkAppHostname = name: "${name}.${config.den.clusters.prd.domain}";
@@ -33,9 +24,7 @@
           };
         };
 
-        # gatewayClassName "cilium": auto-provisioned by Cilium's own
-        # Gateway API controller (cilium/default.nix's gatewayAPI.enabled),
-        # not declared anywhere in this repo.
+        # gatewayClassName "cilium" is auto-provisioned by Cilium, not declared here.
         resources.gateways.apps.spec = {
           gatewayClassName = "cilium";
           listeners = [
@@ -48,8 +37,6 @@
                 mode = "Terminate";
                 certificateRefs = [ { name = "apps-tls"; } ];
               };
-              # Lets HTTPRoutes/GRPCRoutes in other namespaces (e.g. argocd)
-              # attach to this listener.
               allowedRoutes.namespaces.from = "All";
             }
           ];

@@ -45,10 +45,6 @@ _: {
         path = "config/crd";
       };
 
-      # Typed resources.gateways/httproutes/grpcRoutes.* on any
-      # application, mirroring cert-manager's fromChartCRDModule import —
-      # sourced from the same standard-channel CRD files this aspect
-      # already installs, no Helm chart involved.
       nixidy.applicationImports = [
         (generators.fromCRDModule {
           name = "gateway-api";

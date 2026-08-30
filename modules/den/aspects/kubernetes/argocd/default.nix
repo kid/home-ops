@@ -65,18 +65,11 @@ in
             sourceRepos = [ "*" ];
           };
 
-          # TLS terminates at the shared apps-gateway Gateway (see
-          # modules/den/aspects/kubernetes/apps-gateway), so argocd-server
-          # must not also terminate TLS itself.
+          # TLS terminates at the Gateway; argocd-server must not also do it.
           resources.configMaps.argocd-cmd-params-cm.data."server.insecure" = "true";
 
-          # argocd-server multiplexes grpc-web/HTTP (UI) and native gRPC
-          # (CLI) on the same container port, but Gateway API needs them
-          # split across an HTTPRoute and a GRPCRoute, each pointed at its
-          # own Service port — the "https" port is marked h2c so Cilium's
-          # Envoy speaks HTTP/2 cleartext to the backend for gRPC.
-          # mkForce replaces rather than merges: nixidy's resource-override
-          # otherwise concatenates list-typed options like spec.ports.
+          # https port is h2c so Envoy can proxy native gRPC (CLI) to it;
+          # mkForce avoids nixidy concatenating this with kustomize's ports.
           resources.services.argocd-server.spec.ports = lib.mkForce [
             {
               name = "http";
