@@ -1,7 +1,7 @@
 # Shared "firewall" RouterOS stack aspect — see ros-base.nix for why this is
 # thin, except this one also does real work: it's the integration point
 # between rb5009's own manual/local rules (routerosDevice.aspect.
-# terragruntInputs.firewall, see modules/routerosDevices/rb5009.nix) and the
+# terragruntInputs.firewall, see modules/den/routerosDevices/rb5009.nix) and the
 # `firewall` quirk pool (den.quirks.firewall — network/cluster/etc.-emitted
 # rule fragments, collected here via modules/den/policies/pipes.nix's
 # routeros-device-collect-firewall). Quirk-derived rules are placed before

@@ -1,10 +1,10 @@
 # Shared "ros-bgp" RouterOS stack aspect — configures a RouterOS BGP instance
 # on rb5009 so it peers directly with Cilium's BGP Control Plane over the
-# K3s VLAN (see modules/kubernetes/cilium/bgp.nix for the Cilium side).
+# K3s VLAN (see modules/den/aspects/kubernetes/cilium/bgp.nix for the Cilium side).
 # Two decoupled producers feed this, same "many producers, one consumer"
 # pattern as ros-firewall.nix:
 #   - `bgp` quirk (cluster-level name/localAsn/peers/timers, emitted by
-#     den.aspects.prd.bgp in modules/clusters/prd.nix, collected via
+#     den.aspects.prd.bgp in modules/den/clusters/prd.nix, collected via
 #     modules/den/policies/pipes.nix's routeros-device-collect-bgp)
 #   - `k3s-nodes` quirk (per-host K3s-VLAN address, emitted by
 #     den.aspects.k3s-server.k3s-nodes in modules/den/aspects/services/

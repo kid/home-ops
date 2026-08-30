@@ -117,7 +117,7 @@
     (den.aspects.ssh { addresses = [ config.den.devices.node1.address ]; })
   ];
 
-  # Grants kid's "admin" access-policy group (modules/users/kid.nix) onto
+  # Grants kid's "admin" access-policy group (modules/den/users/kid.nix) onto
   # this host — see modules/den/policies/users.nix for how this resolves.
   fleet.user-access.by-host.node1.groups = [ "admin" ];
 

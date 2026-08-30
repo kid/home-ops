@@ -1,5 +1,5 @@
 # prd environment instance — split out of modules/den/schema/environments.nix
-# (schema/instance split, mirroring nixopslab's modules/environments/prod.nix)
+# (schema/instance split, mirroring nixopslab's modules/den/environments/prod.nix)
 # now that prd is referenced by both the RouterOS fleet and the k3s cluster
 # entity.
 #

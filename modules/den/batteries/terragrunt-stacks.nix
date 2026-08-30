@@ -4,16 +4,16 @@
 # policy: registers "terragrunt-stacks" as an aspect content class directly
 # on den.classes (no private namespace — see AGENTS.md), and collects it —
 # across a routerosDevice's aspect-includes chain
-# (den.aspects.<routerosDevice>.includes = [ den.aspects.ros-base
-# den.aspects.ros-capsman ... ]) — into
+# (den.aspects.<routerosDevice>.includes = [ den.aspects.routeros.base
+# den.aspects.routeros.capsman ... ]) — into
 # config.flake.terragruntStacks.<routerosDevice>.<stack>.
 #
 # `terragruntInputs` is a reserved (non-class) aspect key: each device's own
-# self-aspect (modules/routerosDevices/*.nix) precomputes its per-stack
+# self-aspect (modules/den/routerosDevices/*.nix) precomputes its per-stack
 # {dependsOn, inputs} data there (cidrhost() etc. need modules/network/
 # lib.nix's cidrLib, an ordinary module arg den's aspect-content functions
-# can't see — see modules/routerosDevices/rb5009.nix), and the thin, shared
-# ros-<stack> aspects (modules/network/aspects/ros-*.nix) just look it up by
+# can't see — see modules/den/routerosDevices/rb5009.nix), and the thin, shared
+# ros-<stack> aspects (modules/den/aspects/routeros/*.nix) just look it up by
 # stack name.
 {
   lib,

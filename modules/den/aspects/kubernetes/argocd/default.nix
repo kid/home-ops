@@ -1,6 +1,6 @@
 # ArgoCD, sourced as static manifests (argoproj/argo-cd's own
 # manifests/core-install kustomization) rather than a Helm chart — same
-# approach nixopslab's modules/kubernetes/argocd/default.nix uses, ported
+# approach nixopslab's modules/den/aspects/kubernetes/argocd/default.nix uses, ported
 # verbatim here. Once applied (modules/den/aspects/services/k3s/bootstrap.nix),
 # ArgoCD syncs manifests/prd/bootstrap.yaml and takes over managing itself
 # and every other app aspect from git.

@@ -55,7 +55,7 @@ in
           routeros_endpoint = "10.99.0.2";
 
           # routeros_groups/routeros_users are contributed centrally by
-          # modules/network/aspects/ros-base.nix, sourced from
+          # modules/den/aspects/routeros/base.nix, sourced from
           # den.users.registry/den.groups — not hand-written per device
           # anymore. Per-user passwords still come from 1Password: admin
           # reuses op_item_routeros above, every other user needs an item

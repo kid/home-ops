@@ -1,10 +1,10 @@
 # Shared "base" RouterOS stack aspect — thin: the actual per-device inputs
 # (ethernet_interfaces, ip_addresses, dhcp_servers, vlans, …) live on the
 # device's own self-aspect (den.aspects.<routerosDevice>.terragruntInputs.base,
-# see modules/routerosDevices/rb5009.nix), precomputed there because
+# see modules/den/routerosDevices/rb5009.nix), precomputed there because
 # cidrhost()-style arithmetic needs modules/network/lib.nix's cidrLib, which
 # den's aspect content functions can't see (only entity-kind scope bindings
-# like `routerosDevice` are — see modules/terragrunt/collect.nix).
+# like `routerosDevice` are — see modules/den/batteries/terragrunt-stacks.nix).
 #
 # routeros_users/routeros_groups are merged in here instead, sourced
 # directly from den.users.registry/den.groups (modules/den/schema/users.nix,

@@ -1,7 +1,7 @@
 # Shared nixidy defaults, injected into every cluster's k8s-manifests scope.
 # Not a collector itself — modules/den/policies/cluster.nix's
 # cluster-to-nixidy policy assembles this aspect's content together with
-# each app aspect's (modules/kubernetes/*/default.nix) into the real
+# each app aspect's (modules/den/aspects/kubernetes/*/default.nix) into the real
 # nixidy environment.
 _:
 let

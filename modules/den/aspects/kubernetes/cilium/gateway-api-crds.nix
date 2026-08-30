@@ -21,7 +21,7 @@
 # notes: "Cilium moves from Gateway API v1.4 to v1.6.1"), and its
 # gateway-api client now looks up TLSRoute via the real
 # sigs.k8s.io/gateway-api/apis/v1 package instead of v1alpha2 — see
-# modules/kubernetes/cilium/default.nix's chart pin bump, done together
+# modules/den/aspects/kubernetes/cilium/default.nix's chart pin bump, done together
 # with this. No CRD-serving workaround needed as a result.
 #
 # The Renovate annotation below tracks this independently of Cilium's own

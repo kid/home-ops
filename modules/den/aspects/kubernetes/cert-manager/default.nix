@@ -57,7 +57,7 @@ _: {
 
         # Standard cert-manager self-signed-root bootstrap: a selfSigned
         # ClusterIssuer signs one CA Certificate, then hubble-ca-issuer
-        # (referenced by modules/kubernetes/cilium/default.nix's
+        # (referenced by modules/den/aspects/kubernetes/cilium/default.nix's
         # hubble.tls.auto.certManagerIssuerRef) signs everything else off
         # that CA's secret. Certificate's namespace defaults to this
         # application's own namespace (cert-manager).

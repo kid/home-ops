@@ -1,6 +1,6 @@
 # prd k3s cluster instance, and the VLAN it runs on.
 #
-# The VLAN declaration lives here rather than in modules/networks/prd.nix —
+# The VLAN declaration lives here rather than in modules/den/networks/prd.nix —
 # proving den.networks entries are collectible from any entity, not just a
 # flat registry, per that module's own original design intent. This is a
 # plain Nix module-merge (den.networks.<name> can be set from any file), not
@@ -27,7 +27,7 @@ let
 
   # Cilium's LoadBalancer IP pool, BGP-advertised to rb5009 — shared
   # between den.clusters.prd.networks.loadBalancer (read by
-  # modules/kubernetes/cilium/bgp.nix) and the firewall forward-rule
+  # modules/den/aspects/kubernetes/cilium/bgp.nix) and the firewall forward-rule
   # below, so the two can't drift apart.
   lbCidr = "10.0.42.0/24";
 in
@@ -79,9 +79,9 @@ in
   };
 
   # cert-manager is included only for Cilium's Hubble mTLS
-  # (modules/kubernetes/cert-manager/default.nix) — Helm's own cert
+  # (modules/den/aspects/kubernetes/cert-manager/default.nix) — Helm's own cert
   # generation isn't idempotent across renders. sops-operator provides
-  # Kubernetes secrets (modules/kubernetes/sops-operator/default.nix).
+  # Kubernetes secrets (modules/den/aspects/kubernetes/sops-operator/default.nix).
   den.aspects.prd.includes = with den.aspects.kubernetes; [
     gateway-api-crds
     cilium
@@ -98,7 +98,7 @@ in
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
   # quirks/bgp.nix), collected onto rb5009 by modules/den/policies/
   # pipes.nix's routeros-device-collect-bgp and consumed by
-  # modules/network/aspects/ros-bgp.nix. Parallels den.aspects.prd.firewall
+  # modules/den/aspects/routeros/bgp.nix. Parallels den.aspects.prd.firewall
   # just below: a cluster contributes a small data fragment, the RouterOS
   # side merges fragments from however many clusters/networks apply.
   den.aspects.prd.bgp =
@@ -119,7 +119,7 @@ in
   # mikrotik-exporter reaching crs320's management API, LB CIDR routing) —
   # a `firewall` quirk fragment (den.quirks.firewall), collected onto rb5009
   # by modules/den/policies/pipes.nix's routeros-device-collect-firewall and merged
-  # by modules/network/aspects/ros-firewall.nix into the K3s network's rule
+  # by modules/den/aspects/routeros/firewall.nix into the K3s network's rule
   # lists. Nothing here is specific to den.aspects.prd — any other cluster
   # aspect (cilium, coredns, a future one) could contribute its own
   # `firewall` fragment the same way.

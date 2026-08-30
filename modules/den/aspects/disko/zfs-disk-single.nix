@@ -6,7 +6,7 @@
 #
 # `settings.device_id` must be set per-host to the target machine's real
 # stable disk identifier (e.g. "/dev/disk/by-id/nvme-..."), confirmed once
-# the real hardware is known — see modules/hosts/node1.nix.
+# the real hardware is known — see modules/den/hosts/node1.nix.
 { den, lib, ... }:
 let
   emptySnapshot =
@@ -16,7 +16,7 @@ in
   den.aspects.disko.zfs-disk-single.root.nixos = {
     boot.supportedFilesystems = [ "zfs" ];
     # mkDefault throughout: disko's own vmVariantWithDisko (used by
-    # vmWithDisko, see modules/hosts/test-vm.nix) needs to override these to
+    # vmWithDisko, see modules/den/hosts/test-vm.nix) needs to override these to
     # import by uuid and force-import, since /dev/disk/by-id is empty in
     # qemu VMs.
     boot.zfs = {

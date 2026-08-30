@@ -1,7 +1,7 @@
 # prd environment's network client devices — DHCP static lease data, ported
 # verbatim from the previously hand-written per-network lists in
-# modules/routerosDevices/rb5009.nix. crs320's own entry lives in
-# modules/routerosDevices/crs320.nix instead (single producer for a router's
+# modules/den/routerosDevices/rb5009.nix. crs320's own entry lives in
+# modules/den/routerosDevices/crs320.nix instead (single producer for a router's
 # own data lives with the router).
 { den, ... }:
 {

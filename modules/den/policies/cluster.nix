@@ -23,10 +23,10 @@
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  # den.classes.k8s-manifests is registered in modules/flake/k8s.nix.
+  # den.classes.k8s-manifests is registered in modules/den/batteries/k8s-manifests.nix.
 
   # Instantiate each cluster's collected k8s-manifests content into a real
-  # nixidy environment, per system (mirrors modules/terragrunt/collect.nix's
+  # nixidy environment, per system (mirrors modules/den/batteries/terragrunt-stacks.nix's
   # routeros-device-to-terragrunt: den.lib.policy.instantiate on a class, walking the
   # cluster's own aspect-includes chain). Unlike that pipeline, nixidy's own
   # module system expects the den-wrapped `{ imports = [...]; }` module list

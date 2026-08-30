@@ -88,7 +88,7 @@ in
             routeros_endpoint = "10.99.0.1";
 
             # routeros_groups/routeros_users are contributed centrally by
-            # modules/network/aspects/ros-base.nix, sourced from
+            # modules/den/aspects/routeros/base.nix, sourced from
             # den.users.registry/den.groups — not hand-written per device
             # anymore. Per-user passwords still come from 1Password: admin
             # reuses op_item_routeros above, every other user needs an item
@@ -236,8 +236,8 @@ in
             # Only genuinely device/topology-specific rules stay here — the
             # per-network "Allow WAN" rule (den.networks.<name>.internetAccess)
             # and K3s's cluster-specific rules (den.aspects.prd.firewall, in
-            # modules/clusters/prd.nix) now arrive via the `firewall` quirk,
-            # merged in by modules/network/aspects/ros-firewall.nix.
+            # modules/den/clusters/prd.nix) now arrive via the `firewall` quirk,
+            # merged in by modules/den/aspects/routeros/firewall.nix.
             vlans_input_rules = {
               "${networks.Trusted.name}" = [
                 {
@@ -296,7 +296,7 @@ in
 
       # No cidr arithmetic needed — all real values (ASNs, router ID, node
       # addresses) come from the `bgp`/`k3s-nodes` quirks collected in
-      # modules/network/aspects/ros-bgp.nix, not from anything precomputed
+      # modules/den/aspects/routeros/bgp.nix, not from anything precomputed
       # here.
       bgp = {
         dependsOn = [ "rb5009" ];

@@ -8,10 +8,10 @@
 #
 # Emits the `k3s-nodes` quirk ({hostname; address;}), collected onto
 # rb5009 by modules/den/policies/pipes.nix's
-# routeros-device-collect-k3s-nodes (consumed by modules/network/aspects/
+# routeros-device-collect-k3s-nodes (consumed by modules/den/aspects/routeros/
 # ros-bgp.nix, to build its per-node BGP connections) — `address` is this
 # host's own IP on the K3s VLAN, read from the `<hostname>-k3s` den.devices
-# entry every k3s host declares (see modules/hosts/node1.nix).
+# entry every k3s host declares (see modules/den/hosts/node1.nix).
 {
   config,
   den,
@@ -30,7 +30,7 @@ in
         hostname = host.name;
         # null for hosts with no `<hostname>-k3s` den.devices entry (e.g.
         # test-vm, a throwaway QEMU smoke-test host with no real network
-        # attachment) — modules/network/aspects/ros-bgp.nix filters these
+        # attachment) — modules/den/aspects/routeros/bgp.nix filters these
         # out rather than feeding a bogus peer IP to RouterOS.
         address = (config.den.devices."${host.name}-k3s" or { }).address or null;
       };

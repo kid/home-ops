@@ -6,8 +6,8 @@
 # ${NETWORK_*} env-var substituted) — same four resources, but values come
 # straight from den.clusters.<name>.bgp/.networks.loadBalancer since prd
 # renders through nixidy, not Flux postBuild substitution. Requires
-# modules/kubernetes/cilium/default.nix's bgpControlPlane.enabled Helm
-# value and modules/network/aspects/ros-bgp.nix (the RouterOS side of this
+# modules/den/aspects/kubernetes/cilium/default.nix's bgpControlPlane.enabled Helm
+# value and modules/den/aspects/routeros/bgp.nix (the RouterOS side of this
 # same peering) for BGP sessions to actually come up.
 _: {
   den.aspects.kubernetes.cilium-bgp.k8s-manifests =

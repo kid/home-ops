@@ -60,7 +60,7 @@ let
         # RouterOS device membership + per-device data. Not part of the
         # host-side access-grant machinery above — den.users.registry is a
         # flat, non-entity registry (a single producer read directly by
-        # modules/network/aspects/ros-base.nix, not walked via the scope
+        # modules/den/aspects/routeros/base.nix, not walked via the scope
         # tree the NixOS side's resolve.to/quirks machinery uses).
         # Keyed by den.routerosDevices.<name> name (not den.devices, the
         # unrelated network client-device registry).

@@ -1,5 +1,5 @@
 # Reserves the zroot/miroir ZFS dataset miroir's ZFS backend uses as its
-# pool (modules/kubernetes/miroir/default.nix's MiroirNode zfs.dataset) —
+# pool (modules/den/aspects/kubernetes/miroir/default.nix's MiroirNode zfs.dataset) —
 # the driver only zfs-creates child datasets per PV under this parent, it
 # never creates the parent itself, so it must already exist before any PV
 # can be provisioned.

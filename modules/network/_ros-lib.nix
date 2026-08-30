@@ -1,4 +1,4 @@
-# Helpers shared between modules/routerosDevices/{rb5009,crs320}.nix — previously
+# Helpers shared between modules/den/routerosDevices/{rb5009,crs320}.nix — previously
 # duplicated byte-for-byte in both files. Leading underscore: import-tree
 # (the mechanism that auto-imports everything under modules/ as a
 # flake-parts module) skips any path containing `/_` by design, so this is

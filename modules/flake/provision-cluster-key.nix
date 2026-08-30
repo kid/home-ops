@@ -2,7 +2,7 @@
 # locally, encrypts the private half with sops (binary mode — same
 # convention as provision-host-key), and commits both the ciphertext and
 # the plaintext public key to secrets/clusters/<cluster>/. This is the
-# decryption key sops-operator uses in-cluster (modules/kubernetes/
+# decryption key sops-operator uses in-cluster (modules/den/aspects/kubernetes/
 # sops-operator/default.nix) — age-native, not an SSH key, since
 # sops-operator only accepts age/PGP/Vault-transit keys.
 #

@@ -82,7 +82,7 @@ let
     ];
   };
 
-  # sops-operator (modules/kubernetes/sops-operator/default.nix) decrypts
+  # sops-operator (modules/den/aspects/kubernetes/sops-operator/default.nix) decrypts
   # SopsSecret manifests in-cluster using only the cluster's own sops-age
   # key — so a SopsSecret rendered under that cluster's manifest root needs
   # that key as a recipient too, not just the humans-only catch-all every
