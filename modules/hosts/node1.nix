@@ -78,11 +78,16 @@
         "30-storage" = {
           matchConfig.Name = "storage";
           networkConfig.DHCP = "yes";
+          # Don't let this race enp36s0f1's default route (breaks strict rpfilter).
+          dhcpV4Config.UseGateway = false;
           linkConfig.MTUBytes = den.networks.Storage.mtu;
         };
         "30-k3s" = {
           matchConfig.Name = "k3s";
           networkConfig.DHCP = "yes";
+          # Same as "30-storage"; Cilium's device/egress-gateway are already
+          # hardcoded to k3s, independent of the default route.
+          dhcpV4Config.UseGateway = false;
           linkConfig.MTUBytes = 1500;
         };
       };
@@ -91,12 +96,6 @@
       i18n.defaultLocale = "en_US.UTF-8";
 
       users.mutableUsers = false;
-
-      services.openssh = {
-        enable = true;
-        openFirewall = false;
-      };
-      networking.firewall.interfaces."enp36s0f1".allowedTCPPorts = [ 22 ];
 
       system.stateVersion = "26.05";
 
@@ -115,6 +114,7 @@
     den.aspects.k3s-miroir
     den.aspects.power-saving
     den.aspects.k3s-sops-operator
+    (den.aspects.ssh { addresses = [ config.den.devices.node1.address ]; })
   ];
 
   # Grants kid's "admin" access-policy group (modules/users/kid.nix) onto
