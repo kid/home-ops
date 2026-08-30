@@ -53,6 +53,7 @@ _: {
             "config/crd/standard/gateway.networking.k8s.io_gateways.yaml"
             "config/crd/standard/gateway.networking.k8s.io_httproutes.yaml"
             "config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml"
+            "config/crd/standard/gateway.networking.k8s.io_backendtlspolicies.yaml"
           ];
         })
       ];

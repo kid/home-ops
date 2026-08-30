@@ -88,6 +88,7 @@ in
     cilium-bgp
     cilium-egress-gateway
     cert-manager
+    trust-manager
     coredns
     apps-gateway
     argocd

@@ -65,24 +65,40 @@ in
             sourceRepos = [ "*" ];
           };
 
-          # TLS terminates at the Gateway; argocd-server must not also do it.
-          resources.configMaps.argocd-cmd-params-cm.data."server.insecure" = "true";
+          # Replaces argocd-server's ephemeral self-signed cert with one off Hubble's CA.
+          resources.certificates.argocd-server-tls.spec = {
+            secretName = "argocd-server-tls";
+            dnsNames = [
+              "argocd-server"
+              "argocd-server.argocd.svc.cluster.local"
+            ];
+            issuerRef = {
+              name = "hubble-ca-issuer";
+              kind = "ClusterIssuer";
+              group = "cert-manager.io";
+            };
+          };
 
-          # https port is h2c so Envoy can proxy native gRPC (CLI) to it;
-          # mkForce avoids nixidy concatenating this with kustomize's ports.
-          resources.services.argocd-server.spec.ports = lib.mkForce [
-            {
-              name = "http";
-              port = 80;
-              targetPort = 8080;
-            }
-            {
-              name = "https";
-              port = 443;
-              targetPort = 8080;
-              appProtocol = "kubernetes.io/h2c";
-            }
-          ];
+          # internal-ca ConfigMap comes from trust-manager/default.nix's Bundle.
+          resources.backendTLSPolicies.argocd-server.spec = {
+            targetRefs = [
+              {
+                kind = "Service";
+                name = "argocd-server";
+                group = "";
+              }
+            ];
+            validation = {
+              hostname = "argocd-server.argocd.svc.cluster.local";
+              caCertificateRefs = [
+                {
+                  kind = "ConfigMap";
+                  name = "internal-ca";
+                  group = "";
+                }
+              ];
+            };
+          };
 
           resources.httpRoutes.argocd.spec = {
             parentRefs = [
@@ -98,7 +114,7 @@ in
                 backendRefs = [
                   {
                     name = "argocd-server";
-                    port = 80;
+                    port = 443;
                   }
                 ];
               }
