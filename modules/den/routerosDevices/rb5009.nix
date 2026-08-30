@@ -60,12 +60,12 @@ in
 
   den.aspects.rb5009 = {
     includes = [
-      den.aspects.ros-base
-      den.aspects.ros-bgp
-      den.aspects.ros-capsman
-      den.aspects.ros-dns
-      den.aspects.ros-firewall
-      den.aspects.ros-qos
+      den.aspects.routeros.base
+      den.aspects.routeros.bgp
+      den.aspects.routeros.capsman
+      den.aspects.routeros.dns
+      den.aspects.routeros.firewall
+      den.aspects.routeros.qos
     ];
 
     terragruntInputs = {

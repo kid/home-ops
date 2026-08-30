@@ -42,7 +42,7 @@ in
   };
 
   den.aspects.crs320 = {
-    includes = [ den.aspects.ros-base ];
+    includes = [ den.aspects.routeros.base ];
 
     terragruntInputs = {
       base = {

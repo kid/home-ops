@@ -5,7 +5,7 @@
 # the plain internetAccess field is all a network needs to do.
 { lib, den, ... }:
 {
-  den.aspects.network-internet-access.firewall =
+  den.aspects.network.internet-access.firewall =
     { network, ... }:
     lib.optional (network.internetAccess != null) {
       network = network.name;
@@ -21,5 +21,5 @@
       ];
     };
 
-  den.schema.network.includes = [ den.aspects.network-internet-access ];
+  den.schema.network.includes = [ den.aspects.network.internet-access ];
 }

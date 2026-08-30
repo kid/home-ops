@@ -11,7 +11,7 @@
 # by list position, so reordering would cause spurious destroy/recreate.
 { lib, ... }:
 {
-  den.aspects.ros-firewall = {
+  den.aspects.routeros.firewall = {
     "terragrunt-stacks" =
       {
         routerosDevice,

@@ -15,7 +15,7 @@
 # different).
 { den, lib, ... }:
 {
-  den.aspects.ros-base = {
+  den.aspects.routeros.base = {
     "terragrunt-stacks" =
       { routerosDevice, ... }:
       let

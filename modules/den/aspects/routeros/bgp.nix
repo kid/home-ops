@@ -45,7 +45,7 @@ let
     );
 in
 {
-  den.aspects.ros-bgp = {
+  den.aspects.routeros.bgp = {
     "terragrunt-stacks" =
       {
         routerosDevice,
