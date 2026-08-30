@@ -9,7 +9,7 @@ let
   inherit (lib) types mkOption mkIf;
 in
 {
-  den.aspects.argocd = {
+  den.aspects.kubernetes.argocd = {
     service-domains = [ "argocd" ];
 
     k8s-manifests =

@@ -3,7 +3,7 @@ let
   routerosEndpoint = config.den.routerosDevices.rb5009.routerosEndpoint;
 in
 {
-  den.aspects.external-dns.k8s-manifests =
+  den.aspects.kubernetes.external-dns.k8s-manifests =
     { charts, cluster, ... }:
     let
       mikrotikCredentials = cluster.methods.mkSopsSecret {

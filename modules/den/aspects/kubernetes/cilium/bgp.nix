@@ -10,7 +10,7 @@
 # value and modules/network/aspects/ros-bgp.nix (the RouterOS side of this
 # same peering) for BGP sessions to actually come up.
 _: {
-  den.aspects.cilium-bgp.k8s-manifests =
+  den.aspects.kubernetes.cilium-bgp.k8s-manifests =
     { cluster, ... }:
     let
       inherit (cluster.bgp)

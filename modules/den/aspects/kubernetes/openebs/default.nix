@@ -4,7 +4,7 @@
 # separately, via modules/den/aspects/services/k3s/openebs.nix's `datasets`
 # quirk (den.aspects.k3s-openebs, included on node1).
 _: {
-  den.aspects.openebs.k8s-manifests =
+  den.aspects.kubernetes.openebs.k8s-manifests =
     { charts, ... }:
     {
       applications.openebs = {

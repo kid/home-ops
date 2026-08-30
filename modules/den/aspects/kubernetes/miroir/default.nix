@@ -14,7 +14,7 @@
 # host already (see miroir.nix) so a replicated class is a small
 # follow-up once a 2nd node exists, not a redo.
 _: {
-  den.aspects.miroir.k8s-manifests =
+  den.aspects.kubernetes.miroir.k8s-manifests =
     { charts, generators, ... }:
     {
       nixidy.applicationImports = [

@@ -82,7 +82,7 @@ in
   # (modules/kubernetes/cert-manager/default.nix) — Helm's own cert
   # generation isn't idempotent across renders. sops-operator provides
   # Kubernetes secrets (modules/kubernetes/sops-operator/default.nix).
-  den.aspects.prd.includes = with den.aspects; [
+  den.aspects.prd.includes = with den.aspects.kubernetes; [
     gateway-api-crds
     cilium
     cilium-bgp

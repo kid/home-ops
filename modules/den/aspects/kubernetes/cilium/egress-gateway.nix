@@ -1,5 +1,5 @@
 _: {
-  den.aspects.cilium-egress-gateway.k8s-manifests = _: {
+  den.aspects.kubernetes.cilium-egress-gateway.k8s-manifests = _: {
     applications.cilium.yamls = [
       ''
         apiVersion: cilium.io/v2

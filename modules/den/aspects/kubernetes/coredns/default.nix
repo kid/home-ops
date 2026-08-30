@@ -4,7 +4,7 @@
 # matches the fixed address k3s's own --service-cidr flag expects kubelets
 # to find DNS at.
 _: {
-  den.aspects.coredns.k8s-manifests =
+  den.aspects.kubernetes.coredns.k8s-manifests =
     { charts, cluster, ... }:
     {
       applications.coredns = {

@@ -19,7 +19,7 @@ _: {
       ];
     };
 
-  den.aspects.sops-operator.k8s-manifests =
+  den.aspects.kubernetes.sops-operator.k8s-manifests =
     { pkgs, generators, ... }:
     let
       chartSrc = pkgs.fetchFromGitHub {

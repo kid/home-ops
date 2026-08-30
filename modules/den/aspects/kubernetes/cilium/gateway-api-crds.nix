@@ -28,7 +28,7 @@
 # version — check the Cilium release notes for its required Gateway API
 # CRD version before merging a bump here, don't take it on trust.
 _: {
-  den.aspects.gateway-api-crds.k8s-manifests =
+  den.aspects.kubernetes.gateway-api-crds.k8s-manifests =
     { pkgs, ... }:
     {
       applications.gateway-api-crds.kustomize.applications.gateway-api-crds.kustomization = {

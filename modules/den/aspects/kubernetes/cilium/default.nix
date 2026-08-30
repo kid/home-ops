@@ -2,7 +2,7 @@
 # match modules/den/aspects/services/k3s/k3s.nix's k3s flags
 # (--flannel-backend=none --disable-network-policy --disable-kube-proxy).
 _: {
-  den.aspects.cilium.k8s-manifests =
+  den.aspects.kubernetes.cilium.k8s-manifests =
     { charts, cluster, ... }:
     {
       applications.cilium = {

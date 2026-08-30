@@ -11,7 +11,7 @@
 # Helm release's own values below), and kindFilter matches nothing if the
 # chart is templated without it.
 _: {
-  den.aspects.cert-manager.k8s-manifests =
+  den.aspects.kubernetes.cert-manager.k8s-manifests =
     {
       charts,
       generators,
