@@ -3,7 +3,7 @@
 # Mirrors nixopslab's modules/den/schema/environments.nix. An environment
 # groups networks and devices that share a base CIDR block and domain TLD
 # (e.g. "prd", one day "dev"). `cidrBase` is the environment-wide supernet
-# every network's own /prefix is carved out of (see modules/network/lib.nix
+# every network's own /prefix is carved out of (see modules/den/batteries/terragrunt/lib.nix
 # cidrsubnet), matching tf-stacks/prd/env.hcl's `env_cidr`.
 #
 # `networks` resolves every den.networks entry belonging to this environment

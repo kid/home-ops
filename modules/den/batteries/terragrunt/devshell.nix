@@ -1,4 +1,4 @@
-# Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt-stacks.nix) to
+# Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt/terragrunt-stacks.nix) to
 # tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl, exposed
 # as `nix run .#write-terragrunt` (mirrors apps.write-manifests/
 # write-terraform elsewhere in the dendritic ecosystem) + `checks.terragrunt`

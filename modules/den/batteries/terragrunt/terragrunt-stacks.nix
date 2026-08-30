@@ -10,7 +10,7 @@
 #
 # `terragruntInputs` is a reserved (non-class) aspect key: each device's own
 # self-aspect (modules/den/routerosDevices/*.nix) precomputes its per-stack
-# {dependsOn, inputs} data there (cidrhost() etc. need modules/network/
+# {dependsOn, inputs} data there (cidrhost() etc. need modules/den/batteries/terragrunt/
 # lib.nix's cidrLib, an ordinary module arg den's aspect-content functions
 # can't see — see modules/den/routerosDevices/rb5009.nix), and the thin, shared
 # ros-<stack> aspects (modules/den/aspects/routeros/*.nix) just look it up by

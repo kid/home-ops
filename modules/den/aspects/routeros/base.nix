@@ -2,9 +2,9 @@
 # (ethernet_interfaces, ip_addresses, dhcp_servers, vlans, …) live on the
 # device's own self-aspect (den.aspects.<routerosDevice>.terragruntInputs.base,
 # see modules/den/routerosDevices/rb5009.nix), precomputed there because
-# cidrhost()-style arithmetic needs modules/network/lib.nix's cidrLib, which
+# cidrhost()-style arithmetic needs modules/den/batteries/terragrunt/lib.nix's cidrLib, which
 # den's aspect content functions can't see (only entity-kind scope bindings
-# like `routerosDevice` are — see modules/den/batteries/terragrunt-stacks.nix).
+# like `routerosDevice` are — see modules/den/batteries/terragrunt/terragrunt-stacks.nix).
 #
 # routeros_users/routeros_groups are merged in here instead, sourced
 # directly from den.users.registry/den.groups (modules/den/schema/users.nix,

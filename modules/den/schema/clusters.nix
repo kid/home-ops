@@ -106,7 +106,7 @@
             # Single source of truth for BGP session timers, fed to both
             # the RouterOS side (terragrunt-infra-catalog's talos-bgp
             # module's bgp_hold_time/bgp_keepalive_time) and Cilium's own
-            # CiliumBGPPeerConfig.spec.timers — see modules/network/
+            # CiliumBGPPeerConfig.spec.timers — see modules/den/batteries/terragrunt/
             # aspects/routeros/bgp.nix and modules/den/aspects/kubernetes/cilium/bgp.nix.
             bgp.holdTimeSeconds = lib.mkOption {
               type = lib.types.int;

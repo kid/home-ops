@@ -12,8 +12,8 @@
 # path this flake evaluates in.
 #
 # Plain lib file (underscore-prefixed so import-tree skips it), imported
-# directly by modules/terragrunt/render.nix (exposes it as a top-level
-# `_module.args.hcl` for device modules) and modules/terragrunt/devshell.nix
+# directly by modules/den/batteries/terragrunt/render.nix (exposes it as a top-level
+# `_module.args.hcl` for device modules) and modules/den/batteries/terragrunt/devshell.nix
 # (needs it inside `perSystem`, a separate module-args namespace).
 { lib }:
 let

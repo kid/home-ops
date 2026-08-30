@@ -1,5 +1,5 @@
 # Cluster-level BGP instance parameters, contributed by a cluster's own
-# aspect (den.aspects.<cluster>.bgp, e.g. modules/den/clusters/prd.nix) and
+# aspect (den.aspects.<cluster>.bgp, e.g. modules/den/clusters.nix) and
 # collected onto every RouterOS device (modules/den/policies/pipes.nix's
 # routeros-device-collect-bgp). Fragment shape: { name; localAsn; peers;
 # holdTimeSeconds; keepAliveTimeSeconds; } — `peers` is
