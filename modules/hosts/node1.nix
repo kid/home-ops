@@ -92,12 +92,6 @@
 
       users.mutableUsers = false;
 
-      services.openssh = {
-        enable = true;
-        openFirewall = false;
-      };
-      networking.firewall.interfaces."enp36s0f1".allowedTCPPorts = [ 22 ];
-
       system.stateVersion = "26.05";
 
       environment.systemPackages = [ pkgs.htop ];
@@ -115,6 +109,7 @@
     den.aspects.k3s-miroir
     den.aspects.power-saving
     den.aspects.k3s-sops-operator
+    (den.aspects.ssh { addresses = [ config.den.devices.node1.address ]; })
   ];
 
   # Grants kid's "admin" access-policy group (modules/users/kid.nix) onto
