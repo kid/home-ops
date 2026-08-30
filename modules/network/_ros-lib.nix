@@ -3,7 +3,7 @@
 # (the mechanism that auto-imports everything under modules/ as a
 # flake-parts module) skips any path containing `/_` by design, so this is
 # an ordinary Nix file, imported directly, not a dendritic module.
-{ lib, cidrLib }:
+{ lib }:
 {
   allVlanIds = networks: lib.sort (a: b: a < b) (lib.mapAttrsToList (_: net: net.vlanId) networks);
 
@@ -25,7 +25,7 @@
   toFirewallVlanInput = net: {
     inherit (net) name;
     vlan_id = net.vlanId;
-    address = cidrLib.cidrhost net.cidr 1;
+    address = net.methods.host 1;
   };
 
   # Groups den.devices entries by network and reshapes each into the

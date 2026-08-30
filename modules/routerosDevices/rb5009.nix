@@ -12,11 +12,10 @@
   lib,
   den,
   config,
-  cidrLib,
   ...
 }:
 let
-  rosLib = import ../network/_ros-lib.nix { inherit lib cidrLib; };
+  rosLib = import ../network/_ros-lib.nix { inherit lib; };
   inherit (rosLib)
     toVlanInput
     toFirewallVlanInput
@@ -39,13 +38,12 @@ let
     op_item_routeros = "RB5009 - user - kid";
   };
 
-  cidrHostPrefixed = net: hostnum: "${cidrLib.cidrhost net.cidr hostnum}/${toString net.prefix}";
+  cidrHostPrefixed = net: hostnum: "${net.methods.host hostnum}/${toString net.prefix}";
 
-  gatewayFor = net: if net.dhcpGateway != null then net.dhcpGateway else cidrLib.cidrhost net.cidr 1;
   dnsServersFor =
-    net: if net.dhcpDnsServers != null then net.dhcpDnsServers else [ (cidrLib.cidrhost net.cidr 1) ];
+    net: if net.dhcpDnsServers != null then net.dhcpDnsServers else [ (net.methods.host 1) ];
   ntpServersFor =
-    net: if net.dhcpNtpServers != null then net.dhcpNtpServers else [ (cidrLib.cidrhost net.cidr 1) ];
+    net: if net.dhcpNtpServers != null then net.dhcpNtpServers else [ (net.methods.host 1) ];
 in
 {
   den.routerosDevices.rb5009 = {
@@ -149,9 +147,7 @@ in
               };
             }
             // lib.mapAttrs (_: net: {
-              inherit (net) cidr;
-              inherit (net) domain;
-              gateway = gatewayFor net;
+              inherit (net) cidr domain gateway;
               dns_servers = dnsServersFor net;
               ntp_servers = ntpServersFor net;
             }) routedNetworks;
@@ -246,7 +242,7 @@ in
               "${networks.Trusted.name}" = [
                 {
                   action = "accept";
-                  dst_address = cidrLib.cidrhost networks.Management.cidr 1;
+                  dst_address = networks.Management.methods.host 1;
                   comment = "Allow access to Management from Trusted";
                 }
               ];

@@ -14,17 +14,15 @@
 {
   den,
   config,
-  cidrLib,
   ...
 }:
 let
-  managementCidr = config.den.environments.prd.networks.Management.cidr;
   # host 1 = rb5009's own address on each VLAN (matches rb5009.nix's own
   # `cidrHostPrefixed net 1` for its Management address) — external-dns and
   # the mikrotik-exporter scrape target both talk to the router itself, not
   # crs320. The forward-chain mikrotik-exporter rule below is the only one
   # that actually targets crs320's address.
-  rb5009MgmtAddr = cidrLib.cidrhost managementCidr 1;
+  rb5009MgmtAddr = config.den.environments.prd.networks.Management.methods.host 1;
   crs320MgmtAddr = config.den.devices.crs320.address;
 
   # Cilium's LoadBalancer IP pool, BGP-advertised to rb5009 — shared
