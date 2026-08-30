@@ -78,11 +78,23 @@
         "30-storage" = {
           matchConfig.Name = "storage";
           networkConfig.DHCP = "yes";
+          # Keep the Storage subnet route, but don't let it compete with
+          # enp36s0f1's default route — three equal-metric default routes
+          # make the kernel's reverse-path check pick an arbitrary egress
+          # interface, which the firewall's strict rpfilter then treats as
+          # spoofed traffic and silently drops.
+          dhcpV4Config.UseGateway = false;
           linkConfig.MTUBytes = den.networks.Storage.mtu;
         };
         "30-k3s" = {
           matchConfig.Name = "k3s";
           networkConfig.DHCP = "yes";
+          # See "30-storage" above. Cilium's own device (`devices = [ "k3s" ]`
+          # in modules/kubernetes/cilium/default.nix) and egress gateway
+          # (`interface: k3s` in cilium/egress-gateway.nix) are both
+          # hardcoded to this interface already, independent of the host's
+          # default route — pod traffic is unaffected by removing this.
+          dhcpV4Config.UseGateway = false;
           linkConfig.MTUBytes = 1500;
         };
       };
