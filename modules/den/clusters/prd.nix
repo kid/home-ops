@@ -18,10 +18,10 @@
 }:
 let
   # host 1 = rb5009's own address on each VLAN (matches rb5009.nix's own
-  # `cidrHostPrefixed net 1` for its Management address) — external-dns and
-  # the mikrotik-exporter scrape target both talk to the router itself, not
-  # crs320. The forward-chain mikrotik-exporter rule below is the only one
-  # that actually targets crs320's address.
+  # `cidrHostPrefixed net 1` for its Management address) — the
+  # mikrotik-exporter scrape target talks to the router itself, not crs320.
+  # The forward-chain rule below is the only one that actually targets
+  # crs320's address.
   rb5009MgmtAddr = config.den.environments.prd.networks.Management.methods.host 1;
   crs320MgmtAddr = config.den.devices.crs320.address;
 
@@ -87,6 +87,7 @@ in
     cilium
     cilium-bgp
     cilium-egress-gateway
+    cilium-host-firewall
     cert-manager
     trust-manager
     coredns
@@ -117,14 +118,7 @@ in
       }
     ];
 
-  # Router-access rules this cluster's own infra needs (external-dns/
-  # mikrotik-exporter reaching crs320's management API, LB CIDR routing) —
-  # a `firewall` quirk fragment (den.quirks.firewall), collected onto rb5009
-  # by modules/den/policies/pipes.nix's routeros-device-collect-firewall and merged
-  # by modules/den/aspects/routeros/firewall.nix into the K3s network's rule
-  # lists. Nothing here is specific to den.aspects.prd — any other cluster
-  # aspect (cilium, coredns, a future one) could contribute its own
-  # `firewall` fragment the same way.
+  # Rules with no single-app owner: mikrotik-exporter isn't its own aspect here, and the LB CIDR rule is cluster-wide.
   den.aspects.prd.firewall = { cluster, ... }: [
     {
       inherit (cluster) network;
@@ -132,23 +126,9 @@ in
         {
           action = "accept";
           dst_address = rb5009MgmtAddr;
-          dst_port = 443;
-          protocol = "tcp";
-          comment = "Allow access to Management from K3s for external-dns";
-        }
-        {
-          action = "accept";
-          dst_address = rb5009MgmtAddr;
           dst_port = 8729;
           protocol = "tcp";
           comment = "Allow access to Management from K3s for mikrotik-exporter";
-        }
-        {
-          action = "accept";
-          dst_address = (builtins.head cluster.bgp.peers).ip;
-          dst_port = 179;
-          protocol = "tcp";
-          comment = "Allow BGP from k3s nodes to rb5009 for Cilium";
         }
       ];
       forward = [

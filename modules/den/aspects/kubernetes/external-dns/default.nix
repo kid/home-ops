@@ -1,8 +1,27 @@
 { config, ... }:
 let
   routerosEndpoint = config.den.routerosDevices.rb5009.routerosEndpoint;
+  # host 1 = rb5009's own address on each VLAN (matches rb5009.nix's own
+  # `cidrHostPrefixed net 1` for its Management address).
+  rb5009MgmtAddr = config.den.environments.prd.networks.Management.methods.host 1;
 in
 {
+  # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
+  den.aspects.kubernetes.external-dns.firewall = { cluster, ... }: [
+    {
+      inherit (cluster) network;
+      input = [
+        {
+          action = "accept";
+          dst_address = rb5009MgmtAddr;
+          dst_port = 443;
+          protocol = "tcp";
+          comment = "Allow access to Management from K3s for external-dns";
+        }
+      ];
+    }
+  ];
+
   den.aspects.kubernetes.external-dns.k8s-manifests =
     { charts, cluster, ... }:
     let

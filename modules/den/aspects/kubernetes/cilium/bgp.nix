@@ -10,6 +10,22 @@
 # value and modules/den/aspects/routeros/bgp.nix (the RouterOS side of this
 # same peering) for BGP sessions to actually come up.
 _: {
+  # RouterOS access this BGP peering needs — see modules/den/quirks/firewall.nix.
+  den.aspects.kubernetes.cilium-bgp.firewall = { cluster, ... }: [
+    {
+      inherit (cluster) network;
+      input = [
+        {
+          action = "accept";
+          dst_address = (builtins.head cluster.bgp.peers).ip;
+          dst_port = 179;
+          protocol = "tcp";
+          comment = "Allow BGP from k3s nodes to rb5009 for Cilium";
+        }
+      ];
+    }
+  ];
+
   den.aspects.kubernetes.cilium-bgp.k8s-manifests =
     { cluster, ... }:
     let
