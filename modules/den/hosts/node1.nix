@@ -85,9 +85,7 @@
         "30-k3s" = {
           matchConfig.Name = "k3s";
           networkConfig.DHCP = "yes";
-          # Same as "30-storage"; Cilium's device/egress-gateway are already
-          # hardcoded to k3s, independent of the default route.
-          dhcpV4Config.UseGateway = false;
+          dhcpV4Config.RouteMetric = 2048;
           linkConfig.MTUBytes = 1500;
         };
       };
