@@ -29,17 +29,33 @@
 # CRD version before merging a bump here, don't take it on trust.
 _: {
   den.aspects.kubernetes.gateway-api-crds.k8s-manifests =
-    { pkgs, ... }:
+    { pkgs, generators, ... }:
+    let
+      gatewayApiSrc = pkgs.fetchFromGitHub {
+        owner = "kubernetes-sigs";
+        repo = "gateway-api";
+        # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
+        rev = "v1.6.1";
+        hash = "sha256-Hq3vaCQRSRFjya76qRYw4/BcH00Wu5wE6UQACrjKJSk=";
+      };
+    in
     {
       applications.gateway-api-crds.kustomize.applications.gateway-api-crds.kustomization = {
-        src = pkgs.fetchFromGitHub {
-          owner = "kubernetes-sigs";
-          repo = "gateway-api";
-          # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
-          rev = "v1.6.1";
-          hash = "sha256-Hq3vaCQRSRFjya76qRYw4/BcH00Wu5wE6UQACrjKJSk=";
-        };
+        src = gatewayApiSrc;
         path = "config/crd";
       };
+
+      nixidy.applicationImports = [
+        (generators.fromCRDModule {
+          name = "gateway-api";
+          src = gatewayApiSrc;
+          crdFiles = [
+            "config/crd/standard/gateway.networking.k8s.io_gateways.yaml"
+            "config/crd/standard/gateway.networking.k8s.io_httproutes.yaml"
+            "config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml"
+            "config/crd/standard/gateway.networking.k8s.io_backendtlspolicies.yaml"
+          ];
+        })
+      ];
     };
 }

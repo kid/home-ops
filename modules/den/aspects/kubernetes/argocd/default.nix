@@ -1,5 +1,5 @@
 # ArgoCD, sourced as static manifests (argoproj/argo-cd's own
-# manifests/core-install kustomization) rather than a Helm chart — same
+# manifests/cluster-install kustomization) rather than a Helm chart — same
 # approach nixopslab's modules/den/aspects/kubernetes/argocd/default.nix uses, ported
 # verbatim here. Once applied (modules/den/aspects/services/k3s/bootstrap.nix),
 # ArgoCD syncs manifests/prd/bootstrap.yaml and takes over managing itself
@@ -9,65 +9,139 @@ let
   inherit (lib) types mkOption mkIf;
 in
 {
-  den.aspects.kubernetes.argocd = {
-    service-domains = [ "argocd" ];
-
-    k8s-manifests =
-      {
-        config,
-        lib,
-        pkgs,
-        ...
-      }:
-      {
-        options.services.argocd = with lib; {
-          enable = mkOption {
-            type = types.bool;
-            default = true;
-          };
-
-          values = mkOption {
-            type = types.attrsOf types.anything;
-            default = { };
-          };
+  den.aspects.kubernetes.argocd.k8s-manifests =
+    {
+      config,
+      lib,
+      pkgs,
+      cluster,
+      ...
+    }:
+    {
+      options.services.argocd = with lib; {
+        enable = mkOption {
+          type = types.bool;
+          default = true;
         };
 
-        config = mkIf config.services.argocd.enable {
-          applications.argocd = {
+        values = mkOption {
+          type = types.attrsOf types.anything;
+          default = { };
+        };
+      };
+
+      config = mkIf config.services.argocd.enable {
+        applications.argocd = {
+          namespace = "argocd";
+          createNamespace = true;
+
+          kustomize.applications.argocd = {
             namespace = "argocd";
-            createNamespace = true;
-
-            kustomize.applications.argocd = {
-              namespace = "argocd";
-              kustomization = {
-                src = pkgs.fetchFromGitHub {
-                  owner = "argoproj";
-                  repo = "argo-cd";
-                  # renovate: datasource=github-releases depName=argoproj/argo-cd
-                  rev = "v3.4.4";
-                  hash = "sha256-I3udVhmPpOA2Lf1mkJqG+d+mGpfM16HIKBkEnTiAw0c=";
-                };
-                path = "manifests/core-install";
+            kustomization = {
+              src = pkgs.fetchFromGitHub {
+                owner = "argoproj";
+                repo = "argo-cd";
+                # renovate: datasource=github-releases depName=argoproj/argo-cd
+                rev = "v3.4.4";
+                hash = "sha256-I3udVhmPpOA2Lf1mkJqG+d+mGpfM16HIKBkEnTiAw0c=";
               };
+              path = "manifests/cluster-install";
             };
+          };
 
-            resources.appProjects.default.spec = {
-              clusterResourceWhitelist = [
-                {
-                  group = "*";
-                  kind = "*";
-                }
-              ];
-              destinations = [
-                {
-                  namespace = "*";
-                  server = "*";
-                }
-              ];
-              sourceRepos = [ "*" ];
+          resources.appProjects.default.spec = {
+            clusterResourceWhitelist = [
+              {
+                group = "*";
+                kind = "*";
+              }
+            ];
+            destinations = [
+              {
+                namespace = "*";
+                server = "*";
+              }
+            ];
+            sourceRepos = [ "*" ];
+          };
+
+          # Replaces argocd-server's ephemeral self-signed cert with one off Hubble's CA.
+          resources.certificates.argocd-server-tls.spec = {
+            secretName = "argocd-server-tls";
+            dnsNames = [
+              "argocd-server"
+              "argocd-server.argocd.svc.cluster.local"
+            ];
+            issuerRef = {
+              name = "hubble-ca-issuer";
+              kind = "ClusterIssuer";
+              group = "cert-manager.io";
             };
+          };
+
+          # internal-ca ConfigMap comes from trust-manager/default.nix's Bundle.
+          resources.backendTLSPolicies.argocd-server.spec = {
+            targetRefs = [
+              {
+                kind = "Service";
+                name = "argocd-server";
+                group = "";
+              }
+            ];
+            validation = {
+              hostname = "argocd-server.argocd.svc.cluster.local";
+              caCertificateRefs = [
+                {
+                  kind = "ConfigMap";
+                  name = "internal-ca";
+                  group = "";
+                }
+              ];
+            };
+          };
+
+          resources.httpRoutes.argocd.spec = {
+            parentRefs = [
+              {
+                name = "apps";
+                namespace = "gateway";
+                sectionName = "https";
+              }
+            ];
+            hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
+            rules = [
+              {
+                backendRefs = [
+                  {
+                    name = "argocd-server";
+                    port = 443;
+                  }
+                ];
+              }
+            ];
+          };
+
+          resources.grpcRoutes.argocd-grpc.spec = {
+            parentRefs = [
+              {
+                name = "apps";
+                namespace = "gateway";
+                sectionName = "https";
+              }
+            ];
+            hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
+            rules = [
+              {
+                backendRefs = [
+                  {
+                    name = "argocd-server";
+                    port = 443;
+                  }
+                ];
+              }
+            ];
           };
         };
       };
-  };
+    };
 }

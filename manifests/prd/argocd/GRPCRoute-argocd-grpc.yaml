@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GRPCRoute
+metadata:
+  name: argocd-grpc
+  namespace: argocd
+spec:
+  hostnames:
+    - argocd.kidibox.net
+  parentRefs:
+    - name: apps
+      namespace: gateway
+      sectionName: https
+  rules:
+    - backendRefs:
+        - name: argocd-server
+          port: 443
