@@ -1,6 +1,6 @@
 # prd k3s cluster instance, and the VLAN it runs on.
 #
-# The VLAN declaration lives here rather than in modules/den/networks/prd.nix —
+# The VLAN declaration lives here rather than in modules/den/networks.nix —
 # proving den.networks entries are collectible from any entity, not just a
 # flat registry, per that module's own original design intent. This is a
 # plain Nix module-merge (den.networks.<name> can be set from any file), not

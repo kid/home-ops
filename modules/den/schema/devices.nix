@@ -1,6 +1,6 @@
 # Network client-device registry — a Proxmox host, a camera, a vacuum robot,
 # ... anything with a known MAC/host-number/VLAN, used to derive
-# `dhcp_static_leases` dynamically (modules/network/_ros-lib.nix's
+# `dhcp_static_leases` dynamically (modules/den/batteries/terragrunt/_ros-lib.nix's
 # `staticLeasesByNetwork`, wired in modules/den/routerosDevices/rb5009.nix).
 #
 # Deliberately flat/non-entity — no isEntity, no resolve.to/scope-tree walk

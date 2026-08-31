@@ -15,7 +15,7 @@
   ...
 }:
 let
-  rosLib = import ../../network/_ros-lib.nix { inherit lib; };
+  rosLib = import ../batteries/terragrunt/_ros-lib.nix { inherit lib; };
   inherit (rosLib)
     toVlanInput
     toFirewallVlanInput
@@ -236,7 +236,7 @@ in
             # Only genuinely device/topology-specific rules stay here — the
             # per-network "Allow WAN" rule (den.networks.<name>.internetAccess)
             # and K3s's cluster-specific rules (den.aspects.prd.firewall, in
-            # modules/den/clusters/prd.nix) now arrive via the `firewall` quirk,
+            # modules/den/clusters.nix) now arrive via the `firewall` quirk,
             # merged in by modules/den/aspects/routeros/firewall.nix.
             vlans_input_rules = {
               "${networks.Trusted.name}" = [

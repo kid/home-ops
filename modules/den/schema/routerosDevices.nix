@@ -6,7 +6,7 @@
 # it. den.routerosDevices.<name>.includes = [ ros-base ros-capsman ... ] (via
 # the .aspect field below, looked up from den.aspects.<name> — same
 # convention clusters.nix already uses) contributes `terragrunt-stacks`
-# class content, collected by modules/den/batteries/terragrunt-stacks.nix.
+# class content, collected by modules/den/batteries/terragrunt/terragrunt-stacks.nix.
 #
 # Not to be confused with `den.devices` (modules/den/schema/devices.nix) — a
 # separate, unrelated registry of network *client* devices (a Proxmox host, a
