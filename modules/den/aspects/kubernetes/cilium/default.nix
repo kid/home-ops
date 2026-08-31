@@ -5,9 +5,7 @@ _: {
   # cilium-agent health (hostPort 9879), Hubble gRPC (4244), and
   # cilium-envoy (9964) all bind on the host itself — required once
   # cilium.hostFirewall.enabled flips on, or Cilium can end up blocking its
-  # own control-plane traffic. Collected by modules/den/policies/
-  # firewall-ports.nix onto this cluster, same-scope (this aspect already
-  # executes in the cluster's own scope via prd.nix's includes chain).
+  # own control-plane traffic.
   den.aspects.kubernetes.cilium.firewall-ports = _: [
     {
       port = 9879;

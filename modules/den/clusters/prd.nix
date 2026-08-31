@@ -124,9 +124,7 @@ in
   # (den.quirks.firewall), collected onto rb5009 by modules/den/policies/
   # pipes.nix's routeros-device-collect-firewall and merged by
   # modules/den/aspects/routeros/firewall.nix into the K3s network's rule
-  # lists. external-dns's and cilium-bgp's own rules moved to their own
-  # aspects (modules/den/aspects/kubernetes/external-dns/default.nix,
-  # modules/den/aspects/kubernetes/cilium/bgp.nix) — declare at the source.
+  # lists.
   den.aspects.prd.firewall = { cluster, ... }: [
     {
       inherit (cluster) network;

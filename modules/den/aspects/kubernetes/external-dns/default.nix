@@ -10,8 +10,7 @@ in
   # a `firewall` quirk fragment (den.quirks.firewall), collected onto
   # rb5009 by modules/den/policies/pipes.nix's routeros-device-collect-firewall
   # and merged by modules/den/aspects/routeros/firewall.nix into the K3s
-  # network's rule lists. Moved here from modules/den/clusters/prd.nix's own
-  # catch-all fragment, following the "declare at the source" principle.
+  # network's rule lists.
   den.aspects.kubernetes.external-dns.firewall = { cluster, ... }: [
     {
       inherit (cluster) network;

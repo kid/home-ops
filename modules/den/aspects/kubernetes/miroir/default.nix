@@ -15,8 +15,7 @@
 # follow-up once a 2nd node exists, not a redo.
 _: {
   # miroir-agent runs hostNetwork: true with its own port 9810 — required
-  # once cilium.hostFirewall.enabled flips on. Collected by
-  # modules/den/policies/firewall-ports.nix onto this cluster, same-scope.
+  # once cilium.hostFirewall.enabled flips on.
   den.aspects.kubernetes.miroir.firewall-ports = _: [
     {
       port = 9810;

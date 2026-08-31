@@ -1,40 +1,25 @@
 # Renders one CiliumClusterwideNetworkPolicy selecting every node
 # (nodeSelector, not podSelector/endpointSelector — the CCNP shape Cilium's
 # host firewall uses) from every `firewall-ports` fragment collected onto
-# this cluster (modules/den/policies/firewall-ports.nix's
-# cluster-collect-firewall-ports pipe) — cluster-scoped Kubernetes app
-# aspects only (e.g. cilium's own hostNetwork ports); see
-# modules/den/quirks/firewall-ports.nix for why NixOS host-level daemon
-# ports (SSH, apiserver, kubelet) aren't collected this way and are instead
-# declared directly below in this same file.
+# this cluster (modules/den/policies/firewall-ports.nix) — cluster-scoped
+# Kubernetes app aspects only. SSH/apiserver/kubelet are declared directly
+# below instead, since den doesn't reliably deliver a host-scope-emitted
+# quirk to a cluster-scope consumer (see modules/den/quirks/firewall-ports.nix).
 #
-# `firewall-ports` is consumed here as a plain k8s-manifests function arg —
-# NOT threaded through an intermediate den.policies.* function — because
-# den only reliably resolves quirk args inside class-content functions
-# (confirmed against den's own test suite, templates/ci/modules/
-# public-api/pipes.nix's test-pipe-discriminator).
+# Cilium's host firewall does not auto-exempt Cilium's own control-plane
+# traffic once enabled — every port here, including Cilium's own (see
+# default.nix's firewall-ports fragment), is genuinely required.
 #
-# Raw YAML via applications.cilium.yamls, matching this repo's existing
-# convention for every other Cilium CR (bgp.nix, egress-gateway.nix) — no
-# typed nixidy CRD generator exists for any Cilium-native CRD here. Built as
-# a plain attrset and serialized with builtins.toJSON (valid YAML) rather
-# than hand-templated multi-line YAML — bgp.nix already uses this for its
-# `peers` list; a nested list-of-mappings structure like `ingress` needs it
-# even more, since hand-indented YAML silently produces a structurally
-# wrong document (toPorts ends up a sibling of ingress instead of nested in
-# it) the moment indentation is off by one column.
-#
-# Cilium's host firewall does NOT auto-exempt Cilium's own control-plane
-# traffic once enabled (confirmed against docs.cilium.io/.../host-firewall/
-# and .../security/policy/host/) — every port here is genuinely required,
-# not defensive over-caution. See modules/den/aspects/kubernetes/cilium/
-# default.nix's own firewall-ports fragment for Cilium's own ports.
+# Built as a plain attrset and serialized with builtins.toJSON (valid YAML)
+# rather than hand-templated multi-line YAML — bgp.nix already uses this
+# for its `peers` list; a nested list-of-mappings structure like `ingress`
+# needs it even more, since hand-indented YAML silently produces a
+# structurally wrong document (toPorts ends up a sibling of ingress instead
+# of nested in it) the moment indentation is off by one column.
 #
 # This CR is only enforced once cilium.hostFirewall.enabled is set (see
 # default.nix's `devices`/`hostFirewall` values) — until then it's rendered
-# and applied but inert, which is deliberate: it lets the whole pipeline
-# (this file, write-manifests, the port inventory) be validated with zero
-# enforcement risk before host-firewall enforcement is ever turned on.
+# and applied but inert.
 { lib, ... }:
 {
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
@@ -43,9 +28,6 @@
       ...
     }:
     let
-      # SSH/apiserver/kubelet: same-scope declaration (see this file's top
-      # comment) — not co-located with ssh.nix/k3s.nix, but same mechanism
-      # everything else here uses.
       hostPorts = [
         {
           port = 22;
