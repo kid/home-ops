@@ -166,13 +166,6 @@ inputs = {
     K3s = [
       {
         action      = "accept"
-        comment     = "Allow access to Management from K3s for external-dns"
-        dst_address = "10.99.0.1"
-        dst_port    = 443
-        protocol    = "tcp"
-      },
-      {
-        action      = "accept"
         comment     = "Allow access to Management from K3s for mikrotik-exporter"
         dst_address = "10.99.0.1"
         dst_port    = 8729
@@ -183,6 +176,13 @@ inputs = {
         comment     = "Allow BGP from k3s nodes to rb5009 for Cilium"
         dst_address = "10.0.40.1"
         dst_port    = 179
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to Management from K3s for external-dns"
+        dst_address = "10.99.0.1"
+        dst_port    = 443
         protocol    = "tcp"
       },
     ]
