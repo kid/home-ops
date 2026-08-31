@@ -59,7 +59,7 @@ _: {
             bpf.masquerade = true;
             egressGateway.enabled = true;
 
-            devices = [ "k3s" ];
+            hostFirewall.enabled = true;
 
             bgpControlPlane.enabled = true;
 
