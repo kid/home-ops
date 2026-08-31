@@ -118,13 +118,7 @@ in
       }
     ];
 
-  # Router-access rules with no natural single-app owner (mikrotik-exporter
-  # isn't its own aspect in this repo; the LB CIDR forward rule is a
-  # cluster-wide concern, not tied to one app) — a `firewall` quirk fragment
-  # (den.quirks.firewall), collected onto rb5009 by modules/den/policies/
-  # pipes.nix's routeros-device-collect-firewall and merged by
-  # modules/den/aspects/routeros/firewall.nix into the K3s network's rule
-  # lists.
+  # Rules with no single-app owner: mikrotik-exporter isn't its own aspect here, and the LB CIDR rule is cluster-wide.
   den.aspects.prd.firewall = { cluster, ... }: [
     {
       inherit (cluster) network;

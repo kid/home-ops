@@ -6,11 +6,7 @@ let
   rb5009MgmtAddr = config.den.environments.prd.networks.Management.methods.host 1;
 in
 {
-  # Router-access rule this app needs (talking to rb5009's Management API) —
-  # a `firewall` quirk fragment (den.quirks.firewall), collected onto
-  # rb5009 by modules/den/policies/pipes.nix's routeros-device-collect-firewall
-  # and merged by modules/den/aspects/routeros/firewall.nix into the K3s
-  # network's rule lists.
+  # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
   den.aspects.kubernetes.external-dns.firewall = { cluster, ... }: [
     {
       inherit (cluster) network;

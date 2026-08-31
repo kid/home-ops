@@ -14,8 +14,7 @@
 # host already (see miroir.nix) so a replicated class is a small
 # follow-up once a 2nd node exists, not a redo.
 _: {
-  # miroir-agent runs hostNetwork: true with its own port 9810 — required
-  # once cilium.hostFirewall.enabled flips on.
+  # miroir-agent runs hostNetwork: true with its own port 9810.
   den.aspects.kubernetes.miroir.firewall-ports = _: [
     {
       port = 9810;

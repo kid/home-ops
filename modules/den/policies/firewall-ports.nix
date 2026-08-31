@@ -1,10 +1,4 @@
-# Collects the `firewall-ports` quirk (den.quirks.firewall-ports — port
-# fragments emitted by cluster-scoped Kubernetes app aspects, see
-# modules/den/quirks/firewall-ports.nix) onto every cluster, exposed as the
-# `firewall-ports` list arg to any k8s-manifests content function that names
-# it (currently only modules/den/aspects/kubernetes/cilium/host-firewall.nix).
-# Mirrors modules/den/policies/pipes.nix's routeros-device-collect-bgp
-# (single collectAll stage).
+# Collects den.quirks.firewall-ports onto every cluster, mirroring pipes.nix's routeros-device-collect-bgp.
 { den, ... }:
 let
   inherit (den.lib.policy) pipe;
@@ -12,9 +6,7 @@ in
 {
   den.policies.cluster-collect-firewall-ports = _: [
     (pipe.from "firewall-ports" [
-      # Predicate arg name doubles as the entity-kind filter — see
-      # pipes.nix's own comment on this same gotcha. A bare `_: true`
-      # matches nothing.
+      # A bare `_: true` predicate matches nothing — the arg name is the entity-kind filter.
       (pipe.collectAll ({ cluster, ... }: cluster != null))
     ])
   ];

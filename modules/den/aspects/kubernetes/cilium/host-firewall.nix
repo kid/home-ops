@@ -1,25 +1,4 @@
-# Renders one CiliumClusterwideNetworkPolicy selecting every node
-# (nodeSelector, not podSelector/endpointSelector — the CCNP shape Cilium's
-# host firewall uses) from every `firewall-ports` fragment collected onto
-# this cluster (modules/den/policies/firewall-ports.nix) — cluster-scoped
-# Kubernetes app aspects only. SSH/apiserver/kubelet are declared directly
-# below instead, since den doesn't reliably deliver a host-scope-emitted
-# quirk to a cluster-scope consumer (see modules/den/quirks/firewall-ports.nix).
-#
-# Cilium's host firewall does not auto-exempt Cilium's own control-plane
-# traffic once enabled — every port here, including Cilium's own (see
-# default.nix's firewall-ports fragment), is genuinely required.
-#
-# Built as a plain attrset and serialized with builtins.toJSON (valid YAML)
-# rather than hand-templated multi-line YAML — bgp.nix already uses this
-# for its `peers` list; a nested list-of-mappings structure like `ingress`
-# needs it even more, since hand-indented YAML silently produces a
-# structurally wrong document (toPorts ends up a sibling of ingress instead
-# of nested in it) the moment indentation is off by one column.
-#
-# This CR is only enforced once cilium.hostFirewall.enabled is set (see
-# default.nix's `devices`/`hostFirewall` values) — until then it's rendered
-# and applied but inert.
+# builtins.toJSON (valid YAML) avoids hand-indented YAML silently nesting `ingress`/`toPorts` wrong.
 { lib, ... }:
 {
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
@@ -28,6 +7,7 @@
       ...
     }:
     let
+      # Declared here, not ssh.nix/k3s.nix: a host-scope quirk can't reach this cluster-scope consumer.
       hostPorts = [
         {
           port = 22;
@@ -69,6 +49,7 @@
         kind = "CiliumClusterwideNetworkPolicy";
         metadata.name = "node-host-firewall";
         spec = {
+          # nodeSelector, not podSelector/endpointSelector — the shape Cilium's host firewall uses.
           nodeSelector.matchLabels."kubernetes.io/os" = "linux";
           inherit ingress;
         };

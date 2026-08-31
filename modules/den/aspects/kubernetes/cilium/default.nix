@@ -2,10 +2,7 @@
 # match modules/den/aspects/services/k3s/k3s.nix's k3s flags
 # (--flannel-backend=none --disable-network-policy --disable-kube-proxy).
 _: {
-  # cilium-agent health (hostPort 9879), Hubble gRPC (4244), and
-  # cilium-envoy (9964) all bind on the host itself — required once
-  # cilium.hostFirewall.enabled flips on, or Cilium can end up blocking its
-  # own control-plane traffic.
+  # cilium-agent health (9879), Hubble gRPC (4244), and cilium-envoy (9964) bind on the host itself.
   den.aspects.kubernetes.cilium.firewall-ports = _: [
     {
       port = 9879;
