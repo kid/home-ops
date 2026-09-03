@@ -66,6 +66,9 @@ _: {
             # Ingress duty, replacing traefik. Requires gateway-api-crds.nix's
             # CRDs applied first (see bootstrap.nix's wave ordering).
             gatewayAPI.enabled = true;
+            # Chart default "auto" needs a live cluster to detect; nixidy
+            # renders offline, so the GatewayClass would never appear.
+            gatewayAPI.gatewayClass.create = "true";
 
             operator.replicas = 1;
 
