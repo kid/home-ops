@@ -24,7 +24,6 @@
           };
         };
 
-        # gatewayClassName "cilium" is auto-provisioned by Cilium, not declared here.
         resources.gateways.apps.spec = {
           gatewayClassName = "cilium";
           listeners = [
@@ -35,7 +34,13 @@
               hostname = "*.${cluster.domain}";
               tls = {
                 mode = "Terminate";
-                certificateRefs = [ { name = "apps-tls"; } ];
+                certificateRefs = [
+                  {
+                    group = "";
+                    kind = "Secret";
+                    name = "apps-tls";
+                  }
+                ];
               };
               allowedRoutes.namespaces.from = "All";
             }

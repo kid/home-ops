@@ -15,5 +15,7 @@ spec:
       protocol: HTTPS
       tls:
         certificateRefs:
-          - name: apps-tls
+          - group: ""
+            kind: Secret
+            name: apps-tls
         mode: Terminate
