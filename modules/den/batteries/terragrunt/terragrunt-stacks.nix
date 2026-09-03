@@ -101,8 +101,8 @@
   # Central account config) — collected into
   # config.flake.environmentTerragruntStacks.<environment>.<stack> instead,
   # rendered by modules/den/batteries/terragrunt/devshell.nix to
-  # tf-stacks/<environment>/<stack>/terragrunt.hcl (no routerosDevice, so no
-  # network/<device>/ path segment and no per-device dependsOn resolution).
+  # tf-stacks/<environment>/network/<stack>/terragrunt.hcl (no routerosDevice,
+  # so no per-device dependsOn resolution).
   den.policies.environment-to-terragrunt =
     { environment, ... }:
     [
