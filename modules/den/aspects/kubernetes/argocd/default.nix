@@ -65,6 +65,10 @@ in
             sourceRepos = [ "*" ];
           };
 
+          # Pairs with syncOptions.serverSideApply (nixidy-defaults.nix): diffs
+          # against the real server-applied result, not a client-side guess.
+          resources.configMaps.argocd-cmd-params-cm.data."controller.diff.server.side" = "true";
+
           # Replaces argocd-server's ephemeral self-signed cert with one off Hubble's CA.
           resources.certificates.argocd-server-tls.spec = {
             secretName = "argocd-server-tls";
