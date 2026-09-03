@@ -24,11 +24,6 @@ in
     # den.aspects.prd is shared with the "prd" cluster entity (clusters.nix
     # sets den.aspects.prd.includes/.firewall/.bgp too — same instance name,
     # disambiguated by terragrunt-stacks content class, not aspect key).
-    # zerotier-network isn't RouterOS-device config (see
-    # modules/den/aspects/zerotier/network.nix), so it's instantiated here,
-    # on the environment, via den.policies.environment-to-terragrunt
-    # (modules/den/batteries/terragrunt/terragrunt-stacks.nix) rather than
-    # on a routerosDevice.
     den.aspects.prd = {
       includes = [ den.aspects.zerotierNetwork ];
 
@@ -38,20 +33,14 @@ in
           op_vault = "home-ops";
           op_item_zerotier_central = "ZeroTier Central - API Token";
           network_name = "home-lan";
-          # TODO: fill in from `identity_public` after rb5009's zerotier
-          # stack (modules/den/routerosDevices/rb5009.nix) has been applied
-          # once — see the plan's manual bootstrap step.
+          # TODO: rb5009's `identity_public` output, once its zerotier stack
+          # (modules/den/routerosDevices/rb5009.nix) is applied.
           router_member_id = "TODO-rb5009-zerotier-identity";
-          # Matches modules/den/routerosDevices/rb5009.nix's zerotierIp —
-          # outside this environment's own 10.0.0.0/9 supernet, so it can't
-          # collide with any VLAN.
-          router_ip = "10.147.20.1";
+          router_ip = "10.147.20.1"; # matches rb5009.nix's zerotierIp
           assignment_pool = {
             start = "10.147.20.2";
             end = "10.147.20.254";
           };
-          # Split-tunnel: only these three networks are pushed to ZeroTier
-          # clients, matching rb5009's firewall forward-rule scope.
           routes = map (n: { target = environment.networks.${n}.cidr; }) [
             "Trusted"
             "Servers"

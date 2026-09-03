@@ -75,11 +75,8 @@ let
       inputs = ${toValue leaf.inputs}
     '';
 
-  # Environment-scoped stacks (config.flake.environmentTerragruntStacks,
-  # from den.policies.environment-to-terragrunt in terragrunt-stacks.nix) —
-  # not RouterOS-device config, so no network/<device>/ path segment and no
-  # cross-device `dependencies` resolution; renderLeaf's device-name
-  # parameter is unused, so it's reused unchanged.
+  # renderLeaf's device-name parameter is unused, so it's reused unchanged
+  # below for environment-scoped stacks too.
   environmentLeafRelPath = envName: stack: "tf-stacks/${envName}/${stack}/terragrunt.hcl";
 
   allLeaves =

@@ -40,17 +40,11 @@ let
 
   cidrHostPrefixed = net: hostnum: "${net.methods.host hostnum}/${toString net.prefix}";
 
-  # ZeroTier remote-access overlay — not a den.networks VLAN, so it's not
-  # part of `networks`/`routedNetworks` above. Registered as a pseudo-vlan
-  # in the firewall stack's `vlans` below purely to get a
-  # `input-zerotier1`/`forward-zerotier1` jump-chain slot from
-  # terragrunt-infra-catalog's ros-firewall module (its `vlans` entries only
-  # need {name, vlan_id, address} — vlan_id is unused by that module's
-  # rule-generation logic, so it's a harmless placeholder here). `address`
-  # is a fixed IP handed out via a matching `zerotier_member.ip_assignments`
-  # in the zerotier-network stack (modules/den/environments.nix), outside
-  # this device's own CIDR arithmetic (10.0.0.0/9) so it can't collide with
-  # any VLAN.
+  # Not a den.networks VLAN — registered as a pseudo-vlan in the firewall
+  # stack's `vlans` below anyway, purely to get ros-firewall's
+  # input-/forward-<name> jump-chain slot (vlan_id there is unused, just a
+  # required placeholder). address is a fixed IP outside 10.0.0.0/9 so it
+  # can't collide with a real VLAN.
   zerotierInterfaceName = "zerotier1";
   zerotierIp = "10.147.20.1";
 
@@ -249,7 +243,7 @@ in
             vlans = (lib.mapAttrs (_: toFirewallVlanInput) routedNetworks) // {
               ${zerotierInterfaceName} = {
                 name = zerotierInterfaceName;
-                vlan_id = 0; # not a real VLAN — unused by ros-firewall's rule logic
+                vlan_id = 0;
                 address = zerotierIp;
               };
             };
@@ -298,8 +292,7 @@ in
                 }
               ];
 
-              # Split-tunnel remote access: only these three networks are
-              # reachable from ZeroTier clients (not the IoT/Guest VLANs).
+              # Not IoT/Guest — split-tunnel scope stays to the trusted VLANs.
               ${zerotierInterfaceName} =
                 map
                   (netName: {
@@ -339,11 +332,6 @@ in
         inputs = sharedInputs // commonInputs;
       };
 
-      # Split-tunnel remote access: joins the ZeroTier network created by
-      # the zerotier-network stack (modules/den/environments.nix). See that
-      # stack for the network ID this device joins — kept out of Nix (not
-      # computed) since it's an opaque ID handed out by ZeroTier Central,
-      # not derived from anything else here.
       zerotier = {
         dependsOn = [ "rb5009" ];
         inputs =
@@ -352,8 +340,7 @@ in
           // {
             instance_name = zerotierInterfaceName;
             interface_name = zerotierInterfaceName;
-            # TODO: fill in once the network exists in ZeroTier Central
-            # (modules/den/environments.nix's zerotier-network stack).
+            # TODO: opaque ID from ZeroTier Central, once that network exists.
             network_id = "TODO-zerotier-network-id";
             allow_default = false;
             allow_managed = true;

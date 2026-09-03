@@ -1,12 +1,6 @@
-# "zerotier-network" environment-scoped terragrunt-stack aspect — not a
-# RouterOS aspect (lives outside modules/den/aspects/routeros/ on purpose):
-# this is account-wide ZeroTier Central SaaS config (network/routes/member
-# authorization), not RouterOS device config, so it's instantiated on the
-# `environment` entity via den.policies.environment-to-terragrunt
-# (modules/den/batteries/terragrunt/terragrunt-stacks.nix) rather than on a
-# routerosDevice. See modules/den/environments.nix for the "prd" instance
-# data and modules/den/aspects/routeros/zerotier.nix for the RouterOS side
-# that joins the network this creates.
+# Account-wide ZeroTier Central config, not RouterOS device config — lives
+# outside aspects/routeros/ and is instantiated on the `environment` entity
+# (den.policies.environment-to-terragrunt) rather than a routerosDevice.
 _: {
   den.aspects.zerotierNetwork = {
     "terragrunt-stacks" =
