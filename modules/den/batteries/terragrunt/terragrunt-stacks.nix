@@ -94,4 +94,57 @@
     ];
 
   den.schema.routerosDevice.includes = [ den.policies.routeros-device-to-terragrunt ];
+
+  # environment-to-terragrunt: same mechanism as routeros-device-to-terragrunt
+  # above, but for terragrunt-stacks content that isn't RouterOS-device
+  # config at all (e.g. modules/den/aspects/zerotier/network.nix's ZeroTier
+  # Central account config) — collected into
+  # config.flake.environmentTerragruntStacks.<environment>.<stack> instead,
+  # rendered by modules/den/batteries/terragrunt/devshell.nix to
+  # tf-stacks/<environment>/network/<stack>/terragrunt.hcl (no routerosDevice,
+  # so no per-device dependsOn resolution).
+  den.policies.environment-to-terragrunt =
+    { environment, ... }:
+    [
+      (den.lib.policy.instantiate {
+        name = "${environment.name}-terragrunt";
+        class = "terragrunt-stacks";
+        instantiate =
+          { modules, ... }:
+          lib.listToAttrs (
+            map
+              (
+                m:
+                let
+                  evaluated = lib.evalModules {
+                    modules = [
+                      (builtins.head m.imports)
+                      { _module.freeformType = lib.types.attrsOf lib.types.raw; }
+                    ];
+                    specialArgs = {
+                      inherit environment;
+                    };
+                  };
+                  content = evaluated.config;
+                in
+                lib.nameValuePair content.stack (removeAttrs content [ "stack" ])
+              )
+              (
+                # Unlike routerosDevice (a scope-tree leaf), `environment` is an
+                # ancestor of routerosDevice/network/cluster — the "terragrunt-stacks"
+                # class collection rolls up their content too, keyed
+                # "terragrunt-stacks@<aspect>/{<entityKind>=<name>}" (confirmed
+                # empirically). Keep only modules genuinely sourced from this
+                # environment's own aspect, not re-collected descendant content.
+                builtins.filter (m: m ? key && lib.hasSuffix "{environment=${environment.name}}" m.key) modules
+              )
+          );
+        intoAttr = [
+          "environmentTerragruntStacks"
+          environment.name
+        ];
+      })
+    ];
+
+  den.schema.environment.includes = [ den.policies.environment-to-terragrunt ];
 }
