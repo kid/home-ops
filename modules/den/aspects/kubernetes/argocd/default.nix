@@ -107,6 +107,8 @@ in
           resources.httpRoutes.argocd.spec = {
             parentRefs = [
               {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
                 name = "apps";
                 namespace = "gateway";
                 sectionName = "https";
@@ -115,10 +117,21 @@ in
             hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
             rules = [
               {
+                matches = [
+                  {
+                    path = {
+                      type = "PathPrefix";
+                      value = "/";
+                    };
+                  }
+                ];
                 backendRefs = [
                   {
+                    group = "";
+                    kind = "Service";
                     name = "argocd-server";
                     port = 443;
+                    weight = 1;
                   }
                 ];
               }
@@ -128,6 +141,8 @@ in
           resources.grpcRoutes.argocd-grpc.spec = {
             parentRefs = [
               {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
                 name = "apps";
                 namespace = "gateway";
                 sectionName = "https";
@@ -138,8 +153,11 @@ in
               {
                 backendRefs = [
                   {
+                    group = "";
+                    kind = "Service";
                     name = "argocd-server";
                     port = 443;
+                    weight = 1;
                   }
                 ];
               }
