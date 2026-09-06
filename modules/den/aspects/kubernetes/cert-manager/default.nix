@@ -26,6 +26,13 @@ _: {
         namespace = "cert-manager";
         name = "cloudflare-dns-api-token";
       };
+
+      issuerName = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
+      acmeServer =
+        if cluster.letsencrypt.staging then
+          "https://acme-staging-v02.api.letsencrypt.org/directory"
+        else
+          "https://acme-v02.api.letsencrypt.org/directory";
     in
     {
       nixidy.applicationImports = [
@@ -80,10 +87,10 @@ _: {
 
         resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
 
-        resources.clusterIssuers.letsencrypt-prod.spec.acme = {
-          server = "https://acme-v02.api.letsencrypt.org/directory";
+        resources.clusterIssuers.${issuerName}.spec.acme = {
+          server = acmeServer;
           email = "arnaud.rebts@gmail.com";
-          privateKeySecretRef.name = "letsencrypt-prod-account-key";
+          privateKeySecretRef.name = "${issuerName}-account-key";
           solvers = [
             {
               dns01.cloudflare.apiTokenSecretRef = {

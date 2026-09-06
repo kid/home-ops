@@ -120,6 +120,12 @@
               description = "BGP keepalive time (seconds), applied identically on both BGP peers";
             };
 
+            letsencrypt.staging = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+              description = "Use Let's Encrypt's staging ACME server instead of production (modules/den/aspects/kubernetes/cert-manager)";
+            };
+
             storage = lib.mkOption {
               type = lib.types.attrsOf (
                 lib.types.submodule {

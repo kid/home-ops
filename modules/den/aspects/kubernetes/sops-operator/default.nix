@@ -4,8 +4,9 @@
 # SopsSecret can't use fromChartCRDModule like SopsProvider below does:
 # its CRD's required sops.lastmodified/mac (no default) break the whole
 # build via nixidy's schema-walk, even with zero instances declared.
-_: {
-  den.clusters.prd.methods.mkSopsSecret =
+_:
+let
+  mkSopsSecret =
     { namespace, name }:
     builtins.toJSON {
       apiVersion = "addons.projectcapsule.dev/v1alpha1";
@@ -18,9 +19,22 @@ _: {
         }
       ];
     };
+in
+{
+  # Every cluster that includes this aspect needs the method — den has no
+  # reverse "which clusters include me" lookup, and reading config.den.clusters
+  # here to generalize it would self-reference (infinite recursion), so list
+  # clusters explicitly.
+  den.clusters.prd.methods.mkSopsSecret = mkSopsSecret;
+  den.clusters.dev.methods.mkSopsSecret = mkSopsSecret;
 
   den.aspects.kubernetes.sops-operator.k8s-manifests =
-    { pkgs, generators, ... }:
+    {
+      pkgs,
+      generators,
+      cluster,
+      ...
+    }:
     let
       chartSrc = pkgs.fetchFromGitHub {
         owner = "peak-scale";
@@ -56,7 +70,7 @@ _: {
         # SopsSecret cluster-wide — no Capsule/tenant scoping needed for a
         # single-tenant homelab cluster. Matches the "empty matchLabels ==
         # no restriction" shape from the operator's own docs.
-        resources.sopsProviders.prd.spec = {
+        resources.sopsProviders.${cluster.name}.spec = {
           keys = [ { matchLabels = { }; } ];
           sops = [ { matchLabels = { }; } ];
         };
