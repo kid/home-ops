@@ -1,0 +1,42 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: sops-operator
+    app.kubernetes.io/name: sops-operator
+  name: sops-operator-controller
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - '*'
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - list
+      - watch
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - list
+      - update
+      - create
+      - patch
+  - apiGroups:
+      - addons.projectcapsule.dev
+    resources:
+      - sopsproviders
+      - sopsproviders/status
+      - sopssecrets
+      - sopssecrets/status
+      - globalsopssecrets
+      - globalsopssecrets/status
+    verbs:
+      - '*'

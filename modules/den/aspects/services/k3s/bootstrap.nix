@@ -8,11 +8,12 @@
     nixos =
       { host, pkgs, ... }:
       let
+        clusterName = host.k3s.clusterName or "prd";
         manifestPath =
           name:
           builtins.path {
-            path = self + "/manifests/prd/${name}";
-            name = "k3s-prd-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
+            path = self + "/manifests/${clusterName}/${name}";
+            name = "k3s-${clusterName}-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
           };
         ciliumDir = manifestPath "cilium";
         sopsOperatorDir = manifestPath "sops-operator";
@@ -22,8 +23,8 @@
         bootstrapFile = manifestPath "bootstrap.yaml";
         # Swept generically by waves 0-1 so a new app's Namespace/CRDs need no list entry here.
         allManifestsDir = builtins.path {
-          path = self + "/manifests/prd";
-          name = "k3s-prd-all";
+          path = self + "/manifests/${clusterName}";
+          name = "k3s-${clusterName}-all";
         };
         hasCilium = host.hasAspect den.aspects.k3s-cilium;
         waitForApi = ''
