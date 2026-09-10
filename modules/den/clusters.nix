@@ -88,6 +88,7 @@ in
     cilium-bgp
     cilium-egress-gateway
     cilium-host-firewall
+    envoy-gateway
     cert-manager
     trust-manager
     coredns

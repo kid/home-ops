@@ -25,7 +25,7 @@
         };
 
         resources.gateways.apps.spec = {
-          gatewayClassName = "cilium";
+          gatewayClassName = "envoy";
           listeners = [
             {
               name = "https";

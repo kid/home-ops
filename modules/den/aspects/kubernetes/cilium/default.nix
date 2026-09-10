@@ -2,7 +2,7 @@
 # match modules/den/aspects/services/k3s/k3s.nix's k3s flags
 # (--flannel-backend=none --disable-network-policy --disable-kube-proxy).
 _: {
-  # cilium-agent health (9879), Hubble gRPC (4244), and cilium-envoy (9964) bind on the host itself.
+  # cilium-agent health (9879) and Hubble gRPC (4244) bind on the host itself.
   den.aspects.kubernetes.cilium.firewall-ports = _: [
     {
       port = 9879;
@@ -17,15 +17,6 @@ _: {
       port = 4244;
       protocol = "TCP";
       description = "Hubble gRPC";
-      from = [
-        "cluster"
-        "remote-node"
-      ];
-    }
-    {
-      port = 9964;
-      protocol = "TCP";
-      description = "cilium-envoy";
       from = [
         "cluster"
         "remote-node"
@@ -63,12 +54,12 @@ _: {
 
             bgpControlPlane.enabled = true;
 
-            # Ingress duty, replacing traefik. Requires gateway-api-crds.nix's
-            # CRDs applied first (see bootstrap.nix's wave ordering).
-            gatewayAPI.enabled = true;
-            # Chart default "auto" needs a live cluster to detect; nixidy
-            # renders offline, so the GatewayClass would never appear.
-            gatewayAPI.gatewayClass.create = "true";
+            # Gateway API is served by Envoy Gateway instead (see
+            # envoy-gateway/default.nix), not Cilium's own controller.
+            # envoy.enabled powers Cilium's embedded Envoy proxy, used only
+            # for Ingress, Gateway API, L7 network policies, and L7
+            # protocol visibility — none of which this cluster uses now.
+            envoy.enabled = false;
 
             operator.replicas = 1;
 

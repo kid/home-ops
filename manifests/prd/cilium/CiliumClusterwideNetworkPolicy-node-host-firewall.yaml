@@ -21,8 +21,6 @@ spec:
               protocol: TCP
             - port: "4244"
               protocol: TCP
-            - port: "9964"
-              protocol: TCP
             - port: "9810"
               protocol: TCP
     - fromEntities:
