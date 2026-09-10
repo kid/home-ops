@@ -165,9 +165,6 @@ spec:
             successThreshold: 1
           terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
-            - mountPath: /var/run/cilium/envoy/sockets
-              name: envoy-sockets
-              readOnly: false
             - mountPath: /host/proc/sys/net
               name: host-proc-sys-net
             - mountPath: /host/proc/sys/kernel
@@ -430,10 +427,6 @@ spec:
             path: /run/xtables.lock
             type: FileOrCreate
           name: xtables-lock
-        - hostPath:
-            path: /var/run/cilium/envoy/sockets
-            type: DirectoryOrCreate
-          name: envoy-sockets
         - name: clustermesh-secrets
           projected:
             defaultMode: 256

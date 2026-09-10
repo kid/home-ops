@@ -4,7 +4,7 @@ metadata:
   name: apps
   namespace: gateway
 spec:
-  gatewayClassName: cilium
+  gatewayClassName: envoy
   listeners:
     - allowedRoutes:
         namespaces:
