@@ -15,7 +15,10 @@ if [[ ! -f "${sops_file}" ]]; then
   (cd "${repo_root}" && nix run .#provision-host-key -- "${host}" 1>&2)
 fi
 
-private="$(sops --decrypt --input-type binary --output-type binary "${sops_file}")"
+# $(...) strips trailing newlines — OpenSSH private keys must end with
+# exactly one after "-----END OPENSSH PRIVATE KEY-----", or sshd silently
+# rejects the file as invalid and falls back to a different host key type.
+private="$(sops --decrypt --input-type binary --output-type binary "${sops_file}")"$'\n'
 public="$(cat "${pub_file}")"
 
 jq -n --arg private "${private}" --arg public "${public}" '{private: $private, public: $public}'
