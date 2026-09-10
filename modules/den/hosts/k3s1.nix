@@ -30,6 +30,14 @@
 
       services.openssh.enable = true;
 
+      # Without k3s-cilium, k3s's own bundled Traefik installer runs and
+      # tries to helm-install its own copy of the Gateway API CRDs
+      # (backendtlspolicies.gateway.networking.k8s.io etc) — conflicts with
+      # gateway-api-crds' GitOps-managed copy (not Helm-owned), crashing
+      # the helm-install-traefik-crd job. We don't want k3s's Traefik here
+      # regardless (own gateway/ingress managed via app aspects).
+      services.k3s.extraFlags = [ "--disable=traefik" ];
+
       # Real host key delivered via Incus's cloud-init NoCloud seed disk
       # (tf-stacks/dev/compute/incus-k3s), not a first-boot keygen. The
       # "ssh" cc-module that applies it runs in cloud-init's modules:config
