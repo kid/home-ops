@@ -9,7 +9,7 @@ terraform {
 dependency "network" {
   config_path = "../incus-network"
 
-  mock_outputs                            = { network_names = { k3s = "k3s" } }
+  mock_outputs                            = { network_names = { prd-k3s = "prd-k3s" } }
   mock_outputs_allowed_terraform_commands = ["init", "plan"]
 }
 
@@ -24,6 +24,6 @@ inputs = {
     }
   }
 
-  network_name = dependency.network.outputs.network_names.k3s
+  network_name = dependency.network.outputs.network_names["prd-k3s"]
   storage_pool = "default"
 }
