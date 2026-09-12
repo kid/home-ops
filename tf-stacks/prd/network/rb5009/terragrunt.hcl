@@ -170,13 +170,6 @@ inputs = {
         name    = "litters camera"
       },
     ]
-    K3s = [
-      {
-        address = "10.0.40.10"
-        mac     = "d0:50:99:fe:51:b5"
-        name    = "node1-k3s"
-      },
-    ]
     Management = [
       {
         address = "10.99.0.10"
@@ -231,13 +224,6 @@ inputs = {
         address = "10.0.10.11"
         mac     = "be:4f:11:f4:ba:61"
         name    = "pve1"
-      },
-    ]
-    Storage = [
-      {
-        address = "10.0.20.10"
-        mac     = "d0:50:99:fe:51:b5"
-        name    = "node1-storage"
       },
     ]
     Trusted = [
