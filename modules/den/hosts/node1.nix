@@ -38,16 +38,11 @@
       networking.useDHCP = false;
       networking.useNetworkd = true;
 
-      # No local VLAN interfaces for Storage/K3s anymore — node1's own k3s
-      # server and NFS storage roles are moving to Incus VMs on this same
-      # trunk, and Incus tags those VLANs itself for them (see
-      # tf-stacks/prd/compute/incus-network). MTUBytes on the trunk stays
-      # at Storage's jumbo size: it's the physical link's own MTU, still
-      # needed for jumbo frames to pass through to those VMs.
       systemd.network.networks = {
         "10-trunk" = {
           matchConfig.Name = "enp36s0f1";
           networkConfig.DHCP = "yes";
+          # Jumbo MTU stays for the Incus VMs riding the Storage VLAN (tf-stacks/prd/compute/incus-network).
           linkConfig.MTUBytes = den.networks.Storage.mtu;
         };
       };
