@@ -1,7 +1,3 @@
-# dev environment/cluster: sandbox k3s hosts (e.g. modules/den/hosts/k3s1.nix)
-# that aren't part of the real prd fleet — no routerosDevice belongs to
-# this environment, so it carries no real VLAN/router side effects.
-# Mirrors modules/den/clusters/prd.nix's shape, minus BGP.
 { den, ... }:
 {
   den.environments.dev = {
@@ -43,12 +39,6 @@
     };
   };
 
-  # envoy-gateway doesn't depend on Cilium at all (that's the whole point of
-  # the swap), so it works standalone here too — k3s's own bundled servicelb
-  # (not disabled, unlike traefik) gives its Service a real LoadBalancer IP.
-  # No cilium/trust-manager (Hubble-mTLS-only, irrelevant without Cilium as
-  # this cluster's CNI), no cilium-bgp (cluster.bgp.peers is empty here), no
-  # external-dns/miroir (not needed for this cluster's purpose).
   den.aspects.dev.includes = with den.aspects.kubernetes; [
     gateway-api-crds
     envoy-gateway
