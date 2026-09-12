@@ -1,6 +1,3 @@
-# node1 — bare-metal box for the `prd` cluster: k3s node, Incus VM host, and
-# NFS storage. Installs directly onto real hardware via nixos-anywhere
-# (`nix run .#nixos-anywhere-install`, modules/flake/nixos-anywhere.nix).
 { den, config, ... }:
 {
   den.hosts.x86_64-linux.node1 = {
@@ -42,7 +39,6 @@
         "10-trunk" = {
           matchConfig.Name = "enp36s0f1";
           networkConfig.DHCP = "yes";
-          # Jumbo MTU stays for the Incus VMs riding the Storage VLAN (tf-stacks/prd/compute/incus-network).
           linkConfig.MTUBytes = den.networks.Storage.mtu;
         };
       };
@@ -72,8 +68,6 @@
     (den.aspects.ssh { addresses = [ config.den.devices.node1.address ]; })
   ];
 
-  # Grants kid's "admin" access-policy group (modules/den/users/kid.nix) onto
-  # this host — see modules/den/policies/users.nix for how this resolves.
   fleet.user-access.by-host.node1.groups = [ "admin" ];
 
   fleet.nh.targets.node1.hostname = config.den.devices.node1.address;
