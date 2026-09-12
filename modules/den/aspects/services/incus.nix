@@ -6,12 +6,16 @@ _: {
     networking.nftables.enable = true;
     networking.firewall.allowedTCPPorts = [ 8443 ];
 
-    virtualisation.incus.preseed.storage_pools = [
-      {
-        name = "default";
-        driver = "zfs";
-        config.source = "zroot/incus";
-      }
-    ];
+    virtualisation.incus.preseed = {
+      config."core.https_address" = ":8443";
+
+      storage_pools = [
+        {
+          name = "default";
+          driver = "zfs";
+          config.source = "zroot/incus";
+        }
+      ];
+    };
   };
 }
