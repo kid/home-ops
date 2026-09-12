@@ -63,17 +63,6 @@
           };
           vlanConfig.Id = den.networks.K3s.vlanId;
         };
-        # Lets Incus VMs on this host join the K3s VLAN as bridge ports,
-        # alongside node1's own address (moved here from the "k3s" VLAN
-        # interface below). MACAddress kept as the VLAN's own so the
-        # RouterOS DHCP static lease for node1-k3s still matches.
-        "25-k3s-br0" = {
-          netdevConfig = {
-            Kind = "bridge";
-            Name = "k3s-br0";
-            MACAddress = den.devices.node1-k3s.mac;
-          };
-        };
       };
 
       systemd.network.networks = {
@@ -95,10 +84,6 @@
         };
         "30-k3s" = {
           matchConfig.Name = "k3s";
-          networkConfig.Bridge = "k3s-br0";
-        };
-        "31-k3s-br0" = {
-          matchConfig.Name = "k3s-br0";
           networkConfig.DHCP = "yes";
           dhcpV4Config.RouteMetric = 2048;
           linkConfig.MTUBytes = 1500;
