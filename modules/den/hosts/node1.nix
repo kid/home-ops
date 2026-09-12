@@ -15,16 +15,6 @@
       hostNum = 10;
       mac = "d0:50:99:fe:51:b5";
     };
-    node1-storage = {
-      network = "Storage";
-      hostNum = 10;
-      mac = "d0:50:99:fe:51:b5";
-    };
-    node1-k3s = {
-      network = "K3s";
-      hostNum = 10;
-      mac = "d0:50:99:fe:51:b5";
-    };
     node1-ipmi = {
       network = "Management";
       hostNum = (den.networks.Servers.vlanId * 256) + 10;
@@ -48,45 +38,17 @@
       networking.useDHCP = false;
       networking.useNetworkd = true;
 
-      systemd.network.netdevs = {
-        "20-storage" = {
-          netdevConfig = {
-            Kind = "vlan";
-            Name = "storage";
-          };
-          vlanConfig.Id = den.networks.Storage.vlanId;
-        };
-        "20-k3s" = {
-          netdevConfig = {
-            Kind = "vlan";
-            Name = "k3s";
-          };
-          vlanConfig.Id = den.networks.K3s.vlanId;
-        };
-      };
-
+      # No local VLAN interfaces for Storage/K3s anymore — node1's own k3s
+      # server and NFS storage roles are moving to Incus VMs on this same
+      # trunk, and Incus tags those VLANs itself for them (see
+      # tf-stacks/prd/compute/incus-network). MTUBytes on the trunk stays
+      # at Storage's jumbo size: it's the physical link's own MTU, still
+      # needed for jumbo frames to pass through to those VMs.
       systemd.network.networks = {
         "10-trunk" = {
           matchConfig.Name = "enp36s0f1";
           networkConfig.DHCP = "yes";
-          vlan = [
-            "storage"
-            "k3s"
-          ];
           linkConfig.MTUBytes = den.networks.Storage.mtu;
-        };
-        "30-storage" = {
-          matchConfig.Name = "storage";
-          networkConfig.DHCP = "yes";
-          # Don't let this race enp36s0f1's default route (breaks strict rpfilter).
-          dhcpV4Config.UseGateway = false;
-          linkConfig.MTUBytes = den.networks.Storage.mtu;
-        };
-        "30-k3s" = {
-          matchConfig.Name = "k3s";
-          networkConfig.DHCP = "yes";
-          dhcpV4Config.RouteMetric = 2048;
-          linkConfig.MTUBytes = 1500;
         };
       };
 
