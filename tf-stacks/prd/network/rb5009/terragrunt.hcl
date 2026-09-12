@@ -170,6 +170,13 @@ inputs = {
         name    = "litters camera"
       },
     ]
+    K3s = [
+      {
+        address = "10.0.40.10"
+        mac     = "52:54:00:40:00:01"
+        name    = "k3s-prd-0-k3s"
+      },
+    ]
     Management = [
       {
         address = "10.99.0.10"

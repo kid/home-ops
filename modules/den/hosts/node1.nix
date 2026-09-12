@@ -1,7 +1,6 @@
 { den, config, ... }:
 {
   den.hosts.x86_64-linux.node1 = {
-    k3s.clusterName = "prd";
     settings.disko.zfs-disk-single.settings.device_id =
       "/dev/disk/by-id/nvme-Force_MP510_21368248000129171009";
   };
@@ -24,10 +23,6 @@
     {
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
-
-      services.k3s.extraFlags = [
-        "--node-label=kidibox.net/egress-gateway=true"
-      ];
 
       networking.hostId = lib.mkDefault "795500d2";
 
@@ -58,13 +53,7 @@
     den.aspects.disko.zfs-disk-single
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
-    den.aspects.k3s-server
-    den.aspects.k3s-cilium
-    den.aspects.k3s-bootstrap
-    den.aspects.k3s-openebs
-    den.aspects.k3s-miroir
     den.aspects.power-saving
-    den.aspects.k3s-sops-operator
     (den.aspects.ssh { addresses = [ config.den.devices.node1.address ]; })
   ];
 

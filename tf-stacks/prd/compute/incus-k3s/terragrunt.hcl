@@ -9,21 +9,21 @@ terraform {
 dependency "network" {
   config_path = "../incus-network"
 
-  # Lets `plan` succeed before incus-network has ever been applied.
-  mock_outputs                            = { network_name = "incusbr0" }
+  mock_outputs                            = { network_names = { k3s = "k3s" } }
   mock_outputs_allowed_terraform_commands = ["init", "plan"]
 }
 
 inputs = {
   nodes = {
-    k3s-dev-0 = {
-      nixos_attr = "k3s-dev-0"
-      cpu        = 2
-      memory     = "4GiB"
-      disk_size  = "20GiB"
+    k3s-prd-0 = {
+      nixos_attr = "k3s-prd-0"
+      cpu        = 4
+      memory     = "8GiB"
+      disk_size  = "40GiB"
+      mac        = "52:54:00:40:00:01"
     }
   }
 
-  network_name = dependency.network.outputs.network_name
+  network_name = dependency.network.outputs.network_names.k3s
   storage_pool = "default"
 }
