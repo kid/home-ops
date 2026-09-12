@@ -6,6 +6,21 @@ terraform {
   source = "${get_repo_root()}/tf-catalog/modules/incus-k3s"
 }
 
+generate "incus_provider" {
+  path      = "incus_provider.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<-EOF
+    provider "incus" {
+      default_remote = "node1"
+
+      remote {
+        name    = "node1"
+        address = "https://10.0.10.10:8443"
+      }
+    }
+  EOF
+}
+
 dependency "network" {
   config_path = "../incus-network"
 
