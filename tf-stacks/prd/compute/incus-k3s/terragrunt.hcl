@@ -35,7 +35,6 @@ inputs = {
       cpu        = 4
       memory     = "8GiB"
       disk_size  = "40GiB"
-      mac        = "52:54:00:40:00:01"
     }
   }
 
