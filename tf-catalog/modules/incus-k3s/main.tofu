@@ -1,7 +1,3 @@
-# Reusable across environments: assumes `network_name`/`storage_pool` already
-# exist rather than creating them, since dev's network (a local NAT bridge)
-# and prd's (node1's NixOS-managed K3s-VLAN bridge) are unrelated concerns.
-
 terraform {
   required_providers {
     incus = {
@@ -18,6 +14,7 @@ variable "nodes" {
     cpu        = number
     memory     = string
     disk_size  = string
+    mac        = optional(string)
   }))
 }
 
@@ -103,9 +100,10 @@ resource "incus_instance" "k3s" {
   device {
     name = "eth0"
     type = "nic"
-    properties = {
-      network = var.network_name
-    }
+    properties = merge(
+      { network = var.network_name },
+      each.value.mac != null ? { hwaddr = each.value.mac } : {}
+    )
   }
 
   # Agent-independent cloud-init seed: no incus-agent runs in this image.

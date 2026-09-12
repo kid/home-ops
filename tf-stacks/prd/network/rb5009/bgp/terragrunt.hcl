@@ -27,8 +27,12 @@ inputs = {
   ]
   hostname            = "rb5009"
   mgmt_interface_list = "MANAGEMENT"
-  nodes               = {}
-  op_item_routeros    = "RB5009 - user - kid"
-  op_vault            = "home-ops"
-  wan_interface_list  = "WAN"
+  nodes = {
+    k3s-prd-0 = {
+      ip_address = "10.0.40.10"
+    }
+  }
+  op_item_routeros   = "RB5009 - user - kid"
+  op_vault           = "home-ops"
+  wan_interface_list = "WAN"
 }
