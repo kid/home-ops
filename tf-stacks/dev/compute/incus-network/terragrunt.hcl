@@ -7,6 +7,6 @@ terraform {
 }
 
 inputs = {
-  name         = "dev-nat"
+  name         = "k3s-dev"
   ipv4_address = "10.150.19.1/24"
 }

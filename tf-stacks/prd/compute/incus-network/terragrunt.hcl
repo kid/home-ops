@@ -8,7 +8,8 @@ terraform {
 
 inputs = {
   networks = {
-    prd-k3s = {
+    k3s = {
+      name    = "k3s-prd"
       parent  = "enp36s0f1"
       vlan_id = 40
     }

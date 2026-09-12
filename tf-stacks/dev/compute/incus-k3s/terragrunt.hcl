@@ -10,7 +10,7 @@ dependency "network" {
   config_path = "../incus-network"
 
   # Lets `plan` succeed before incus-network has ever been applied.
-  mock_outputs                            = { network_name = "dev-nat" }
+  mock_outputs                            = { network_name = "k3s-dev" }
   mock_outputs_allowed_terraform_commands = ["init", "plan"]
 }
 
