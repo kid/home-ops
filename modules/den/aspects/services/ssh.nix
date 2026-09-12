@@ -18,7 +18,7 @@
         };
         # sshd only orders after network.target by default, which fires
         # before DHCP completes.
-        systemd.services.sshd = lib.mkIf (addresses != [ ]) {
+        systemd.sockets.sshd = lib.mkIf (addresses != [ ]) {
           wants = [ "network-online.target" ];
           after = [ "network-online.target" ];
         };
