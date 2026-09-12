@@ -53,6 +53,7 @@
     den.aspects.disko.zfs-disk-single
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
+    den.aspects.incus
     den.aspects.power-saving
     (den.aspects.ssh { addresses = [ config.den.devices.node1.address ]; })
   ];
