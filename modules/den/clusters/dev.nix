@@ -43,14 +43,15 @@
     };
   };
 
-  # gateway-api-crds: k3s-bootstrap-crds unconditionally waits for these
-  # CRDs to be Established, so they're needed even without apps-gateway's
-  # actual Gateway/HTTPRoute objects. No cilium/trust-manager (Hubble-mTLS-
-  # only, irrelevant without Cilium as this cluster's CNI), no cilium-bgp
-  # (cluster.bgp.peers is empty here), no external-dns/miroir/apps-gateway
-  # (not needed for this cluster's purpose).
+  # envoy-gateway doesn't depend on Cilium at all (that's the whole point of
+  # the swap), so it works standalone here too — k3s's own bundled servicelb
+  # (not disabled, unlike traefik) gives its Service a real LoadBalancer IP.
+  # No cilium/trust-manager (Hubble-mTLS-only, irrelevant without Cilium as
+  # this cluster's CNI), no cilium-bgp (cluster.bgp.peers is empty here), no
+  # external-dns/miroir (not needed for this cluster's purpose).
   den.aspects.dev.includes = with den.aspects.kubernetes; [
     gateway-api-crds
+    envoy-gateway
     cert-manager
     coredns
     argocd

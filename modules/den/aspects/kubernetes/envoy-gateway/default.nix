@@ -1,9 +1,17 @@
-# Envoy Gateway (https://gateway.envoyproxy.io/), replacing Cilium's own
-# Gateway API controller (see cilium/default.nix's envoy.enabled = false).
-# apps-gateway/default.nix's Gateway references this GatewayClass by name.
-_: {
+# Envoy Gateway (https://gateway.envoyproxy.io/): the controller (replacing
+# Cilium's own, see cilium/default.nix's envoy.enabled = false) and the
+# shared "apps" Gateway cluster.domain apps attach HTTPRoutes to — one
+# aspect, since neither is useful without the other in this repo.
+{ config, ... }:
+let
+  mkAppHostname = clusterName: appName: "${appName}.${config.den.clusters.${clusterName}.domain}";
+in
+{
+  den.clusters.prd.methods.mkAppHostname = mkAppHostname "prd";
+  den.clusters.dev.methods.mkAppHostname = mkAppHostname "dev";
+
   den.aspects.kubernetes.envoy-gateway.k8s-manifests =
-    { charts, ... }:
+    { charts, cluster, ... }:
     {
       applications.envoy-gateway = {
         namespace = "envoy-gateway-system";
@@ -31,6 +39,42 @@ _: {
             spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
           })
         ];
+
+        resources.certificates.apps-tls.spec = {
+          secretName = "apps-tls";
+          dnsNames = [
+            "*.${cluster.domain}"
+            cluster.domain
+          ];
+          issuerRef = {
+            name = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
+            kind = "ClusterIssuer";
+            group = "cert-manager.io";
+          };
+        };
+
+        resources.gateways.apps.spec = {
+          gatewayClassName = "envoy";
+          listeners = [
+            {
+              name = "https";
+              protocol = "HTTPS";
+              port = 443;
+              hostname = "*.${cluster.domain}";
+              tls = {
+                mode = "Terminate";
+                certificateRefs = [
+                  {
+                    group = "";
+                    kind = "Secret";
+                    name = "apps-tls";
+                  }
+                ];
+              };
+              allowedRoutes.namespaces.from = "All";
+            }
+          ];
+        };
       };
     };
 }

@@ -110,7 +110,7 @@ in
                 group = "gateway.networking.k8s.io";
                 kind = "Gateway";
                 name = "apps";
-                namespace = "gateway";
+                namespace = "envoy-gateway-system";
                 sectionName = "https";
               }
             ];
@@ -144,7 +144,7 @@ in
                 group = "gateway.networking.k8s.io";
                 kind = "Gateway";
                 name = "apps";
-                namespace = "gateway";
+                namespace = "envoy-gateway-system";
                 sectionName = "https";
               }
             ];
