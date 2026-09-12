@@ -15,8 +15,9 @@ terraform {
 }
 
 variable "networks" {
-  description = "Incus physical networks to create, keyed by name, each tagging one VLAN on a shared parent NIC."
+  description = "Incus physical networks to create, each tagging one VLAN on a shared parent NIC."
   type = map(object({
+    name    = string
     parent  = string
     vlan_id = number
   }))
@@ -25,7 +26,7 @@ variable "networks" {
 resource "incus_network" "this" {
   for_each = var.networks
 
-  name = each.key
+  name = each.value.name
   type = "physical"
 
   config = {
