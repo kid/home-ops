@@ -92,7 +92,6 @@ in
     cert-manager
     trust-manager
     coredns
-    apps-gateway
     argocd
     miroir
     sops-operator

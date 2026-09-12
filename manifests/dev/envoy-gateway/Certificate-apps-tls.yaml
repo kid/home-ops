@@ -2,13 +2,13 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: apps-tls
-  namespace: gateway
+  namespace: envoy-gateway-system
 spec:
   dnsNames:
-    - '*.kidibox.net'
-    - kidibox.net
+    - '*.dev.kidibox.net'
+    - dev.kidibox.net
   issuerRef:
     group: cert-manager.io
     kind: ClusterIssuer
-    name: letsencrypt-prod
+    name: letsencrypt-staging
   secretName: apps-tls

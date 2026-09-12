@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: apps-gateway
+  name: envoy-gateway
   namespace: argocd
 spec:
   destination:
-    namespace: gateway
+    namespace: envoy-gateway-system
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: ./manifests/prd/apps-gateway
+    path: ./manifests/dev/envoy-gateway
     repoURL: https://github.com/kid/home-ops.git
-    targetRevision: main
+    targetRevision: dev
   syncPolicy:
     automated:
       prune: true
