@@ -1,10 +1,3 @@
-# One Incus `physical`-type network per VLAN, each tagging its own VLAN ID
-# on a shared trunk NIC — Incus does the tagging itself, no host-side VLAN
-# interface or bridge needed. Used by prd (node1's trunk carries both the
-# K3s and Storage VLANs for Incus VMs) — see tf-stacks/prd/compute/
-# incus-network. Unlike dev's incus-network module, there's no NAT/bridge
-# here: these networks ride the VLANs that RouterOS already routes.
-
 terraform {
   required_providers {
     incus = {
@@ -15,7 +8,7 @@ terraform {
 }
 
 variable "networks" {
-  description = "Incus physical networks to create, each tagging one VLAN on a shared parent NIC."
+  description = "Incus bridge networks to create, each tagging one VLAN on a shared parent NIC via bridge.external_interfaces."
   type = map(object({
     name    = string
     parent  = string
@@ -27,11 +20,12 @@ resource "incus_network" "this" {
   for_each = var.networks
 
   name = each.value.name
-  type = "physical"
+  type = "bridge"
 
   config = {
-    parent = each.value.parent
-    vlan   = tostring(each.value.vlan_id)
+    "bridge.external_interfaces" = "vlan${each.value.vlan_id}/${each.value.parent}/${each.value.vlan_id}"
+    "ipv4.address"               = "none"
+    "ipv6.address"               = "none"
   }
 }
 
