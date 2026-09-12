@@ -4,6 +4,7 @@ _: {
   den.aspects.incus.nixos = _: {
     virtualisation.incus.enable = true;
     networking.nftables.enable = true;
+    networking.firewall.allowedTCPPorts = [ 8443 ];
 
     virtualisation.incus.preseed.storage_pools = [
       {
