@@ -2,35 +2,36 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-  name: miroirsnapshotgroups.miroir.home-operations.com
+    api-approved.kubernetes.io: https://github.com/kubernetes-sigs/external-dns/pull/5372
+  name: dnsrecords.externaldns.k8s.io
 spec:
-  group: miroir.home-operations.com
+  group: externaldns.k8s.io
   names:
-    kind: MiroirSnapshotGroup
-    listKind: MiroirSnapshotGroupList
-    plural: miroirsnapshotgroups
-    shortNames:
-      - misg
-    singular: miroirsnapshotgroup
-  scope: Cluster
+    kind: DNSRecord
+    listKind: DNSRecordList
+    plural: dnsrecords
+    singular: dnsrecord
+  scope: Namespaced
   versions:
     - additionalPrinterColumns:
-        - jsonPath: .status.readyToUse
-          name: Ready
-          type: boolean
-        - jsonPath: .metadata.creationTimestamp
-          name: Age
-          type: date
+        - jsonPath: .spec.endpoint.dnsName
+          name: DNS Name
+          type: string
+        - jsonPath: .spec.endpoint.recordType
+          name: Type
+          type: string
+        - jsonPath: .spec.endpoint.setIdentifier
+          name: Set ID
+          type: string
+        - jsonPath: .spec.endpoint.targets
+          name: Targets
+          type: string
+        - jsonPath: .status.conditions[?(@.type=="Ready")].reason
+          name: Status
+          type: string
       name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: |-
-            MiroirSnapshotGroup is one crash-consistent point-in-time snapshot cut
-            across several MiroirVolumes at once (1:1 with a
-            VolumeGroupSnapshotContent). Its members are ordinary MiroirSnapshots
-            that restore individually; the group coordinates their cut under one
-            shared write barrier.
           properties:
             apiVersion:
               description: |-
@@ -50,37 +51,54 @@ spec:
             metadata:
               type: object
             spec:
-              description: |-
-                MiroirSnapshotGroupSpec is the desired state, created by the controller
-                on CSI CreateVolumeGroupSnapshot.
+              description: DNSRecordSpec defines the desired state of DNSRecord
               properties:
-                snapshotNames:
-                  description: |-
-                    SnapshotNames lists the member MiroirSnapshots (one per source
-                    volume, each carrying this group's name in spec.group). Immutable:
-                    the group barrier is cut atomically over exactly this member set,
-                    so growing or shrinking it after the fact would misrepresent what
-                    the cut covered.
-                  items:
-                    type: string
-                  minItems: 1
-                  type: array
-                  x-kubernetes-validations:
-                    - message: 'snapshotNames is immutable: the group barrier was cut over exactly this member set'
-                      rule: self == oldSelf
+                endpoint:
+                  description: Endpoint is a high-level way of a connection between a service and an IP
+                  properties:
+                    dnsName:
+                      description: The hostname of the DNS record
+                      type: string
+                    labels:
+                      additionalProperties:
+                        type: string
+                      description: Labels stores labels defined for the Endpoint
+                      type: object
+                    providerSpecific:
+                      description: ProviderSpecific stores provider specific config
+                      items:
+                        description: ProviderSpecificProperty holds the name and value of a configuration which is specific to individual DNS providers
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                        type: object
+                      type: array
+                    recordTTL:
+                      description: TTL for the record
+                      format: int64
+                      type: integer
+                    recordType:
+                      description: RecordType type of record, e.g. CNAME, A, AAAA, SRV, TXT etc
+                      type: string
+                    setIdentifier:
+                      description: Identifier to distinguish multiple records with the same name and type (e.g. Route53 records with routing policies other than 'simple')
+                      type: string
+                    targets:
+                      description: The targets the DNS record points to
+                      items:
+                        type: string
+                      type: array
+                  type: object
               required:
-                - snapshotNames
+                - endpoint
               type: object
             status:
-              description: |-
-                MiroirSnapshotGroupStatus is the shared state of the group's write
-                barrier round. One MiroirSnapshotGroup is one round spanning every
-                diskful leg of every member volume — the multi-volume generalization
-                of the MiroirSnapshot per-node round, kept on a single object so that
-                sealing and voiding the round serialize on one resourceVersion.
+              description: DNSRecordStatus defines the observed state of DNSRecord
               properties:
                 conditions:
-                  description: Conditions follow the standard Kubernetes condition conventions.
+                  description: Conditions represent the latest available observations of the DNSRecord state.
                   items:
                     description: Condition contains details for one aspect of the current state of this API Resource.
                     properties:
@@ -135,35 +153,10 @@ spec:
                       - type
                     type: object
                   type: array
-                ioSuspended:
-                  description: |-
-                    IOSuspended is the group-wide write barrier: set by the round
-                    driver after suspending its local member legs, cleared on resume.
-                    Legs are cut only while it holds and every slot reports Suspended.
-                  type: boolean
-                perLeg:
-                  additionalProperties:
-                    description: SnapshotNodeState tracks one node's progress through the snapshot barrier.
-                    type: string
-                  description: |-
-                    PerLeg maps "<volume>/<node>" to that leg's progress through the
-                    group barrier round.
-                  type: object
-                readyToUse:
-                  description: |-
-                    ReadyToUse is true once every diskful leg of every member volume
-                    holds its snapshot, all cut inside one shared write barrier.
-                  type: boolean
-                suspendedAt:
-                  description: |-
-                    SuspendedAt bounds the barrier: the driver voids the round at the
-                    deadline even if a leg never cuts, so a stuck member cannot freeze
-                    every volume in the group forever.
-                  format: date-time
-                  type: string
+                  x-kubernetes-list-map-keys:
+                    - type
+                  x-kubernetes-list-type: map
               type: object
-          required:
-            - spec
           type: object
       served: true
       storage: true
