@@ -5,5 +5,5 @@ metadata:
 spec:
   pools:
     - lvmthin:
-        device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir-data
+        device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir--data
       name: default

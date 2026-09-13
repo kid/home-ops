@@ -36,8 +36,7 @@ _: {
         resources.miroirNodes.k3s-prd-0.spec.pools = [
           {
             name = "default";
-            # CONFIRM this by-id path once `terraform apply` attaches the disk.
-            lvmthin.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir-data";
+            lvmthin.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir--data";
           }
         ];
 
