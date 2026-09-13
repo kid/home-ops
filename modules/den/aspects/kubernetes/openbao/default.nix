@@ -5,6 +5,7 @@ _: {
       applications.openbao = {
         namespace = "openbao";
         createNamespace = true;
+        annotations."argocd.argoproj.io/sync-wave" = "-1";
 
         helm.releases.openbao = {
           chart = charts.openbao.openbao;
