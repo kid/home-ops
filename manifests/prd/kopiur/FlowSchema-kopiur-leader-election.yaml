@@ -1,0 +1,31 @@
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: FlowSchema
+metadata:
+  labels:
+    app.kubernetes.io/instance: kopiur
+    app.kubernetes.io/name: kopiur
+    app.kubernetes.io/part-of: kopiur
+  name: kopiur-leader-election
+spec:
+  distinguisherMethod:
+    type: ByUser
+  matchingPrecedence: 200
+  priorityLevelConfiguration:
+    name: leader-election
+  rules:
+    - resourceRules:
+        - apiGroups:
+            - coordination.k8s.io
+          namespaces:
+            - kopiur-system
+          resources:
+            - leases
+          verbs:
+            - get
+            - create
+            - update
+      subjects:
+        - kind: ServiceAccount
+          serviceAccount:
+            name: kopiur
+            namespace: kopiur-system

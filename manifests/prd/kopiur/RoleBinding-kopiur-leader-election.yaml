@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kopiur
+    app.kubernetes.io/name: kopiur
+    app.kubernetes.io/part-of: kopiur
+  name: kopiur-leader-election
+  namespace: kopiur-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kopiur-leader-election
+subjects:
+  - kind: ServiceAccount
+    name: kopiur
+    namespace: kopiur-system

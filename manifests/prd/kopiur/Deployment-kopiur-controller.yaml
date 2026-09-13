@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: kopiur
+    app.kubernetes.io/name: kopiur
+    app.kubernetes.io/part-of: kopiur
+  name: kopiur-controller
+  namespace: kopiur-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: kopiur
+      app.kubernetes.io/name: kopiur
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: kopiur
+        app.kubernetes.io/name: kopiur
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - --leader-elect=true
+            - --cluster-scope
+          env:
+            - name: RUST_LOG
+              value: info
+            - name: KOPIUR_LOG_FORMAT
+              value: text
+            - name: KOPIUR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KOPIUR_LEASE_NAME
+              value: kopiur
+            - name: KOPIUR_MOVER_IMAGE
+              value: ghcr.io/home-operations/kopiur-mover@sha256:6b079d549320d126e16a3beecf071997aaea6eb42a434316000484f6f14dc595
+            - name: KOPIUR_MOVER_PULL_POLICY
+              value: IfNotPresent
+            - name: KOPIUR_MOVER_SERVICE_ACCOUNT
+              value: kopiur-mover
+            - name: KOPIUR_MOVER_CLUSTERROLE
+              value: kopiur-mover
+            - name: KOPIUR_MOVER_ROLE_KIND
+              value: ClusterRole
+            - name: KOPIUR_WORKER_THREADS
+              value: "2"
+            - name: KOPIUR_STREAMING_LISTS
+              value: "true"
+            - name: KOPIUR_MAX_CONCURRENT_DELETE_JOBS
+              value: "0"
+            - name: KOPIUR_MAX_CONCURRENT_JOBS
+              value: "0"
+            - name: KOPIUR_RECONCILE_CONCURRENCY
+              value: "8"
+            - name: KOPIUR_HTTP_ADDR
+              value: '[::]:8081'
+            - name: KOPIUR_WEBHOOK_TLS_MANAGED
+              value: "true"
+            - name: KOPIUR_WEBHOOK_SECRET_NAME
+              value: kopiur-webhook-tls
+            - name: KOPIUR_WEBHOOK_SERVICE_NAME
+              value: kopiur-webhook
+            - name: KOPIUR_WEBHOOK_VALIDATING_CONFIG
+              value: kopiur-validating
+            - name: KOPIUR_WEBHOOK_MUTATING_CONFIG
+              value: kopiur-mutating
+          image: ghcr.io/home-operations/kopiur-controller@sha256:8d62c667ec20fc05b23a0eb10d2ce9be8a83c9eb60042ca2e23775c57a2175b2
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          name: controller
+          ports:
+            - containerPort: 8081
+              name: metrics
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /var/cache/kopia
+              name: kopia-cache
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kopiur
+      volumes:
+        - emptyDir: {}
+          name: kopia-cache

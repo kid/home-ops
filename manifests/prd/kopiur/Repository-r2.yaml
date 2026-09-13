@@ -1,0 +1,18 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: r2
+  namespace: kopiur-system
+spec:
+  backend:
+    s3:
+      auth:
+        secretRef:
+          name: kopiur-r2
+      bucket: home-ops-kopiur
+  create:
+    enabled: true
+  encryption:
+    passwordSecretRef:
+      key: KOPIA_PASSWORD
+      name: kopiur-r2
