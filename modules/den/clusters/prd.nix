@@ -108,6 +108,7 @@ in
     miroir
     sops-operator
     external-dns
+    external-secrets
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
