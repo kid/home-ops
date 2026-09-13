@@ -37,6 +37,7 @@ jobs:
           commit-message: "chore(charts): bump pinned helm chart versions"
           title: "chore(charts): bump pinned helm chart versions"
           branch: update-helm-charts
+          sign-commits: true
           add-paths: |
             charts/
             manifests/prd/
