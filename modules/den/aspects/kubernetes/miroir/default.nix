@@ -1,18 +1,6 @@
-# miroir, replacing OpenEBS ZFS-LocalPV as the cluster's storage
-# provisioner, using k3s-prd-0's miroir/data dataset as its ZFS pool
-# (reserved via modules/den/aspects/services/k3s/miroir.nix's `datasets`
-# quirk, den.aspects.k3s-miroir, included on k3s-prd-0).
-#
 # MiroirNode isn't a core Kubernetes type, so nixidy has no built-in typed
 # options for it — generators.fromChartCRDModule generates it live from
-# the chart's own CRDs (miroir ships them under crds/, installed by Helm
-# automatically, no crds.enabled-style value needed).
-#
-# k3s-prd-0 is the only cluster node today, so the default StorageClass
-# stays replicas: "1" (local only) — a replicas: "2" class would leave
-# PVCs Pending with nowhere to place a second replica. DRBD9 is loaded on
-# the host already (see miroir.nix) so a replicated class is a small
-# follow-up once a 2nd node exists, not a redo.
+# the chart's own CRDs, installed by Helm automatically.
 _: {
   # miroir-agent runs hostNetwork: true with its own port 9810.
   den.aspects.kubernetes.miroir.firewall-ports = _: [
@@ -44,10 +32,12 @@ _: {
 
         helm.releases.miroir.chart = charts.home-operations.miroir;
 
+        # Resource name must match the real Kubernetes node name.
         resources.miroirNodes.k3s-prd-0.spec.pools = [
           {
             name = "default";
-            zfs.dataset = "miroir/data";
+            # CONFIRM this by-id path once `terraform apply` attaches the disk.
+            lvmthin.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir-data";
           }
         ];
 
@@ -57,6 +47,7 @@ _: {
           volumeBindingMode = "WaitForFirstConsumer";
           allowVolumeExpansion = true;
           parameters = {
+            # "2" would leave PVCs Pending — no second node to place a replica on yet.
             "miroir.home-operations.com/replicas" = "1";
             "csi.storage.k8s.io/fstype" = "ext4";
           };

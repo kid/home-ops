@@ -116,9 +116,8 @@ resource "incus_instance" "k3s" {
     }
   }
 
-  # Raw block device (no `path`) for hosts that format their own extra ZFS
-  # pool at boot — this VM's root disk comes from a pre-built qemuImage, so
-  # disko never runs for it; a second disk needs guest-side pool creation.
+  # No `path`, so this appears as a raw block device in the guest rather
+  # than a mounted filesystem.
   dynamic "device" {
     for_each = each.value.miroir_disk_size != null ? [each.value.miroir_disk_size] : []
 

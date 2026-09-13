@@ -4,6 +4,6 @@ metadata:
   name: k3s-prd-0
 spec:
   pools:
-    - name: default
-      zfs:
-        dataset: miroir/data
+    - lvmthin:
+        device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir-data
+      name: default
