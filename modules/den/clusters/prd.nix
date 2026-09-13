@@ -86,7 +86,6 @@ in
     gateway-api-crds
     cilium
     cilium-bgp
-    cilium-egress-gateway
     cilium-host-firewall
     envoy-gateway
     cert-manager

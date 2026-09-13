@@ -48,7 +48,6 @@ _: {
             };
 
             bpf.masquerade = true;
-            egressGateway.enabled = true;
 
             hostFirewall.enabled = true;
 

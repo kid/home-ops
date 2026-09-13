@@ -53,7 +53,6 @@ data:
   enable-drift-checker: "true"
   enable-dynamic-config: "true"
   enable-dynamic-source-lookup-nodeport: "false"
-  enable-egress-gateway: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
   enable-health-check-loadbalancer-ip: "false"
