@@ -21,6 +21,10 @@ data "onepassword_vault" "home_ops" {
   name = "home-ops"
 }
 
+data "onepassword_vault" "home_ops_prd" {
+  name = "home-ops/prd"
+}
+
 data "onepassword_item" "cloudflare_admin" {
   vault = data.onepassword_vault.home_ops.uuid
   title = "Cloudflare - admin token"
@@ -32,7 +36,7 @@ resource "random_password" "kopia_repository_password" {
 }
 
 resource "onepassword_item" "kopiur_r2" {
-  vault    = data.onepassword_vault.home_ops.uuid
+  vault    = data.onepassword_vault.home_ops_prd.uuid
   title    = "kopiur - R2 credentials"
   category = "secure_note"
 
