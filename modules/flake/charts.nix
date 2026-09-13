@@ -25,6 +25,16 @@
     };
   };
 
+  # nixhelm's own cache — without it, helmupdater's Python venv (built via
+  # uv2nix) builds from source on every cold machine, since nothing in it
+  # comes from cache.nixos.org. https://github.com/farcaller/nixhelm#using-the-cache
+  flake-file.nixConfig = {
+    extra-substituters = [ "https://nixhelm.cachix.org" ];
+    extra-trusted-public-keys = [
+      "nixhelm.cachix.org-1:esqauAsR4opRF0UsGrA6H3gD21OrzMnBBYvJXeddjtY="
+    ];
+  };
+
   # Plain repo/chart/version/chartHash data, no fetching — helmupdater
   # reads this via `nix eval .#chartsMetadata.<org>.<chart>` to know what's
   # currently pinned.
