@@ -1,0 +1,79 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openbao-init
+  namespace: openbao
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      containers:
+        - command:
+            - sh
+            - -c
+            - |
+              set -e
+              if [ ! -f /shared/unsealKey ]; then
+                echo "Nothing to push (already initialized)."
+                exit 0
+              fi
+              kubectl create secret generic openbao-init-output -n openbao \
+                --from-file=unsealKey=/shared/unsealKey \
+                --dry-run=client -o yaml | kubectl apply -f -
+          image: bitnami/kubectl:1.31
+          name: push
+          volumeMounts:
+            - mountPath: /shared
+              name: shared
+              readOnly: true
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - |
+              set -e
+
+              while true; do
+                bao status >/dev/null 2>&1
+                code=$?
+                [ "$code" -ne 1 ] && break
+                echo "Waiting for OpenBao API..."
+                sleep 5
+              done
+
+              if bao status -format=json | grep -q '"initialized": *true'; then
+                echo "Already initialized, nothing to do."
+                exit 0
+              fi
+
+              init=$(bao operator init -key-shares=1 -key-threshold=1 -format=json)
+              unseal_key=$(printf '%s' "$init" | grep -o '"unseal_keys_b64": *\[ *"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')
+              root_token=$(printf '%s' "$init" | grep -o '"root_token": *"[^"]*"' | sed 's/.*: *"\([^"]*\)"/\1/')
+
+              bao operator unseal "$unseal_key"
+
+              export BAO_TOKEN="$root_token"
+              bao secrets enable -path=secret kv-v2 || true
+              bao auth enable kubernetes || true
+              bao write auth/kubernetes/config kubernetes_host="https://kubernetes.default.svc"
+              printf 'path "secret/data/*" {\n  capabilities = ["read"]\n}\n' | bao policy write eso-cluster -
+              bao write auth/kubernetes/role/eso-cluster \
+                bound_service_account_names=external-secrets \
+                bound_service_account_namespaces=external-secrets \
+                policies=eso-cluster \
+                ttl=1h
+
+              printf '%s' "$unseal_key" > /shared/unsealKey
+          env:
+            - name: BAO_ADDR
+              value: http://openbao.openbao.svc:8200
+          image: openbao/openbao:2.6.2
+          name: init
+          volumeMounts:
+            - mountPath: /shared
+              name: shared
+      restartPolicy: OnFailure
+      serviceAccountName: openbao-init
+      volumes:
+        - emptyDir: {}
+          name: shared
