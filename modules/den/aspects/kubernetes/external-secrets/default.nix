@@ -17,6 +17,7 @@ _: {
       applications.external-secrets = {
         namespace = "external-secrets";
         createNamespace = true;
+        annotations."argocd.argoproj.io/sync-wave" = "-3";
 
         helm.releases.external-secrets.chart = charts.external-secrets.external-secrets;
 
@@ -25,6 +26,17 @@ _: {
           auth.serviceAccountSecretRef = {
             name = "onepassword-service-account-token";
             key = "token";
+          };
+        };
+
+        resources.clusterSecretStores.openbao.spec.provider.vault = {
+          server = "http://openbao.openbao.svc:8200";
+          path = "secret";
+          version = "v2";
+          auth.kubernetes = {
+            mountPath = "kubernetes";
+            role = "eso-cluster";
+            serviceAccountRef.name = "external-secrets";
           };
         };
       };
