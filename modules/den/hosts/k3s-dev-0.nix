@@ -34,6 +34,7 @@
     };
 
   den.aspects.k3s-dev-0.includes = [
+    den.aspects.base
     den.aspects.k3s-server
     den.aspects.k3s-bootstrap
     den.aspects.k3s-sops-operator

@@ -23,10 +23,6 @@
       services.openssh.enable = true;
       services.openssh.generateHostKeys = false;
 
-      services.k3s.extraFlags = [
-        "--node-label=kidibox.net/egress-gateway=true"
-      ];
-
       services.cloud-init = {
         enable = true;
         settings.datasource_list = [ "NoCloud" ];
@@ -36,6 +32,7 @@
     };
 
   den.aspects.k3s-prd-0.includes = [
+    den.aspects.base
     den.aspects.k3s-server
     den.aspects.k3s-cilium
     den.aspects.k3s-bootstrap

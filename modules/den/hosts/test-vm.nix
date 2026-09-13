@@ -32,6 +32,7 @@
     };
 
   den.aspects.test-vm.includes = [
+    den.aspects.base
     den.aspects.disko.zfs-disk-single
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
