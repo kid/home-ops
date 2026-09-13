@@ -69,6 +69,27 @@ in
           # against the real server-applied result, not a client-side guess.
           resources.configMaps.argocd-cmd-params-cm.data."controller.diff.server.side" = "true";
 
+          # ArgoCD has no built-in health check for ExternalSecret, so it
+          # considers one healthy the instant it's applied — before ESO has
+          # actually pulled anything. This is what makes every sync-wave
+          # ordering gated on an ExternalSecret's health mean anything.
+          resources.configMaps.argocd-cm.data."resource.customizations.health.external-secrets.io_ExternalSecret" =
+            ''
+              hs = {}
+              if obj.status ~= nil and obj.status.conditions ~= nil then
+                for i, condition in ipairs(obj.status.conditions) do
+                  if condition.type == "Ready" and condition.status == "True" then
+                    hs.status = "Healthy"
+                    hs.message = condition.message
+                    return hs
+                  end
+                end
+              end
+              hs.status = "Progressing"
+              hs.message = "Waiting for ExternalSecret to sync"
+              return hs
+            '';
+
           # Replaces argocd-server's ephemeral self-signed cert with one off Hubble's CA.
           resources.certificates.argocd-server-tls.spec = {
             secretName = "argocd-server-tls";

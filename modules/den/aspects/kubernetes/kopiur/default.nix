@@ -18,6 +18,7 @@ _: {
       applications.kopiur = {
         namespace = "kopiur-system";
         createNamespace = true;
+        annotations."argocd.argoproj.io/sync-wave" = "-2";
 
         helm.releases.kopiur = {
           chart = charts.home-operations.kopiur;
