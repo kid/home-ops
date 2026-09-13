@@ -16,7 +16,13 @@ _: {
   ];
 
   den.aspects.kubernetes.miroir.k8s-manifests =
-    { charts, generators, ... }:
+    {
+      charts,
+      generators,
+      lib,
+      cluster,
+      ...
+    }:
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -32,13 +38,19 @@ _: {
 
         helm.releases.miroir.chart = charts.home-operations.miroir;
 
-        # Resource name must match the real Kubernetes node name.
-        resources.miroirNodes.k3s-prd-0.spec.pools = [
-          {
-            name = "default";
-            lvmthin.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir--data";
-          }
-        ];
+        resources.miroirNodes = lib.listToAttrs (
+          map (
+            n:
+            lib.nameValuePair n.hostname {
+              spec.pools = [
+                {
+                  name = "default";
+                  lvmthin.device = n.device;
+                }
+              ];
+            }
+          ) cluster.methods.miroirNodes
+        );
 
         resources.storageClasses.miroir = {
           metadata.annotations."storageclass.kubernetes.io/is-default-class" = "true";

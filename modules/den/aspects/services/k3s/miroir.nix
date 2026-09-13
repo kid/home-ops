@@ -14,7 +14,8 @@
 # extended with the same broken-check for drbd, this picks the newest
 # kernel where neither module is broken. Deliberately not `lib.mkDefault`:
 # nothing else in this repo sets boot.kernelPackages.
-_: {
+{ lib, ... }:
+{
   den.aspects.k3s-miroir = {
     datasets."zroot/miroir".properties.mountpoint = "none";
 
@@ -45,5 +46,9 @@ _: {
         boot.kernelModules = [ "drbd" ];
         boot.extraModulePackages = [ config.boot.kernelPackages.drbd ];
       };
+  };
+
+  den.aspects.k3s-miroir-node = {
+    settings.device = lib.mkOption { type = lib.types.str; };
   };
 }

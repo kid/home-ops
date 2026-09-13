@@ -2,6 +2,7 @@
 {
   den.hosts.x86_64-linux.k3s-prd-0 = {
     k3s.clusterName = "prd";
+    settings.k3s-miroir-node.settings.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir--data";
   };
 
   den.devices."k3s-prd-0-k3s" = {
@@ -37,6 +38,7 @@
     den.aspects.k3s-cilium
     den.aspects.k3s-bootstrap
     den.aspects.k3s-sops-operator
+    den.aspects.k3s-miroir-node
     (den.aspects.ssh { })
   ];
 
