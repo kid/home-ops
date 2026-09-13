@@ -6,6 +6,10 @@
 # decrypts secrets/clusters/<cluster>/<namespace>/<name>.sops.json and
 # re-encrypts in place. checks.manifests excludes SopsSecret-*.yaml from
 # its diff since that ciphertext is never reproduced by the sandboxed build.
+#
+# write-manifests --skip-secrets leaves SopsSecret-*.yaml untouched on disk
+# instead (no rsync, no decrypt/re-encrypt) — for CI, which has no sops
+# decryption key for secrets/clusters/<cluster>.
 {
   lib,
   self,
@@ -47,25 +51,35 @@
           pkgs.yq
           pkgs.findutils
         ];
-        text = lib.concatStringsSep "\n" (
+        text = ''
+          skip_secrets=0
+          if [[ "''${1:-}" == "--skip-secrets" ]]; then
+            skip_secrets=1
+          fi
+        ''
+        + lib.concatStringsSep "\n" (
           lib.mapAttrsToList (name: env: ''
             echo "==> Writing ${name} manifests to ${targetDirFor env}..."
             mkdir -p "${targetDirFor env}"
-            rsync -rlL --checksum --delete --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
+            if [[ "$skip_secrets" == 1 ]]; then
+              rsync -rlL --checksum --delete --exclude='SopsSecret-*.yaml' --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
+            else
+              rsync -rlL --checksum --delete --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
 
-            echo "==> Encrypting SopsSecret values for ${name}..."
-            while IFS= read -r -d "" f; do
-              namespace=$(yq -r '.metadata.namespace' "$f")
-              secretName=$(yq -r '.metadata.name' "$f")
-              valueFile="secrets/clusters/${name}/$namespace/$secretName.sops.json"
-              if [ -f "$valueFile" ]; then
-                value=$(sops --decrypt --input-type json --output-type json "$valueFile")
-                # shellcheck disable=SC2016 # $v is a jq variable, not a shell one
-                yq -y --argjson v "$value" '.spec.secrets[0].stringData = $v' "$f" > "$f.tmp"
-                mv "$f.tmp" "$f"
-              fi
-              sops --encrypt --input-type yaml --output-type yaml -i "$f"
-            done < <(find "${targetDirFor env}" -name 'SopsSecret-*.yaml' -print0)
+              echo "==> Encrypting SopsSecret values for ${name}..."
+              while IFS= read -r -d "" f; do
+                namespace=$(yq -r '.metadata.namespace' "$f")
+                secretName=$(yq -r '.metadata.name' "$f")
+                valueFile="secrets/clusters/${name}/$namespace/$secretName.sops.json"
+                if [ -f "$valueFile" ]; then
+                  value=$(sops --decrypt --input-type json --output-type json "$valueFile")
+                  # shellcheck disable=SC2016 # $v is a jq variable, not a shell one
+                  yq -y --argjson v "$value" '.spec.secrets[0].stringData = $v' "$f" > "$f.tmp"
+                  mv "$f.tmp" "$f"
+                fi
+                sops --encrypt --input-type yaml --output-type yaml -i "$f"
+              done < <(find "${targetDirFor env}" -name 'SopsSecret-*.yaml' -print0)
+            fi
           '') envs
         );
       };
