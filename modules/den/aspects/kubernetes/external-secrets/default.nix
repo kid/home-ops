@@ -21,7 +21,7 @@ _: {
         helm.releases.external-secrets.chart = charts.external-secrets.external-secrets;
 
         resources.clusterSecretStores.onepassword.spec.provider.onepasswordSDK = {
-          vault = "home-ops";
+          vault = "home-ops/prd";
           auth.serviceAccountSecretRef = {
             name = "onepassword-service-account-token";
             namespace = "external-secrets";
