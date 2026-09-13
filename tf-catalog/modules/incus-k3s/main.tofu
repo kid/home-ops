@@ -10,12 +10,13 @@ terraform {
 variable "nodes" {
   description = "k3s cluster compute nodes to run as Incus VMs, keyed by den.hosts entity name."
   type = map(object({
-    nixos_attr       = string
-    cpu              = number
-    memory           = string
-    disk_size        = string
-    mac              = optional(string)
-    miroir_disk_size = optional(string)
+    nixos_attr = string
+    cpu        = number
+    memory     = string
+    disk_size  = string
+    mac        = optional(string)
+    # Extra raw block devices beyond the root disk, keyed by device name.
+    extra_disks = optional(map(object({ size = string })), {})
   }))
 }
 
@@ -60,6 +61,13 @@ locals {
       }
     })}"
   }
+
+  extra_disks = merge([
+    for node_key, node in var.nodes : {
+      for disk_key, disk in node.extra_disks :
+      "${node_key}/${disk_key}" => merge(disk, { node = node_key, disk = disk_key })
+    }
+  ]...)
 }
 
 resource "incus_image" "k3s" {
@@ -78,15 +86,15 @@ resource "incus_image" "k3s" {
 # A plain disk device with `pool`+`size` and no `path`/`source` is only
 # valid for the special-cased root disk — any other disk needs a real
 # custom volume to attach as its `source`.
-resource "incus_storage_volume" "miroir_data" {
-  for_each = { for k, v in var.nodes : k => v if v.miroir_disk_size != null }
+resource "incus_storage_volume" "extra" {
+  for_each = local.extra_disks
 
-  name         = "${each.key}-miroir-data"
+  name         = "${each.value.node}-${each.value.disk}"
   pool         = var.storage_pool
   content_type = "block"
 
   config = {
-    size = each.value.miroir_disk_size
+    size = each.value.size
   }
 }
 
@@ -131,17 +139,17 @@ resource "incus_instance" "k3s" {
     }
   }
 
-  # No `path`, so this appears as a raw block device in the guest rather
-  # than a mounted filesystem.
+  # No `path`, so these appear as raw block devices in the guest rather
+  # than mounted filesystems.
   dynamic "device" {
-    for_each = each.value.miroir_disk_size != null ? [incus_storage_volume.miroir_data[each.key].name] : []
+    for_each = each.value.extra_disks
 
     content {
-      name = "miroir-data"
+      name = device.key
       type = "disk"
       properties = {
         pool   = var.storage_pool
-        source = device.value
+        source = incus_storage_volume.extra["${each.key}/${device.key}"].name
       }
     }
   }
