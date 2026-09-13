@@ -28,6 +28,7 @@
       {
         host,
         pkgs,
+        lib,
         config,
         ...
       }:
@@ -40,6 +41,15 @@
         sops.secrets.sops-operator-age-key = {
           sopsFile = ../../../../../secrets/clusters/${clusterName}/sops-age-key.sops;
           format = "binary";
+        };
+
+        # Delays decryption past cloud-init writing the real host key, avoiding a first-boot race.
+        # It's cloud-config.service, not cloud-init.service: NixOS's cloud_init_modules stage
+        # skips write-files as "no applicable config", it only runs under cloud_config_modules.
+        sops.useSystemdActivation = lib.mkIf config.services.cloud-init.enable true;
+        systemd.services.sops-install-secrets = lib.mkIf config.services.cloud-init.enable {
+          after = [ "cloud-config.service" ];
+          wants = [ "cloud-config.service" ];
         };
 
         systemd.services.k3s-sops-operator-seed = {
