@@ -40,4 +40,4 @@ jobs:
           sign-commits: true
           add-paths: |
             charts/
-            manifests/prd/
+            manifests/
