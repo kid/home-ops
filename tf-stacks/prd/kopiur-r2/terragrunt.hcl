@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "${get_repo_root()}/tf-catalog/modules/kopiur-r2"
+  source = "${get_repo_root()}/tf-catalog/modules//kopiur-r2"
 }
 
 generate "providers" {
