@@ -75,6 +75,21 @@ resource "incus_image" "k3s" {
   }
 }
 
+# A plain disk device with `pool`+`size` and no `path`/`source` is only
+# valid for the special-cased root disk — any other disk needs a real
+# custom volume to attach as its `source`.
+resource "incus_storage_volume" "miroir_data" {
+  for_each = { for k, v in var.nodes : k => v if v.miroir_disk_size != null }
+
+  name         = "${each.key}-miroir-data"
+  pool         = var.storage_pool
+  content_type = "block"
+
+  config = {
+    size = each.value.miroir_disk_size
+  }
+}
+
 resource "incus_instance" "k3s" {
   for_each = var.nodes
 
@@ -119,14 +134,14 @@ resource "incus_instance" "k3s" {
   # No `path`, so this appears as a raw block device in the guest rather
   # than a mounted filesystem.
   dynamic "device" {
-    for_each = each.value.miroir_disk_size != null ? [each.value.miroir_disk_size] : []
+    for_each = each.value.miroir_disk_size != null ? [incus_storage_volume.miroir_data[each.key].name] : []
 
     content {
       name = "miroir-data"
       type = "disk"
       properties = {
-        pool = var.storage_pool
-        size = device.value
+        pool   = var.storage_pool
+        source = device.value
       }
     }
   }
