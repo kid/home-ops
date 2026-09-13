@@ -15,6 +15,8 @@ variable "nodes" {
     memory     = string
     disk_size  = string
     mac        = optional(string)
+    # Extra raw block devices beyond the root disk, keyed by device name.
+    extra_disks = optional(map(object({ size = string })), {})
   }))
 }
 
@@ -59,6 +61,13 @@ locals {
       }
     })}"
   }
+
+  extra_disks = merge([
+    for node_key, node in var.nodes : {
+      for disk_key, disk in node.extra_disks :
+      "${node_key}/${disk_key}" => merge(disk, { node = node_key, disk = disk_key })
+    }
+  ]...)
 }
 
 resource "incus_image" "k3s" {
@@ -71,6 +80,21 @@ resource "incus_image" "k3s" {
 
   alias {
     name = "nixos/${each.key}"
+  }
+}
+
+# A plain disk device with `pool`+`size` and no `path`/`source` is only
+# valid for the special-cased root disk — any other disk needs a real
+# custom volume to attach as its `source`.
+resource "incus_storage_volume" "extra" {
+  for_each = local.extra_disks
+
+  name         = "${each.value.node}-${each.value.disk}"
+  pool         = var.storage_pool
+  content_type = "block"
+
+  config = {
+    size = each.value.size
   }
 }
 
@@ -112,6 +136,21 @@ resource "incus_instance" "k3s" {
     type = "disk"
     properties = {
       source = "cloud-init:config"
+    }
+  }
+
+  # No `path`, so these appear as raw block devices in the guest rather
+  # than mounted filesystems.
+  dynamic "device" {
+    for_each = each.value.extra_disks
+
+    content {
+      name = device.key
+      type = "disk"
+      properties = {
+        pool   = var.storage_pool
+        source = incus_storage_volume.extra["${each.key}/${device.key}"].name
+      }
     }
   }
 }

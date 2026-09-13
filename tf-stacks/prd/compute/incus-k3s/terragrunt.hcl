@@ -36,6 +36,9 @@ inputs = {
       memory     = "8GiB"
       disk_size  = "40GiB"
       mac        = "52:54:00:40:00:01"
+      extra_disks = {
+        miroir-data = { size = "20GiB" }
+      }
     }
   }
 
