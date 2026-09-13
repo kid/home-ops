@@ -11,70 +11,141 @@ in
   den.clusters.dev.methods.mkAppHostname = mkAppHostname "dev";
 
   den.aspects.kubernetes.envoy-gateway.k8s-manifests =
-    { charts, cluster, ... }:
     {
-      applications.envoy-gateway = {
-        namespace = "envoy-gateway-system";
-        createNamespace = true;
+      charts,
+      cluster,
+      lib,
+      ...
+    }:
+    {
+      applications.envoy-gateway =
+        lib.recursiveUpdate
+          {
+            namespace = "envoy-gateway-system";
+            createNamespace = true;
 
-        helm.releases.envoy-gateway = {
-          chart = charts.envoyproxy.gateway-helm;
-          values = {
-            # Gateway API CRDs are installed separately (gateway-api-crds.nix,
-            # upstream standard channel) — the chart's own bundled copy
-            # defaults to the experimental channel and would conflict.
-            crds.enabled = false;
-          };
-        };
+            helm.releases.envoy-gateway = {
+              chart = charts.envoyproxy.gateway-helm;
+              values = {
+                # Gateway API CRDs are installed separately (gateway-api-crds.nix,
+                # upstream standard channel) — the chart's own bundled copy
+                # defaults to the experimental channel and would conflict.
+                crds.enabled = false;
+              };
+            };
 
-        # The chart doesn't create a GatewayClass itself (unlike Cilium's
-        # gatewayClass.create shortcut) — gatewayclasses isn't one of
-        # gateway-api-crds.nix's typed nixidy imports, so this goes through
-        # the same raw-YAML escape hatch sops-operator's mkSopsSecret uses.
-        yamls = [
-          (builtins.toJSON {
-            apiVersion = "gateway.networking.k8s.io/v1";
-            kind = "GatewayClass";
-            metadata.name = "envoy";
-            spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
-          })
-        ];
+            # The chart doesn't create a GatewayClass itself (unlike Cilium's
+            # gatewayClass.create shortcut) — gatewayclasses isn't one of
+            # gateway-api-crds.nix's typed nixidy imports, so this goes through
+            # the same raw-YAML escape hatch sops-operator's mkSopsSecret uses.
+            yamls = [
+              (builtins.toJSON {
+                apiVersion = "gateway.networking.k8s.io/v1";
+                kind = "GatewayClass";
+                metadata.name = "envoy";
+                spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+              })
+            ];
 
-        resources.certificates.apps-tls.spec = {
-          secretName = "apps-tls";
-          dnsNames = [
-            "*.${cluster.domain}"
-            cluster.domain
-          ];
-          issuerRef = {
-            name = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
-            kind = "ClusterIssuer";
-            group = "cert-manager.io";
-          };
-        };
+            resources.certificates.apps-tls.spec = {
+              secretName = "apps-tls";
+              dnsNames = [
+                "*.${cluster.domain}"
+                cluster.domain
+              ];
+              issuerRef = {
+                name = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
+                kind = "ClusterIssuer";
+                group = "cert-manager.io";
+              };
+            };
 
-        resources.gateways.apps.spec = {
-          gatewayClassName = "envoy";
-          listeners = [
-            {
-              name = "https";
-              protocol = "HTTPS";
-              port = 443;
-              hostname = "*.${cluster.domain}";
-              tls = {
-                mode = "Terminate";
-                certificateRefs = [
+            resources.gateways.apps.spec = {
+              gatewayClassName = "envoy";
+              listeners = [
+                {
+                  name = "https";
+                  protocol = "HTTPS";
+                  port = 443;
+                  hostname = "*.${cluster.domain}";
+                  tls = {
+                    mode = "Terminate";
+                    certificateRefs = [
+                      {
+                        group = "";
+                        kind = "Secret";
+                        name = "apps-tls";
+                      }
+                    ];
+                  };
+                  allowedRoutes.namespaces.from = "All";
+                }
+              ];
+            };
+          }
+          (
+            lib.optionalAttrs (cluster.name == "prd") {
+              resources.pushSecrets.apps-tls.spec = {
+                refreshInterval = "1h";
+                secretStoreRefs = [
                   {
-                    group = "";
-                    kind = "Secret";
-                    name = "apps-tls";
+                    name = "openbao";
+                    kind = "ClusterSecretStore";
+                  }
+                ];
+                selector.secret.name = "apps-tls";
+                data = [
+                  {
+                    match = {
+                      secretKey = "tls.crt";
+                      remoteRef = {
+                        remoteKey = "apps-tls";
+                        property = "tls.crt";
+                      };
+                    };
+                  }
+                  {
+                    match = {
+                      secretKey = "tls.key";
+                      remoteRef = {
+                        remoteKey = "apps-tls";
+                        property = "tls.key";
+                      };
+                    };
                   }
                 ];
               };
-              allowedRoutes.namespaces.from = "All";
+
+              resources.externalSecrets.apps-tls = {
+                metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+                spec = {
+                  secretStoreRef = {
+                    name = "openbao";
+                    kind = "ClusterSecretStore";
+                  };
+                  target = {
+                    name = "apps-tls";
+                    creationPolicy = "Merge";
+                  };
+                  data = [
+                    {
+                      secretKey = "tls.crt";
+                      remoteRef = {
+                        key = "apps-tls";
+                        property = "tls.crt";
+                      };
+                    }
+                    {
+                      secretKey = "tls.key";
+                      remoteRef = {
+                        key = "apps-tls";
+                        property = "tls.key";
+                      };
+                    }
+                  ];
+                };
+              };
             }
-          ];
-        };
-      };
+          );
     };
 }
