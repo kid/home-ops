@@ -11,6 +11,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13"
     ];
+    hashedPassword = "$y$j9T$aTrKe3LPuhd9zCvCSs4KP1$/V7Blv9MLvM5JWQYjLQrTcc2TzrDpcjHdDdqlSP0Aq2";
     routerosDevices.rb5009.group = "full"; # TODO: verify against the real router — unconfirmed placeholder
     routerosDevices.crs320.group = "full"; # TODO: verify against the real router — unconfirmed placeholder
   };
