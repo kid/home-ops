@@ -31,7 +31,7 @@ spec:
               # in the pod's logs.
 
               kubectl apply --server-side=true --overwrite=true --force-conflicts=true -f /data/ 2>&1
-          image: docker.io/clastix/kubectl:v1.36
+          image: docker.io/clastix/kubectl:v1.37
           imagePullPolicy: IfNotPresent
           name: crds-hook
           securityContext:
