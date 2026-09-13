@@ -1,0 +1,17 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: openbao-data
+  namespace: openbao
+spec:
+  identity:
+    hostname: openbao
+    username: openbao
+  repository:
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: data-openbao-0
