@@ -34,7 +34,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: ghcr.io/home-operations/miroir-agent@sha256:2d43d418c8929fe28aedaf8cfd306f1fe4be39f3dd1f521942b135b19ebe133c
+          image: ghcr.io/home-operations/miroir-agent@sha256:07bdd5ae358f2caf4c77e45bc913084600de76aec2d2e25e227e6ed85af711b2
           imagePullPolicy: IfNotPresent
           lifecycle:
             preStop:
@@ -92,7 +92,7 @@ spec:
         - args:
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=/var/lib/kubelet/plugins/miroir.home-operations.com/csi.sock
-          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.17.0
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.18.0
           name: node-driver-registrar
           resources:
             limits:
