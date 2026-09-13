@@ -5,6 +5,11 @@
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 
+  nixConfig = {
+    extra-substituters = [ "https://nixhelm.cachix.org" ];
+    extra-trusted-public-keys = [ "nixhelm.cachix.org-1:esqauAsR4opRF0UsGrA6H3gD21OrzMnBBYvJXeddjtY=" ];
+  };
+
   inputs = {
     den.url = "github:denful/den";
     disko = {
