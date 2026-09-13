@@ -16,10 +16,8 @@
   ],
   ignorePaths: [
     '**/resources/**',
-    // nixidy-generated, regenerated from modules/kubernetes/**/*.nix via
-    // `nix run .#write-manifests` — never hand-edit, and a version bump
-    // here alone would just get overwritten on the next regen.
-    'manifests/prd/**',
+    // nixidy-generated, regenerated from modules/kubernetes/**/*.nix via `nix run .#write-manifests`
+    'manifests/**',
   ],
   suppressNotifications: [
     "prEditedNotification",
@@ -34,14 +32,6 @@
   kubernetes: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
-  // Tracks version pins hand-written directly in modules/kubernetes/**/*.nix
-  // (Helm values, fetchFromGitHub revs) that the yaml-only managers above
-  // can't see. Each pin needs a `# renovate: datasource=... depName=...`
-  // comment on the line above it — see those files for examples. Pins
-  // paired with a Nix `hash` (fetchFromGitHub) will still need that hash
-  // updated by hand after Renovate bumps `rev`: the hosted app can't run
-  // postUpgradeTasks to recompute it, so `nix flake check` will fail with
-  // a hash mismatch until it's fixed.
   customManagers: [
     {
       customType: "regex",
@@ -51,20 +41,13 @@
       ],
     },
   ],
-  // Beta: lets Renovate propose a bump PR for individual flake.lock inputs.
-  // Scoped to nixhelm only for now — chart versions themselves
-  // (charts/<org>/<chart>/default.nix) are no longer tracked here at all,
-  // since they're literal strings bumped by the scheduled
-  // .github/workflows/update-helm-charts.yaml job instead. This lever just
-  // keeps nixhelm's own helmupdater CLI (modules/flake/devshell.nix)
-  // current.
   nix: {
     enabled: true,
   },
   packageRules: [
     {
       matchManagers: ["nix"],
-      enabled: false,
+      enabled: true,
     },
     {
       matchManagers: ["nix"],
