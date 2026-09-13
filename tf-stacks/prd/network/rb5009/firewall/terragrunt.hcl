@@ -69,6 +69,11 @@ inputs = {
       name    = "Trusted"
       vlan_id = 100
     }
+    zerotier1 = {
+      address = "10.147.20.1"
+      name    = "zerotier1"
+      vlan_id = 0
+    }
   }
   vlans_forward_rules = {
     Guest = [
@@ -159,6 +164,23 @@ inputs = {
         action             = "accept"
         comment            = "Allow access to all vlans"
         out_interface_list = "all"
+      },
+    ]
+    zerotier1 = [
+      {
+        action        = "accept"
+        comment       = "Allow ZeroTier to Trusted"
+        out_interface = "Trusted"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow ZeroTier to Servers"
+        out_interface = "Servers"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow ZeroTier to Management"
+        out_interface = "Management"
       },
     ]
   }

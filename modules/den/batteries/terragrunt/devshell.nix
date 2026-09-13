@@ -1,6 +1,8 @@
 # Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt/terragrunt-stacks.nix) to
-# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl, exposed
-# as `nix run .#write-terragrunt` (mirrors apps.write-manifests/
+# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl, plus
+# config.flake.environmentTerragruntStacks (non-RouterOS-device,
+# environment-scoped stack content) to tf-stacks/<env>/network/<stack>/terragrunt.hcl,
+# exposed as `nix run .#write-terragrunt` (mirrors apps.write-manifests/
 # write-terraform elsewhere in the dendritic ecosystem) + `checks.terragrunt`
 # (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
 {
@@ -73,15 +75,29 @@ let
       inputs = ${toValue leaf.inputs}
     '';
 
-  allLeaves = lib.flatten (
-    lib.mapAttrsToList (
-      routerosDeviceName: stacks:
-      lib.mapAttrsToList (stack: leaf: {
-        path = leafRelPath routerosDeviceName stack;
-        content = renderLeaf routerosDeviceName stack leaf;
-      }) stacks
-    ) (config.flake.terragruntStacks or { })
-  );
+  # renderLeaf's device-name parameter is unused, so it's reused unchanged
+  # below for environment-scoped stacks too.
+  environmentLeafRelPath = envName: stack: "tf-stacks/${envName}/network/${stack}/terragrunt.hcl";
+
+  allLeaves =
+    lib.flatten (
+      lib.mapAttrsToList (
+        routerosDeviceName: stacks:
+        lib.mapAttrsToList (stack: leaf: {
+          path = leafRelPath routerosDeviceName stack;
+          content = renderLeaf routerosDeviceName stack leaf;
+        }) stacks
+      ) (config.flake.terragruntStacks or { })
+    )
+    ++ lib.flatten (
+      lib.mapAttrsToList (
+        envName: stacks:
+        lib.mapAttrsToList (stack: leaf: {
+          path = environmentLeafRelPath envName stack;
+          content = renderLeaf envName stack leaf;
+        }) stacks
+      ) (config.flake.environmentTerragruntStacks or { })
+    );
 in
 {
   perSystem =
