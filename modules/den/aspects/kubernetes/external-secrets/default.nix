@@ -24,6 +24,7 @@ _: {
           vault = "home-ops";
           auth.serviceAccountSecretRef = {
             name = "onepassword-service-account-token";
+            namespace = "external-secrets";
             key = "token";
           };
         };
