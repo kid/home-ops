@@ -10,11 +10,12 @@ terraform {
 variable "nodes" {
   description = "k3s cluster compute nodes to run as Incus VMs, keyed by den.hosts entity name."
   type = map(object({
-    nixos_attr = string
-    cpu        = number
-    memory     = string
-    disk_size  = string
-    mac        = optional(string)
+    nixos_attr       = string
+    cpu              = number
+    memory           = string
+    disk_size        = string
+    mac              = optional(string)
+    miroir_disk_size = optional(string)
   }))
 }
 
@@ -112,6 +113,22 @@ resource "incus_instance" "k3s" {
     type = "disk"
     properties = {
       source = "cloud-init:config"
+    }
+  }
+
+  # Raw block device (no `path`) for hosts that format their own extra ZFS
+  # pool at boot — this VM's root disk comes from a pre-built qemuImage, so
+  # disko never runs for it; a second disk needs guest-side pool creation.
+  dynamic "device" {
+    for_each = each.value.miroir_disk_size != null ? [each.value.miroir_disk_size] : []
+
+    content {
+      name = "miroir-data"
+      type = "disk"
+      properties = {
+        pool = var.storage_pool
+        size = device.value
+      }
     }
   }
 }

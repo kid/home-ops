@@ -1,8 +1,11 @@
-# Reserves the zroot/miroir ZFS dataset miroir's ZFS backend uses as its
+# Reserves the miroir/data ZFS dataset miroir's ZFS backend uses as its
 # pool (modules/den/aspects/kubernetes/miroir/default.nix's MiroirNode zfs.dataset) —
 # the driver only zfs-creates child datasets per PV under this parent, it
 # never creates the parent itself, so it must already exist before any PV
-# can be provisioned.
+# can be provisioned. The `miroir` pool itself (as opposed to this dataset
+# under it) is created by k3s-prd-0's own zfs-pool-miroir-init systemd unit
+# (modules/den/hosts/k3s-prd-0.nix) — this host has no disko install, so
+# disko-zfs here only manages the dataset, not the pool/disk.
 #
 # DRBD9 (>= 9.3.1, required even for miroir's local-only, single-replica
 # use today — it's needed before any node can replicate, and loading it
@@ -16,7 +19,7 @@
 # nothing else in this repo sets boot.kernelPackages.
 _: {
   den.aspects.k3s-miroir = {
-    datasets."zroot/miroir".properties.mountpoint = "none";
+    datasets."miroir/data".properties.mountpoint = "none";
 
     nixos =
       {

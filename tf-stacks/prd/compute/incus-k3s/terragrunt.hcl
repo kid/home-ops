@@ -31,11 +31,12 @@ dependency "network" {
 inputs = {
   nodes = {
     k3s-prd-0 = {
-      nixos_attr = "k3s-prd-0"
-      cpu        = 4
-      memory     = "8GiB"
-      disk_size  = "40GiB"
-      mac        = "52:54:00:40:00:01"
+      nixos_attr       = "k3s-prd-0"
+      cpu              = 4
+      memory           = "8GiB"
+      disk_size        = "40GiB"
+      mac              = "52:54:00:40:00:01"
+      miroir_disk_size = "20GiB"
     }
   }
 

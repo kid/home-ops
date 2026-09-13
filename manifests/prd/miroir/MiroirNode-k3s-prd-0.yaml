@@ -1,9 +1,9 @@
 apiVersion: miroir.home-operations.com/v1alpha1
 kind: MiroirNode
 metadata:
-  name: node1
+  name: k3s-prd-0
 spec:
   pools:
     - name: default
       zfs:
-        dataset: zroot/miroir
+        dataset: miroir/data
