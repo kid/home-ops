@@ -13,7 +13,7 @@ generate "providers" {
     provider "onepassword" {}
 
     provider "cloudflare" {
-      api_token = data.onepassword_item.cloudflare_r2_provisioning.password
+      api_token = data.onepassword_item.cloudflare_admin.password
     }
   EOF
 }

@@ -21,9 +21,9 @@ data "onepassword_vault" "home_ops" {
   name = "home-ops"
 }
 
-data "onepassword_item" "cloudflare_r2_provisioning" {
+data "onepassword_item" "cloudflare_admin" {
   vault = data.onepassword_vault.home_ops.uuid
-  title = "Cloudflare - R2 provisioning token"
+  title = "Cloudflare - admin token"
 }
 
 resource "random_password" "kopia_repository_password" {
