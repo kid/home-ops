@@ -49,9 +49,6 @@ _: {
           };
         };
 
-        # ClusterRepository, not Repository — openbao's Restore/SnapshotPolicy
-        # live in a different namespace and need to reference this same
-        # repository (Repository is namespace-scoped, so they couldn't).
         resources.clusterRepositories.r2.spec = {
           allowedNamespaces.all = true;
           backend.s3 = {
@@ -68,8 +65,6 @@ _: {
             key = "KOPIA_PASSWORD";
             namespace = "kopiur-system";
           };
-          # Lets kopiur copy the credential Secret into any namespace whose
-          # own Snapshot/Restore/Maintenance references this repository.
           credentialProjection.allowed = true;
           create.enabled = true;
         };
