@@ -31,8 +31,9 @@ resource "cloudflare_r2_bucket" "this" {
   location   = var.location
 }
 
-resource "cloudflare_api_token" "this" {
-  name = "${var.bucket_name}-r2"
+resource "cloudflare_account_token" "this" {
+  account_id = var.account_id
+  name       = "${var.bucket_name}-r2"
 
   policies = [{
     effect = "allow"
@@ -50,10 +51,10 @@ output "bucket_name" {
 }
 
 output "access_key_id" {
-  value = cloudflare_api_token.this.id
+  value = cloudflare_account_token.this.id
 }
 
 output "secret_access_key" {
-  value     = sha256(cloudflare_api_token.this.value)
+  value     = sha256(cloudflare_account_token.this.value)
   sensitive = true
 }

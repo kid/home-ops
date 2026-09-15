@@ -7,5 +7,5 @@ terraform {
 }
 
 inputs = {
-  account_id = "" # TODO: set your Cloudflare account ID
+  account_id = "fadfc390b1e5fb0ce019b9f7a8917d42"
 }
