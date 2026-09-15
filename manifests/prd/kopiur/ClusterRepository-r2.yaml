@@ -1,20 +1,25 @@
 apiVersion: kopiur.home-operations.com/v1alpha1
-kind: Repository
+kind: ClusterRepository
 metadata:
   name: r2
-  namespace: kopiur-system
 spec:
+  allowedNamespaces:
+    all: true
   backend:
     s3:
       auth:
         secretRef:
           name: kopiur-r2
+          namespace: kopiur-system
       bucket: home-ops-kopiur
       endpoint: fadfc390b1e5fb0ce019b9f7a8917d42.r2.cloudflarestorage.com
       region: auto
   create:
     enabled: true
+  credentialProjection:
+    allowed: true
   encryption:
     passwordSecretRef:
       key: KOPIA_PASSWORD
       name: kopiur-r2
+      namespace: kopiur-system
