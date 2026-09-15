@@ -4,6 +4,8 @@ metadata:
   name: openbao-data
   namespace: openbao
 spec:
+  credentialProjection:
+    enabled: true
   policy:
     onMissingSnapshot: Continue
   source:
