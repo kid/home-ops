@@ -1,0 +1,14 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: openbao-data
+  namespace: openbao
+spec:
+  policy:
+    onMissingSnapshot: Continue
+  source:
+    fromPolicy:
+      name: openbao-data
+      offset: 0
+  target:
+    populator: {}
