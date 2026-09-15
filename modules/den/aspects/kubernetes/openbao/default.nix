@@ -27,10 +27,10 @@ _: {
           data = [
             {
               secretKey = "unsealKey";
-              remoteRef = {
-                key = "OpenBao - unseal key";
-                property = "unsealKey";
-              };
+              # <item>/[section/]<field> — the only key format this provider
+              # reads for `data[]` entries; a separate `property` is silently
+              # ignored (that's only for `dataFrom[].extract`).
+              remoteRef.key = "openbao-unseal-key/unseal-key";
             }
           ];
         };
