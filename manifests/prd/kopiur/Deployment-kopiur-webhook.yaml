@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/instance: kopiur
+    app.kubernetes.io/name: kopiur
+    app.kubernetes.io/part-of: kopiur
+  name: kopiur-webhook
+  namespace: kopiur-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: webhook
+      app.kubernetes.io/instance: kopiur
+      app.kubernetes.io/name: kopiur
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: webhook
+        app.kubernetes.io/instance: kopiur
+        app.kubernetes.io/name: kopiur
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - env:
+            - name: RUST_LOG
+              value: info
+            - name: KOPIUR_LOG_FORMAT
+              value: text
+            - name: KOPIUR_WEBHOOK_ADDR
+              value: '[::]:8443'
+            - name: KOPIUR_WEBHOOK_TLS_CERT
+              value: /tls/tls.crt
+            - name: KOPIUR_WEBHOOK_TLS_KEY
+              value: /tls/tls.key
+          image: ghcr.io/home-operations/kopiur-webhook@sha256:7dbe59cdd08c24d8a11b7a1e1851d664be87e7005f7eb37a03d1da1e4c64187e
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          name: webhook
+          ports:
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tls
+              name: tls
+              readOnly: true
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kopiur
+      volumes:
+        - name: tls
+          secret:
+            secretName: kopiur-webhook-tls

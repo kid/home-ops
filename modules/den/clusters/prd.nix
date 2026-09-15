@@ -109,6 +109,7 @@ in
     sops-operator
     external-dns
     external-secrets
+    kopiur
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/

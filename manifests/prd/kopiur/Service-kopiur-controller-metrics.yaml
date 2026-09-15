@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: kopiur
+    app.kubernetes.io/name: kopiur
+    app.kubernetes.io/part-of: kopiur
+  name: kopiur-controller-metrics
+  namespace: kopiur-system
+spec:
+  ports:
+    - name: metrics
+      port: 8081
+      protocol: TCP
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: kopiur
+    app.kubernetes.io/name: kopiur
+  type: ClusterIP
