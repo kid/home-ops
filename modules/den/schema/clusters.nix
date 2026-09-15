@@ -126,6 +126,11 @@
               description = "Use Let's Encrypt's staging ACME server instead of production (modules/den/aspects/kubernetes/cert-manager)";
             };
 
+            secrets.onepasswordVault = lib.mkOption {
+              type = lib.types.str;
+              description = "1Password vault name this cluster's ExternalSecrets read from (modules/den/aspects/kubernetes/external-secrets)";
+            };
+
             storage = lib.mkOption {
               type = lib.types.attrsOf (
                 lib.types.submodule {

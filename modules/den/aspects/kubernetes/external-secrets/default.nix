@@ -1,6 +1,11 @@
 _: {
   den.aspects.kubernetes.external-secrets.k8s-manifests =
-    { charts, generators, ... }:
+    {
+      charts,
+      generators,
+      cluster,
+      ...
+    }:
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -21,7 +26,7 @@ _: {
         helm.releases.external-secrets.chart = charts.external-secrets.external-secrets;
 
         resources.clusterSecretStores.onepassword.spec.provider.onepasswordSDK = {
-          vault = "home-ops/prd";
+          vault = cluster.secrets.onepasswordVault;
           auth.serviceAccountSecretRef = {
             name = "onepassword-service-account-token";
             namespace = "external-secrets";

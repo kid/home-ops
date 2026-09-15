@@ -14,7 +14,7 @@ terraform {
 provider "onepassword" {}
 
 data "onepassword_vault" "home_ops_prd" {
-  name = "home-ops/prd"
+  name = "home-ops-prd"
 }
 
 variable "account_id" {
