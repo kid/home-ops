@@ -52,7 +52,7 @@
 
               kubectl create secret generic onepassword-service-account-token \
                 -n external-secrets \
-                --from-file=token=${config.sops.secrets.onepassword-service-account-token.path} \
+                --from-literal=token="$(cat ${config.sops.secrets.onepassword-service-account-token.path})" \
                 --dry-run=client -o yaml | kubectl apply -f -
 
               echo "onepassword-service-account-token synced."
