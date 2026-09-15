@@ -77,6 +77,7 @@ _: {
             kind = "ClusterRepository";
             name = "r2";
           };
+          credentialProjection.enabled = true;
           sources = [ { pvc.name = "data-openbao-0"; } ];
           identity = {
             username = "openbao";
@@ -104,6 +105,7 @@ _: {
           };
           target.populator = { };
           policy.onMissingSnapshot = "Continue";
+          credentialProjection.enabled = true;
         };
 
         resources.persistentVolumeClaims.data-openbao-0.spec = {
