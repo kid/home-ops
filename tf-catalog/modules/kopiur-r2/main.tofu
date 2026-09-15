@@ -35,26 +35,26 @@ resource "random_password" "kopia_repository_password" {
 
 resource "onepassword_item" "kopiur_r2" {
   vault    = data.onepassword_vault.home_ops_prd.uuid
-  title    = "kopiur - R2 credentials"
+  title    = "kopiur-r2-credentials"
   category = "secure_note"
 
   section {
     label = "credentials"
 
     field {
-      label = "accessKeyId"
+      label = "access-key-id"
       type  = "STRING"
       value = module.bucket.access_key_id
     }
 
     field {
-      label = "secretAccessKey"
+      label = "secret-access-key"
       type  = "CONCEALED"
       value = module.bucket.secret_access_key
     }
 
     field {
-      label = "repositoryPassword"
+      label = "repository-password"
       type  = "CONCEALED"
       value = random_password.kopia_repository_password.result
     }

@@ -29,27 +29,21 @@ _: {
               kind = "ClusterSecretStore";
             };
             target.name = "kopiur-r2";
+            # <item>/[section/]<field> — the only key format this provider
+            # reads for `data[]` entries; a separate `property` is silently
+            # ignored (that's only for `dataFrom[].extract`).
             data = [
               {
                 secretKey = "AWS_ACCESS_KEY_ID";
-                remoteRef = {
-                  key = "kopiur - R2 credentials";
-                  property = "accessKeyId";
-                };
+                remoteRef.key = "kopiur-r2-credentials/credentials/access-key-id";
               }
               {
                 secretKey = "AWS_SECRET_ACCESS_KEY";
-                remoteRef = {
-                  key = "kopiur - R2 credentials";
-                  property = "secretAccessKey";
-                };
+                remoteRef.key = "kopiur-r2-credentials/credentials/secret-access-key";
               }
               {
                 secretKey = "KOPIA_PASSWORD";
-                remoteRef = {
-                  key = "kopiur - R2 credentials";
-                  property = "repositoryPassword";
-                };
+                remoteRef.key = "kopiur-r2-credentials/credentials/repository-password";
               }
             ];
           };
