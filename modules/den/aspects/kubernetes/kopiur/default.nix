@@ -19,7 +19,10 @@ _: {
         namespace = "kopiur-system";
         createNamespace = true;
 
-        helm.releases.kopiur.chart = charts.home-operations.kopiur;
+        helm.releases.kopiur = {
+          chart = charts.home-operations.kopiur;
+          values.features.credentialProjection.enabled = true;
+        };
 
         resources.externalSecrets.kopiur-r2 = {
           metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
