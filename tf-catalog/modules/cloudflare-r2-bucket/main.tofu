@@ -20,6 +20,15 @@ variable "location" {
   default = null
 }
 
+variable "token_name" {
+  type    = string
+  default = null
+}
+
+locals {
+  token_name = coalesce(var.token_name, "${var.bucket_name}-r2")
+}
+
 data "cloudflare_account_api_token_permission_groups_list" "r2_write" {
   account_id = var.account_id
   name       = "Workers%20R2%20Storage%20Bucket%20Item%20Write"
@@ -33,7 +42,7 @@ resource "cloudflare_r2_bucket" "this" {
 
 resource "cloudflare_account_token" "this" {
   account_id = var.account_id
-  name       = "${var.bucket_name}-r2"
+  name       = local.token_name
 
   policies = [{
     effect = "allow"

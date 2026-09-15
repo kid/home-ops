@@ -26,6 +26,7 @@ module "bucket" {
 
   account_id  = var.account_id
   bucket_name = "home-ops-kopiur"
+  token_name  = "kopiur@home-ops/prd"
 }
 
 resource "random_password" "kopia_repository_password" {
