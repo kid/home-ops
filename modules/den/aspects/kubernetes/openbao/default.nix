@@ -73,7 +73,10 @@ _: {
         };
 
         resources.snapshotPolicies.openbao-data.spec = {
-          repository.name = "r2";
+          repository = {
+            kind = "ClusterRepository";
+            name = "r2";
+          };
           sources = [ { pvc.name = "data-openbao-0"; } ];
           identity = {
             username = "openbao";

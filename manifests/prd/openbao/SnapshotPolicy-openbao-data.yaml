@@ -8,6 +8,7 @@ spec:
     hostname: openbao
     username: openbao
   repository:
+    kind: ClusterRepository
     name: r2
   retention:
     keepDaily: 14
