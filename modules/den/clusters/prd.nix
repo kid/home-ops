@@ -55,6 +55,8 @@ in
     network = "K3s";
     domain = "kidibox.net";
 
+    secrets.onepasswordVault = "home-ops-prd";
+
     networks = {
       pods = {
         cidr = "172.40.0.0/16";
