@@ -52,6 +52,8 @@ _: {
         resources.repositories.r2.spec = {
           backend.s3 = {
             bucket = "home-ops-kopiur";
+            endpoint = "fadfc390b1e5fb0ce019b9f7a8917d42.r2.cloudflarestorage.com";
+            region = "auto";
             auth.secretRef.name = "kopiur-r2";
           };
           encryption.passwordSecretRef = {
