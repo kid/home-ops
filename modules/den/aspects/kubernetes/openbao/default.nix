@@ -106,17 +106,14 @@ _: {
           policy.onMissingSnapshot = "Continue";
         };
 
-        resources.persistentVolumeClaims.data-openbao-0 = {
-          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-          spec = {
-            storageClassName = "miroir";
-            accessModes = [ "ReadWriteOnce" ];
-            resources.requests.storage = "10Gi";
-            dataSourceRef = {
-              apiGroup = "kopiur.home-operations.com";
-              kind = "Restore";
-              name = "openbao-data";
-            };
+        resources.persistentVolumeClaims.data-openbao-0.spec = {
+          storageClassName = "miroir";
+          accessModes = [ "ReadWriteOnce" ];
+          resources.requests.storage = "10Gi";
+          dataSourceRef = {
+            apiGroup = "kopiur.home-operations.com";
+            kind = "Restore";
+            name = "openbao-data";
           };
         };
       };
