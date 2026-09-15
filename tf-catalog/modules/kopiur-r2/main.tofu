@@ -13,21 +13,8 @@ terraform {
 
 provider "onepassword" {}
 
-data "onepassword_vault" "home_ops" {
-  name = "home-ops"
-}
-
 data "onepassword_vault" "home_ops_prd" {
   name = "home-ops/prd"
-}
-
-data "onepassword_item" "cloudflare_admin" {
-  vault = data.onepassword_vault.home_ops.uuid
-  title = "Cloudflare - admin token"
-}
-
-provider "cloudflare" {
-  api_token = data.onepassword_item.cloudflare_admin.credential
 }
 
 variable "account_id" {
