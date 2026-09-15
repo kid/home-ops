@@ -7,6 +7,10 @@ terraform {
   }
 }
 
+variable "account_id" {
+  type = string
+}
+
 variable "bucket_name" {
   type = string
 }
@@ -16,19 +20,13 @@ variable "location" {
   default = null
 }
 
-data "cloudflare_accounts" "this" {}
-
 data "cloudflare_account_api_token_permission_groups_list" "r2_write" {
-  account_id = local.account_id
+  account_id = var.account_id
   name       = "Workers%20R2%20Storage%20Bucket%20Item%20Write"
 }
 
-locals {
-  account_id = data.cloudflare_accounts.this.result[0].id
-}
-
 resource "cloudflare_r2_bucket" "this" {
-  account_id = local.account_id
+  account_id = var.account_id
   name       = var.bucket_name
   location   = var.location
 }
@@ -42,7 +40,7 @@ resource "cloudflare_api_token" "this" {
       { id = data.cloudflare_account_api_token_permission_groups_list.r2_write.result[0].id }
     ]
     resources = jsonencode({
-      "com.cloudflare.edge.r2.bucket.${local.account_id}_default_${var.bucket_name}" = "*"
+      "com.cloudflare.edge.r2.bucket.${var.account_id}_default_${var.bucket_name}" = "*"
     })
   }]
 }

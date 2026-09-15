@@ -11,11 +11,7 @@ terraform {
   }
 }
 
-module "bucket" {
-  source = "../cloudflare-r2-bucket"
-
-  bucket_name = "home-ops-kopiur"
-}
+provider "onepassword" {}
 
 data "onepassword_vault" "home_ops" {
   name = "home-ops"
@@ -28,6 +24,21 @@ data "onepassword_vault" "home_ops_prd" {
 data "onepassword_item" "cloudflare_admin" {
   vault = data.onepassword_vault.home_ops.uuid
   title = "Cloudflare - admin token"
+}
+
+provider "cloudflare" {
+  api_token = data.onepassword_item.cloudflare_admin.credential
+}
+
+variable "account_id" {
+  type = string
+}
+
+module "bucket" {
+  source = "../cloudflare-r2-bucket"
+
+  account_id  = var.account_id
+  bucket_name = "home-ops-kopiur"
 }
 
 resource "random_password" "kopia_repository_password" {
