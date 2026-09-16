@@ -33,6 +33,7 @@ _: {
             kubectl
             kubernetes-helm
             cilium-cli
+            argocd
             kustomize
             kustomize-sops
             kubectx
