@@ -26,18 +26,9 @@ in
 
             helm.releases.envoy-gateway = {
               chart = charts.envoyproxy.gateway-helm;
-              values = {
-                # Gateway API CRDs are installed separately (gateway-api-crds.nix,
-                # upstream standard channel) — the chart's own bundled copy
-                # defaults to the experimental channel and would conflict.
-                crds.enabled = false;
-              };
+              values.crds.enabled = true;
             };
 
-            # The chart doesn't create a GatewayClass itself (unlike Cilium's
-            # gatewayClass.create shortcut) — gatewayclasses isn't one of
-            # gateway-api-crds.nix's typed nixidy imports, so this goes through
-            # the same raw-YAML escape hatch sops-operator's mkSopsSecret uses.
             yamls = [
               (builtins.toJSON {
                 apiVersion = "gateway.networking.k8s.io/v1";

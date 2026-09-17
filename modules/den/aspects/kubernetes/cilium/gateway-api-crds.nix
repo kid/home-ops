@@ -40,11 +40,9 @@ _: {
       };
     in
     {
-      applications.gateway-api-crds.kustomize.applications.gateway-api-crds.kustomization = {
-        src = gatewayApiSrc;
-        path = "config/crd";
-      };
-
+      # CRDs themselves come from envoy-gateway's own chart (crds.enabled),
+      # not applied here — this aspect only registers the typed nixidy
+      # options other aspects (envoy-gateway, argocd) read/write against.
       nixidy.applicationImports = [
         (generators.fromCRDModule {
           name = "gateway-api";
