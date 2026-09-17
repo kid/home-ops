@@ -53,6 +53,7 @@ _: {
             config.packages.provision-host-key
             config.packages.write-manifests
             config.packages.write-terragrunt
+            config.packages.refresh-nix-hash
             config.packages.write-sops-config
             config.packages.write-flake
             config.packages.write-lock

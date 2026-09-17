@@ -54,5 +54,19 @@
       matchDepNames: ["nixhelm"],
       enabled: true,
     },
+    {
+      // fetchFromGitHub pins need their hash recomputed whenever the rev
+      // bumps, or Nix silently keeps serving the old fetch's content —
+      // this custom manager can only rewrite the rev, not the hash.
+      matchManagers: ["regex"],
+      matchDatasources: ["github-releases"],
+      postUpgradeTasks: {
+        commands: [
+          "nix run .#refresh-nix-hash -- {{{packageFileName}}} {{{depName}}} {{{newValue}}}",
+        ],
+        fileFilters: ["**/*.nix"],
+        executionMode: "update",
+      },
+    },
   ],
 }
