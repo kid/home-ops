@@ -35,6 +35,10 @@ spec:
       name: openbao-server-test
       securityContext:
         allowPrivilegeEscalation: false
+      volumeMounts:
+        - mountPath: /vault/unseal
+          name: unseal
+          readOnly: true
   restartPolicy: Never
   securityContext:
     fsGroup: 1000
@@ -43,3 +47,7 @@ spec:
     runAsUser: 100
     seccompProfile:
       type: RuntimeDefault
+  volumes:
+    - name: unseal
+      secret:
+        secretName: openbao-unseal
