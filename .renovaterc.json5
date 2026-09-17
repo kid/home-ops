@@ -35,7 +35,7 @@
   customManagers: [
     {
       customType: "regex",
-      managerFilePatterns: ["/^modules/kubernetes/.*\\.nix$/"],
+      managerFilePatterns: ["/.*\\.nix$/"],
       matchStrings: [
         "# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?\\s+\\S+\\s*=\\s*\"(?<currentValue>[^\"]+)\";",
       ],
