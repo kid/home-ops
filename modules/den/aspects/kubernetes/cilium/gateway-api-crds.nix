@@ -40,11 +40,6 @@ _: {
       };
     in
     {
-      applications.gateway-api-crds.kustomize.applications.gateway-api-crds.kustomization = {
-        src = gatewayApiSrc;
-        path = "config/crd";
-      };
-
       nixidy.applicationImports = [
         (generators.fromCRDModule {
           name = "gateway-api";
