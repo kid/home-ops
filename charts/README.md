@@ -19,5 +19,8 @@ helmupdater rehash "<org>/<chart-name>"               # recompute hash only
 
 After bumping, run `nix run .#write-manifests` and commit both the
 `charts/` change and the regenerated `manifests/prd/` output together —
-`checks.manifests` fails otherwise. `.github/workflows/update-helm-charts.yaml`
-does this on a schedule and opens a PR.
+`checks.manifests` fails otherwise. Renovate does this on its own: its
+self-hosted run (`.github/workflows/renovate.yaml`) bumps each pin's
+`version`, then `postUpgradeTasks` (`.renovaterc.json5`) runs
+`refresh-nix-hash` (which calls `helmupdater rehash`) and `write-manifests`,
+and opens a PR with the changelog.
