@@ -1,49 +1,53 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "config:recommended",
-    "docker:enableMajor",
-    "helpers:pinGitHubActionDigests",
-    "github>kid/home-ops//.renovate/groups.json5",
-    "github>kid/home-ops//.renovate/labels.json5",
-    "github>kid/home-ops//.renovate/overrides.json5",
-    "github>kid/home-ops//.renovate/semanticCommits.json5",
-    ":automergeBranch",
-    ":disableRateLimiting",
-    ":dependencyDashboard",
-    ":semanticCommits",
-    ":timezone(Europe/Brussels)",
+    'config:recommended',
+    'docker:enableMajor',
+    'helpers:pinGitHubActionDigests',
+    'github>kid/home-ops//.renovate/groups.json5',
+    'github>kid/home-ops//.renovate/labels.json5',
+    'github>kid/home-ops//.renovate/overrides.json5',
+    'github>kid/home-ops//.renovate/semanticCommits.json5',
+    ':automergeBranch',
+    ':disableRateLimiting',
+    ':dependencyDashboard',
+    ':semanticCommits',
+    ':timezone(Europe/Brussels)',
   ],
   ignorePaths: [
     '**/resources/**',
-    // nixidy-generated, regenerated from modules/kubernetes/**/*.nix via `nix run .#write-manifests`
     'manifests/**',
   ],
   suppressNotifications: [
-    "prEditedNotification",
-    "prIgnoreNotification",
+    'prEditedNotification',
+    'prIgnoreNotification',
   ],
-  // Adopt the PRs the hosted Renovate GitHub App opened before this repo
-  // self-hosted: without this the self-hosted run reads the App's commits as
-  // manual edits and never updates them. Its other half, ignorePrAuthor, is
-  // global-only (RENOVATE_IGNORE_PR_AUTHOR in .github/workflows/renovate.yaml).
-  // Keep both while any of those PRs is still open.
-  gitIgnoredAuthors: ["29139614+renovate[bot]@users.noreply.github.com"],
+  gitIgnoredAuthors: [
+    '29139614+renovate[bot]@users.noreply.github.com',
+  ],
   flux: {
-    managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
+    managerFilePatterns: [
+      '/\\.yaml(?:\\.j2)?$/',
+    ],
   },
-  "helm-values": {
-    managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
+  'helm-values': {
+    managerFilePatterns: [
+      '/\\.yaml(?:\\.j2)?$/',
+    ],
   },
   kubernetes: {
-    managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
+    managerFilePatterns: [
+      '/\\.yaml(?:\\.j2)?$/',
+    ],
   },
   customManagers: [
     {
-      customType: "regex",
-      managerFilePatterns: ["/.*\\.nix$/"],
+      customType: 'regex',
+      managerFilePatterns: [
+        '/.*\\.nix$/',
+      ],
       matchStrings: [
-        "# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?\\s+\\S+\\s*=\\s*\"(?<currentValue>[^\"]+)\";",
+        '# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?\\s+\\S+\\s*=\\s*"(?<currentValue>[^"]+)";',
       ],
     },
   ],
@@ -52,26 +56,35 @@
   },
   packageRules: [
     {
-      matchManagers: ["nix"],
+      matchManagers: [
+        'nix',
+      ],
       enabled: true,
     },
     {
-      matchManagers: ["nix"],
-      matchDepNames: ["nixhelm"],
+      matchManagers: [
+        'nix',
+      ],
+      matchDepNames: [
+        'nixhelm',
+      ],
       enabled: true,
     },
     {
-      // fetchFromGitHub pins need their hash recomputed whenever the rev
-      // bumps, or Nix silently keeps serving the old fetch's content —
-      // this custom manager can only rewrite the rev, not the hash.
-      matchManagers: ["regex"],
-      matchDatasources: ["github-releases"],
+      matchManagers: [
+        'custom.regex',
+      ],
+      matchDatasources: [
+        'github-releases',
+      ],
       postUpgradeTasks: {
         commands: [
-          "nix run .#refresh-nix-hash -- {{{packageFile}}} {{{depName}}} {{{newValue}}}",
+          'nix run .#refresh-nix-hash -- {{{packageFile}}} {{{depName}}} {{{newValue}}}',
         ],
-        fileFilters: ["**/*.nix"],
-        executionMode: "update",
+        fileFilters: [
+          '**/*.nix',
+        ],
+        executionMode: 'update',
       },
     },
   ],
