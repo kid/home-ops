@@ -64,7 +64,25 @@ spec:
                   key: notificationscontroller.repo.server.plaintext
                   name: argocd-cmd-params-cm
                   optional: true
-          image: quay.io/argoproj/argocd:v3.4.4
+            - name: ARGOCD_NOTIFICATION_CONTROLLER_REPO_SERVER_CA_CERT_PATH
+              valueFrom:
+                configMapKeyRef:
+                  key: notificationscontroller.repo.server.ca.cert.path
+                  name: argocd-cmd-params-cm
+                  optional: true
+            - name: ARGOCD_NOTIFICATION_CONTROLLER_REPO_SERVER_CLIENT_CERT_PATH
+              valueFrom:
+                configMapKeyRef:
+                  key: notificationscontroller.repo.server.client.cert.path
+                  name: argocd-cmd-params-cm
+                  optional: true
+            - name: ARGOCD_NOTIFICATION_CONTROLLER_REPO_SERVER_CLIENT_CERT_KEY_PATH
+              valueFrom:
+                configMapKeyRef:
+                  key: notificationscontroller.repo.server.client.cert.key.path
+                  name: argocd-cmd-params-cm
+                  optional: true
+          image: quay.io/argoproj/argocd:v3.5.3
           imagePullPolicy: Always
           livenessProbe:
             tcpSocket:
@@ -81,6 +99,8 @@ spec:
               name: tls-certs
             - mountPath: /app/config/reposerver/tls
               name: argocd-repo-server-tls
+            - mountPath: /app/config/reposerver/mtls
+              name: argocd-repo-server-mtls
           workingDir: /app
       nodeSelector:
         kubernetes.io/os: linux
@@ -104,3 +124,14 @@ spec:
                 path: ca.crt
             optional: true
             secretName: argocd-repo-server-tls
+        - name: argocd-repo-server-mtls
+          secret:
+            items:
+              - key: client.crt
+                path: client.crt
+              - key: client.key
+                path: client.key
+              - key: server-ca.crt
+                path: server-ca.crt
+            optional: true
+            secretName: argocd-repo-server-mtls
