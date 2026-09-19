@@ -46,6 +46,25 @@
         "# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?\\s+\\S+\\s*=\\s*\"(?<currentValue>[^\"]+)\";",
       ],
     },
+    // charts/<org>/<chart>/default.nix pins (see charts/README.md): a plain
+    // helm repo, or an oci:// one which Renovate reads as a docker image.
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^charts/.+/default\\.nix$/"],
+      matchStrings: [
+        "repo = \"(?<registryUrl>https?://[^\"]+)\";\\s*chart = \"(?<depName>[^\"]+)\";\\s*version = \"(?<currentValue>[^\"]+)\";",
+      ],
+      datasourceTemplate: "helm",
+    },
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^charts/.+/default\\.nix$/"],
+      matchStrings: [
+        "repo = \"oci://(?<registry>[^\"]+)\";\\s*chart = \"(?<chart>[^\"]+)\";\\s*version = \"(?<currentValue>[^\"]+)\";",
+      ],
+      datasourceTemplate: "docker",
+      depNameTemplate: "{{{registry}}}/{{{chart}}}",
+    },
   ],
   nix: {
     enabled: true,
@@ -61,12 +80,24 @@
       enabled: true,
     },
     {
-      // fetchFromGitHub pins need their hash recomputed whenever the rev
-      // bumps, or Nix silently keeps serving the old fetch's content —
-      // this custom manager can only rewrite the rev, not the hash. Then
-      // manifests/ is regenerated so the PR passes checks.manifests.
-      matchManagers: ["regex"],
+      // Every pin has a content hash next to its version, which Renovate
+      // cannot recompute: left stale, Nix silently keeps serving the old
+      // content. Recompute it, then regenerate manifests/ so the PR passes
+      // checks.manifests.
+      matchManagers: ["custom.regex"],
       matchDatasources: ["github-releases"],
+      postUpgradeTasks: {
+        commands: [
+          "nix run .#refresh-nix-hash -- {{{packageFile}}} {{{depName}}} {{{newValue}}}",
+          "nix run .#write-manifests -- --skip-secrets",
+        ],
+        fileFilters: ["**/*.nix", "manifests/**"],
+        executionMode: "update",
+      },
+    },
+    {
+      matchManagers: ["custom.regex"],
+      matchFileNames: ["charts/**"],
       postUpgradeTasks: {
         commands: [
           "nix run .#refresh-nix-hash -- {{{packageFile}}} {{{depName}}} {{{newValue}}}",
