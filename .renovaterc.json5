@@ -23,6 +23,12 @@
     "prEditedNotification",
     "prIgnoreNotification",
   ],
+  // Adopt the PRs the hosted Renovate GitHub App opened before this repo
+  // self-hosted: otherwise the self-hosted run does not see them as its own
+  // and reads the App's commits as manual edits, so it never updates them.
+  // Keep while any of those PRs is still open.
+  ignorePrAuthor: true,
+  gitIgnoredAuthors: ["29139614+renovate[bot]@users.noreply.github.com"],
   flux: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
