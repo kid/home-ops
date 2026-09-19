@@ -1,12 +1,18 @@
 # k3s bootstrap: oneshot systemd services applying manifests baked into the image via `self`.
-# Wave order: namespaces, CRDs, cilium, coredns, sops-operator, cert-manager, argocd.
-# sops-operator must already be watching before cert-manager applies its SopsSecret CR.
+# Wave order: namespaces, CRDs, cilium, coredns, sops-operator (only where the
+# cluster runs it), cert-manager, argocd. Where present, sops-operator must
+# already be watching before cert-manager applies its SopsSecret CR.
 # Cilium's operator registers its own CRDs at runtime — not shipped in the chart.
 { self, den, ... }:
 {
   den.aspects.k3s-bootstrap = {
     nixos =
-      { host, pkgs, ... }:
+      {
+        host,
+        pkgs,
+        lib,
+        ...
+      }:
       let
         clusterName = host.k3s.clusterName or "prd";
         manifestPath =
@@ -16,6 +22,7 @@
             name = "k3s-${clusterName}-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
           };
         ciliumDir = manifestPath "cilium";
+        hasSopsOperator = builtins.pathExists (self + "/manifests/${clusterName}/sops-operator");
         sopsOperatorDir = manifestPath "sops-operator";
         corednsDir = manifestPath "coredns";
         argocdDir = manifestPath "argocd";
@@ -27,6 +34,8 @@
           name = "k3s-${clusterName}-all";
         };
         hasCilium = host.hasAspect den.aspects.k3s-cilium;
+        certManagerPredecessor =
+          if hasSopsOperator then "k3s-bootstrap-sops-operator.service" else "k3s-bootstrap-coredns.service";
         waitForApi = ''
           echo "Waiting for k3s API server..."
           until kubectl get nodes >/dev/null 2>&1; do
@@ -122,13 +131,14 @@
                   crd/backendtlspolicies.gateway.networking.k8s.io \
                   --timeout=60s
 
-                echo "Waiting for sops-operator CRDs to be established..."
-                kubectl wait --for=condition=Established \
-                  crd/sopssecrets.addons.projectcapsule.dev \
-                  crd/globalsopssecrets.addons.projectcapsule.dev \
-                  crd/sopsproviders.addons.projectcapsule.dev \
-                  --timeout=60s
-
+                ${lib.optionalString hasSopsOperator ''
+                  echo "Waiting for sops-operator CRDs to be established..."
+                  kubectl wait --for=condition=Established \
+                    crd/sopssecrets.addons.projectcapsule.dev \
+                    crd/globalsopssecrets.addons.projectcapsule.dev \
+                    crd/sopsproviders.addons.projectcapsule.dev \
+                    --timeout=60s
+                ''}
                 echo "CRDs ready."
               '';
             };
@@ -245,7 +255,7 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          k3s-bootstrap-sops-operator = {
+          k3s-bootstrap-sops-operator = lib.mkIf hasSopsOperator {
             description = "Bootstrap sops-operator";
             after = [
               "k3s.service"
@@ -286,11 +296,11 @@
             description = "Bootstrap cert-manager and the Hubble CA";
             after = [
               "k3s.service"
-              "k3s-bootstrap-sops-operator.service"
+              certManagerPredecessor
             ];
             requires = [
               "k3s.service"
-              "k3s-bootstrap-sops-operator.service"
+              certManagerPredecessor
             ];
             path = [
               pkgs.kubectl
