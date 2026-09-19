@@ -7,7 +7,7 @@ metadata:
   namespace: openbao
 spec:
   ports:
-    - name: http
+    - name: https
       port: 8200
       targetPort: 8200
   selector:

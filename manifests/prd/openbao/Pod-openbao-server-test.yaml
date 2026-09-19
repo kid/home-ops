@@ -29,7 +29,7 @@ spec:
           exit 0
       env:
         - name: VAULT_ADDR
-          value: http://openbao.openbao.svc:8200
+          value: https://openbao.openbao.svc:8200
       image: quay.io/openbao/openbao:2.6.2
       imagePullPolicy: IfNotPresent
       name: openbao-server-test
@@ -38,6 +38,9 @@ spec:
       volumeMounts:
         - mountPath: /vault/unseal
           name: unseal
+          readOnly: true
+        - mountPath: /vault/tls
+          name: tls
           readOnly: true
   restartPolicy: Never
   securityContext:
@@ -51,3 +54,6 @@ spec:
     - name: unseal
       secret:
         secretName: openbao-unseal
+    - name: tls
+      secret:
+        secretName: openbao-tls

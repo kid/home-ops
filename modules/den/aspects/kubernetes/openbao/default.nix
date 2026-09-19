@@ -37,7 +37,7 @@ _: {
             };
             ports = [
               {
-                name = "http";
+                name = "https";
                 port = 8200;
                 targetPort = 8200;
               }
@@ -47,6 +47,7 @@ _: {
 
         helm.releases.openbao = {
           chart = charts.openbao.openbao;
+          values.global.tlsDisable = false;
           values.server = {
             ha = {
               enabled = true;
@@ -57,9 +58,10 @@ _: {
                   ui = true
 
                   listener "tcp" {
-                    tls_disable = 1
-                    address = "[::]:8200"
+                    address         = "[::]:8200"
                     cluster_address = "[::]:8201"
+                    tls_cert_file   = "/vault/tls/tls.crt"
+                    tls_key_file    = "/vault/tls/tls.key"
                   }
 
                   storage "raft" {
@@ -167,6 +169,10 @@ _: {
                 name = "unseal";
                 secret.secretName = "openbao-unseal";
               }
+              {
+                name = "tls";
+                secret.secretName = "openbao-tls";
+              }
             ];
             volumeMounts = [
               {
@@ -174,7 +180,22 @@ _: {
                 mountPath = "/vault/unseal";
                 readOnly = true;
               }
+              {
+                name = "tls";
+                mountPath = "/vault/tls";
+                readOnly = true;
+              }
             ];
+          };
+        };
+
+        resources.certificates.openbao-tls.spec = {
+          secretName = "openbao-tls";
+          dnsNames = [ "openbao.${cluster.domain}" ];
+          issuerRef = {
+            name = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
+            kind = "ClusterIssuer";
+            group = "cert-manager.io";
           };
         };
 

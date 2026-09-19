@@ -36,7 +36,7 @@ _: {
         };
 
         resources.clusterSecretStores.openbao.spec.provider.vault = {
-          server = "http://openbao.openbao.svc:8200";
+          server = "https://openbao.${cluster.domain}:8200";
           path = "secret";
           version = "v2";
           auth.kubernetes = {

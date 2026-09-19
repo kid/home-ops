@@ -8,10 +8,6 @@ terraform {
       source  = "1Password/onepassword"
       version = "~> 3.0"
     }
-    vault = {
-      source  = "hashicorp/vault"
-      version = "~> 4.0"
-    }
   }
 }
 
@@ -27,33 +23,10 @@ variable "cloudflare_zone_id" {
   type = string
 }
 
-variable "vault_address" {
-  type = string
-}
-
 provider "onepassword" {}
 
 data "onepassword_vault" "home_ops_prd" {
   name = "home-ops-prd"
-}
-
-data "onepassword_item" "openbao_approle" {
-  vault = data.onepassword_vault.home_ops_prd.uuid
-  title = "openbao-approle"
-}
-
-provider "vault" {
-  address = "http://${var.vault_address}:8200"
-  # The approle policy can't mint child tokens.
-  skip_child_token = true
-
-  auth_login {
-    path = "auth/approle/login"
-    parameters = {
-      role_id   = data.onepassword_item.openbao_approle.username
-      secret_id = data.onepassword_item.openbao_approle.password
-    }
-  }
 }
 
 data "cloudflare_account_api_token_permission_groups_list" "dns_write" {
@@ -76,10 +49,18 @@ resource "cloudflare_account_token" "dns" {
   }]
 }
 
-resource "vault_kv_secret_v2" "cloudflare_dns_api_token" {
-  mount = "secret"
-  name  = "cloudflare-dns-api-token"
-  data_json = jsonencode({
-    token = cloudflare_account_token.dns.value
-  })
+resource "onepassword_item" "cloudflare_dns_api_token" {
+  vault    = data.onepassword_vault.home_ops_prd.uuid
+  title    = "cloudflare-dns-api-token"
+  category = "secure_note"
+
+  section {
+    label = "credentials"
+
+    field {
+      label = "token"
+      type  = "CONCEALED"
+      value = cloudflare_account_token.dns.value
+    }
+  }
 }

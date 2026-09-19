@@ -99,21 +99,21 @@ _: {
       (
         if cluster.name == "prd" then
           {
+            # Before openbao (-1), whose pod can't start without its Let's Encrypt cert.
+            applications.cert-manager.annotations."argocd.argoproj.io/sync-wave" = "-2";
+
             applications.cert-manager.resources.externalSecrets.cloudflare-dns-api-token = {
               metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
               spec = {
                 secretStoreRef = {
-                  name = "openbao";
+                  name = "onepassword";
                   kind = "ClusterSecretStore";
                 };
                 target.name = "cloudflare-dns-api-token";
                 data = [
                   {
                     secretKey = "token";
-                    remoteRef = {
-                      key = "cloudflare-dns-api-token";
-                      property = "token";
-                    };
+                    remoteRef.key = "cloudflare-dns-api-token/credentials/token";
                   }
                 ];
               };

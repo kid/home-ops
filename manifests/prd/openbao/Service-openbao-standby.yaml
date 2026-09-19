@@ -8,8 +8,8 @@ metadata:
   namespace: openbao
 spec:
   ports:
-    - appProtocol: HTTP
-      name: http
+    - appProtocol: HTTPS
+      name: https
       port: 8200
       targetPort: 8200
     - name: https-internal
