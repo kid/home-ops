@@ -7,5 +7,6 @@ terraform {
 }
 
 inputs = {
-  account_id = "fadfc390b1e5fb0ce019b9f7a8917d42"
+  account_id  = "fadfc390b1e5fb0ce019b9f7a8917d42"
+  environment = "prd"
 }

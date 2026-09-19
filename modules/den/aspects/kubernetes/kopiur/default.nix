@@ -1,6 +1,11 @@
 _: {
   den.aspects.kubernetes.kopiur.k8s-manifests =
-    { charts, generators, ... }:
+    {
+      charts,
+      generators,
+      cluster,
+      ...
+    }:
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -56,7 +61,7 @@ _: {
         resources.clusterRepositories.r2.spec = {
           allowedNamespaces.all = true;
           backend.s3 = {
-            bucket = "home-ops-kopiur";
+            bucket = "home-ops-${cluster.environment}-kopiur";
             endpoint = "fadfc390b1e5fb0ce019b9f7a8917d42.r2.cloudflarestorage.com";
             region = "auto";
             auth.secretRef = {

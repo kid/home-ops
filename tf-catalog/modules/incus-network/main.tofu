@@ -1,7 +1,7 @@
 # NAT'd Incus-managed bridge, for environments with no real VLAN to attach
 # to (e.g. dev — see tf-stacks/dev/compute/incus-network). Not used by prd:
 # node1's K3s VLAN bridge is NixOS-managed, not Terraform-managed (see
-# tf-stacks/prd/compute/incus-network).
+# tf-stacks/prd/k3s/incus-network).
 
 terraform {
   required_providers {

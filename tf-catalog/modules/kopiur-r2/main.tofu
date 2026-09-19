@@ -2,12 +2,16 @@ variable "account_id" {
   type = string
 }
 
+variable "environment" {
+  type = string
+}
+
 module "bucket" {
   source = "../cloudflare-r2-bucket"
 
   account_id  = var.account_id
-  bucket_name = "home-ops-kopiur"
-  token_name  = "kopiur@home-ops/prd"
+  bucket_name = "home-ops-${var.environment}-kopiur"
+  token_name  = "kopiur@home-ops/${var.environment}"
 }
 
 output "access_key_id" {

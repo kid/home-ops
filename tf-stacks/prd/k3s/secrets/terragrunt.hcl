@@ -7,7 +7,7 @@ terraform {
 }
 
 dependency "kopiur_r2" {
-  config_path = "../kopiur-r2"
+  config_path = "../kopiur"
 
   mock_outputs = {
     access_key_id     = "mock"
