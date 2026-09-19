@@ -7,7 +7,6 @@ metadata:
   name: openbao
   namespace: openbao
 spec:
-  externalTrafficPolicy: Cluster
   ports:
     - appProtocol: HTTP
       name: http
@@ -21,4 +20,3 @@ spec:
     app.kubernetes.io/instance: openbao
     app.kubernetes.io/name: openbao
     component: server
-  type: LoadBalancer

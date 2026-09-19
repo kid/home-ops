@@ -81,7 +81,7 @@ spec:
             - name: MIKROTIK_BASEURL
               value: https://10.99.0.1:443
             - name: MIKROTIK_USERNAME
-              value: external-dns
+              value: external-dns-prd
             - name: MIKROTIK_PASSWORD
               valueFrom:
                 secretKeyRef:

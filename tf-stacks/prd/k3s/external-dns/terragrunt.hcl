@@ -7,6 +7,5 @@ terraform {
 }
 
 inputs = {
-  cluster_name  = "prd"
-  vault_address = "" # TODO: OpenBao's LoadBalancer IP, once it's deployed
+  cluster_name = "prd"
 }

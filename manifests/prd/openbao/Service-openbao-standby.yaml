@@ -7,7 +7,6 @@ metadata:
   name: openbao-standby
   namespace: openbao
 spec:
-  externalTrafficPolicy: Cluster
   ports:
     - appProtocol: HTTP
       name: http
@@ -22,4 +21,3 @@ spec:
     app.kubernetes.io/name: openbao
     component: server
     openbao-active: "false"
-  type: LoadBalancer

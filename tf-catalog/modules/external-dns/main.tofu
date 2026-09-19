@@ -12,18 +12,10 @@ terraform {
       source  = "terraform-routeros/routeros"
       version = "~> 1.99"
     }
-    vault = {
-      source  = "hashicorp/vault"
-      version = "~> 4.0"
-    }
   }
 }
 
 variable "cluster_name" {
-  type = string
-}
-
-variable "vault_address" {
   type = string
 }
 
@@ -45,30 +37,11 @@ data "onepassword_item" "routeros_admin" {
   title = "RB5009 - user - kid"
 }
 
-data "onepassword_item" "openbao_approle" {
-  vault = data.onepassword_vault.home_ops_prd.uuid
-  title = "openbao-approle"
-}
-
 provider "routeros" {
   hosturl  = "https://10.99.0.1"
   username = data.onepassword_item.routeros_admin.username
   password = data.onepassword_item.routeros_admin.password
   insecure = true
-}
-
-provider "vault" {
-  address = "http://${var.vault_address}:8200"
-  # The approle policy can't mint child tokens.
-  skip_child_token = true
-
-  auth_login {
-    path = "auth/approle/login"
-    parameters = {
-      role_id   = data.onepassword_item.openbao_approle.username
-      secret_id = data.onepassword_item.openbao_approle.password
-    }
-  }
 }
 
 resource "random_password" "external_dns" {
@@ -87,10 +60,18 @@ resource "routeros_system_user" "external_dns" {
   password = random_password.external_dns.result
 }
 
-resource "vault_kv_secret_v2" "mikrotik_credentials" {
-  mount = "secret"
-  name  = "mikrotik-credentials"
-  data_json = jsonencode({
-    MIKROTIK_PASSWORD = random_password.external_dns.result
-  })
+resource "onepassword_item" "mikrotik_credentials" {
+  vault    = data.onepassword_vault.home_ops_prd.uuid
+  title    = "mikrotik-credentials"
+  category = "secure_note"
+
+  section {
+    label = "credentials"
+
+    field {
+      label = "password"
+      type  = "CONCEALED"
+      value = random_password.external_dns.result
+    }
+  }
 }

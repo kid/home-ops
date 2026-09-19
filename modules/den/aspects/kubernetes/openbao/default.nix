@@ -1,6 +1,6 @@
 _: {
   den.aspects.kubernetes.openbao.k8s-manifests =
-    { charts, ... }:
+    { charts, cluster, ... }:
     {
       applications.openbao = {
         namespace = "openbao";
@@ -24,10 +24,30 @@ _: {
           ];
         };
 
+        # The chart applies `server.service.type` to its active and standby
+        # Services too, and its annotations to all of them, so the one
+        # external endpoint is a Service of its own.
+        resources.services.openbao-external = {
+          metadata.annotations."external-dns.alpha.kubernetes.io/hostname" = "openbao.${cluster.domain}";
+          spec = {
+            type = "LoadBalancer";
+            selector = {
+              "app.kubernetes.io/name" = "openbao";
+              component = "server";
+            };
+            ports = [
+              {
+                name = "http";
+                port = 8200;
+                targetPort = 8200;
+              }
+            ];
+          };
+        };
+
         helm.releases.openbao = {
           chart = charts.openbao.openbao;
           values.server = {
-            service.type = "LoadBalancer";
             ha = {
               enabled = true;
               replicas = 1;

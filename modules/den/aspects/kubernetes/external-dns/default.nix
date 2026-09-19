@@ -69,7 +69,7 @@ in
                   }
                   {
                     name = "MIKROTIK_USERNAME";
-                    value = "external-dns";
+                    value = "external-dns-${cluster.name}";
                   }
                   {
                     name = "MIKROTIK_PASSWORD";
@@ -114,17 +114,14 @@ in
           metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
           spec = {
             secretStoreRef = {
-              name = "openbao";
+              name = "onepassword";
               kind = "ClusterSecretStore";
             };
             target.name = "mikrotik-credentials";
             data = [
               {
                 secretKey = "MIKROTIK_PASSWORD";
-                remoteRef = {
-                  key = "mikrotik-credentials";
-                  property = "MIKROTIK_PASSWORD";
-                };
+                remoteRef.key = "mikrotik-credentials/credentials/password";
               }
             ];
           };
