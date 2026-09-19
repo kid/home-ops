@@ -105,6 +105,9 @@ spec:
               name: data
             - mountPath: /openbao/config
               name: config
+            - mountPath: /vault/unseal
+              name: unseal
+              readOnly: true
             - mountPath: /home/openbao
               name: home
       hostNetwork: false
@@ -121,6 +124,9 @@ spec:
         - configMap:
             name: openbao-config
           name: config
+        - name: unseal
+          secret:
+            secretName: openbao-unseal
         - emptyDir: {}
           name: home
   updateStrategy:

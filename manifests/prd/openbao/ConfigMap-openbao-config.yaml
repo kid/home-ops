@@ -8,10 +8,6 @@ data:
       tls_disable = 1
       address = "[::]:8200"
       cluster_address = "[::]:8201"
-      # Enable unauthenticated metrics access (necessary for Prometheus Operator)
-      #telemetry {
-      #  unauthenticated_metrics_access = "true"
-      #}
     }
 
     storage "raft" {
@@ -19,6 +15,97 @@ data:
     }
 
     service_registration "kubernetes" {}
+
+    seal "static" {
+      current_key_id = "1"
+      current_key    = "file:///vault/unseal/unsealKey"
+    }
+
+    initialize "kv" {
+      request "mount-kv" {
+        operation = "update"
+        path      = "sys/mounts/secret"
+        data = {
+          type    = "kv"
+          options = { version = "2" }
+        }
+      }
+    }
+
+    initialize "kubernetes-auth" {
+      request "enable" {
+        operation = "update"
+        path      = "sys/auth/kubernetes"
+        data      = { type = "kubernetes" }
+      }
+
+      request "configure" {
+        operation = "update"
+        path      = "auth/kubernetes/config"
+        data = {
+          kubernetes_host = "https://kubernetes.default.svc"
+        }
+      }
+
+      request "policy" {
+        operation = "update"
+        path      = "sys/policies/acl/eso-cluster"
+        data = {
+          # secret/data/* covers everything ESO reads; the
+          # approle paths let the one-time bootstrap step
+          # (kubectl exec into an external-secrets pod, no
+          # persisted root token) hand cluster-secrets its
+          # own role_id/secret_id.
+          policy = <<-EOT
+            path "secret/data/*" {
+              capabilities = ["read"]
+            }
+            path "auth/approle/role/cluster-secrets/role-id" {
+              capabilities = ["read"]
+            }
+            path "auth/approle/role/cluster-secrets/secret-id" {
+              capabilities = ["create", "update"]
+            }
+          EOT
+        }
+      }
+
+      request "role" {
+        operation = "update"
+        path      = "auth/kubernetes/role/eso-cluster"
+        data = {
+          bound_service_account_names      = ["external-secrets"]
+          bound_service_account_namespaces = ["external-secrets"]
+          policies                          = ["eso-cluster"]
+        }
+      }
+    }
+
+    initialize "approle-auth" {
+      request "enable" {
+        operation = "update"
+        path      = "sys/auth/approle"
+        data      = { type = "approle" }
+      }
+
+      request "policy" {
+        operation = "update"
+        path      = "sys/policies/acl/cluster-secrets"
+        data = {
+          policy = <<-EOT
+            path "secret/data/*" {
+              capabilities = ["create", "update"]
+            }
+          EOT
+        }
+      }
+
+      request "role" {
+        operation = "update"
+        path      = "auth/approle/role/cluster-secrets"
+        data      = { token_policies = ["cluster-secrets"] }
+      }
+    }
 kind: ConfigMap
 metadata:
   labels:

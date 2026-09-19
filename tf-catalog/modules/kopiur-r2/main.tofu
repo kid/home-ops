@@ -2,7 +2,7 @@ terraform {
   required_providers {
     onepassword = {
       source  = "1Password/onepassword"
-      version = "~> 2.0"
+      version = "~> 3.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -11,22 +11,26 @@ terraform {
   }
 }
 
+variable "account_id" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
 provider "onepassword" {}
 
 data "onepassword_vault" "home_ops_prd" {
   name = "home-ops-prd"
 }
 
-variable "account_id" {
-  type = string
-}
-
 module "bucket" {
   source = "../cloudflare-r2-bucket"
 
   account_id  = var.account_id
-  bucket_name = "home-ops-kopiur"
-  token_name  = "kopiur@home-ops/prd"
+  bucket_name = "home-ops-${var.environment}-kopiur"
+  token_name  = "kopiur@home-ops/${var.environment}"
 }
 
 resource "random_password" "kopia_repository_password" {

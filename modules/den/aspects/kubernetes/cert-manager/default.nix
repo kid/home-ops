@@ -16,17 +16,10 @@ _: {
       charts,
       generators,
       cluster,
+      lib,
       ...
     }:
     let
-      # namespace/name must match
-      # secrets/clusters/prd/cert-manager/cloudflare-dns-api-token.sops.json
-      # (write-manifests finds the value by that path).
-      cloudflareDnsApiToken = cluster.methods.mkSopsSecret {
-        namespace = "cert-manager";
-        name = "cloudflare-dns-api-token";
-      };
-
       issuerName = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
       acmeServer =
         if cluster.letsencrypt.staging then
@@ -34,74 +27,106 @@ _: {
         else
           "https://acme-v02.api.letsencrypt.org/directory";
     in
-    {
-      nixidy.applicationImports = [
-        (generators.fromChartCRDModule {
-          name = "cert-manager";
-          chart = charts.jetstack.cert-manager;
-          kindFilter = [
-            "Certificate"
-            "ClusterIssuer"
-          ];
-          extraOpts = [
-            "--set"
-            "crds.enabled=true"
-          ];
-        })
-      ];
+    lib.recursiveUpdate
+      {
+        nixidy.applicationImports = [
+          (generators.fromChartCRDModule {
+            name = "cert-manager";
+            chart = charts.jetstack.cert-manager;
+            kindFilter = [
+              "Certificate"
+              "ClusterIssuer"
+            ];
+            extraOpts = [
+              "--set"
+              "crds.enabled=true"
+            ];
+          })
+        ];
 
-      applications.cert-manager = {
-        namespace = "cert-manager";
-        createNamespace = true;
+        applications.cert-manager = {
+          namespace = "cert-manager";
+          createNamespace = true;
 
-        helm.releases.cert-manager = {
-          chart = charts.jetstack.cert-manager;
-          values = {
-            crds.enabled = true;
-            replicaCount = 1;
+          helm.releases.cert-manager = {
+            chart = charts.jetstack.cert-manager;
+            values = {
+              crds.enabled = true;
+              replicaCount = 1;
+            };
+          };
+
+          # Standard cert-manager self-signed-root bootstrap: a selfSigned
+          # ClusterIssuer signs one CA Certificate, then hubble-ca-issuer
+          # (referenced by modules/den/aspects/kubernetes/cilium/default.nix's
+          # hubble.tls.auto.certManagerIssuerRef) signs everything else off
+          # that CA's secret. Certificate's namespace defaults to this
+          # application's own namespace (cert-manager).
+          resources.clusterIssuers.selfsigned-issuer.spec.selfSigned = { };
+
+          resources.certificates.hubble-ca.spec = {
+            isCA = true;
+            commonName = "hubble-ca";
+            secretName = "hubble-ca-secret";
+            privateKey = {
+              algorithm = "ECDSA";
+              size = 256;
+            };
+            issuerRef = {
+              name = "selfsigned-issuer";
+              kind = "ClusterIssuer";
+              group = "cert-manager.io";
+            };
+          };
+
+          resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
+
+          resources.clusterIssuers.${issuerName}.spec.acme = {
+            server = acmeServer;
+            email = "arnaud.rebts@gmail.com";
+            privateKeySecretRef.name = "${issuerName}-account-key";
+            solvers = [
+              {
+                dns01.cloudflare.apiTokenSecretRef = {
+                  name = "cloudflare-dns-api-token";
+                  key = "token";
+                };
+              }
+            ];
           };
         };
-
-        # Standard cert-manager self-signed-root bootstrap: a selfSigned
-        # ClusterIssuer signs one CA Certificate, then hubble-ca-issuer
-        # (referenced by modules/den/aspects/kubernetes/cilium/default.nix's
-        # hubble.tls.auto.certManagerIssuerRef) signs everything else off
-        # that CA's secret. Certificate's namespace defaults to this
-        # application's own namespace (cert-manager).
-        resources.clusterIssuers.selfsigned-issuer.spec.selfSigned = { };
-
-        resources.certificates.hubble-ca.spec = {
-          isCA = true;
-          commonName = "hubble-ca";
-          secretName = "hubble-ca-secret";
-          privateKey = {
-            algorithm = "ECDSA";
-            size = 256;
-          };
-          issuerRef = {
-            name = "selfsigned-issuer";
-            kind = "ClusterIssuer";
-            group = "cert-manager.io";
-          };
-        };
-
-        resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
-
-        resources.clusterIssuers.${issuerName}.spec.acme = {
-          server = acmeServer;
-          email = "arnaud.rebts@gmail.com";
-          privateKeySecretRef.name = "${issuerName}-account-key";
-          solvers = [
-            {
-              dns01.cloudflare.apiTokenSecretRef = {
-                name = "cloudflare-dns-api-token";
-                key = "token";
+      }
+      (
+        if cluster.name == "prd" then
+          {
+            applications.cert-manager.resources.externalSecrets.cloudflare-dns-api-token = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+              spec = {
+                secretStoreRef = {
+                  name = "openbao";
+                  kind = "ClusterSecretStore";
+                };
+                target.name = "cloudflare-dns-api-token";
+                data = [
+                  {
+                    secretKey = "token";
+                    remoteRef = {
+                      key = "cloudflare-dns-api-token";
+                      property = "token";
+                    };
+                  }
+                ];
               };
-            }
-          ];
-        };
-
-        yamls = [ cloudflareDnsApiToken ];
-      };
-    };
+            };
+          }
+        else
+          {
+            applications.cert-manager.yamls = [
+              (cluster.methods.mkSopsSecret {
+                namespace = "cert-manager";
+                name = "cloudflare-dns-api-token";
+              })
+            ];
+          }
+      );
 }

@@ -95,8 +95,8 @@ in
 
   # cert-manager is included only for Cilium's Hubble mTLS
   # (modules/den/aspects/kubernetes/cert-manager/default.nix) — Helm's own cert
-  # generation isn't idempotent across renders. sops-operator provides
-  # Kubernetes secrets (modules/den/aspects/kubernetes/sops-operator/default.nix).
+  # generation isn't idempotent across renders. external-secrets provides
+  # Kubernetes secrets (modules/den/aspects/kubernetes/external-secrets/default.nix).
   den.aspects.prd.includes = with den.aspects.kubernetes; [
     gateway-api-crds
     cilium
@@ -108,7 +108,6 @@ in
     coredns
     argocd
     miroir
-    sops-operator
     external-dns
     external-secrets
     kopiur
