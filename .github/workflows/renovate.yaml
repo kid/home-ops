@@ -55,7 +55,4 @@ jobs:
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_IGNORE_PR_AUTHOR: "true"
-          # Commit through the GitHub API so GitHub signs the commits; "auto"
-          # only does that for GitHub App tokens, not this PAT.
-          RENOVATE_PLATFORM_COMMIT: enabled
           RENOVATE_ALLOWED_COMMANDS: '["^nix run \\.#refresh-nix-hash -- [\\w./-]+ [\\w./-]+ [\\w.-]+$"]'
