@@ -34,7 +34,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: ghcr.io/home-operations/miroir-agent@sha256:07bdd5ae358f2caf4c77e45bc913084600de76aec2d2e25e227e6ed85af711b2
+          image: ghcr.io/home-operations/miroir-agent@sha256:c4d2779d0425c46c7ce4757e223009207f680254983f810cf9195dabfe9b104a
           imagePullPolicy: IfNotPresent
           lifecycle:
             preStop:
