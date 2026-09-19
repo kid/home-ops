@@ -92,13 +92,20 @@ data "onepassword_item" "routeros_admin" {
 
 provider "routeros" {
   hosturl  = "https://10.99.0.1"
-  username = "kid"
-  password = data.onepassword_item.routeros_admin.credential
+  username = data.onepassword_item.routeros_admin.username
+  password = data.onepassword_item.routeros_admin.password
   insecure = true
 }
 
 provider "vault" {
-  address = var.vault_address != null ? "http://${var.vault_address}:8200" : null
+  address = "http://${coalesce(var.vault_address, "127.0.0.1")}:8200"
+
+  # A provider is configured even when every resource using it has count = 0,
+  # so while disabled a placeholder token and no version lookup keep it offline.
+  token                  = var.enable_vault ? null : "unused"
+  skip_get_vault_version = !var.enable_vault
+  # The approle policy can't mint child tokens.
+  skip_child_token = true
 
   dynamic "auth_login" {
     for_each = var.enable_vault ? [1] : []
