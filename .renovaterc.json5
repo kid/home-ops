@@ -63,14 +63,16 @@
     {
       // fetchFromGitHub pins need their hash recomputed whenever the rev
       // bumps, or Nix silently keeps serving the old fetch's content —
-      // this custom manager can only rewrite the rev, not the hash.
+      // this custom manager can only rewrite the rev, not the hash. Then
+      // manifests/ is regenerated so the PR passes checks.manifests.
       matchManagers: ["regex"],
       matchDatasources: ["github-releases"],
       postUpgradeTasks: {
         commands: [
           "nix run .#refresh-nix-hash -- {{{packageFile}}} {{{depName}}} {{{newValue}}}",
+          "nix run .#write-manifests -- --skip-secrets",
         ],
-        fileFilters: ["**/*.nix"],
+        fileFilters: ["**/*.nix", "manifests/**"],
         executionMode: "update",
       },
     },
