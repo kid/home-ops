@@ -24,7 +24,7 @@ _: {
             analytics.enabled = false;
 
             # renovate: datasource=docker depName=registry.k8s.io/sig-storage/csi-node-driver-registrar
-            zfsNode.driverRegistrar.image.tag = "v2.17.0";
+            zfsNode.driverRegistrar.image.tag = "v2.18.0";
             zfsController = {
               # renovate: datasource=docker depName=registry.k8s.io/sig-storage/csi-resizer
               resizer.image.tag = "v1.14.0";
