@@ -68,7 +68,7 @@
       matchDatasources: ["github-releases"],
       postUpgradeTasks: {
         commands: [
-          "nix run .#refresh-nix-hash -- {{{packageFileName}}} {{{depName}}} {{{newValue}}}",
+          "nix run .#refresh-nix-hash -- {{{packageFile}}} {{{depName}}} {{{newValue}}}",
         ],
         fileFilters: ["**/*.nix"],
         executionMode: "update",
