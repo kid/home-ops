@@ -55,4 +55,4 @@ jobs:
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_IGNORE_PR_AUTHOR: "true"
-          RENOVATE_ALLOWED_COMMANDS: '["^nix run \\.#refresh-nix-hash -- [\\w./-]+ [\\w./-]+ [\\w.-]+$"]'
+          RENOVATE_ALLOWED_COMMANDS: '["^nix run \\.#refresh-nix-hash -- [\\w./-]+ [\\w./-]+ [\\w.-]+$", "^nix run \\.#write-manifests -- --skip-secrets$"]'
