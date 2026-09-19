@@ -16,9 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
   renovate:
@@ -47,11 +45,20 @@ jobs:
         with:
           node-version: 24
 
+      # A GitHub App token, not a PAT: Renovate then commits through the API
+      # and GitHub signs the commits, and PRs it opens still trigger workflows.
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
+
       - name: Run Renovate
         # renovate: datasource=npm depName=renovate
         run: npx --yes renovate@44.97.2
         env:
-          RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_IGNORE_PR_AUTHOR: "true"
