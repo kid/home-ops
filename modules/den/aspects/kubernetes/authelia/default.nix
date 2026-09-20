@@ -46,12 +46,12 @@ _: {
 
               storage.local.enabled = true;
 
-              # Mailgun via tf-stacks/prd/k3s/mailgun. No startup check: a mail outage must not stop the login for everything.
+              # Mailgun (EU), set up by the authelia tf stack. No startup check: a mail outage must not stop the login for everything.
               notifier = {
                 disable_startup_check = true;
                 smtp = {
                   enabled = true;
-                  address = "submission://smtp.mailgun.org:587";
+                  address = "submission://smtp.eu.mailgun.org:587";
                   username = "postmaster@mail.${cluster.domain}";
                   sender = "Authelia <auth@mail.${cluster.domain}>";
                 };
@@ -151,7 +151,7 @@ _: {
               }
               {
                 secretKey = "notifier.smtp.password.txt";
-                remoteRef.key = "mailgun-smtp/credentials/password";
+                remoteRef.key = "authelia/secrets/smtp-password";
               }
             ];
           };
