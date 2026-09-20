@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "${get_repo_root()}/tf-catalog/modules/incus-k3s"
+  source = "${get_repo_root()}/tf-catalog/modules//incus-k3s-vlan"
 }
 
 generate "incus_provider" {
@@ -21,14 +21,13 @@ generate "incus_provider" {
   EOF
 }
 
-dependency "network" {
-  config_path = "../incus-network"
-
-  mock_outputs                            = { network_names = { k3s = "k3s-prd" } }
-  mock_outputs_allowed_terraform_commands = ["init", "plan"]
-}
-
 inputs = {
+  network = {
+    name    = "k3s-prd"
+    parent  = "enp36s0f1"
+    vlan_id = 40
+  }
+
   nodes = {
     k3s-prd-0 = {
       nixos_attr = "k3s-prd-0"
@@ -42,6 +41,5 @@ inputs = {
     }
   }
 
-  network_name = dependency.network.outputs.network_names.k3s
   storage_pool = "default"
 }

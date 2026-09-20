@@ -57,6 +57,11 @@ in
 
     secrets.onepasswordVault = "home-ops-prd";
 
+    cloudflare = {
+      accountId = "fadfc390b1e5fb0ce019b9f7a8917d42";
+      zoneId = "dba2b63221015f1957d718defbf6b871";
+    };
+
     networks = {
       pods = {
         cidr = "172.40.0.0/16";
@@ -95,8 +100,8 @@ in
 
   # cert-manager is included only for Cilium's Hubble mTLS
   # (modules/den/aspects/kubernetes/cert-manager/default.nix) — Helm's own cert
-  # generation isn't idempotent across renders. sops-operator provides
-  # Kubernetes secrets (modules/den/aspects/kubernetes/sops-operator/default.nix).
+  # generation isn't idempotent across renders. external-secrets provides
+  # Kubernetes secrets (modules/den/aspects/kubernetes/external-secrets/default.nix).
   den.aspects.prd.includes = with den.aspects.kubernetes; [
     gateway-api-crds
     cilium
@@ -108,7 +113,6 @@ in
     coredns
     argocd
     miroir
-    sops-operator
     external-dns
     external-secrets
     kopiur

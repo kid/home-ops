@@ -55,9 +55,9 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: BAO_ADDR
-              value: http://127.0.0.1:8200
+              value: https://127.0.0.1:8200
             - name: BAO_API_ADDR
-              value: http://$(POD_IP):8200
+              value: https://$(POD_IP):8200
             - name: SKIP_CHOWN
               value: "true"
             - name: SKIP_SETCAP
@@ -82,11 +82,11 @@ spec:
           name: openbao
           ports:
             - containerPort: 8200
-              name: http
+              name: https
             - containerPort: 8201
               name: https-internal
             - containerPort: 8202
-              name: http-rep
+              name: https-rep
           readinessProbe:
             exec:
               command:
@@ -105,6 +105,12 @@ spec:
               name: data
             - mountPath: /openbao/config
               name: config
+            - mountPath: /vault/unseal
+              name: unseal
+              readOnly: true
+            - mountPath: /vault/tls
+              name: tls
+              readOnly: true
             - mountPath: /home/openbao
               name: home
       hostNetwork: false
@@ -121,6 +127,12 @@ spec:
         - configMap:
             name: openbao-config
           name: config
+        - name: unseal
+          secret:
+            secretName: openbao-unseal
+        - name: tls
+          secret:
+            secretName: openbao-tls
         - emptyDir: {}
           name: home
   updateStrategy:

@@ -24,12 +24,6 @@ in
 
   den.aspects.kubernetes.external-dns.k8s-manifests =
     { charts, cluster, ... }:
-    let
-      mikrotikCredentials = cluster.methods.mkSopsSecret {
-        namespace = "external-dns";
-        name = "mikrotik-credentials";
-      };
-    in
     {
       applications.external-dns = {
         namespace = "external-dns";
@@ -46,7 +40,7 @@ in
               "crd"
             ];
             registry = "txt";
-            txtOwnerId = "prd";
+            txtOwnerId = cluster.name;
             txtPrefix = "k8s.";
             domainFilters = [ cluster.domain ];
             policy = "sync";
@@ -75,7 +69,10 @@ in
                   }
                   {
                     name = "MIKROTIK_USERNAME";
-                    value = "external-dns";
+                    valueFrom.secretKeyRef = {
+                      name = "mikrotik-credentials";
+                      key = "MIKROTIK_USERNAME";
+                    };
                   }
                   {
                     name = "MIKROTIK_PASSWORD";
@@ -116,7 +113,26 @@ in
           };
         };
 
-        yamls = [ mikrotikCredentials ];
+        resources.externalSecrets.mikrotik-credentials = {
+          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+          spec = {
+            secretStoreRef = {
+              name = "onepassword";
+              kind = "ClusterSecretStore";
+            };
+            target.name = "mikrotik-credentials";
+            data = [
+              {
+                secretKey = "MIKROTIK_USERNAME";
+                remoteRef.key = "mikrotik-credentials/credentials/username";
+              }
+              {
+                secretKey = "MIKROTIK_PASSWORD";
+                remoteRef.key = "mikrotik-credentials/credentials/password";
+              }
+            ];
+          };
+        };
       };
     };
 }

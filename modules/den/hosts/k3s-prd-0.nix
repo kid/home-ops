@@ -37,7 +37,6 @@
     den.aspects.k3s-server
     den.aspects.k3s-cilium
     den.aspects.k3s-bootstrap
-    den.aspects.k3s-sops-operator
     den.aspects.k3s-external-secrets
     den.aspects.k3s-miroir-node
     (den.aspects.ssh { })

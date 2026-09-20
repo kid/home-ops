@@ -38,19 +38,6 @@ in
               })
             ];
 
-            resources.certificates.apps-tls.spec = {
-              secretName = "apps-tls";
-              dnsNames = [
-                "*.${cluster.domain}"
-                cluster.domain
-              ];
-              issuerRef = {
-                name = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
-                kind = "ClusterIssuer";
-                group = "cert-manager.io";
-              };
-            };
-
             resources.gateways.apps.spec = {
               gatewayClassName = "envoy";
               listeners = [
@@ -75,68 +62,43 @@ in
             };
           }
           (
-            lib.optionalAttrs (cluster.name == "prd") {
-              resources.pushSecrets.apps-tls.spec = {
-                refreshInterval = "1h";
-                secretStoreRefs = [
-                  {
-                    name = "openbao";
-                    kind = "ClusterSecretStore";
-                  }
-                ];
-                selector.secret.name = "apps-tls";
-                data = [
-                  {
-                    match = {
-                      secretKey = "tls.crt";
-                      remoteRef = {
-                        remoteKey = "apps-tls";
-                        property = "tls.crt";
-                      };
-                    };
-                  }
-                  {
-                    match = {
-                      secretKey = "tls.key";
-                      remoteRef = {
-                        remoteKey = "apps-tls";
-                        property = "tls.key";
-                      };
-                    };
-                  }
-                ];
-              };
-
-              resources.externalSecrets.apps-tls = {
-                metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-                spec = {
+            if cluster.name == "prd" then
+              {
+                # Issued once by cert-manager's own app, see cert-manager/default.nix.
+                resources.externalSecrets.apps-tls.spec = {
                   secretStoreRef = {
-                    name = "openbao";
+                    name = "onepassword";
                     kind = "ClusterSecretStore";
                   };
                   target = {
                     name = "apps-tls";
-                    creationPolicy = "Merge";
+                    template.type = "kubernetes.io/tls";
                   };
-                  data = [
+                  dataFrom = [
                     {
-                      secretKey = "tls.crt";
-                      remoteRef = {
-                        key = "apps-tls";
-                        property = "tls.crt";
-                      };
-                    }
-                    {
-                      secretKey = "tls.key";
-                      remoteRef = {
-                        key = "apps-tls";
-                        property = "tls.key";
+                      extract = {
+                        key = "wildcard-tls";
+                        decodingStrategy = "Base64";
                       };
                     }
                   ];
                 };
-              };
-            }
+              }
+            else
+              {
+                resources.certificates.apps-tls.spec = {
+                  secretName = "apps-tls";
+                  dnsNames = [
+                    "*.${cluster.domain}"
+                    cluster.domain
+                  ];
+                  issuerRef = {
+                    name = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
+                    kind = "ClusterIssuer";
+                    group = "cert-manager.io";
+                  };
+                };
+              }
           );
     };
 }

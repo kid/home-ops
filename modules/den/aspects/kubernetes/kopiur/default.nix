@@ -1,6 +1,11 @@
 _: {
   den.aspects.kubernetes.kopiur.k8s-manifests =
-    { charts, generators, ... }:
+    {
+      charts,
+      generators,
+      cluster,
+      ...
+    }:
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -18,6 +23,7 @@ _: {
       applications.kopiur = {
         namespace = "kopiur-system";
         createNamespace = true;
+        annotations."argocd.argoproj.io/sync-wave" = "-2";
 
         helm.releases.kopiur = {
           chart = charts.home-operations.kopiur;
@@ -55,8 +61,8 @@ _: {
         resources.clusterRepositories.r2.spec = {
           allowedNamespaces.all = true;
           backend.s3 = {
-            bucket = "home-ops-kopiur";
-            endpoint = "fadfc390b1e5fb0ce019b9f7a8917d42.r2.cloudflarestorage.com";
+            bucket = "home-ops-${cluster.environment}-kopiur";
+            endpoint = "${cluster.cloudflare.accountId}.r2.cloudflarestorage.com";
             region = "auto";
             auth.secretRef = {
               name = "kopiur-r2";
