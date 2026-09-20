@@ -5,7 +5,9 @@ _: {
       applications.openbao = {
         namespace = "openbao";
         createNamespace = true;
-        annotations."argocd.argoproj.io/sync-wave" = "-1";
+        # Last: nothing else needs it, and it can't become healthy until its
+        # 1Password seed items exist, which mustn't hold up the other apps.
+        annotations."argocd.argoproj.io/sync-wave" = "1";
 
         # OpenBao's kubernetes auth method calls the TokenReview API to
         # validate a login's ServiceAccount token — needs auth-delegator.

@@ -34,6 +34,16 @@ let
               { lib, ... }:
               {
                 syncPolicy.syncOptions.serverSideApply = lib.mkDefault true;
+                # Without a retry, one resource failing to apply (e.g. an
+                # admission webhook that isn't serving yet) stalls the sync.
+                syncPolicy.retry = lib.mkDefault {
+                  limit = 10;
+                  backoff = {
+                    duration = "10s";
+                    factor = 2;
+                    maxDuration = "3m";
+                  };
+                };
               }
             )
           ];

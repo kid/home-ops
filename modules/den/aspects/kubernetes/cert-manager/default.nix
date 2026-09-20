@@ -99,7 +99,7 @@ _: {
       (
         if cluster.name == "prd" then
           {
-            # Before openbao (-1), whose pod can't start without the wildcard cert.
+            # Before envoy-gateway and openbao, which read the wildcard cert it pushes to 1Password.
             applications.cert-manager.annotations."argocd.argoproj.io/sync-wave" = "-2";
 
             # The wildcard cert lives in 1Password so a rebuild imports it instead

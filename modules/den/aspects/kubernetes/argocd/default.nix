@@ -69,6 +69,24 @@ in
           # against the real server-applied result, not a client-side guess.
           resources.configMaps.argocd-cmd-params-cm.data."controller.diff.server.side" = "true";
 
+          # ArgoCD ships no health check for Application either. Without one a
+          # child Application counts as healthy the moment it exists, so the
+          # sync-wave annotations on the Applications in manifests/*/apps
+          # order nothing: the next wave starts seconds later, while the
+          # previous app's pods are still starting.
+          resources.configMaps.argocd-cm.data."resource.customizations.health.argoproj.io_Application" = ''
+            hs = {}
+            hs.status = "Progressing"
+            hs.message = ""
+            if obj.status ~= nil and obj.status.health ~= nil then
+              hs.status = obj.status.health.status
+              if obj.status.health.message ~= nil then
+                hs.message = obj.status.health.message
+              end
+            end
+            return hs
+          '';
+
           # ArgoCD has no built-in health check for ExternalSecret, so it
           # considers one healthy the instant it's applied — before ESO has
           # actually pulled anything. This is what makes every sync-wave
