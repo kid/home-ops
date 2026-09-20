@@ -19,7 +19,7 @@ spec:
   template:
     metadata:
       annotations:
-        authelia.com/checksum-config: fe0e929967e4df7967eee165184c514a00519ee9768084264177278d579a2f63
+        authelia.com/checksum-config: 4bbfa55085ae55867fed635cf75639f286d3a34240374dd7900705b69e90eba5
       labels:
         app.kubernetes.io/instance: authelia
         app.kubernetes.io/name: authelia
@@ -38,6 +38,8 @@ spec:
               value: /secrets/internal/identity_validation.reset_password.jwt.hmac.key
             - name: AUTHELIA_SESSION_SECRET_FILE
               value: /secrets/internal/session.encryption.key
+            - name: AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE
+              value: /secrets/internal/notifier.smtp.password.txt
             - name: AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE
               value: /secrets/internal/storage.encryption.key
             - name: AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE
@@ -121,6 +123,8 @@ spec:
                 path: identity_validation.reset_password.jwt.hmac.key
               - key: session.encryption.key
                 path: session.encryption.key
+              - key: notifier.smtp.password.txt
+                path: notifier.smtp.password.txt
               - key: storage.encryption.key
                 path: storage.encryption.key
               - key: identity_providers.oidc.hmac.key

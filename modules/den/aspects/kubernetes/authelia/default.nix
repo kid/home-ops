@@ -45,7 +45,17 @@ _: {
               ];
 
               storage.local.enabled = true;
-              notifier.filesystem.enabled = true;
+
+              # Mailgun via tf-stacks/prd/k3s/mailgun. No startup check: a mail outage must not stop the login for everything.
+              notifier = {
+                disable_startup_check = true;
+                smtp = {
+                  enabled = true;
+                  address = "submission://smtp.mailgun.org:587";
+                  username = "postmaster@mail.${cluster.domain}";
+                  sender = "Authelia <auth@mail.${cluster.domain}>";
+                };
+              };
 
               # Users live in 1Password, so Authelia's own password change/reset would write to a read-only file.
               authentication_backend = {
@@ -138,6 +148,10 @@ _: {
               {
                 secretKey = "identity_providers.oidc.hmac.key";
                 remoteRef.key = "authelia/secrets/oidc-hmac-secret";
+              }
+              {
+                secretKey = "notifier.smtp.password.txt";
+                remoteRef.key = "mailgun-smtp/credentials/password";
               }
             ];
           };
