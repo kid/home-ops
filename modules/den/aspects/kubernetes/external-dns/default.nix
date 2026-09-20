@@ -40,7 +40,7 @@ in
               "crd"
             ];
             registry = "txt";
-            txtOwnerId = "prd";
+            txtOwnerId = cluster.name;
             txtPrefix = "k8s.";
             domainFilters = [ cluster.domain ];
             policy = "sync";
