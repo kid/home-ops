@@ -46,7 +46,7 @@
 
         # den.groups is global/non-duplicated, but not every device needs
         # every group materialized as a RouterOS resource (e.g. a device
-        # with no external-dns user shouldn't get an external-dns group
+        # with no metrics user shouldn't get a metrics group
         # either) — only emit the groups actually referenced on this device.
         referencedGroups = lib.unique (
           lib.mapAttrsToList (_: u: u.routerosDevices.${routerosDevice.name}.group) registryUsers

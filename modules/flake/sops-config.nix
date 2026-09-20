@@ -15,7 +15,7 @@
 }:
 let
   # Every registry user's sshKeys, not just kid's — a service account (e.g.
-  # external-dns, metrics) has none, so this naturally stays human-only
+  # metrics) has none, so this naturally stays human-only
   # without singling out a user by name.
   humanKeys = lib.unique (lib.concatMap (u: u.sshKeys) (lib.attrValues config.den.users.registry));
 
