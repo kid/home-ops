@@ -69,6 +69,12 @@ resource "onepassword_item" "mikrotik_credentials" {
     label = "credentials"
 
     field {
+      label = "username"
+      type  = "STRING"
+      value = routeros_system_user.external_dns.name
+    }
+
+    field {
       label = "password"
       type  = "CONCEALED"
       value = random_password.external_dns.result

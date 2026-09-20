@@ -69,7 +69,10 @@ in
                   }
                   {
                     name = "MIKROTIK_USERNAME";
-                    value = "external-dns-${cluster.name}";
+                    valueFrom.secretKeyRef = {
+                      name = "mikrotik-credentials";
+                      key = "MIKROTIK_USERNAME";
+                    };
                   }
                   {
                     name = "MIKROTIK_PASSWORD";
@@ -119,6 +122,10 @@ in
             };
             target.name = "mikrotik-credentials";
             data = [
+              {
+                secretKey = "MIKROTIK_USERNAME";
+                remoteRef.key = "mikrotik-credentials/credentials/username";
+              }
               {
                 secretKey = "MIKROTIK_PASSWORD";
                 remoteRef.key = "mikrotik-credentials/credentials/password";
