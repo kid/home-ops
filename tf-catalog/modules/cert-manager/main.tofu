@@ -19,7 +19,7 @@ variable "account_id" {
   type = string
 }
 
-variable "cloudflare_zone_id" {
+variable "domain" {
   type = string
 }
 
@@ -27,6 +27,13 @@ provider "onepassword" {}
 
 data "onepassword_vault" "home_ops_prd" {
   name = "home-ops-prd"
+}
+
+data "cloudflare_zone" "this" {
+  filter = {
+    name    = var.domain
+    account = { id = var.account_id }
+  }
 }
 
 data "cloudflare_account_api_token_permission_groups_list" "dns_write" {
@@ -44,7 +51,7 @@ resource "cloudflare_account_token" "dns" {
       { id = data.cloudflare_account_api_token_permission_groups_list.dns_write.result[0].id }
     ]
     resources = jsonencode({
-      "com.cloudflare.api.account.zone.${var.cloudflare_zone_id}" = "*"
+      "com.cloudflare.api.account.zone.${data.cloudflare_zone.this.zone_id}" = "*"
     })
   }]
 }
