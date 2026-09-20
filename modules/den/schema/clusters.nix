@@ -131,6 +131,17 @@
               description = "1Password vault name this cluster's ExternalSecrets read from (modules/den/aspects/kubernetes/external-secrets)";
             };
 
+            cloudflare = {
+              accountId = lib.mkOption {
+                type = lib.types.str;
+                description = "Cloudflare account ID holding this cluster's R2 bucket (modules/den/aspects/kubernetes/kopiur)";
+              };
+              zoneId = lib.mkOption {
+                type = lib.types.str;
+                description = "ID of the Cloudflare zone for `domain`, where cert-manager solves DNS-01";
+              };
+            };
+
             storage = lib.mkOption {
               type = lib.types.attrsOf (
                 lib.types.submodule {

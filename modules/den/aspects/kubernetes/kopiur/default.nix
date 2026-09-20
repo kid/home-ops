@@ -62,7 +62,7 @@ _: {
           allowedNamespaces.all = true;
           backend.s3 = {
             bucket = "home-ops-${cluster.environment}-kopiur";
-            endpoint = "fadfc390b1e5fb0ce019b9f7a8917d42.r2.cloudflarestorage.com";
+            endpoint = "${cluster.cloudflare.accountId}.r2.cloudflarestorage.com";
             region = "auto";
             auth.secretRef = {
               name = "kopiur-r2";

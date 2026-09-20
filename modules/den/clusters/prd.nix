@@ -57,6 +57,11 @@ in
 
     secrets.onepasswordVault = "home-ops-prd";
 
+    cloudflare = {
+      accountId = "fadfc390b1e5fb0ce019b9f7a8917d42";
+      zoneId = "dba2b63221015f1957d718defbf6b871";
+    };
+
     networks = {
       pods = {
         cidr = "172.40.0.0/16";
