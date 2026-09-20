@@ -25,7 +25,6 @@ in
   # reverse "which clusters include me" lookup, and reading config.den.clusters
   # here to generalize it would self-reference (infinite recursion), so list
   # clusters explicitly.
-  den.clusters.prd.methods.mkSopsSecret = mkSopsSecret;
   den.clusters.dev.methods.mkSopsSecret = mkSopsSecret;
 
   den.aspects.kubernetes.sops-operator.k8s-manifests =

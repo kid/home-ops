@@ -56,7 +56,6 @@ creation_rules:
     - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb 
       kid@fw13
-    - age1crlwx4k0eaq666fa8dqpq3k9rhkm8qvwf3ewuum8s8hmrzrm55fsl3tk8h
     - age14q38ykuylz090zv6vje9asr8v6s735f75vy2l858pd7qshynh35sdc6zcg
   path_regex: secrets/clusters/prd/.*
 - encrypted_regex: ^(data|stringData)$
@@ -71,18 +70,6 @@ creation_rules:
     - age17zks7jaqpljq6k8lgn939lfg6mqysf53r3n3l7e0j4tkhywyrqxqyc72x8
   mac_only_encrypted: true
   path_regex: manifests/dev/.*SopsSecret-.*\.ya?ml$
-- encrypted_regex: ^(data|stringData)$
-  key_groups:
-  - age:
-    - ssh-ed25519 
-      AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo 
-      kid@vulkan
-    - ssh-ed25519 
-      AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb 
-      kid@fw13
-    - age1crlwx4k0eaq666fa8dqpq3k9rhkm8qvwf3ewuum8s8hmrzrm55fsl3tk8h
-  mac_only_encrypted: true
-  path_regex: manifests/prd/.*SopsSecret-.*\.ya?ml$
 - key_groups:
   - age:
     - ssh-ed25519 

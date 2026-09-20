@@ -45,10 +45,17 @@ let
   clusterNames = builtins.attrNames (config.den.clusters or { });
   clusterPubKeyPath = cluster: secretsDir + "/clusters/${cluster}/sops-age-key.pub";
 
+  # Only a cluster running sops-operator has its own age key; the rest
+  # (e.g. prd, which reads its secrets through ESO) have none.
+  clusterHasKey = cluster: builtins.pathExists (clusterPubKeyPath cluster);
+  clusterKey =
+    cluster:
+    lib.optional (clusterHasKey cluster) (
+      lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))
+    );
+
   # Same "not provisioned yet -> no rule, no error" behavior as hostRule.
-  provisionedClusters = builtins.filter (
-    cluster: builtins.pathExists (clusterPubKeyPath cluster)
-  ) clusterNames;
+  keyedClusters = builtins.filter clusterHasKey clusterNames;
 
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
@@ -74,13 +81,14 @@ let
     path_regex = "secrets/clusters/${cluster}/.*";
     key_groups = [
       {
-        age =
-          humanKeys
-          ++ [ (lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))) ]
-          ++ clusterMemberHostKeys cluster;
+        age = humanKeys ++ clusterKey cluster ++ clusterMemberHostKeys cluster;
       }
     ];
   };
+
+  ruledClusters = builtins.filter (
+    cluster: clusterHasKey cluster || clusterMemberHostKeys cluster != [ ]
+  ) clusterNames;
 
   # sops-operator (modules/den/aspects/kubernetes/sops-operator/default.nix) decrypts
   # SopsSecret manifests in-cluster using only the cluster's own sops-age
@@ -100,7 +108,7 @@ let
     mac_only_encrypted = true;
     key_groups = [
       {
-        age = humanKeys ++ [ (lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))) ];
+        age = humanKeys ++ clusterKey cluster;
       }
     ];
   };
@@ -108,8 +116,8 @@ let
   sopsConfig = {
     creation_rules =
       map hostRule provisionedHosts
-      ++ map clusterRule provisionedClusters
-      ++ map clusterManifestsRule provisionedClusters
+      ++ map clusterRule ruledClusters
+      ++ map clusterManifestsRule keyedClusters
       ++ [
         {
           key_groups = [ { age = humanKeys; } ];
