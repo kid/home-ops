@@ -88,17 +88,19 @@ resource "onepassword_item" "authelia" {
       }
     }
 
+    # The next two are multi-line and a concealed field loses its newlines, so they are
+    # base64 here and decoded by the ExternalSecret.
     field {
       label = "oidc-jwks-key"
       type  = "CONCEALED"
-      value = tls_private_key.oidc_jwks.private_key_pem
+      value = base64encode(tls_private_key.oidc_jwks.private_key_pem)
     }
 
     # Authelia's file backend, with bcrypt hashes.
     field {
       label = "users-database"
       type  = "CONCEALED"
-      value = yamlencode({
+      value = base64encode(yamlencode({
         users = {
           for name, user in var.users : name => {
             disabled    = false
@@ -108,7 +110,7 @@ resource "onepassword_item" "authelia" {
             password    = random_password.user[name].bcrypt_hash
           }
         }
-      })
+      }))
     }
   }
 }

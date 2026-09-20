@@ -159,7 +159,10 @@ _: {
             data = [
               {
                 secretKey = "jwksKey";
-                remoteRef.key = "authelia/secrets/oidc-jwks-key";
+                remoteRef = {
+                  key = "authelia/secrets/oidc-jwks-key";
+                  decodingStrategy = "Base64";
+                };
               }
               {
                 secretKey = "argocdClientSecret";
@@ -167,7 +170,10 @@ _: {
               }
               {
                 secretKey = "usersDatabase";
-                remoteRef.key = "authelia/secrets/users-database";
+                remoteRef = {
+                  key = "authelia/secrets/users-database";
+                  decodingStrategy = "Base64";
+                };
               }
             ];
           };
