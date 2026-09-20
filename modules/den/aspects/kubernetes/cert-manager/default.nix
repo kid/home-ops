@@ -113,7 +113,9 @@ _: {
             #    0 Certificate; 1 push the result back to 1Password.
             applications.cert-manager.resources.secrets.wildcard-tls-seed = {
               metadata.annotations."argocd.argoproj.io/sync-wave" = "-3";
-              stringData = {
+              # `data`, not `stringData`: the API server rewrites the latter, which
+              # ArgoCD reports as drift. Both values are "placeholder".
+              data = {
                 "tls.crt" = "cGxhY2Vob2xkZXI=";
                 "tls.key" = "cGxhY2Vob2xkZXI=";
               };
@@ -130,6 +132,10 @@ _: {
                   }
                 ];
                 selector.secret.name = "wildcard-tls-seed";
+                template.data = {
+                  "tls.crt" = ''{{ index . "tls.crt" | b64enc }}'';
+                  "tls.key" = ''{{ index . "tls.key" | b64enc }}'';
+                };
                 data = [
                   {
                     match = {
