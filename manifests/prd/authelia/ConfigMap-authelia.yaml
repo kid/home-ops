@@ -1,0 +1,411 @@
+apiVersion: v1
+data:
+  configuration.yaml: |
+    ---
+    # yaml-language-server: $schema=https://www.authelia.com/schemas/v4.39/json-schema/configuration.json
+    theme: 'light'
+    default_2fa_method: ''
+    server:
+      address: 'tcp://0.0.0.0:9091/'
+      asset_path: ''
+      headers:
+        csp_template: ""
+      buffers:
+        read: 4096
+        write: 4096
+      timeouts:
+        read: '6 seconds'
+        write: '6 seconds'
+        idle: '30 seconds'
+      endpoints:
+        enable_pprof: false
+        enable_expvars: false
+        authz:
+          auth-request:
+            implementation: 'AuthRequest'
+          ext-authz:
+            implementation: 'ExtAuthz'
+          forward-auth:
+            implementation: 'ForwardAuth'
+        rate_limits:
+          reset_password_start:
+            enable: true
+          reset_password_finish:
+            enable: true
+          second_factor_totp:
+            enable: true
+          second_factor_duo:
+            enable: true
+          session_elevation_start:
+            enable: true
+          session_elevation_finish:
+            enable: true
+          openid_connect_token:
+            enable: true
+          openid_connect_pushed_authorization_request:
+            enable: true
+          openid_connect_userinfo:
+            enable: true
+          openid_connect_introspection:
+            enable: true
+          openid_connect_revocation:
+            enable: true
+          second_factor_password:
+            enable: true
+    log:
+      level: 'info'
+      format: 'text'
+      file_path: ''
+      keep_stdout: true
+    telemetry:
+      metrics:
+        enabled: false
+    identity_validation:
+      elevated_session:
+        code_lifespan: '5 minutes'
+        elevation_lifespan: '10 minutes'
+        characters: 8
+        require_second_factor: false
+        skip_second_factor: false
+      reset_password:
+        jwt_lifespan: '5 minutes'
+        jwt_algorithm: 'HS256'
+    totp:
+      disable: false
+      issuer: 'Authelia'
+      skew: 1
+      secret_size: 32
+      algorithm: 'SHA1'
+      digits: 6
+      period: 30
+      disable_reuse_security_policy: false
+      allowed_algorithms:
+        - 'SHA1'
+      allowed_digits:
+        - 6
+      allowed_periods:
+        - 30
+    webauthn:
+      disable: false
+      enable_passkey_login: false
+      experimental_enable_passkey_uv_two_factors: false
+      experimental_enable_passkey_upgrade: false
+      display_name: 'Authelia'
+      attestation_conveyance_preference: 'indirect'
+      timeout: '60 seconds'
+      filtering:
+        permitted_aaguids: []
+        prohibited_aaguids: []
+        prohibit_backup_eligibility: false
+      selection_criteria:
+        attachment: ''
+        discoverability: 'preferred'
+        user_verification: 'preferred'
+      metadata:
+        enabled: false
+        cache_policy: 'strict'
+        validate_trust_anchor: true
+        validate_entry: true
+        validate_entry_permit_zero_aaguid: false
+        validate_status: true
+        validate_status_permitted: []
+        validate_status_prohibited: []
+    ntp:
+      address: 'udp://time.cloudflare.com:123'
+      version: 4
+      max_desync: '3 seconds'
+      disable_startup_check: false
+      disable_failure: false
+    authentication_backend:
+      password_reset:
+        disable: true
+        custom_url: ''
+      password_change:
+        disable: true
+      refresh_interval: '5 minutes'
+      file:
+        path: '/secrets/authelia-extra/users_database.yml'
+        watch: false
+        search:
+          email: false
+          case_insensitive: false
+        password:
+          algorithm: 'argon2'
+          argon2:
+            variant: 'argon2id'
+            iterations: 3
+            memory: 65536
+            parallelism: 4
+            key_length: 32
+            salt_length: 16
+          scrypt:
+            variant: 'scrypt'
+            iterations: 16
+            block_size: 8
+            parallelism: 1
+            key_length: 32
+            salt_length: 16
+          pbkdf2:
+            variant: 'sha512'
+            iterations: 310000
+            salt_length: 16
+          sha2crypt:
+            variant: 'sha512'
+            iterations: 50000
+            salt_length: 16
+          bcrypt:
+            variant: 'standard'
+            cost: 12
+    password_policy:
+      standard:
+        enabled: false
+        min_length: 8
+        max_length: 0
+        require_uppercase: false
+        require_lowercase: false
+        require_number: false
+        require_special: false
+      zxcvbn:
+        enabled: false
+        min_score: 0
+    session:
+      name: 'authelia_session'
+      same_site: 'lax'
+      inactivity: '5 minutes'
+      expiration: '1 hour'
+      remember_me: '1 month'
+      cookies:
+        - domain: 'kidibox.net'
+          authelia_url: 'https://auth.kidibox.net'
+    regulation:
+      modes:
+      - 'user'
+      max_retries: 3
+      find_time: '2 minutes'
+      ban_time: '5 minutes'
+    storage:
+      local:
+        path: '/config/db.sqlite3'
+    notifier:
+      disable_startup_check: false
+      filesystem:
+        filename: '/config/notification.txt'
+    identity_providers:
+      oidc:
+        lifespans:
+          access_token: '1 hour'
+          refresh_token: '1 hour and 30 minutes'
+          id_token: '1 hour'
+          authorize_code: '1 minute'
+          device_code: '10 minutes'
+          jwt_secured_authorization: '5 minutes'
+        enforce_pkce: 'public_clients_only'
+        enable_pkce_plain_challenge: false
+        enable_client_debug_messages: false
+        enable_jwt_access_token_stateless_introspection: false
+        minimum_parameter_entropy: 8
+        discovery_signed_response_alg: ''
+        discovery_signed_response_key_id: ''
+        require_pushed_authorization_requests: false
+        claims_policies:
+          oidc-id-token:
+            id_token:
+            - 'groups'
+            - 'email'
+            - 'email_verified'
+            - 'alt_emails'
+            - 'preferred_username'
+            - 'name'
+            id_token_audience_mode: 'specification'
+        jwks:
+          - algorithm: 'RS256'
+            use: 'sig'
+            key: {{ secret "/secrets/authelia-extra/oidc.jwks.rsa.key" | mindent 10 "|" | msquote }}
+        cors:
+          allowed_origins_from_client_redirect_uris: false
+        clients:
+          - client_id: 'argocd'
+            client_name: 'ArgoCD'
+            client_secret: '{{ secret "/secrets/authelia-extra/oidc.client.argocd.secret" }}'
+            public: false
+            redirect_uris:
+              - 'https://argocd.kidibox.net/auth/callback'
+            scopes:
+              - 'openid'
+              - 'profile'
+              - 'email'
+              - 'groups'
+            grant_types:
+              - 'authorization_code'
+            response_types:
+              - 'code'
+            authorization_policy: 'two_factor'
+            claims_policy: 'oidc-id-token'
+            allow_multiple_auth_methods: false
+            consent_mode: 'auto'
+            require_pushed_authorization_requests: false
+            require_pkce: false
+            pkce_challenge_method: ''
+            authorization_signed_response_alg: 'RS256'
+            authorization_signed_response_key_id: ''
+            authorization_encrypted_response_key_id: ''
+            authorization_encrypted_response_alg: ''
+            authorization_encrypted_response_enc: ''
+            id_token_signed_response_alg: 'RS256'
+            id_token_signed_response_key_id: ''
+            id_token_encrypted_response_key_id: ''
+            id_token_encrypted_response_alg: ''
+            id_token_encrypted_response_enc: ''
+            access_token_signed_response_alg: 'none'
+            access_token_signed_response_key_id: ''
+            access_token_encrypted_response_key_id: ''
+            access_token_encrypted_response_alg: ''
+            access_token_encrypted_response_enc: ''
+            userinfo_signed_response_alg: 'none'
+            userinfo_signed_response_key_id: ''
+            userinfo_encrypted_response_key_id: ''
+            userinfo_encrypted_response_alg: ''
+            userinfo_encrypted_response_enc: ''
+            introspection_signed_response_alg: 'none'
+            introspection_signed_response_key_id: ''
+            introspection_encrypted_response_key_id: ''
+            introspection_encrypted_response_alg: ''
+            introspection_encrypted_response_enc: ''
+            introspection_endpoint_auth_method: 'client_secret_basic'
+            introspection_endpoint_auth_signing_alg: 'RS256'
+            request_object_signing_alg: ''
+            request_object_encryption_alg: 'none'
+            request_object_encryption_enc: ''
+            token_endpoint_auth_method: 'client_secret_basic'
+            token_endpoint_auth_signing_alg: ''
+            revocation_endpoint_auth_method: 'client_secret_basic'
+            revocation_endpoint_auth_signing_alg: 'RS256'
+            pushed_authorization_request_endpoint_auth_method: 'client_secret_basic'
+            pushed_authorization_request_endpoint_auth_signing_alg: 'RS256'
+          - client_id: 'argocd-cli'
+            client_name: 'ArgoCD CLI'
+            public: true
+            redirect_uris:
+              - 'http://localhost:8085/auth/callback'
+            scopes:
+              - 'openid'
+              - 'profile'
+              - 'email'
+              - 'groups'
+            grant_types:
+              - 'authorization_code'
+            response_types:
+              - 'code'
+            authorization_policy: 'two_factor'
+            claims_policy: 'oidc-id-token'
+            allow_multiple_auth_methods: false
+            consent_mode: 'auto'
+            require_pushed_authorization_requests: false
+            require_pkce: true
+            pkce_challenge_method: 'S256'
+            authorization_signed_response_alg: 'RS256'
+            authorization_signed_response_key_id: ''
+            authorization_encrypted_response_key_id: ''
+            authorization_encrypted_response_alg: ''
+            authorization_encrypted_response_enc: ''
+            id_token_signed_response_alg: 'RS256'
+            id_token_signed_response_key_id: ''
+            id_token_encrypted_response_key_id: ''
+            id_token_encrypted_response_alg: ''
+            id_token_encrypted_response_enc: ''
+            access_token_signed_response_alg: 'none'
+            access_token_signed_response_key_id: ''
+            access_token_encrypted_response_key_id: ''
+            access_token_encrypted_response_alg: ''
+            access_token_encrypted_response_enc: ''
+            userinfo_signed_response_alg: 'none'
+            userinfo_signed_response_key_id: ''
+            userinfo_encrypted_response_key_id: ''
+            userinfo_encrypted_response_alg: ''
+            userinfo_encrypted_response_enc: ''
+            introspection_signed_response_alg: 'none'
+            introspection_signed_response_key_id: ''
+            introspection_encrypted_response_key_id: ''
+            introspection_encrypted_response_alg: ''
+            introspection_encrypted_response_enc: ''
+            introspection_endpoint_auth_method: 'none'
+            introspection_endpoint_auth_signing_alg: 'RS256'
+            request_object_signing_alg: ''
+            request_object_encryption_alg: 'none'
+            request_object_encryption_enc: ''
+            token_endpoint_auth_method: 'none'
+            token_endpoint_auth_signing_alg: ''
+            revocation_endpoint_auth_method: 'none'
+            revocation_endpoint_auth_signing_alg: 'RS256'
+            pushed_authorization_request_endpoint_auth_method: 'none'
+            pushed_authorization_request_endpoint_auth_signing_alg: 'RS256'
+          - client_id: 'kubernetes'
+            client_name: 'Kubernetes'
+            public: true
+            redirect_uris:
+              - 'http://localhost:8000'
+              - 'http://localhost:18000'
+            scopes:
+              - 'openid'
+              - 'profile'
+              - 'email'
+              - 'groups'
+              - 'offline_access'
+            grant_types:
+              - 'authorization_code'
+              - 'refresh_token'
+            response_types:
+              - 'code'
+            authorization_policy: 'two_factor'
+            claims_policy: 'oidc-id-token'
+            allow_multiple_auth_methods: false
+            consent_mode: 'auto'
+            require_pushed_authorization_requests: false
+            require_pkce: true
+            pkce_challenge_method: 'S256'
+            authorization_signed_response_alg: 'RS256'
+            authorization_signed_response_key_id: ''
+            authorization_encrypted_response_key_id: ''
+            authorization_encrypted_response_alg: ''
+            authorization_encrypted_response_enc: ''
+            id_token_signed_response_alg: 'RS256'
+            id_token_signed_response_key_id: ''
+            id_token_encrypted_response_key_id: ''
+            id_token_encrypted_response_alg: ''
+            id_token_encrypted_response_enc: ''
+            access_token_signed_response_alg: 'none'
+            access_token_signed_response_key_id: ''
+            access_token_encrypted_response_key_id: ''
+            access_token_encrypted_response_alg: ''
+            access_token_encrypted_response_enc: ''
+            userinfo_signed_response_alg: 'none'
+            userinfo_signed_response_key_id: ''
+            userinfo_encrypted_response_key_id: ''
+            userinfo_encrypted_response_alg: ''
+            userinfo_encrypted_response_enc: ''
+            introspection_signed_response_alg: 'none'
+            introspection_signed_response_key_id: ''
+            introspection_encrypted_response_key_id: ''
+            introspection_encrypted_response_alg: ''
+            introspection_encrypted_response_enc: ''
+            introspection_endpoint_auth_method: 'none'
+            introspection_endpoint_auth_signing_alg: 'RS256'
+            request_object_signing_alg: ''
+            request_object_encryption_alg: 'none'
+            request_object_encryption_enc: ''
+            token_endpoint_auth_method: 'none'
+            token_endpoint_auth_signing_alg: ''
+            revocation_endpoint_auth_method: 'none'
+            revocation_endpoint_auth_signing_alg: 'RS256'
+            pushed_authorization_request_endpoint_auth_method: 'none'
+            pushed_authorization_request_endpoint_auth_signing_alg: 'RS256'
+    access_control:
+      default_policy: 'two_factor'
+    ...
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: authelia
+    app.kubernetes.io/name: authelia
+  name: authelia
+  namespace: authelia

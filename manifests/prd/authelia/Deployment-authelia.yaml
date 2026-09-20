@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: authelia
+    app.kubernetes.io/name: authelia
+  name: authelia
+  namespace: authelia
+spec:
+  minReadySeconds: 0
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: authelia
+      app.kubernetes.io/name: authelia
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        authelia.com/checksum-config: fe0e929967e4df7967eee165184c514a00519ee9768084264177278d579a2f63
+      labels:
+        app.kubernetes.io/instance: authelia
+        app.kubernetes.io/name: authelia
+    spec:
+      affinity:
+        nodeAffinity: {}
+        podAffinity: {}
+        podAntiAffinity: {}
+      containers:
+        - command:
+            - authelia
+          env:
+            - name: AUTHELIA_SERVER_DISABLE_HEALTHCHECK
+              value: "true"
+            - name: AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE
+              value: /secrets/internal/identity_validation.reset_password.jwt.hmac.key
+            - name: AUTHELIA_SESSION_SECRET_FILE
+              value: /secrets/internal/session.encryption.key
+            - name: AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE
+              value: /secrets/internal/storage.encryption.key
+            - name: AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE
+              value: /secrets/internal/identity_providers.oidc.hmac.key
+            - name: X_AUTHELIA_CONFIG
+              value: /configuration.yaml
+            - name: X_AUTHELIA_CONFIG_FILTERS
+              value: template
+          image: ghcr.io/authelia/authelia:4.39.24
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /api/health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: authelia
+          ports:
+            - containerPort: 9091
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /api/health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits: {}
+            requests: {}
+          startupProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /api/health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /config
+              name: authelia
+              readOnly: false
+            - mountPath: /configuration.yaml
+              name: config
+              readOnly: true
+              subPath: configuration.yaml
+            - mountPath: /secrets/internal
+              name: secrets
+              readOnly: true
+            - mountPath: /secrets/authelia-extra
+              name: secret-authelia-extra
+              readOnly: true
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      volumes:
+        - name: authelia
+          persistentVolumeClaim:
+            claimName: authelia
+        - configMap:
+            items:
+              - key: configuration.yaml
+                path: configuration.yaml
+            name: authelia
+          name: config
+        - name: secrets
+          secret:
+            items:
+              - key: identity_validation.reset_password.jwt.hmac.key
+                path: identity_validation.reset_password.jwt.hmac.key
+              - key: session.encryption.key
+                path: session.encryption.key
+              - key: storage.encryption.key
+                path: storage.encryption.key
+              - key: identity_providers.oidc.hmac.key
+                path: identity_providers.oidc.hmac.key
+            secretName: authelia-secrets
+        - name: secret-authelia-extra
+          secret:
+            secretName: authelia-extra
