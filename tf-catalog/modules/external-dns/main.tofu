@@ -50,7 +50,7 @@ resource "random_password" "external_dns" {
 }
 
 resource "routeros_system_user_group" "external_dns" {
-  name   = "external-dns"
+  name   = "external-dns-${var.cluster_name}"
   policy = ["api", "read", "rest-api", "write"]
 }
 
