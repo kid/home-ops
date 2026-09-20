@@ -350,14 +350,7 @@ inputs = {
   op_item_routeros    = "RB5009 - user - kid"
   op_vault            = "home-ops"
   routeros_endpoint   = "10.99.0.1"
-  routeros_groups = {
-    metrics = {
-      policies = [
-        "api",
-        "read",
-      ]
-    }
-  }
+  routeros_groups     = {}
   routeros_users = {
     admin = {
       disabled = true
@@ -369,10 +362,6 @@ inputs = {
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan",
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13",
       ]
-    }
-    metrics = {
-      group         = "metrics"
-      password_item = "RB5009 - user - metrics"
     }
   }
   vlans = {
