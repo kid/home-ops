@@ -65,9 +65,26 @@
       datasourceTemplate: "docker",
       depNameTemplate: "{{{registry}}}/{{{chart}}}",
     },
+    // Flake inputs pinned by rev in the module that declares them. The nix
+    // manager would edit the generated flake.nix instead, which flake-file
+    // then reports as drift.
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^modules/.+\\.nix$/"],
+      matchStrings: [
+        "\"github:(?<depName>[^/\"]+/[^/\"]+)/(?<currentDigest>[0-9a-f]{40})\"",
+      ],
+      datasourceTemplate: "git-refs",
+      packageNameTemplate: "https://github.com/{{{depName}}}",
+    },
   ],
   nix: {
     enabled: true,
+  },
+  // Inputs without a rev (nixpkgs, transitive ones) can only be updated here.
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["before 4am on monday"],
   },
   packageRules: [
     {
@@ -78,6 +95,21 @@
       matchManagers: ["nix"],
       matchDepNames: ["nixhelm"],
       enabled: true,
+    },
+    {
+      matchManagers: ["nix"],
+      matchUpdateTypes: ["major", "minor", "patch", "digest", "pin", "pinDigest", "bump"],
+      enabled: false,
+    },
+    {
+      // flake.nix and flake.lock are regenerated from the bumped module.
+      matchManagers: ["custom.regex"],
+      matchDatasources: ["git-refs"],
+      postUpgradeTasks: {
+        commands: ["nix run .#write-flake", "nix flake lock"],
+        fileFilters: ["flake.nix", "flake.lock"],
+        executionMode: "update",
+      },
     },
     {
       // Every pin has a content hash next to its version, which Renovate

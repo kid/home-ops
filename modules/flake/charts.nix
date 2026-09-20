@@ -11,7 +11,7 @@
 }:
 {
   flake-file.inputs = {
-    nix-kube-generators.url = "github:farcaller/nix-kube-generators";
+    nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";
     haumea = {
       url = "github:nix-community/haumea/v0.2.2";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -20,7 +20,7 @@
     # for its helmupdater CLI (modules/flake/devshell.nix), used to add/bump
     # entries under ../../charts.
     nixhelm = {
-      url = "github:farcaller/nixhelm";
+      url = "github:farcaller/nixhelm/49330920db72bc9122a04239c0b427aa6b774311";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

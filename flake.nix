@@ -11,52 +11,52 @@
   };
 
   inputs = {
-    den.url = "github:denful/den";
+    den.url = "github:denful/den/99cc0c5a1cc846cb1be681344b10d2731d430e13";
     disko = {
       url = "github:AlexLov/disko/6747342da148f6cb28c8405a70fe00455a0ba027";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     disko-zfs = {
-      url = "github:numtide/disko-zfs";
+      url = "github:numtide/disko-zfs/4a0e131be44004fcd8493c9249ab42016a90a4bb";
       inputs = {
         disko.follows = "disko";
         flake-parts.follows = "flake-parts";
         nixpkgs.follows = "nixpkgs";
       };
     };
-    flake-file.url = "github:vic/flake-file";
+    flake-file.url = "github:vic/flake-file/66ddd2f69a5c4677f0095c6f70eea1217dc45749";
     flake-parts = {
-      url = "github:hercules-ci/flake-parts";
+      url = "github:hercules-ci/flake-parts/17c9d6cdfc60c64f4ee8d306f9bc0b4ccb51481e";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
     git-hooks-nix = {
-      url = "github:cachix/git-hooks.nix";
+      url = "github:cachix/git-hooks.nix/43b3c1ab9d40fb1dbb008f451988a91e375825e9";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     haumea = {
       url = "github:nix-community/haumea/v0.2.2";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    impermanence.url = "github:nix-community/impermanence";
-    import-tree.url = "github:vic/import-tree";
-    nh.url = "github:nix-community/nh";
-    nix-kube-generators.url = "github:farcaller/nix-kube-generators";
+    impermanence.url = "github:nix-community/impermanence/7b1d382faf603b6d264f58627330f9faa5cba149";
+    import-tree.url = "github:vic/import-tree/4ebb10ae17d5f1ad366e7aef5b92cb8eecf24f69";
+    nh.url = "github:nix-community/nh/769573044127841330cae023b07ea828758119b0";
+    nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";
     nixhelm = {
-      url = "github:farcaller/nixhelm";
+      url = "github:farcaller/nixhelm/49330920db72bc9122a04239c0b427aa6b774311";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixidy = {
-      url = "github:arnarg/nixidy";
+      url = "github:arnarg/nixidy/4682f760ddcae469bd4e6eec7aeb70e20505a4ed";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixos-anywhere.url = "github:nix-community/nixos-anywhere";
+    nixos-anywhere.url = "github:nix-community/nixos-anywhere/91fc9b70fc295258c366cce8627efb6f185fd9fb";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     sops-nix = {
-      url = "github:Mic92/sops-nix";
+      url = "github:Mic92/sops-nix/a8627b21b9107c5711c96b84f32a9a4b3d45295f";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     treefmt-nix = {
-      url = "github:numtide/treefmt-nix";
+      url = "github:numtide/treefmt-nix/df3c0640565d04a0261253cdd89fce78ec50168a";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

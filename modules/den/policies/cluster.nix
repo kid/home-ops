@@ -19,7 +19,7 @@
 }:
 {
   flake-file.inputs.nixidy = {
-    url = "github:arnarg/nixidy";
+    url = "github:arnarg/nixidy/4682f760ddcae469bd4e6eec7aeb70e20505a4ed";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
