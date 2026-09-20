@@ -189,14 +189,24 @@ _: {
           };
         };
 
-        resources.certificates.openbao-tls.spec = {
-          secretName = "openbao-tls";
-          dnsNames = [ "openbao.${cluster.domain}" ];
-          issuerRef = {
-            name = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
-            kind = "ClusterIssuer";
-            group = "cert-manager.io";
+        # The wildcard cert cert-manager keeps in 1Password (see cert-manager/default.nix).
+        resources.externalSecrets.openbao-tls.spec = {
+          secretStoreRef = {
+            name = "onepassword";
+            kind = "ClusterSecretStore";
           };
+          target = {
+            name = "openbao-tls";
+            template.type = "kubernetes.io/tls";
+          };
+          dataFrom = [
+            {
+              extract = {
+                key = "wildcard-tls";
+                decodingStrategy = "Base64";
+              };
+            }
+          ];
         };
 
         resources.externalSecrets.openbao-unseal.spec = {

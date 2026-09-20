@@ -1,8 +1,8 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: apps-tls
-  namespace: envoy-gateway-system
+  name: wildcard
+  namespace: cert-manager
 spec:
   dnsNames:
     - '*.kidibox.net'
@@ -11,4 +11,8 @@ spec:
     group: cert-manager.io
     kind: ClusterIssuer
     name: letsencrypt-prod
-  secretName: apps-tls
+  privateKey:
+    algorithm: ECDSA
+    rotationPolicy: Always
+    size: 256
+  secretName: wildcard-tls

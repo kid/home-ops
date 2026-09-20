@@ -99,8 +99,154 @@ _: {
       (
         if cluster.name == "prd" then
           {
-            # Before openbao (-1), whose pod can't start without its Let's Encrypt cert.
+            # Before openbao (-1), whose pod can't start without the wildcard cert.
             applications.cert-manager.annotations."argocd.argoproj.io/sync-wave" = "-2";
+
+            # The wildcard cert lives in 1Password so a rebuild imports it instead
+            # of asking Let's Encrypt again. Waves (within this app):
+            #   -3 seed Secret, -2 seed PushSecret: puts a placeholder in the item
+            #      only if it doesn't exist yet, so the import below never fails
+            #      on a first-ever deploy.
+            #   -1 import: creates wildcard-tls once, carrying the annotations
+            #      cert-manager checks before deciding to re-issue. A placeholder
+            #      isn't a certificate, so cert-manager issues a real one.
+            #    0 Certificate; 1 push the result back to 1Password.
+            applications.cert-manager.resources.secrets.wildcard-tls-seed = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-3";
+              stringData = {
+                "tls.crt" = "cGxhY2Vob2xkZXI=";
+                "tls.key" = "cGxhY2Vob2xkZXI=";
+              };
+            };
+
+            applications.cert-manager.resources.pushSecrets.wildcard-tls-seed = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-2";
+              spec = {
+                updatePolicy = "IfNotExists";
+                secretStoreRefs = [
+                  {
+                    name = "onepassword";
+                    kind = "ClusterSecretStore";
+                  }
+                ];
+                selector.secret.name = "wildcard-tls-seed";
+                data = [
+                  {
+                    match = {
+                      secretKey = "tls.crt";
+                      remoteRef = {
+                        remoteKey = "wildcard-tls";
+                        property = "tls.crt";
+                      };
+                    };
+                  }
+                  {
+                    match = {
+                      secretKey = "tls.key";
+                      remoteRef = {
+                        remoteKey = "wildcard-tls";
+                        property = "tls.key";
+                      };
+                    };
+                  }
+                ];
+              };
+            };
+
+            applications.cert-manager.resources.externalSecrets.wildcard-tls-import = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+              spec = {
+                refreshPolicy = "CreatedOnce";
+                secretStoreRef = {
+                  name = "onepassword";
+                  kind = "ClusterSecretStore";
+                };
+                target = {
+                  name = "wildcard-tls";
+                  creationPolicy = "Orphan";
+                  template = {
+                    type = "kubernetes.io/tls";
+                    metadata = {
+                      annotations = {
+                        "cert-manager.io/alt-names" = "*.${cluster.domain},${cluster.domain}";
+                        "cert-manager.io/certificate-name" = "wildcard";
+                        "cert-manager.io/common-name" = "";
+                        "cert-manager.io/ip-sans" = "";
+                        "cert-manager.io/issuer-group" = "";
+                        "cert-manager.io/issuer-kind" = "ClusterIssuer";
+                        "cert-manager.io/issuer-name" = issuerName;
+                        "cert-manager.io/uri-sans" = "";
+                      };
+                      labels."controller.cert-manager.io/fao" = "true";
+                    };
+                  };
+                };
+                dataFrom = [
+                  {
+                    extract = {
+                      key = "wildcard-tls";
+                      decodingStrategy = "Base64";
+                    };
+                  }
+                ];
+              };
+            };
+
+            applications.cert-manager.resources.certificates.wildcard.spec = {
+              secretName = "wildcard-tls";
+              dnsNames = [
+                "*.${cluster.domain}"
+                cluster.domain
+              ];
+              privateKey = {
+                algorithm = "ECDSA";
+                size = 256;
+                rotationPolicy = "Always";
+              };
+              issuerRef = {
+                name = issuerName;
+                kind = "ClusterIssuer";
+                group = "cert-manager.io";
+              };
+            };
+
+            applications.cert-manager.resources.pushSecrets.wildcard-tls = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "1";
+              spec = {
+                refreshInterval = "1h";
+                secretStoreRefs = [
+                  {
+                    name = "onepassword";
+                    kind = "ClusterSecretStore";
+                  }
+                ];
+                selector.secret.name = "wildcard-tls";
+                template.data = {
+                  "tls.crt" = ''{{ index . "tls.crt" | b64enc }}'';
+                  "tls.key" = ''{{ index . "tls.key" | b64enc }}'';
+                };
+                data = [
+                  {
+                    match = {
+                      secretKey = "tls.crt";
+                      remoteRef = {
+                        remoteKey = "wildcard-tls";
+                        property = "tls.crt";
+                      };
+                    };
+                  }
+                  {
+                    match = {
+                      secretKey = "tls.key";
+                      remoteRef = {
+                        remoteKey = "wildcard-tls";
+                        property = "tls.key";
+                      };
+                    };
+                  }
+                ];
+              };
+            };
 
             applications.cert-manager.resources.externalSecrets.cloudflare-dns-api-token = {
               metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
