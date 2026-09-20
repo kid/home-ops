@@ -116,7 +116,6 @@ in
     external-dns
     external-secrets
     kopiur
-    openbao
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/

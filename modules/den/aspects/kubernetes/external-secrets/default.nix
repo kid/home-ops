@@ -34,17 +34,6 @@ _: {
             key = "token";
           };
         };
-
-        resources.clusterSecretStores.openbao.spec.provider.vault = {
-          server = "https://openbao.${cluster.domain}:8200";
-          path = "secret";
-          version = "v2";
-          auth.kubernetes = {
-            mountPath = "kubernetes";
-            role = "eso-cluster";
-            serviceAccountRef.name = "external-secrets";
-          };
-        };
       };
     };
 }
