@@ -351,14 +351,6 @@ inputs = {
   op_vault            = "home-ops"
   routeros_endpoint   = "10.99.0.1"
   routeros_groups = {
-    external-dns = {
-      policies = [
-        "api",
-        "read",
-        "rest-api",
-        "write",
-      ]
-    }
     metrics = {
       policies = [
         "api",
@@ -369,10 +361,6 @@ inputs = {
   routeros_users = {
     admin = {
       disabled = true
-    }
-    external-dns = {
-      group         = "external-dns"
-      password_item = "RB5009 - user - external-dns"
     }
     kid = {
       group         = "full"
