@@ -7,6 +7,6 @@ terraform {
 }
 
 inputs = {
-  account_id  = "fadfc390b1e5fb0ce019b9f7a8917d42"
+  account_id  = get_env("CLOUDFLARE_ACCOUNT_ID")
   environment = "prd"
 }
