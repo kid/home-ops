@@ -72,11 +72,6 @@ resource "random_password" "storage_encryption_key" {
   }
 }
 
-moved {
-  from = random_password.secret["storage-encryption-key"]
-  to   = random_password.storage_encryption_key
-}
-
 resource "random_password" "user" {
   for_each = var.users
 
