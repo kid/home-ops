@@ -7,6 +7,9 @@ _: {
       applications.argocd = {
         resources.configMaps.argocd-cm.data.url = "https://${cluster.methods.mkAppHostname "argocd"}";
 
+        # No local login, so the form is hidden. If Authelia is down, fix it through git and kubectl on the node.
+        resources.configMaps.argocd-cm.data."admin.enabled" = "false";
+
         # cliClientID is for `argocd login --sso`; ArgoCD accepts its tokens without an allowedAudiences entry.
         resources.configMaps.argocd-cm.data."oidc.config" = builtins.toJSON {
           name = "Authelia";
