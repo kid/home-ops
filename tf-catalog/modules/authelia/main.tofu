@@ -25,6 +25,12 @@ variable "url" {
   description = "Authelia's public URL, set on each user's login item"
 }
 
+variable "smtp_password" {
+  type        = string
+  sensitive   = true
+  description = "Google app password of the Gmail account Authelia sends from"
+}
+
 variable "users" {
   type = map(object({
     displayname = string
@@ -86,6 +92,12 @@ resource "onepassword_item" "authelia" {
         type  = "CONCEALED"
         value = field.value.result
       }
+    }
+
+    field {
+      label = "smtp-password"
+      type  = "CONCEALED"
+      value = replace(var.smtp_password, " ", "") # Google shows it in groups of four
     }
 
     # The next two are multi-line and a concealed field loses its newlines, so they are

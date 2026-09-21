@@ -47,7 +47,7 @@ _: {
 
               storage.local.enabled = true;
 
-              # Gmail with an app password (the authelia-smtp 1Password item, made by hand). No startup check: a mail outage must not stop the login for everything.
+              # Gmail with an app password, put in 1Password by the authelia tf stack. No startup check: a mail outage must not stop the login for everything.
               notifier = {
                 disable_startup_check = true;
                 smtp = {
@@ -152,7 +152,7 @@ _: {
               }
               {
                 secretKey = "notifier.smtp.password.txt";
-                remoteRef.key = "authelia-smtp/password";
+                remoteRef.key = "authelia/secrets/smtp-password";
               }
             ];
           };

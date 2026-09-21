@@ -10,6 +10,8 @@ inputs = {
   op_vault = "home-ops-prd"
   url      = "https://auth.kidibox.net"
 
+  smtp_password = get_env("GOOGLE_APP_PASSWORD")
+
   users = {
     kid = {
       displayname = "Arnaud Rebts"
