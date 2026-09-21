@@ -6,7 +6,7 @@
   ...
 }:
 {
-  flake-file.inputs.impermanence.url = "github:nix-community/impermanence";
+  flake-file.inputs.impermanence.url = "github:nix-community/impermanence/7b1d382faf603b6d264f58627330f9faa5cba149";
 
   den.aspects.impermanence = {
     includes = [ den.aspects.impermanence.persist-collector ];

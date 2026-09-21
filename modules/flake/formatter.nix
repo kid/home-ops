@@ -3,7 +3,7 @@
 { inputs, ... }:
 {
   flake-file.inputs.treefmt-nix = {
-    url = "github:numtide/treefmt-nix";
+    url = "github:numtide/treefmt-nix/27b3b12a8e6375f28ebe122f07d230ca5459bbfa";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 

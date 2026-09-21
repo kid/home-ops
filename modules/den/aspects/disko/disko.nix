@@ -21,7 +21,7 @@
   # via the `datasets` quirk (see zfs-datasets-collector.nix) without a
   # reformat. Auto-adopts datasets already declared under disko.devices.
   flake-file.inputs.disko-zfs = {
-    url = "github:numtide/disko-zfs";
+    url = "github:numtide/disko-zfs/4a0e131be44004fcd8493c9249ab42016a90a4bb";
     inputs.nixpkgs.follows = "nixpkgs";
     inputs.flake-parts.follows = "flake-parts";
     inputs.disko.follows = "disko";

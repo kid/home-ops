@@ -19,7 +19,7 @@
 }:
 {
   flake-file.inputs.sops-nix = {
-    url = "github:Mic92/sops-nix";
+    url = "github:Mic92/sops-nix/7214124c20c1542c90deb54af50e2f53ae02711f";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 

@@ -6,6 +6,7 @@ metadata:
 spec:
   credentialProjection:
     enabled: true
+  groupBy: None
   identity:
     hostname: authelia
     username: authelia
