@@ -112,6 +112,7 @@ in
     trust-manager
     coredns
     argocd
+    snapshot-controller
     miroir
     external-dns
     external-secrets
