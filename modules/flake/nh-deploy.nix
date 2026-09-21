@@ -4,7 +4,7 @@
 { lib, config, ... }:
 {
   config.flake-file.inputs.nh.url =
-    "github:nix-community/nh/769573044127841330cae023b07ea828758119b0";
+    "github:nix-community/nh/d2a7aa0c40cb0d2e1c433789e369c61fe63e1a76";
 
   options.fleet.nh.targets = lib.mkOption {
     type = lib.types.attrsOf (
