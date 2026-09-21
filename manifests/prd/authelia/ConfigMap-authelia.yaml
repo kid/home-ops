@@ -306,8 +306,10 @@ data:
               - 'profile'
               - 'email'
               - 'groups'
+              - 'offline_access'
             grant_types:
               - 'authorization_code'
+              - 'refresh_token'
             response_types:
               - 'code'
             authorization_policy: 'two_factor'
