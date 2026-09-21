@@ -112,6 +112,7 @@ in
     trust-manager
     coredns
     argocd
+    argocd-oidc
     miroir
     external-dns
     external-secrets
