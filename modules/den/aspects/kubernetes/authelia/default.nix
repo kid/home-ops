@@ -5,6 +5,8 @@ _: {
       # The chart only mounts its own known keys from authelia-secrets, so the rest live in authelia-extra.
       extraDir = "/secrets/authelia-extra";
       smtpUser = "arnaud.rebts@gmail.com";
+      # The image runs as root by default. The kopiur mover reads the volume as this same uid.
+      appId = 1000;
       onepassword = {
         name = "onepassword";
         kind = "ClusterSecretStore";
@@ -24,6 +26,13 @@ _: {
             pod = {
               kind = "Deployment";
               strategy.type = "Recreate";
+              securityContext.pod = {
+                runAsNonRoot = true;
+                runAsUser = appId;
+                runAsGroup = appId;
+                fsGroup = appId;
+                fsGroupChangePolicy = "OnRootMismatch";
+              };
             };
 
             persistence = {
@@ -217,14 +226,11 @@ _: {
             name = "r2";
           };
           credentialProjection.enabled = true;
-          groupBy = "None";
-          # The mover can't read Authelia's files (notification.txt) without its fsGroup, which a read-only mount skips. Safe: only the staged snapshot copy changes.
-          sources = [
-            {
-              pvc.name = "authelia";
-              readOnly = false;
-            }
-          ];
+          mover.securityContext = {
+            runAsUser = appId;
+            runAsGroup = appId;
+          };
+          sources = [ { pvc.name = "authelia"; } ];
           identity = {
             username = "authelia";
             hostname = "authelia";
