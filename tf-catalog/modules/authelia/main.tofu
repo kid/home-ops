@@ -1,13 +1,5 @@
 terraform {
   required_providers {
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = "~> 5.0"
-    }
-    mailgun = {
-      source  = "wgebis/mailgun"
-      version = "~> 0.10"
-    }
     onepassword = {
       source  = "1Password/onepassword"
       version = "~> 3.0"
@@ -31,21 +23,6 @@ variable "op_vault" {
 variable "url" {
   type        = string
   description = "Authelia's public URL, set on each user's login item"
-}
-
-variable "mail_domain" {
-  type        = string
-  description = "Mailgun sending domain, for example mail.kidibox.net"
-}
-
-variable "mailgun_region" {
-  type        = string
-  description = "Mailgun region of the account, us or eu"
-}
-
-variable "cloudflare_zone_id" {
-  type        = string
-  description = "Cloudflare zone that gets the SPF and DKIM records for mail_domain"
 }
 
 variable "users" {
@@ -87,38 +64,9 @@ resource "random_password" "user" {
   special = false
 }
 
-resource "random_password" "smtp" {
-  length  = 32
-  special = false
-}
-
 resource "tls_private_key" "oidc_jwks" {
   algorithm = "RSA"
   rsa_bits  = 4096
-}
-
-resource "mailgun_domain" "this" {
-  name          = var.mail_domain
-  region        = var.mailgun_region
-  smtp_password = random_password.smtp.result
-}
-
-# The keys are static because the record set is only known after apply.
-locals {
-  mailgun_records = {
-    spf  = one([for r in mailgun_domain.this.sending_records_set : r if r.record_type == "TXT" && startswith(r.value, "v=spf1")])
-    dkim = one([for r in mailgun_domain.this.sending_records_set : r if r.record_type == "TXT" && startswith(r.value, "k=rsa")])
-  }
-}
-
-resource "cloudflare_dns_record" "mailgun" {
-  for_each = local.mailgun_records
-
-  zone_id = var.cloudflare_zone_id
-  name    = each.value.name
-  type    = each.value.record_type
-  content = each.value.value
-  ttl     = 1
 }
 
 # Read by modules/den/aspects/kubernetes/authelia/default.nix as authelia/secrets/<field>.
@@ -138,18 +86,6 @@ resource "onepassword_item" "authelia" {
         type  = "CONCEALED"
         value = field.value.result
       }
-    }
-
-    field {
-      label = "smtp-username"
-      type  = "STRING"
-      value = mailgun_domain.this.smtp_login
-    }
-
-    field {
-      label = "smtp-password"
-      type  = "CONCEALED"
-      value = random_password.smtp.result
     }
 
     # The next two are multi-line and a concealed field loses its newlines, so they are

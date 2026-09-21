@@ -4,6 +4,7 @@ _: {
     let
       # The chart only mounts its own known keys from authelia-secrets, so the rest live in authelia-extra.
       extraDir = "/secrets/authelia-extra";
+      smtpUser = "arnaud.rebts@gmail.com";
       onepassword = {
         name = "onepassword";
         kind = "ClusterSecretStore";
@@ -46,14 +47,14 @@ _: {
 
               storage.local.enabled = true;
 
-              # Mailgun (EU), set up by the authelia tf stack. No startup check: a mail outage must not stop the login for everything.
+              # Gmail with an app password (the authelia-smtp 1Password item, made by hand). No startup check: a mail outage must not stop the login for everything.
               notifier = {
                 disable_startup_check = true;
                 smtp = {
                   enabled = true;
-                  address = "submission://smtp.eu.mailgun.org:587";
-                  username = "postmaster@mail.${cluster.domain}";
-                  sender = "Authelia <auth@mail.${cluster.domain}>";
+                  address = "submission://smtp.gmail.com:587";
+                  username = smtpUser;
+                  sender = "Authelia <${smtpUser}>";
                 };
               };
 
@@ -151,7 +152,7 @@ _: {
               }
               {
                 secretKey = "notifier.smtp.password.txt";
-                remoteRef.key = "authelia/secrets/smtp-password";
+                remoteRef.key = "authelia-smtp/password";
               }
             ];
           };

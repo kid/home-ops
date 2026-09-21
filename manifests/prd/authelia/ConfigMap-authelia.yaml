@@ -189,10 +189,10 @@ data:
     notifier:
       disable_startup_check: true
       smtp:
-        address: 'submission://smtp.eu.mailgun.org:587'
+        address: 'submission://smtp.gmail.com:587'
         timeout: '5 seconds'
-        username: 'postmaster@mail.kidibox.net'
-        sender: 'Authelia <auth@mail.kidibox.net>'
+        username: 'arnaud.rebts@gmail.com'
+        sender: 'Authelia <arnaud.rebts@gmail.com>'
         identifier: 'localhost'
         subject: '[Authelia] {title}'
         startup_check_address: 'test@authelia.com'
