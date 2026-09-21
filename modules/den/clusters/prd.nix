@@ -112,6 +112,7 @@ in
     trust-manager
     coredns
     argocd
+    argocd-oidc
     snapshot-controller
     miroir
     external-dns

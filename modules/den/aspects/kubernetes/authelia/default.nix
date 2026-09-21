@@ -97,6 +97,18 @@ _: {
                     require_pkce = true;
                     pkce_challenge_method = "S256";
                     redirect_uris = [ "http://localhost:8085/auth/callback" ];
+                    # The CLI asks for offline_access whenever the provider lists it.
+                    scopes = [
+                      "openid"
+                      "profile"
+                      "email"
+                      "groups"
+                      "offline_access"
+                    ];
+                    grant_types = [
+                      "authorization_code"
+                      "refresh_token"
+                    ];
                     claims_policy = "oidc-id-token";
                   }
                   {

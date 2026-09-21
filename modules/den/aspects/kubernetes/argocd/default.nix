@@ -209,6 +209,18 @@ in
             hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
             rules = [
               {
+                # Without a match this ties with the HTTPRoute on /, which is listed first, so gRPC never got here.
+                matches = [
+                  {
+                    headers = [
+                      {
+                        name = "Content-Type";
+                        type = "RegularExpression";
+                        value = "^application/grpc.*$";
+                      }
+                    ];
+                  }
+                ];
                 backendRefs = [
                   {
                     group = "";

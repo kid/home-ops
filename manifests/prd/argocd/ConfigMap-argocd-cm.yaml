@@ -1,5 +1,7 @@
 apiVersion: v1
 data:
+  admin.enabled: "false"
+  oidc.config: '{"cliClientID":"argocd-cli","clientID":"argocd","clientSecret":"$argocd-oidc:clientSecret","issuer":"https://auth.kidibox.net","name":"Authelia","requestedScopes":["openid","profile","email","groups"]}'
   resource.customizations.health.argoproj.io_Application: |
     hs = {}
     hs.status = "Progressing"
@@ -132,6 +134,7 @@ data:
       - BackgroundScanReport
       - ClusterBackgroundScanReport
       - UpdateRequest
+  url: https://argocd.kidibox.net
 kind: ConfigMap
 metadata:
   labels:
