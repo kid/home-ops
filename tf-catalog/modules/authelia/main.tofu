@@ -50,7 +50,6 @@ locals {
   secret_names = [
     "reset-password-jwt-secret",
     "session-encryption-key",
-    "storage-encryption-key",
     "oidc-hmac-secret",
     "argocd-client-secret",
   ]
@@ -61,6 +60,21 @@ resource "random_password" "secret" {
 
   length  = 64
   special = false
+}
+
+# Losing this key makes the SQLite database unreadable, so it must survive a destroy.
+resource "random_password" "storage_encryption_key" {
+  length  = 64
+  special = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+moved {
+  from = random_password.secret["storage-encryption-key"]
+  to   = random_password.storage_encryption_key
 }
 
 resource "random_password" "user" {
@@ -92,6 +106,12 @@ resource "onepassword_item" "authelia" {
         type  = "CONCEALED"
         value = field.value.result
       }
+    }
+
+    field {
+      label = "storage-encryption-key"
+      type  = "CONCEALED"
+      value = random_password.storage_encryption_key.result
     }
 
     field {
