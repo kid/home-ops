@@ -355,17 +355,18 @@ data:
             revocation_endpoint_auth_signing_alg: 'RS256'
             pushed_authorization_request_endpoint_auth_method: 'none'
             pushed_authorization_request_endpoint_auth_signing_alg: 'RS256'
-          - client_id: 'kubernetes'
+          - client_id: 'kube_login'
             client_name: 'Kubernetes'
-            public: true
+            client_secret: '{{ secret "/secrets/authelia-extra/oidc.client.kubelogin.secret" }}'
+            public: false
             redirect_uris:
               - 'http://localhost:8000'
               - 'http://localhost:18000'
             scopes:
               - 'openid'
-              - 'profile'
-              - 'email'
               - 'groups'
+              - 'email'
+              - 'profile'
               - 'offline_access'
             grant_types:
               - 'authorization_code'
@@ -377,8 +378,8 @@ data:
             allow_multiple_auth_methods: false
             consent_mode: 'auto'
             require_pushed_authorization_requests: false
-            require_pkce: true
-            pkce_challenge_method: 'S256'
+            require_pkce: false
+            pkce_challenge_method: ''
             authorization_signed_response_alg: 'RS256'
             authorization_signed_response_key_id: ''
             authorization_encrypted_response_key_id: ''
@@ -404,16 +405,16 @@ data:
             introspection_encrypted_response_key_id: ''
             introspection_encrypted_response_alg: ''
             introspection_encrypted_response_enc: ''
-            introspection_endpoint_auth_method: 'none'
+            introspection_endpoint_auth_method: 'client_secret_basic'
             introspection_endpoint_auth_signing_alg: 'RS256'
             request_object_signing_alg: ''
             request_object_encryption_alg: 'none'
             request_object_encryption_enc: ''
-            token_endpoint_auth_method: 'none'
+            token_endpoint_auth_method: 'client_secret_basic'
             token_endpoint_auth_signing_alg: ''
-            revocation_endpoint_auth_method: 'none'
+            revocation_endpoint_auth_method: 'client_secret_basic'
             revocation_endpoint_auth_signing_alg: 'RS256'
-            pushed_authorization_request_endpoint_auth_method: 'none'
+            pushed_authorization_request_endpoint_auth_method: 'client_secret_basic'
             pushed_authorization_request_endpoint_auth_signing_alg: 'RS256'
     access_control:
       default_policy: 'two_factor'

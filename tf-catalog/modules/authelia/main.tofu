@@ -52,6 +52,7 @@ locals {
     "session-encryption-key",
     "oidc-hmac-secret",
     "argocd-client-secret",
+    "kubelogin-client-secret",
   ]
 }
 

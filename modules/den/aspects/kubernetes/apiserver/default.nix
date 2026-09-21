@@ -2,11 +2,23 @@
 # LoadBalancer, and a TLS passthrough listener on 6443 hands the connection to the kubernetes Service, so
 # kubectl sees the API server's own certificate. external-dns names it through the TLSRoute.
 # The login side is modules/den/aspects/services/k3s/oidc.nix.
-_: {
+{ config, ... }:
+let
+  mkAppHostname = config.den.clusters.prd.methods.mkAppHostname;
+in
+{
+  # Shared by the Authelia client, the k3s API server flags and modules/flake/docs.nix, so they cannot drift.
+  den.clusters.prd.methods.kubeLogin = {
+    clientId = "kube_login";
+    group = "admins";
+    issuerUrl = "https://${mkAppHostname "auth"}";
+    server = mkAppHostname "kube";
+  };
+
   den.aspects.kubernetes.apiserver.k8s-manifests =
     { cluster, ... }:
     let
-      hostname = cluster.methods.mkAppHostname "kube";
+      hostname = cluster.methods.kubeLogin.server;
     in
     {
       # Merged with the https listener in envoy-gateway/default.nix, which is shared with dev.
@@ -60,7 +72,7 @@ _: {
           })
         ];
 
-        # Group names carry the oidc: prefix set in the authentication config.
+        # kube-apiserver adds no groups prefix, so this is the group name as Authelia sends it.
         resources.clusterRoleBindings.oidc-admins = {
           roleRef = {
             apiGroup = "rbac.authorization.k8s.io";
@@ -71,7 +83,7 @@ _: {
             {
               apiGroup = "rbac.authorization.k8s.io";
               kind = "Group";
-              name = "oidc:admins";
+              name = cluster.methods.kubeLogin.group;
             }
           ];
         };

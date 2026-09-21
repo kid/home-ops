@@ -1,47 +1,24 @@
-# Log in to the API server with Authelia (kubectl through kubelogin). Split out of k3s-server
-# because only a host whose cluster runs Authelia should include it. The client is `kubernetes`,
-# defined in modules/den/aspects/kubernetes/authelia/default.nix.
+# Log in to the API server with Authelia (kubectl through kubelogin), as in Authelia's kubelogin page
+# (integration/openid-connect/clients/kubelogin). Split out of k3s-server because only a host whose
+# cluster runs Authelia should include it. The values come from den.clusters.<name>.methods.kubeLogin,
+# set in modules/den/aspects/kubernetes/apiserver/default.nix, like the Authelia client itself.
 { config, ... }:
 let
   clusters = config.den.clusters or { };
 in
 {
   den.aspects.k3s-oidc.nixos =
-    { host, pkgs, ... }:
+    { host, ... }:
     let
-      cluster = clusters.${host.k3s.clusterName or "prd"};
-
-      # The nix store keeps the file readable by k3s, and a change restarts it through the new flag path.
-      authenticationConfig = pkgs.writeText "authentication-config.json" (
-        builtins.toJSON {
-          apiVersion = "apiserver.config.k8s.io/v1";
-          kind = "AuthenticationConfiguration";
-          jwt = [
-            {
-              issuer = {
-                url = "https://${cluster.methods.mkAppHostname "auth"}";
-                audiences = [ "kubernetes" ];
-              };
-              claimMappings = {
-                username = {
-                  claim = "preferred_username";
-                  prefix = "oidc:";
-                };
-                groups = {
-                  claim = "groups";
-                  prefix = "oidc:";
-                };
-              };
-            }
-          ];
-        }
-      );
+      login = clusters.${host.k3s.clusterName or "prd"}.methods.kubeLogin;
     in
     {
       services.k3s.extraFlags = [
-        # The load balancer name from kubernetes/apiserver/default.nix.
-        "--tls-san=${cluster.methods.mkAppHostname "kube"}"
-        "--kube-apiserver-arg=authentication-config=${authenticationConfig}"
+        # Adds the load balancer name from kubernetes/apiserver/default.nix to the serving certificate.
+        "--tls-san=${login.server}"
+        "--kube-apiserver-arg=oidc-issuer-url=${login.issuerUrl}"
+        "--kube-apiserver-arg=oidc-client-id=${login.clientId}"
+        "--kube-apiserver-arg=oidc-groups-claim=groups"
       ];
     };
 }
