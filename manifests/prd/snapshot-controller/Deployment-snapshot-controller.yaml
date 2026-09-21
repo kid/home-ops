@@ -7,12 +7,17 @@ metadata:
   name: snapshot-controller
   namespace: snapshot-controller
 spec:
+  minReadySeconds: 35
   replicas: 1
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app.kubernetes.io/instance: snapshot-controller
       app.kubernetes.io/name: snapshot-controller
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -21,10 +26,11 @@ spec:
     spec:
       containers:
         - args:
-            - --feature-gates=CSIVolumeGroupSnapshot=true
-            - --http-endpoint=:8080
+            - --v=2
             - --leader-election=true
             - --leader-election-namespace=$(NAMESPACE)
+            - --http-endpoint=:8080
+            - --feature-gates=CSIVolumeGroupSnapshot=true
           env:
             - name: NAMESPACE
               valueFrom:
@@ -35,27 +41,36 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz/leader-election
-              port: http
-              scheme: HTTP
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 20
           name: snapshot-controller
           ports:
             - containerPort: 8080
-              name: http
+              name: metrics
               protocol: TCP
           readinessProbe:
             httpGet:
               path: /healthz/leader-election
-              port: http
-              scheme: HTTP
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
           resources: {}
           securityContext:
+            allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-            runAsUser: 1000
-      dnsPolicy: ClusterFirst
-      hostNetwork: false
-      securityContext: {}
+            runAsUser: 65532
+      enableServiceLinks: false
+      priorityClassName: system-cluster-critical
+      securityContext:
+        fsGroup: 65532
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: snapshot-controller

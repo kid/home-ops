@@ -32,7 +32,7 @@ _: {
         })
         (generators.fromChartCRDModule {
           name = "snapshot-controller";
-          chart = charts.piraeusdatastore.snapshot-controller;
+          chart = charts.home-operations.snapshot-controller;
           kindFilter = [ "VolumeSnapshotClass" ];
         })
       ];
