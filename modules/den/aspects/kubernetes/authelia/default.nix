@@ -218,7 +218,13 @@ _: {
           };
           credentialProjection.enabled = true;
           groupBy = "None";
-          sources = [ { pvc.name = "authelia"; } ];
+          # The mover can't read Authelia's files (notification.txt) without its fsGroup, which a read-only mount skips. Safe: only the staged snapshot copy changes.
+          sources = [
+            {
+              pvc.name = "authelia";
+              readOnly = false;
+            }
+          ];
           identity = {
             username = "authelia";
             hostname = "authelia";

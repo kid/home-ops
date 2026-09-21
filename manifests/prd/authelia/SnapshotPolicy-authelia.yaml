@@ -19,3 +19,4 @@ spec:
   sources:
     - pvc:
         name: authelia
+      readOnly: false
