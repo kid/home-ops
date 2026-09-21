@@ -116,6 +116,7 @@ in
     external-dns
     external-secrets
     kopiur
+    authelia
   ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/

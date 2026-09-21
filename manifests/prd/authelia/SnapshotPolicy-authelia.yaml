@@ -1,0 +1,20 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: authelia
+  namespace: authelia
+spec:
+  credentialProjection:
+    enabled: true
+  identity:
+    hostname: authelia
+    username: authelia
+  repository:
+    kind: ClusterRepository
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: authelia

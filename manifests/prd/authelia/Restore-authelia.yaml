@@ -1,0 +1,16 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: authelia
+  namespace: authelia
+spec:
+  credentialProjection:
+    enabled: true
+  policy:
+    onMissingSnapshot: Continue
+  source:
+    fromPolicy:
+      name: authelia
+      offset: 0
+  target:
+    populator: {}
