@@ -49,7 +49,7 @@
       url = "github:arnarg/nixidy/4682f760ddcae469bd4e6eec7aeb70e20505a4ed";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixos-anywhere.url = "github:nix-community/nixos-anywhere/91fc9b70fc295258c366cce8627efb6f185fd9fb";
+    nixos-anywhere.url = "github:nix-community/nixos-anywhere/1c2f124e970fed2a49bd14ce0a8b4e9bff74d3b4";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     sops-nix = {
       url = "github:Mic92/sops-nix/a8627b21b9107c5711c96b84f32a9a4b3d45295f";
