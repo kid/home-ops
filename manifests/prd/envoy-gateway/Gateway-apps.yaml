@@ -19,3 +19,14 @@ spec:
             kind: Secret
             name: apps-tls
         mode: Terminate
+    - allowedRoutes:
+        kinds:
+          - kind: TLSRoute
+        namespaces:
+          from: All
+      hostname: kube.kidibox.net
+      name: kube-api
+      port: 6443
+      protocol: TLS
+      tls:
+        mode: Passthrough

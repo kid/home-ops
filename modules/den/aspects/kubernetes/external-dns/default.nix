@@ -36,6 +36,7 @@ in
             replicaCount = 1;
             sources = [
               "gateway-httproute"
+              "gateway-tlsroute"
               "service"
               "crd"
             ];

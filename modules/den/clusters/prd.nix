@@ -113,6 +113,7 @@ in
     coredns
     argocd
     argocd-oidc
+    apiserver
     miroir
     external-dns
     external-secrets

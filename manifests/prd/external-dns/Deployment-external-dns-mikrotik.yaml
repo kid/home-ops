@@ -27,6 +27,7 @@ spec:
             - --log-format=text
             - --interval=1m
             - --source=gateway-httproute
+            - --source=gateway-tlsroute
             - --source=service
             - --source=crd
             - --policy=sync
