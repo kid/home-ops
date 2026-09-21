@@ -6,10 +6,13 @@ metadata:
 spec:
   credentialProjection:
     enabled: true
-  groupBy: None
   identity:
     hostname: authelia
     username: authelia
+  mover:
+    securityContext:
+      runAsGroup: 1000
+      runAsUser: 1000
   repository:
     kind: ClusterRepository
     name: r2
@@ -19,4 +22,3 @@ spec:
   sources:
     - pvc:
         name: authelia
-      readOnly: false
