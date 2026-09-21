@@ -30,6 +30,11 @@ _: {
           chart = charts.home-operations.miroir;
           kindFilter = [ "MiroirNode" ];
         })
+        (generators.fromChartCRDModule {
+          name = "snapshot-controller";
+          chart = charts.piraeusdatastore.snapshot-controller;
+          kindFilter = [ "VolumeSnapshotClass" ];
+        })
       ];
 
       applications.miroir = {
@@ -51,6 +56,12 @@ _: {
             }
           ) cluster.methods.miroirNodes
         );
+
+        resources.volumeSnapshotClasses.miroir = {
+          metadata.annotations."snapshot.storage.kubernetes.io/is-default-class" = "true";
+          driver = "miroir.home-operations.com";
+          deletionPolicy = "Delete";
+        };
 
         resources.storageClasses.miroir = {
           metadata.annotations."storageclass.kubernetes.io/is-default-class" = "true";

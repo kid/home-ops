@@ -5,7 +5,4 @@ kind: VolumeSnapshotClass
 metadata:
   annotations:
     snapshot.storage.kubernetes.io/is-default-class: "true"
-  labels:
-    app.kubernetes.io/instance: snapshot-controller
-    app.kubernetes.io/name: snapshot-controller
   name: miroir
