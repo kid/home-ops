@@ -12,9 +12,10 @@ surface.
 ## Commands
 
 - `nix develop` (or let direnv do it) — devshell with `terragrunt`, `opentofu`, `talosctl`, `kubectl`, `sops`, `age`, `just`, etc.
-- `nix flake check --print-build-logs` — the only "test". Runs treefmt's formatting check, `checks.terragrunt` (tf-stacks drift), `checks.manifests` (manifests/ drift), and the flake's own evaluation. This is exactly what CI (`.github/workflows/nix-flake-check.yaml`) runs on every PR.
+- `nix flake check --print-build-logs` — the only "test". Runs treefmt's formatting check, `checks.terragrunt` (tf-stacks drift), `checks.manifests` (manifests/ drift), `checks.docs` (docs/clusters drift), and the flake's own evaluation. This is exactly what CI (`.github/workflows/nix-flake-check.yaml`) runs on every PR.
 - `nix run .#write-terragrunt` — regenerate `tf-stacks/prd/network/**/terragrunt.hcl` from Nix. Run after editing any `"terragrunt-stacks"` aspect content or a device's `terragruntInputs`.
 - `nix run .#write-manifests` — regenerate `manifests/prd/**` from nixidy. Run after editing any `k8s-manifests` aspect content.
+- `nix run .#write-docs` — regenerate `docs/clusters/<name>.md` (the kubectl login commands) from Nix. Run after changing a cluster's `methods.kubeLogin` (`modules/den/aspects/kubernetes/apiserver/default.nix`).
 - `nix run .#nixos-anywhere-install <host> <ssh-target>` — kexec-based remote NixOS install straight onto real hardware for a `den.hosts` entry (e.g. `nixos-anywhere-install node1 root@10.0.10.10`).
 - `deploy <host> [switch|boot|test|build]` (mode defaults to `switch`) — ongoing config push to an already-installed `den.hosts` entry over SSH via `nh os <mode> --target-host`, e.g. `deploy node1` or `deploy node1 boot` (host must first exist via `nixos-anywhere-install`). Hosts opt in via `fleet.nh.targets.<name>` (not every `den.hosts` entry — `test-vm` isn't).
 - `nix run .#refresh-nix-hash -- <file> <dep-name> <new-value>` — recompute the hash next to a pin after bumping its version by hand: `fetchFromGitHub` pins (`refresh-nix-hash modules/den/aspects/kubernetes/argocd/default.nix argoproj/argo-cd v3.4.5`) or `charts/<org>/<chart>/default.nix` pins (delegates to `helmupdater rehash`; the last two args are unused). Renovate's self-hosted run (`.github/workflows/renovate.yaml`) calls this, then `write-manifests --skip-secrets`, via `postUpgradeTasks` for every `# renovate: datasource=github-releases` pin and every `charts/` pin — the hash must change whenever the version does, or Nix silently keeps serving the old content.
@@ -23,7 +24,7 @@ surface.
 - `.pre-commit-config.yaml` is a generated symlink into the Nix store — never hand-edit it.
 - Terragrunt `plan`/`apply` happen by hand, from inside `tf-stacks/prd/network/<device>[/<stack>]/`, only after `write-terragrunt` + human review of the diff. Never automate an apply.
 
-**Generated output — never hand-edit:** `tf-stacks/prd/network/**/terragrunt.hcl` and `manifests/prd/**` (the latter's own `README.md` says so too). Edit the Nix source under `modules/` and regenerate with the commands above. Both have a `nix flake check` drift check that fails CI if the committed file doesn't match a fresh render.
+**Generated output — never hand-edit:** `tf-stacks/prd/network/**/terragrunt.hcl`, `manifests/prd/**` (its own `README.md` says so too) and `docs/clusters/**`. Edit the Nix source under `modules/` and regenerate with the commands above. Each has a `nix flake check` drift check that fails CI if the committed file doesn't match a fresh render.
 
 ## Repo shape
 
