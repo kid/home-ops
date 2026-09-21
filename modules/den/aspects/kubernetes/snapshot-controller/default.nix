@@ -10,7 +10,7 @@ _: {
         createNamespace = true;
         annotations."argocd.argoproj.io/sync-wave" = "-3";
 
-        helm.releases.snapshot-controller.chart = charts.piraeusdatastore.snapshot-controller;
+        helm.releases.snapshot-controller.chart = charts.home-operations.snapshot-controller;
       };
     };
 }

@@ -1,11 +1,14 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: snapshot-controller
+  labels:
+    app.kubernetes.io/instance: snapshot-controller
+    app.kubernetes.io/name: snapshot-controller
+  name: snapshot-controller-runner
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: snapshot-controller
+  name: snapshot-controller-runner
 subjects:
   - kind: ServiceAccount
     name: snapshot-controller
