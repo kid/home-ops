@@ -26,7 +26,7 @@
     };
     flake-file.url = "github:vic/flake-file/66ddd2f69a5c4677f0095c6f70eea1217dc45749";
     flake-parts = {
-      url = "github:hercules-ci/flake-parts/17c9d6cdfc60c64f4ee8d306f9bc0b4ccb51481e";
+      url = "github:hercules-ci/flake-parts/31729ca8cbdb4fa927b34e5f4353e6a83f39e993";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
     git-hooks-nix = {
