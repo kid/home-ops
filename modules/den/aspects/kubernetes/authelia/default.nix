@@ -212,6 +212,7 @@ _: {
             name = "r2";
           };
           credentialProjection.enabled = true;
+          groupBy = "None";
           sources = [ { pvc.name = "authelia"; } ];
           identity = {
             username = "authelia";

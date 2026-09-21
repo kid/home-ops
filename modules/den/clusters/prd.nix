@@ -113,6 +113,7 @@ in
     coredns
     argocd
     argocd-oidc
+    snapshot-controller
     miroir
     external-dns
     external-secrets
