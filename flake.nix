@@ -13,7 +13,7 @@
   inputs = {
     den.url = "github:denful/den/99cc0c5a1cc846cb1be681344b10d2731d430e13";
     disko = {
-      url = "github:AlexLov/disko/6747342da148f6cb28c8405a70fe00455a0ba027";
+      url = "github:AlexLov/disko/ff8702b4de27f72b4c78573dfb89ec74e36abdf1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     disko-zfs = {
