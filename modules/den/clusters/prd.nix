@@ -113,6 +113,7 @@ in
     coredns
     argocd
     argocd-oidc
+    apiserver
     snapshot-controller
     miroir
     external-dns

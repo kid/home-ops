@@ -112,20 +112,20 @@ _: {
                     claims_policy = "oidc-id-token";
                   }
                   {
-                    client_id = "kubernetes";
+                    client_id = cluster.methods.kubeLogin.clientId;
                     client_name = "Kubernetes";
-                    public = true;
-                    require_pkce = true;
-                    pkce_challenge_method = "S256";
+                    client_secret.path = "${extraDir}/oidc.client.kubelogin.secret";
                     redirect_uris = [
                       "http://localhost:8000"
                       "http://localhost:18000"
                     ];
+                    # Authelia's kubelogin page (integration/openid-connect/clients/kubelogin) plus offline_access
+                    # and refresh_token, without which the login expires with the ID token after an hour.
                     scopes = [
                       "openid"
-                      "profile"
-                      "email"
                       "groups"
+                      "email"
+                      "profile"
                       "offline_access"
                     ];
                     grant_types = [
@@ -180,6 +180,7 @@ _: {
                 "oidc.jwks.rsa.key" = "{{ .jwksKey }}";
                 # Authelia wants a hash here; $plaintext$ is its prefix for an unhashed secret.
                 "oidc.client.argocd.secret" = ''{{ printf "$plaintext$%s" .argocdClientSecret }}'';
+                "oidc.client.kubelogin.secret" = ''{{ printf "$plaintext$%s" .kubeloginClientSecret }}'';
                 "users_database.yml" = "{{ .usersDatabase }}";
               };
             };
@@ -194,6 +195,10 @@ _: {
               {
                 secretKey = "argocdClientSecret";
                 remoteRef.key = "authelia/secrets/argocd-client-secret";
+              }
+              {
+                secretKey = "kubeloginClientSecret";
+                remoteRef.key = "authelia/secrets/kubelogin-client-secret";
               }
               {
                 secretKey = "usersDatabase";
