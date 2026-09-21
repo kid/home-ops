@@ -22,7 +22,7 @@
   ...
 }:
 {
-  flake-file.inputs.nixos-anywhere.url = "github:nix-community/nixos-anywhere";
+  flake-file.inputs.nixos-anywhere.url = "github:nix-community/nixos-anywhere/91fc9b70fc295258c366cce8627efb6f185fd9fb";
 
   perSystem =
     {

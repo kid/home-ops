@@ -12,6 +12,7 @@
       "original": {
         "owner": "denful",
         "repo": "den",
+        "rev": "99cc0c5a1cc846cb1be681344b10d2731d430e13",
         "type": "github"
       }
     },
@@ -59,6 +60,7 @@
       "original": {
         "owner": "numtide",
         "repo": "disko-zfs",
+        "rev": "4a0e131be44004fcd8493c9249ab42016a90a4bb",
         "type": "github"
       }
     },
@@ -112,6 +114,7 @@
       "original": {
         "owner": "vic",
         "repo": "flake-file",
+        "rev": "66ddd2f69a5c4677f0095c6f70eea1217dc45749",
         "type": "github"
       }
     },
@@ -132,6 +135,7 @@
       "original": {
         "owner": "hercules-ci",
         "repo": "flake-parts",
+        "rev": "17c9d6cdfc60c64f4ee8d306f9bc0b4ccb51481e",
         "type": "github"
       }
     },
@@ -189,6 +193,7 @@
       "original": {
         "owner": "cachix",
         "repo": "git-hooks.nix",
+        "rev": "43b3c1ab9d40fb1dbb008f451988a91e375825e9",
         "type": "github"
       }
     },
@@ -272,6 +277,7 @@
       "original": {
         "owner": "nix-community",
         "repo": "impermanence",
+        "rev": "7b1d382faf603b6d264f58627330f9faa5cba149",
         "type": "github"
       }
     },
@@ -287,6 +293,7 @@
       "original": {
         "owner": "vic",
         "repo": "import-tree",
+        "rev": "4ebb10ae17d5f1ad366e7aef5b92cb8eecf24f69",
         "type": "github"
       }
     },
@@ -305,6 +312,7 @@
       "original": {
         "owner": "nix-community",
         "repo": "nh",
+        "rev": "769573044127841330cae023b07ea828758119b0",
         "type": "github"
       }
     },
@@ -320,6 +328,7 @@
       "original": {
         "owner": "farcaller",
         "repo": "nix-kube-generators",
+        "rev": "810dcf792081790648ba9ae705b9a2286115ace8",
         "type": "github"
       }
     },
@@ -397,6 +406,7 @@
       "original": {
         "owner": "farcaller",
         "repo": "nixhelm",
+        "rev": "49330920db72bc9122a04239c0b427aa6b774311",
         "type": "github"
       }
     },
@@ -419,6 +429,7 @@
       "original": {
         "owner": "arnarg",
         "repo": "nixidy",
+        "rev": "4682f760ddcae469bd4e6eec7aeb70e20505a4ed",
         "type": "github"
       }
     },
@@ -442,6 +453,7 @@
       "original": {
         "owner": "nix-community",
         "repo": "nixos-anywhere",
+        "rev": "91fc9b70fc295258c366cce8627efb6f185fd9fb",
         "type": "github"
       }
     },
@@ -635,6 +647,7 @@
       "original": {
         "owner": "Mic92",
         "repo": "sops-nix",
+        "rev": "a8627b21b9107c5711c96b84f32a9a4b3d45295f",
         "type": "github"
       }
     },
@@ -706,6 +719,7 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "rev": "df3c0640565d04a0261253cdd89fce78ec50168a",
         "type": "github"
       }
     },
