@@ -21,7 +21,7 @@ in
       hostname = cluster.methods.kubeLogin.server;
     in
     {
-      # Merged with the https listener in envoy-gateway/default.nix, which is shared with dev.
+      # Merged with the https listener in envoy-gateway/default.nix.
       applications.envoy-gateway.resources.gateways.apps.spec.listeners = [
         {
           name = "kube-api";

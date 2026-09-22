@@ -2,6 +2,10 @@
 # pre-dendritic flake.nix), plus den/flake-file/import-tree for the
 # dendritic module system used to generate tf-stacks/prd/network's
 # terragrunt.hcl leaves from Nix (see modules/den/batteries/terragrunt/*.nix).
+# sops-nix lives here too, not next to its one current consumer
+# (modules/den/aspects/services/k3s/external-secrets.nix): it's generic
+# secrets-decryption plumbing any future NixOS aspect can pull in, not
+# something owned by that aspect specifically.
 _: {
   flake-file.description = "home-ops";
 
@@ -18,5 +22,10 @@ _: {
     flake-file.url = "github:vic/flake-file/66ddd2f69a5c4677f0095c6f70eea1217dc45749";
 
     import-tree.url = "github:vic/import-tree/4ebb10ae17d5f1ad366e7aef5b92cb8eecf24f69";
+
+    sops-nix = {
+      url = "github:Mic92/sops-nix/7214124c20c1542c90deb54af50e2f53ae02711f";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 }
