@@ -40,37 +40,26 @@ in
         # Where the kubernetes Service lives, so the backendRef needs no ReferenceGrant.
         namespace = "default";
 
-        # No typed TLSRoute in nixidy here.
-        yamls = [
-          (builtins.toJSON {
-            apiVersion = "gateway.networking.k8s.io/v1";
-            kind = "TLSRoute";
-            metadata = {
-              name = "kube-api";
-              namespace = "default";
-            };
-            spec = {
-              parentRefs = [
+        resources.tlsRoutes.kube-api.spec = {
+          parentRefs = [
+            {
+              name = "apps";
+              namespace = "envoy-gateway-system";
+              sectionName = "kube-api";
+            }
+          ];
+          hostnames = [ hostname ];
+          rules = [
+            {
+              backendRefs = [
                 {
-                  name = "apps";
-                  namespace = "envoy-gateway-system";
-                  sectionName = "kube-api";
+                  name = "kubernetes";
+                  port = 443;
                 }
               ];
-              hostnames = [ hostname ];
-              rules = [
-                {
-                  backendRefs = [
-                    {
-                      name = "kubernetes";
-                      port = 443;
-                    }
-                  ];
-                }
-              ];
-            };
-          })
-        ];
+            }
+          ];
+        };
 
         # kube-apiserver adds no groups prefix, so this is the group name as Authelia sends it.
         resources.clusterRoleBindings.oidc-admins = {

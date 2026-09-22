@@ -29,14 +29,8 @@ in
               values.crds.enabled = true;
             };
 
-            yamls = [
-              (builtins.toJSON {
-                apiVersion = "gateway.networking.k8s.io/v1";
-                kind = "GatewayClass";
-                metadata.name = "envoy";
-                spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
-              })
-            ];
+            resources.gatewayClasses.envoy.spec.controllerName =
+              "gateway.envoyproxy.io/gatewayclass-controller";
 
             resources.gateways.apps.spec = {
               gatewayClassName = "envoy";
