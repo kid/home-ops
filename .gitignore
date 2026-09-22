@@ -6,6 +6,9 @@
 .worktrees
 .pre-commit-config.yaml
 
+# Nix
+result
+
 # Terragrunt
 .terragrunt-cache
 .terragrunt-stack
