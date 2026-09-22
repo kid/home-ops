@@ -19,7 +19,7 @@ _: {
 
     den.url = "github:denful/den/99cc0c5a1cc846cb1be681344b10d2731d430e13";
 
-    flake-file.url = "github:vic/flake-file/66ddd2f69a5c4677f0095c6f70eea1217dc45749";
+    flake-file.url = "github:vic/flake-file/eccac77d2c2567efb6f368330930f3d55af8668a";
 
     import-tree.url = "github:vic/import-tree/4ebb10ae17d5f1ad366e7aef5b92cb8eecf24f69";
 
