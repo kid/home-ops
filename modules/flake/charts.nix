@@ -20,7 +20,7 @@
     # for its helmupdater CLI (modules/flake/devshell.nix), used to add/bump
     # entries under ../../charts.
     nixhelm = {
-      url = "github:farcaller/nixhelm/8a19607cd16231e1f92e10174ff562f9c6d52984";
+      url = "github:farcaller/nixhelm/f706b6918a26b2c65d7ae9fd4f8bf9787cfd5b56";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
