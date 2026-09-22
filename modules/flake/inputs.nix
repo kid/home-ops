@@ -21,7 +21,7 @@ _: {
 
     flake-file.url = "github:vic/flake-file/66ddd2f69a5c4677f0095c6f70eea1217dc45749";
 
-    import-tree.url = "github:vic/import-tree/4ebb10ae17d5f1ad366e7aef5b92cb8eecf24f69";
+    import-tree.url = "github:vic/import-tree/eb1b52eaecc57f7c136d07ae8a93e724dfecac46";
 
     sops-nix = {
       url = "github:Mic92/sops-nix/7214124c20c1542c90deb54af50e2f53ae02711f";
