@@ -1,5 +1,5 @@
 # Log in through Authelia (kubernetes/authelia/default.nix defines both clients). Separate from
-# default.nix because that aspect is shared with dev, which has neither Authelia nor External Secrets.
+# default.nix so default.nix doesn't hard-depend on Authelia or External Secrets being present.
 _: {
   den.aspects.kubernetes.argocd-oidc.k8s-manifests =
     { cluster, ... }:

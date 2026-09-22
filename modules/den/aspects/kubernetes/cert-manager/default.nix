@@ -16,7 +16,6 @@ _: {
       charts,
       generators,
       cluster,
-      lib,
       ...
     }:
     let
@@ -27,258 +26,244 @@ _: {
         else
           "https://acme-v02.api.letsencrypt.org/directory";
     in
-    lib.recursiveUpdate
-      {
-        nixidy.applicationImports = [
-          (generators.fromChartCRDModule {
-            name = "cert-manager";
-            chart = charts.jetstack.cert-manager;
-            kindFilter = [
-              "Certificate"
-              "ClusterIssuer"
-            ];
-            extraOpts = [
-              "--set"
-              "crds.enabled=true"
-            ];
-          })
-        ];
+    {
+      nixidy.applicationImports = [
+        (generators.fromChartCRDModule {
+          name = "cert-manager";
+          chart = charts.jetstack.cert-manager;
+          kindFilter = [
+            "Certificate"
+            "ClusterIssuer"
+          ];
+          extraOpts = [
+            "--set"
+            "crds.enabled=true"
+          ];
+        })
+      ];
 
-        applications.cert-manager = {
-          namespace = "cert-manager";
-          createNamespace = true;
+      applications.cert-manager = {
+        namespace = "cert-manager";
+        createNamespace = true;
 
-          helm.releases.cert-manager = {
-            chart = charts.jetstack.cert-manager;
-            values = {
-              crds.enabled = true;
-              replicaCount = 1;
-            };
+        # Before envoy-gateway, which reads the wildcard cert it pushes to 1Password.
+        annotations."argocd.argoproj.io/sync-wave" = "-2";
+
+        helm.releases.cert-manager = {
+          chart = charts.jetstack.cert-manager;
+          values = {
+            crds.enabled = true;
+            replicaCount = 1;
           };
+        };
 
-          # Standard cert-manager self-signed-root bootstrap: a selfSigned
-          # ClusterIssuer signs one CA Certificate, then hubble-ca-issuer
-          # (referenced by modules/den/aspects/kubernetes/cilium/default.nix's
-          # hubble.tls.auto.certManagerIssuerRef) signs everything else off
-          # that CA's secret. Certificate's namespace defaults to this
-          # application's own namespace (cert-manager).
-          resources.clusterIssuers.selfsigned-issuer.spec.selfSigned = { };
+        # Standard cert-manager self-signed-root bootstrap: a selfSigned
+        # ClusterIssuer signs one CA Certificate, then hubble-ca-issuer
+        # (referenced by modules/den/aspects/kubernetes/cilium/default.nix's
+        # hubble.tls.auto.certManagerIssuerRef) signs everything else off
+        # that CA's secret. Certificate's namespace defaults to this
+        # application's own namespace (cert-manager).
+        resources.clusterIssuers.selfsigned-issuer.spec.selfSigned = { };
 
-          resources.certificates.hubble-ca.spec = {
-            isCA = true;
-            commonName = "hubble-ca";
-            secretName = "hubble-ca-secret";
-            privateKey = {
-              algorithm = "ECDSA";
-              size = 256;
-            };
-            issuerRef = {
-              name = "selfsigned-issuer";
-              kind = "ClusterIssuer";
-              group = "cert-manager.io";
-            };
+        resources.certificates.hubble-ca.spec = {
+          isCA = true;
+          commonName = "hubble-ca";
+          secretName = "hubble-ca-secret";
+          privateKey = {
+            algorithm = "ECDSA";
+            size = 256;
           };
+          issuerRef = {
+            name = "selfsigned-issuer";
+            kind = "ClusterIssuer";
+            group = "cert-manager.io";
+          };
+        };
 
-          resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
+        resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
 
-          resources.clusterIssuers.${issuerName}.spec.acme = {
-            server = acmeServer;
-            email = "arnaud.rebts@gmail.com";
-            privateKeySecretRef.name = "${issuerName}-account-key";
-            solvers = [
+        resources.clusterIssuers.${issuerName}.spec.acme = {
+          server = acmeServer;
+          email = "arnaud.rebts@gmail.com";
+          privateKeySecretRef.name = "${issuerName}-account-key";
+          solvers = [
+            {
+              dns01.cloudflare.apiTokenSecretRef = {
+                name = "cloudflare-dns-api-token";
+                key = "token";
+              };
+            }
+          ];
+        };
+
+        # The wildcard cert lives in 1Password so a rebuild imports it instead
+        # of asking Let's Encrypt again. Waves (within this app):
+        #   -3 seed Secret, -2 seed PushSecret: puts a placeholder in the item
+        #      only if it doesn't exist yet, so the import below never fails
+        #      on a first-ever deploy.
+        #   -1 import: creates wildcard-tls once, carrying the annotations
+        #      cert-manager checks before deciding to re-issue. A placeholder
+        #      isn't a certificate, so cert-manager issues a real one.
+        #    0 Certificate; 1 push the result back to 1Password.
+        resources.secrets.wildcard-tls-seed = {
+          metadata.annotations."argocd.argoproj.io/sync-wave" = "-3";
+          # `data`, not `stringData`: the API server rewrites the latter, which
+          # ArgoCD reports as drift. Both values are "placeholder".
+          data = {
+            "tls.crt" = "cGxhY2Vob2xkZXI=";
+            "tls.key" = "cGxhY2Vob2xkZXI=";
+          };
+        };
+
+        resources.pushSecrets.wildcard-tls-seed = {
+          metadata.annotations."argocd.argoproj.io/sync-wave" = "-2";
+          spec = {
+            updatePolicy = "IfNotExists";
+            secretStoreRefs = [
               {
-                dns01.cloudflare.apiTokenSecretRef = {
-                  name = "cloudflare-dns-api-token";
-                  key = "token";
+                name = "onepassword";
+                kind = "ClusterSecretStore";
+              }
+            ];
+            selector.secret.name = "wildcard-tls-seed";
+            template.data = {
+              "tls.crt" = ''{{ index . "tls.crt" | b64enc }}'';
+              "tls.key" = ''{{ index . "tls.key" | b64enc }}'';
+            };
+            data = [
+              {
+                match = {
+                  secretKey = "tls.crt";
+                  remoteRef = {
+                    remoteKey = "wildcard-tls";
+                    property = "tls.crt";
+                  };
+                };
+              }
+              {
+                match = {
+                  secretKey = "tls.key";
+                  remoteRef = {
+                    remoteKey = "wildcard-tls";
+                    property = "tls.key";
+                  };
                 };
               }
             ];
           };
         };
-      }
-      (
-        if cluster.name == "prd" then
-          {
-            # Before envoy-gateway, which reads the wildcard cert it pushes to 1Password.
-            applications.cert-manager.annotations."argocd.argoproj.io/sync-wave" = "-2";
 
-            # The wildcard cert lives in 1Password so a rebuild imports it instead
-            # of asking Let's Encrypt again. Waves (within this app):
-            #   -3 seed Secret, -2 seed PushSecret: puts a placeholder in the item
-            #      only if it doesn't exist yet, so the import below never fails
-            #      on a first-ever deploy.
-            #   -1 import: creates wildcard-tls once, carrying the annotations
-            #      cert-manager checks before deciding to re-issue. A placeholder
-            #      isn't a certificate, so cert-manager issues a real one.
-            #    0 Certificate; 1 push the result back to 1Password.
-            applications.cert-manager.resources.secrets.wildcard-tls-seed = {
-              metadata.annotations."argocd.argoproj.io/sync-wave" = "-3";
-              # `data`, not `stringData`: the API server rewrites the latter, which
-              # ArgoCD reports as drift. Both values are "placeholder".
-              data = {
-                "tls.crt" = "cGxhY2Vob2xkZXI=";
-                "tls.key" = "cGxhY2Vob2xkZXI=";
+        resources.externalSecrets.wildcard-tls-import = {
+          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+          spec = {
+            refreshPolicy = "CreatedOnce";
+            secretStoreRef = {
+              name = "onepassword";
+              kind = "ClusterSecretStore";
+            };
+            target = {
+              name = "wildcard-tls";
+              creationPolicy = "Orphan";
+              template = {
+                type = "kubernetes.io/tls";
+                metadata = {
+                  annotations = {
+                    "cert-manager.io/alt-names" = "*.${cluster.domain},${cluster.domain}";
+                    "cert-manager.io/certificate-name" = "wildcard";
+                    "cert-manager.io/common-name" = "";
+                    "cert-manager.io/ip-sans" = "";
+                    "cert-manager.io/issuer-group" = "";
+                    "cert-manager.io/issuer-kind" = "ClusterIssuer";
+                    "cert-manager.io/issuer-name" = issuerName;
+                    "cert-manager.io/uri-sans" = "";
+                  };
+                  labels."controller.cert-manager.io/fao" = "true";
+                };
               };
             };
-
-            applications.cert-manager.resources.pushSecrets.wildcard-tls-seed = {
-              metadata.annotations."argocd.argoproj.io/sync-wave" = "-2";
-              spec = {
-                updatePolicy = "IfNotExists";
-                secretStoreRefs = [
-                  {
-                    name = "onepassword";
-                    kind = "ClusterSecretStore";
-                  }
-                ];
-                selector.secret.name = "wildcard-tls-seed";
-                template.data = {
-                  "tls.crt" = ''{{ index . "tls.crt" | b64enc }}'';
-                  "tls.key" = ''{{ index . "tls.key" | b64enc }}'';
+            dataFrom = [
+              {
+                extract = {
+                  key = "wildcard-tls";
+                  decodingStrategy = "Base64";
                 };
-                data = [
-                  {
-                    match = {
-                      secretKey = "tls.crt";
-                      remoteRef = {
-                        remoteKey = "wildcard-tls";
-                        property = "tls.crt";
-                      };
-                    };
-                  }
-                  {
-                    match = {
-                      secretKey = "tls.key";
-                      remoteRef = {
-                        remoteKey = "wildcard-tls";
-                        property = "tls.key";
-                      };
-                    };
-                  }
-                ];
-              };
+              }
+            ];
+          };
+        };
+
+        resources.certificates.wildcard.spec = {
+          secretName = "wildcard-tls";
+          dnsNames = [
+            "*.${cluster.domain}"
+            cluster.domain
+          ];
+          privateKey = {
+            algorithm = "ECDSA";
+            size = 256;
+            rotationPolicy = "Always";
+          };
+          issuerRef = {
+            name = issuerName;
+            kind = "ClusterIssuer";
+            group = "cert-manager.io";
+          };
+        };
+
+        resources.pushSecrets.wildcard-tls = {
+          metadata.annotations."argocd.argoproj.io/sync-wave" = "1";
+          spec = {
+            refreshInterval = "1h";
+            secretStoreRefs = [
+              {
+                name = "onepassword";
+                kind = "ClusterSecretStore";
+              }
+            ];
+            selector.secret.name = "wildcard-tls";
+            template.data = {
+              "tls.crt" = ''{{ index . "tls.crt" | b64enc }}'';
+              "tls.key" = ''{{ index . "tls.key" | b64enc }}'';
             };
-
-            applications.cert-manager.resources.externalSecrets.wildcard-tls-import = {
-              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-              spec = {
-                refreshPolicy = "CreatedOnce";
-                secretStoreRef = {
-                  name = "onepassword";
-                  kind = "ClusterSecretStore";
-                };
-                target = {
-                  name = "wildcard-tls";
-                  creationPolicy = "Orphan";
-                  template = {
-                    type = "kubernetes.io/tls";
-                    metadata = {
-                      annotations = {
-                        "cert-manager.io/alt-names" = "*.${cluster.domain},${cluster.domain}";
-                        "cert-manager.io/certificate-name" = "wildcard";
-                        "cert-manager.io/common-name" = "";
-                        "cert-manager.io/ip-sans" = "";
-                        "cert-manager.io/issuer-group" = "";
-                        "cert-manager.io/issuer-kind" = "ClusterIssuer";
-                        "cert-manager.io/issuer-name" = issuerName;
-                        "cert-manager.io/uri-sans" = "";
-                      };
-                      labels."controller.cert-manager.io/fao" = "true";
-                    };
+            data = [
+              {
+                match = {
+                  secretKey = "tls.crt";
+                  remoteRef = {
+                    remoteKey = "wildcard-tls";
+                    property = "tls.crt";
                   };
                 };
-                dataFrom = [
-                  {
-                    extract = {
-                      key = "wildcard-tls";
-                      decodingStrategy = "Base64";
-                    };
-                  }
-                ];
-              };
-            };
-
-            applications.cert-manager.resources.certificates.wildcard.spec = {
-              secretName = "wildcard-tls";
-              dnsNames = [
-                "*.${cluster.domain}"
-                cluster.domain
-              ];
-              privateKey = {
-                algorithm = "ECDSA";
-                size = 256;
-                rotationPolicy = "Always";
-              };
-              issuerRef = {
-                name = issuerName;
-                kind = "ClusterIssuer";
-                group = "cert-manager.io";
-              };
-            };
-
-            applications.cert-manager.resources.pushSecrets.wildcard-tls = {
-              metadata.annotations."argocd.argoproj.io/sync-wave" = "1";
-              spec = {
-                refreshInterval = "1h";
-                secretStoreRefs = [
-                  {
-                    name = "onepassword";
-                    kind = "ClusterSecretStore";
-                  }
-                ];
-                selector.secret.name = "wildcard-tls";
-                template.data = {
-                  "tls.crt" = ''{{ index . "tls.crt" | b64enc }}'';
-                  "tls.key" = ''{{ index . "tls.key" | b64enc }}'';
+              }
+              {
+                match = {
+                  secretKey = "tls.key";
+                  remoteRef = {
+                    remoteKey = "wildcard-tls";
+                    property = "tls.key";
+                  };
                 };
-                data = [
-                  {
-                    match = {
-                      secretKey = "tls.crt";
-                      remoteRef = {
-                        remoteKey = "wildcard-tls";
-                        property = "tls.crt";
-                      };
-                    };
-                  }
-                  {
-                    match = {
-                      secretKey = "tls.key";
-                      remoteRef = {
-                        remoteKey = "wildcard-tls";
-                        property = "tls.key";
-                      };
-                    };
-                  }
-                ];
-              };
-            };
-
-            applications.cert-manager.resources.externalSecrets.cloudflare-dns-api-token = {
-              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-              spec = {
-                secretStoreRef = {
-                  name = "onepassword";
-                  kind = "ClusterSecretStore";
-                };
-                target.name = "cloudflare-dns-api-token";
-                data = [
-                  {
-                    secretKey = "token";
-                    remoteRef.key = "cloudflare-dns-api-token/credentials/token";
-                  }
-                ];
-              };
-            };
-          }
-        else
-          {
-            applications.cert-manager.yamls = [
-              (cluster.methods.mkSopsSecret {
-                namespace = "cert-manager";
-                name = "cloudflare-dns-api-token";
-              })
+              }
             ];
-          }
-      );
+          };
+        };
+
+        resources.externalSecrets.cloudflare-dns-api-token = {
+          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+          spec = {
+            secretStoreRef = {
+              name = "onepassword";
+              kind = "ClusterSecretStore";
+            };
+            target.name = "cloudflare-dns-api-token";
+            data = [
+              {
+                secretKey = "token";
+                remoteRef.key = "cloudflare-dns-api-token/credentials/token";
+              }
+            ];
+          };
+        };
+      };
+    };
 }
