@@ -1,4 +1,73 @@
-_: {
+_:
+let
+  # Builds the four kopiur objects a PVC-backed app needs: the PVC itself
+  # (restored from the named Restore), the SnapshotPolicy, its hourly
+  # SnapshotSchedule, and the Restore. uid must match the app's own pod
+  # uid/gid — the kopiur mover only reads files it owns or that are
+  # world-readable (https://kopiur.home-operations.com/permissions/).
+  mkKopiurBackup =
+    {
+      name,
+      uid ? 1000,
+      storage ? "1Gi",
+    }:
+    {
+      persistentVolumeClaims.${name}.spec = {
+        storageClassName = "miroir";
+        accessModes = [ "ReadWriteOnce" ];
+        resources.requests.storage = storage;
+        dataSourceRef = {
+          apiGroup = "kopiur.home-operations.com";
+          kind = "Restore";
+          inherit name;
+        };
+      };
+      snapshotPolicies.${name}.spec = {
+        repository = {
+          kind = "ClusterRepository";
+          name = "r2";
+        };
+        credentialProjection.enabled = true;
+        mover.securityContext = {
+          runAsUser = uid;
+          runAsGroup = uid;
+        };
+        sources = [ { pvc.name = name; } ];
+        identity = {
+          username = name;
+          hostname = name;
+        };
+        retention = {
+          keepDaily = 14;
+          keepWeekly = 4;
+        };
+      };
+      snapshotSchedules.${name}.spec = {
+        policyRef.name = name;
+        schedule = {
+          cron = "H * * * *";
+          jitter = "5m";
+          runOnCreate = false;
+        };
+      };
+      restores.${name}.spec = {
+        source.fromPolicy = {
+          inherit name;
+          offset = 0;
+        };
+        target.populator = { };
+        policy.onMissingSnapshot = "Continue";
+        credentialProjection.enabled = true;
+      };
+    };
+in
+{
+  # Every cluster that includes this aspect needs the method — den has no
+  # reverse "which clusters include me" lookup, and reading config.den.clusters
+  # here to generalize it would self-reference (infinite recursion), so list
+  # clusters explicitly.
+  den.clusters.prd.methods.mkKopiurBackup = mkKopiurBackup;
+
   den.aspects.kubernetes.kopiur.k8s-manifests =
     {
       charts,

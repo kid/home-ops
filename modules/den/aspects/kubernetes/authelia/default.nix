@@ -149,161 +149,117 @@ _: {
           };
         };
 
-        resources.externalSecrets.authelia-secrets = {
-          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-          spec = {
-            secretStoreRef = onepassword;
-            target.name = "authelia-secrets";
-            data = [
-              {
-                secretKey = "identity_validation.reset_password.jwt.hmac.key";
-                remoteRef.key = "authelia/secrets/reset-password-jwt-secret";
-              }
-              {
-                secretKey = "session.encryption.key";
-                remoteRef.key = "authelia/secrets/session-encryption-key";
-              }
-              {
-                secretKey = "storage.encryption.key";
-                remoteRef.key = "authelia/secrets/storage-encryption-key";
-              }
-              {
-                secretKey = "identity_providers.oidc.hmac.key";
-                remoteRef.key = "authelia/secrets/oidc-hmac-secret";
-              }
-              {
-                secretKey = "notifier.smtp.password.txt";
-                remoteRef.key = "authelia/secrets/smtp-password";
-              }
-            ];
-          };
-        };
-
-        resources.externalSecrets.authelia-extra = {
-          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-          spec = {
-            secretStoreRef = onepassword;
-            target = {
-              name = "authelia-extra";
-              template.data = {
-                "oidc.jwks.rsa.key" = "{{ .jwksKey }}";
-                # Authelia wants a hash here; $plaintext$ is its prefix for an unhashed secret.
-                "oidc.client.argocd.secret" = ''{{ printf "$plaintext$%s" .argocdClientSecret }}'';
-                "oidc.client.kubelogin.secret" = ''{{ printf "$plaintext$%s" .kubeloginClientSecret }}'';
-                "users_database.yml" = "{{ .usersDatabase }}";
+        resources =
+          cluster.methods.mkKopiurBackup {
+            name = "authelia";
+            uid = appId;
+          }
+          // {
+            externalSecrets.authelia-secrets = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+              spec = {
+                secretStoreRef = onepassword;
+                target.name = "authelia-secrets";
+                data = [
+                  {
+                    secretKey = "identity_validation.reset_password.jwt.hmac.key";
+                    remoteRef.key = "authelia/secrets/reset-password-jwt-secret";
+                  }
+                  {
+                    secretKey = "session.encryption.key";
+                    remoteRef.key = "authelia/secrets/session-encryption-key";
+                  }
+                  {
+                    secretKey = "storage.encryption.key";
+                    remoteRef.key = "authelia/secrets/storage-encryption-key";
+                  }
+                  {
+                    secretKey = "identity_providers.oidc.hmac.key";
+                    remoteRef.key = "authelia/secrets/oidc-hmac-secret";
+                  }
+                  {
+                    secretKey = "notifier.smtp.password.txt";
+                    remoteRef.key = "authelia/secrets/smtp-password";
+                  }
+                ];
               };
             };
-            data = [
-              {
-                secretKey = "jwksKey";
-                remoteRef = {
-                  key = "authelia/secrets/oidc-jwks-key";
-                  decodingStrategy = "Base64";
-                };
-              }
-              {
-                secretKey = "argocdClientSecret";
-                remoteRef.key = "authelia/secrets/argocd-client-secret";
-              }
-              {
-                secretKey = "kubeloginClientSecret";
-                remoteRef.key = "authelia/secrets/kubelogin-client-secret";
-              }
-              {
-                secretKey = "usersDatabase";
-                remoteRef = {
-                  key = "authelia/secrets/users-database";
-                  decodingStrategy = "Base64";
-                };
-              }
-            ];
-          };
-        };
 
-        resources.snapshotPolicies.authelia.spec = {
-          repository = {
-            kind = "ClusterRepository";
-            name = "r2";
-          };
-          credentialProjection.enabled = true;
-          mover.securityContext = {
-            runAsUser = appId;
-            runAsGroup = appId;
-          };
-          sources = [ { pvc.name = "authelia"; } ];
-          identity = {
-            username = "authelia";
-            hostname = "authelia";
-          };
-          retention = {
-            keepDaily = 14;
-            keepWeekly = 4;
-          };
-        };
-
-        resources.snapshotSchedules.authelia.spec = {
-          policyRef.name = "authelia";
-          schedule = {
-            cron = "H * * * *";
-            jitter = "5m";
-            runOnCreate = false;
-          };
-        };
-
-        resources.restores.authelia.spec = {
-          source.fromPolicy = {
-            name = "authelia";
-            offset = 0;
-          };
-          target.populator = { };
-          policy.onMissingSnapshot = "Continue";
-          credentialProjection.enabled = true;
-        };
-
-        resources.persistentVolumeClaims.authelia.spec = {
-          storageClassName = "miroir";
-          accessModes = [ "ReadWriteOnce" ];
-          resources.requests.storage = "1Gi";
-          dataSourceRef = {
-            apiGroup = "kopiur.home-operations.com";
-            kind = "Restore";
-            name = "authelia";
-          };
-        };
-
-        resources.httpRoutes.authelia.spec = {
-          parentRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = "apps";
-              namespace = "envoy-gateway-system";
-              sectionName = "https";
-            }
-          ];
-          hostnames = [ (cluster.methods.mkAppHostname "auth") ];
-          rules = [
-            {
-              matches = [
-                {
-                  path = {
-                    type = "PathPrefix";
-                    value = "/";
+            externalSecrets.authelia-extra = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+              spec = {
+                secretStoreRef = onepassword;
+                target = {
+                  name = "authelia-extra";
+                  template.data = {
+                    "oidc.jwks.rsa.key" = "{{ .jwksKey }}";
+                    # Authelia wants a hash here; $plaintext$ is its prefix for an unhashed secret.
+                    "oidc.client.argocd.secret" = ''{{ printf "$plaintext$%s" .argocdClientSecret }}'';
+                    "oidc.client.kubelogin.secret" = ''{{ printf "$plaintext$%s" .kubeloginClientSecret }}'';
+                    "users_database.yml" = "{{ .usersDatabase }}";
                   };
-                }
-              ];
-              backendRefs = [
+                };
+                data = [
+                  {
+                    secretKey = "jwksKey";
+                    remoteRef = {
+                      key = "authelia/secrets/oidc-jwks-key";
+                      decodingStrategy = "Base64";
+                    };
+                  }
+                  {
+                    secretKey = "argocdClientSecret";
+                    remoteRef.key = "authelia/secrets/argocd-client-secret";
+                  }
+                  {
+                    secretKey = "kubeloginClientSecret";
+                    remoteRef.key = "authelia/secrets/kubelogin-client-secret";
+                  }
+                  {
+                    secretKey = "usersDatabase";
+                    remoteRef = {
+                      key = "authelia/secrets/users-database";
+                      decodingStrategy = "Base64";
+                    };
+                  }
+                ];
+              };
+            };
+
+            httpRoutes.authelia.spec = {
+              parentRefs = [
                 {
-                  group = "";
-                  kind = "Service";
-                  name = "authelia";
-                  port = 80;
-                  weight = 1;
+                  group = "gateway.networking.k8s.io";
+                  kind = "Gateway";
+                  name = "apps";
+                  namespace = "envoy-gateway-system";
+                  sectionName = "https";
                 }
               ];
-            }
-          ];
-        };
+              hostnames = [ (cluster.methods.mkAppHostname "auth") ];
+              rules = [
+                {
+                  matches = [
+                    {
+                      path = {
+                        type = "PathPrefix";
+                        value = "/";
+                      };
+                    }
+                  ];
+                  backendRefs = [
+                    {
+                      group = "";
+                      kind = "Service";
+                      name = "authelia";
+                      port = 80;
+                      weight = 1;
+                    }
+                  ];
+                }
+              ];
+            };
+          };
       };
     };
 }
