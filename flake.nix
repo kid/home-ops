@@ -52,7 +52,7 @@
     nixos-anywhere.url = "github:nix-community/nixos-anywhere/1c2f124e970fed2a49bd14ce0a8b4e9bff74d3b4";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     sops-nix = {
-      url = "github:Mic92/sops-nix/7214124c20c1542c90deb54af50e2f53ae02711f";
+      url = "github:Mic92/sops-nix/2bd00bd9bb35fe6d114888c8f1c2e946c541dd8f";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     treefmt-nix = {

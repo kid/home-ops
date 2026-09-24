@@ -24,7 +24,7 @@ _: {
     import-tree.url = "github:vic/import-tree/4ebb10ae17d5f1ad366e7aef5b92cb8eecf24f69";
 
     sops-nix = {
-      url = "github:Mic92/sops-nix/7214124c20c1542c90deb54af50e2f53ae02711f";
+      url = "github:Mic92/sops-nix/2bd00bd9bb35fe6d114888c8f1c2e946c541dd8f";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
