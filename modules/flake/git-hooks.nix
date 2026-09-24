@@ -2,7 +2,7 @@
 { inputs, ... }:
 {
   flake-file.inputs.git-hooks-nix = {
-    url = "github:cachix/git-hooks.nix/59f4ca0d063a1a3ec722c88b51a33004862e5379";
+    url = "github:cachix/git-hooks.nix/0d3997c4d3253505f77c9bcea63904bb575da3c5";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
