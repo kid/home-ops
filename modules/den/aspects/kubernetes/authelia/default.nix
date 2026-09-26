@@ -15,7 +15,6 @@ _: {
     {
       applications.authelia = {
         namespace = "authelia";
-        createNamespace = true;
 
         helm.releases.authelia = {
           chart = charts.authelia.authelia;

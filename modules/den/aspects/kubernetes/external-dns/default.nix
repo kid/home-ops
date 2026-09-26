@@ -27,7 +27,6 @@ in
     {
       applications.external-dns = {
         namespace = "external-dns";
-        createNamespace = true;
 
         helm.releases.external-dns = {
           chart = charts.kubernetes-sigs.external-dns;

@@ -33,7 +33,6 @@ in
       config = mkIf config.services.argocd.enable {
         applications.argocd = {
           namespace = "argocd";
-          createNamespace = true;
 
           kustomize.applications.argocd = {
             namespace = "argocd";

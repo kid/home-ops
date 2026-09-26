@@ -44,7 +44,6 @@ _: {
 
       applications.cert-manager = {
         namespace = "cert-manager";
-        createNamespace = true;
 
         # Before envoy-gateway, which reads the wildcard cert it pushes to 1Password.
         annotations."argocd.argoproj.io/sync-wave" = "-2";
