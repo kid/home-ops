@@ -9,8 +9,6 @@ spec:
   config:
     auth:
       disable_login_form: "true"
-    auth.basic:
-      enabled: "false"
     auth.generic_oauth:
       api_url: https://auth.kidibox.net/api/oidc/userinfo
       auth_url: https://auth.kidibox.net/api/oidc/authorization

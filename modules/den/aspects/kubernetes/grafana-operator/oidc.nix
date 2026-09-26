@@ -9,8 +9,9 @@ _: {
         resources.grafanas.grafana.spec = {
           config = {
             # No local login, so the form is hidden. If Authelia is down, fix it through git and kubectl on the node.
+            # auth.basic stays enabled — the operator itself authenticates to
+            # Grafana's API with it to reconcile dashboards/datasources.
             auth.disable_login_form = "true";
-            "auth.basic".enabled = "false";
 
             "auth.generic_oauth" = {
               enabled = "true";
