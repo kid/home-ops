@@ -1,4 +1,4 @@
-# DO-NOT-EDIT. This file was auto-generated using github:vic/flake-file.
+# DO-NOT-EDIT. This file was auto-generated using github:denful/flake-file.
 # Use `nix run .#write-flake` to regenerate it.
 {
   description = "home-ops";
@@ -24,7 +24,7 @@
         nixpkgs.follows = "nixpkgs";
       };
     };
-    flake-file.url = "github:vic/flake-file/eccac77d2c2567efb6f368330930f3d55af8668a";
+    flake-file.url = "github:denful/flake-file/eccac77d2c2567efb6f368330930f3d55af8668a";
     flake-parts = {
       url = "github:hercules-ci/flake-parts/31729ca8cbdb4fa927b34e5f4353e6a83f39e993";
       inputs.nixpkgs-lib.follows = "nixpkgs";
