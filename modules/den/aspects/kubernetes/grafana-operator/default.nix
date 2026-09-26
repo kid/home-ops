@@ -89,6 +89,38 @@ _: {
             url = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
           };
         };
+
+        # Official dashboards, pinned to the exact tags matching the deployed
+        # vmsingle/vmagent/vmalert (v1.152.0) and vlsingle/vlagent (v1.52.0)
+        # image versions — the "vm"/plain variants below are the ones built
+        # for the victoriametrics-{metrics,logs}-datasource plugins, not
+        # a generic Prometheus datasource.
+        resources.grafanaDashboards =
+          let
+            mkDashboard = url: {
+              spec = {
+                instanceSelector.matchLabels.dashboards = "grafana";
+                inherit url;
+              };
+            };
+            vmRef = "v1.152.0";
+            vlRef = "v1.52.0";
+            vmDashboard =
+              name:
+              mkDashboard "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/${vmRef}/dashboards/vm/${name}.json";
+            vlDashboard =
+              path:
+              mkDashboard "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/${vlRef}/dashboards/${path}.json";
+          in
+          {
+            victoriametrics = vmDashboard "victoriametrics";
+            vmagent = vmDashboard "vmagent";
+            vmalert = vmDashboard "vmalert";
+            victoriametrics-operator = vmDashboard "operator";
+            victorialogs = vlDashboard "vm/victorialogs";
+            vlagent = vlDashboard "vm/vlagent";
+            victorialogs-explorer = vlDashboard "victorialogs-kubernetes-explorer";
+          };
       };
     };
 }
