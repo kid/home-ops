@@ -1,0 +1,45 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  labels:
+    dashboards: grafana
+  name: grafana
+  namespace: monitoring
+spec:
+  config:
+    auth.generic_oauth:
+      api_url: https://auth.kidibox.net/api/oidc/userinfo
+      auth_url: https://auth.kidibox.net/api/oidc/authorization
+      client_id: grafana
+      enabled: "true"
+      name: Authelia
+      scopes: openid profile email groups
+      token_url: https://auth.kidibox.net/api/oidc/token
+    plugins:
+      allow_loading_unsigned_plugins: victoriametrics-datasource,victorialogs-datasource
+    server:
+      root_url: https://grafana.kidibox.net
+  deployment:
+    spec:
+      template:
+        spec:
+          containers:
+            - env:
+                - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      key: clientSecret
+                      name: grafana-oidc
+                - name: GF_INSTALL_PLUGINS
+                  value: victoriametrics-datasource,victorialogs-datasource
+              name: grafana
+  httpRoute:
+    spec:
+      hostnames:
+        - grafana.kidibox.net
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: apps
+          namespace: envoy-gateway-system
+          sectionName: https

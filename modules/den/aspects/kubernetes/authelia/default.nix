@@ -142,6 +142,13 @@ _: {
                     ];
                     claims_policy = "oidc-id-token";
                   }
+                  {
+                    client_id = "grafana";
+                    client_name = "Grafana";
+                    client_secret.path = "${extraDir}/oidc.client.grafana.secret";
+                    redirect_uris = [ "https://${cluster.methods.mkAppHostname "grafana"}/login/generic_oauth" ];
+                    claims_policy = "oidc-id-token";
+                  }
                 ];
               };
             };
@@ -195,6 +202,7 @@ _: {
                     # Authelia wants a hash here; $plaintext$ is its prefix for an unhashed secret.
                     "oidc.client.argocd.secret" = ''{{ printf "$plaintext$%s" .argocdClientSecret }}'';
                     "oidc.client.kubelogin.secret" = ''{{ printf "$plaintext$%s" .kubeloginClientSecret }}'';
+                    "oidc.client.grafana.secret" = ''{{ printf "$plaintext$%s" .grafanaClientSecret }}'';
                     "users_database.yml" = "{{ .usersDatabase }}";
                   };
                 };
@@ -213,6 +221,10 @@ _: {
                   {
                     secretKey = "kubeloginClientSecret";
                     remoteRef.key = "authelia/secrets/kubelogin-client-secret";
+                  }
+                  {
+                    secretKey = "grafanaClientSecret";
+                    remoteRef.key = "authelia/secrets/grafana-client-secret";
                   }
                   {
                     secretKey = "usersDatabase";

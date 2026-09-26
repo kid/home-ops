@@ -154,6 +154,8 @@ in
       external-secrets
       kopiur
       authelia
+      grafana-operator
+      grafana-oidc
     ])
     ++ [ incusTerragruntAspect ];
 
