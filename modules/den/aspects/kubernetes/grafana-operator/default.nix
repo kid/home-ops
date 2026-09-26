@@ -21,7 +21,6 @@ _: {
 
       applications.grafana-operator = {
         namespace = "monitoring";
-        createNamespace = true;
 
         helm.releases.grafana-operator.chart = charts.grafana.grafana-operator;
 
