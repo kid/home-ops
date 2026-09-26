@@ -40,6 +40,12 @@ variable "users" {
   description = "Authelia users, by username. Each gets a random password, kept in its own 1Password login item."
 }
 
+variable "extra_secret_names" {
+  type        = list(string)
+  default     = []
+  description = "Additional 1Password field names to generate alongside the built-in ones — e.g. one per OIDC client's client_secret."
+}
+
 provider "onepassword" {}
 
 data "onepassword_vault" "this" {
@@ -47,13 +53,11 @@ data "onepassword_vault" "this" {
 }
 
 locals {
-  secret_names = [
+  secret_names = concat([
     "reset-password-jwt-secret",
     "session-encryption-key",
     "oidc-hmac-secret",
-    "argocd-client-secret",
-    "kubelogin-client-secret",
-  ]
+  ], var.extra_secret_names)
 }
 
 resource "random_password" "secret" {

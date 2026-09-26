@@ -13,6 +13,14 @@ _: {
         op_vault = cluster.secrets.onepasswordVault;
         url = "https://${cluster.methods.mkAppHostname "auth"}";
         smtp_password = hcl.raw ''get_env("GOOGLE_APP_PASSWORD")'';
+        # One per OIDC client in default.nix's identity_providers.oidc.clients
+        # that has a client_secret.path — kept here, not in the module itself,
+        # so a new client needs no tf-catalog change.
+        extra_secret_names = [
+          "argocd-client-secret"
+          "kubelogin-client-secret"
+          "grafana-client-secret"
+        ];
         users.kid = {
           displayname = "Arnaud Rebts";
           email = "arnaud.rebts@gmail.com";
