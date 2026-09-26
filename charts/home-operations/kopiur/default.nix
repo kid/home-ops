@@ -1,6 +1,6 @@
 {
   repo = "oci://ghcr.io/home-operations/charts";
   chart = "kopiur";
-  version = "0.10.9";
-  chartHash = "sha256-CyVBdF+9KpzLo0ks3Ip8moZZK0Cp1aIzqc4CCV6X0b8=";
+  version = "0.10.10";
+  chartHash = "sha256-c5qVbAjDV8V3Hm/rq/9fWTOPHaPUuZ4stLb4pPDlwkA=";
 }
