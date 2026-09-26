@@ -1,7 +1,5 @@
 # k3s bootstrap: oneshot systemd services applying manifests baked into the image via `self`.
-# Wave order: namespaces, CRDs, cilium, coredns, sops-operator (only where the
-# cluster runs it), cert-manager, argocd. Where present, sops-operator must
-# already be watching before cert-manager applies its SopsSecret CR.
+# Wave order: namespaces, CRDs, cilium, coredns, cert-manager, argocd.
 # Cilium's operator registers its own CRDs at runtime — not shipped in the chart.
 { self, den, ... }:
 {
@@ -10,7 +8,6 @@
       {
         host,
         pkgs,
-        lib,
         ...
       }:
       let
@@ -22,8 +19,6 @@
             name = "k3s-${clusterName}-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
           };
         ciliumDir = manifestPath "cilium";
-        hasSopsOperator = builtins.pathExists (self + "/manifests/${clusterName}/sops-operator");
-        sopsOperatorDir = manifestPath "sops-operator";
         corednsDir = manifestPath "coredns";
         argocdDir = manifestPath "argocd";
         certManagerDir = manifestPath "cert-manager";
@@ -34,8 +29,6 @@
           name = "k3s-${clusterName}-all";
         };
         hasCilium = host.hasAspect den.aspects.k3s-cilium;
-        certManagerPredecessor =
-          if hasSopsOperator then "k3s-bootstrap-sops-operator.service" else "k3s-bootstrap-coredns.service";
         waitForApi = ''
           echo "Waiting for k3s API server..."
           until kubectl get nodes >/dev/null 2>&1; do
@@ -131,14 +124,6 @@
                   crd/backendtlspolicies.gateway.networking.k8s.io \
                   --timeout=60s
 
-                ${lib.optionalString hasSopsOperator ''
-                  echo "Waiting for sops-operator CRDs to be established..."
-                  kubectl wait --for=condition=Established \
-                    crd/sopssecrets.addons.projectcapsule.dev \
-                    crd/globalsopssecrets.addons.projectcapsule.dev \
-                    crd/sopsproviders.addons.projectcapsule.dev \
-                    --timeout=60s
-                ''}
                 echo "CRDs ready."
               '';
             };
@@ -255,52 +240,15 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          k3s-bootstrap-sops-operator = lib.mkIf hasSopsOperator {
-            description = "Bootstrap sops-operator";
-            after = [
-              "k3s.service"
-              "k3s-bootstrap-coredns.service"
-            ];
-            requires = [
-              "k3s.service"
-              "k3s-bootstrap-coredns.service"
-            ];
-            path = [ pkgs.kubectl ];
-            environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-            serviceConfig = {
-              Type = "oneshot";
-              RemainAfterExit = true;
-              ExecStart = pkgs.writeShellScript "k3s-bootstrap-sops-operator" ''
-                set -e
-
-                if kubectl get deployment -n sops-operator sops-operator >/dev/null 2>&1; then
-                  echo "sops-operator already installed, skipping bootstrap."
-                  exit 0
-                fi
-
-                echo "Applying sops-operator manifests..."
-                kubectl apply \
-                  --server-side --force-conflicts --field-manager=argocd-controller \
-                  -f ${sopsOperatorDir}
-
-                echo "Waiting for sops-operator rollout..."
-                kubectl rollout status -n sops-operator deployment/sops-operator --timeout=120s
-
-                echo "sops-operator bootstrap complete."
-              '';
-            };
-            wantedBy = [ "multi-user.target" ];
-          };
-
           k3s-bootstrap-cert-manager = {
             description = "Bootstrap cert-manager and the Hubble CA";
             after = [
               "k3s.service"
-              certManagerPredecessor
+              "k3s-bootstrap-coredns.service"
             ];
             requires = [
               "k3s.service"
-              certManagerPredecessor
+              "k3s-bootstrap-coredns.service"
             ];
             path = [
               pkgs.kubectl
