@@ -18,7 +18,6 @@ in
     {
       applications.envoy-gateway = {
         namespace = "envoy-gateway-system";
-        createNamespace = true;
 
         helm.releases.envoy-gateway = {
           chart = charts.envoyproxy.gateway-helm;

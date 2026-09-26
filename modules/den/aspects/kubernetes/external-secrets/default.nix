@@ -21,7 +21,6 @@ _: {
 
       applications.external-secrets = {
         namespace = "external-secrets";
-        createNamespace = true;
         annotations."argocd.argoproj.io/sync-wave" = "-3";
 
         helm.releases.external-secrets.chart = charts.external-secrets.external-secrets;

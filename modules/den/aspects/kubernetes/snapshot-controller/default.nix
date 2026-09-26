@@ -7,7 +7,6 @@ _: {
     {
       applications.snapshot-controller = {
         namespace = "snapshot-controller";
-        createNamespace = true;
         annotations."argocd.argoproj.io/sync-wave" = "-3";
 
         helm.releases.snapshot-controller.chart = charts.home-operations.snapshot-controller;

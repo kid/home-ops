@@ -39,7 +39,6 @@ _: {
 
       applications.miroir = {
         namespace = "miroir-system";
-        createNamespace = true;
 
         helm.releases.miroir.chart = charts.home-operations.miroir;
 

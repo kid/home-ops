@@ -9,7 +9,26 @@ let
     name = "nixidy/defaults";
     k8s-manifests =
       { cluster, environment, ... }:
-      { lib, ... }:
+      { lib, config, ... }:
+      let
+        # kube-system/default are pre-existing, cluster-critical namespaces —
+        # never let an app's own createNamespace = true put them under
+        # ArgoCD's "apps" root Application.
+        systemNamespaces = [
+          "kube-system"
+          "default"
+        ];
+        # Every app's own namespace is created here instead of in its own
+        # manifest set, so two apps sharing a namespace (e.g. cert-manager +
+        # trust-manager) don't each end up owning the same object as a
+        # "shared resource" in ArgoCD. Apps no longer set createNamespace
+        # themselves — this replaces nixidy's own per-app handling of it.
+        namespacesToCreate = lib.unique (
+          lib.filter (ns: !(builtins.elem ns systemNamespaces)) (
+            map (app: app.namespace) (lib.attrValues config.applications)
+          )
+        );
+      in
       {
         # den's collision-validator writes to config.warnings; nixidy's own
         # module system doesn't declare that NixOS-ism by default.
@@ -17,6 +36,12 @@ let
           type = lib.types.listOf lib.types.str;
           default = [ ];
         };
+
+        config.applications.${config.nixidy.appOfApps.name}.resources.namespaces =
+          lib.genAttrs namespacesToCreate
+            (_: {
+              metadata.annotations."argocd.argoproj.io/sync-options" = "Prune=false";
+            });
 
         config.nixidy = {
           env = lib.mkDefault "${environment.name}-${cluster.name}";
