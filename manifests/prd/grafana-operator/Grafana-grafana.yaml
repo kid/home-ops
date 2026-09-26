@@ -7,12 +7,17 @@ metadata:
   namespace: monitoring
 spec:
   config:
+    auth:
+      disable_login_form: "true"
+    auth.basic:
+      enabled: "false"
     auth.generic_oauth:
       api_url: https://auth.kidibox.net/api/oidc/userinfo
       auth_url: https://auth.kidibox.net/api/oidc/authorization
       client_id: grafana
       enabled: "true"
       name: Authelia
+      role_attribute_path: contains(groups[*], 'admins') && 'Admin' || 'Viewer'
       scopes: openid profile email groups
       token_url: https://auth.kidibox.net/api/oidc/token
     plugins:
