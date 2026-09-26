@@ -13,10 +13,10 @@
 # /etc/ssh/... itself is just the bind-mount target, reset on every boot.
 #
 # Only the host's own SSH identity is a one-shot install-time concern —
-# everything else the host needs to decrypt (e.g. a cluster's sops-age key,
-# modules/den/aspects/services/k3s/sops-operator.nix) is sops-nix's job,
-# declaratively decrypted from committed ciphertext on every activation
-# using this same host key, not injected once here.
+# everything else the host needs to decrypt (e.g. the 1Password service
+# account token, modules/den/aspects/services/k3s/external-secrets.nix) is
+# sops-nix's job, declaratively decrypted from committed ciphertext on every
+# activation using this same host key, not injected once here.
 {
   inputs,
   ...

@@ -1,9 +1,8 @@
 # Generates .sops.yaml from Nix instead of hand-maintaining it: human
 # recipients sourced from den.users.registry, plus one path-scoped rule per
 # host that has a committed SSH key (modules/flake/provision-host-key.nix)
-# and one per cluster that has a committed age key
-# (modules/flake/provision-cluster-key.nix). `.sops.yaml` becomes generated
-# output, like manifests/prd/** and tf-stacks/prd/**.
+# and one per cluster whose member hosts have committed keys. `.sops.yaml`
+# becomes generated output, like manifests/prd/** and tf-stacks/prd/**.
 #
 # pkgs.formats.yaml renders the attrset straight to YAML — no hand-built
 # templating needed, unlike _render-lib.nix's HCL renderer.
@@ -43,30 +42,18 @@ let
   # den.clusters is a flat registry (not per-system, unlike den.hosts —
   # clusters aren't tied to one architecture).
   clusterNames = builtins.attrNames (config.den.clusters or { });
-  clusterPubKeyPath = cluster: secretsDir + "/clusters/${cluster}/sops-age-key.pub";
-
-  # Only a cluster running sops-operator has its own age key; the rest
-  # (e.g. prd, which reads its secrets through ESO) have none.
-  clusterHasKey = cluster: builtins.pathExists (clusterPubKeyPath cluster);
-  clusterKey =
-    cluster:
-    lib.optional (clusterHasKey cluster) (
-      lib.removeSuffix "\n" (builtins.readFile (clusterPubKeyPath cluster))
-    );
-
-  # Same "not provisioned yet -> no rule, no error" behavior as hostRule.
-  keyedClusters = builtins.filter clusterHasKey clusterNames;
 
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
   # A cluster's member hosts (host.k3s.clusterName == cluster) that have
   # their own committed key, in provisioned-host key order — sops-nix
-  # (modules/den/aspects/services/k3s/sops-operator.nix) decrypts the
-  # cluster's own sops-age key on each such host, using that host's own
-  # persisted SSH key as its decryption identity, so this file needs each
-  # member host's key as a recipient too, not just the cluster's own key.
-  # Uses each host's age-pub (provision-host-key.nix), not its raw
-  # ssh-ed25519 pubkey — sops-nix derives a different X25519 key from that.
+  # (modules/den/aspects/services/k3s/external-secrets.nix) decrypts
+  # cluster-scoped secrets (e.g. the 1Password service account token) on
+  # each such host, using that host's own persisted SSH key as its
+  # decryption identity, so this file needs each member host's key as a
+  # recipient. Uses each host's age-pub (provision-host-key.nix), not its
+  # raw ssh-ed25519 pubkey — sops-nix derives a different X25519 key from
+  # that.
   clusterMemberHostKeys =
     cluster:
     map (host: lib.removeSuffix "\n" (builtins.readFile (hostAgePubKeyPath host))) (
@@ -81,43 +68,17 @@ let
     path_regex = "secrets/clusters/${cluster}/.*";
     key_groups = [
       {
-        age = humanKeys ++ clusterKey cluster ++ clusterMemberHostKeys cluster;
+        age = humanKeys ++ clusterMemberHostKeys cluster;
       }
     ];
   };
 
-  ruledClusters = builtins.filter (
-    cluster: clusterHasKey cluster || clusterMemberHostKeys cluster != [ ]
-  ) clusterNames;
-
-  # sops-operator (modules/den/aspects/kubernetes/sops-operator/default.nix) decrypts
-  # SopsSecret manifests in-cluster using only the cluster's own sops-age
-  # key — so a SopsSecret rendered under that cluster's manifest root needs
-  # that key as a recipient too, not just the humans-only catch-all every
-  # other committed file gets.
-  #
-  # encrypted_regex/mac_only_encrypted: required by sops-operator itself
-  # (https://github.com/peak-scale/sops-operator/blob/main/docs/usage.md#generate-sops-configuration)
-  # — only spec.secrets[].data/stringData values get encrypted, so
-  # apiVersion/kind/metadata stay cleartext (kubectl/the operator need
-  # those to even route the object before decryption), and re-rendering
-  # non-secret fields doesn't invalidate the MAC of the encrypted ones.
-  clusterManifestsRule = cluster: {
-    path_regex = "${config.den.clusters.${cluster}.nixidy.rootPath}/.*SopsSecret-.*\\.ya?ml$";
-    encrypted_regex = "^(data|stringData)$";
-    mac_only_encrypted = true;
-    key_groups = [
-      {
-        age = humanKeys ++ clusterKey cluster;
-      }
-    ];
-  };
+  ruledClusters = builtins.filter (cluster: clusterMemberHostKeys cluster != [ ]) clusterNames;
 
   sopsConfig = {
     creation_rules =
       map hostRule provisionedHosts
       ++ map clusterRule ruledClusters
-      ++ map clusterManifestsRule keyedClusters
       ++ [
         {
           key_groups = [ { age = humanKeys; } ];
