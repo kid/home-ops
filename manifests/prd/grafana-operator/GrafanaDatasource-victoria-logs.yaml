@@ -7,7 +7,7 @@ spec:
   datasource:
     access: proxy
     name: VictoriaLogs
-    type: victorialogs-datasource
+    type: victoriametrics-logs-datasource
     url: http://vlsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:9428
   instanceSelector:
     matchLabels:

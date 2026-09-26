@@ -8,7 +8,7 @@ spec:
     access: proxy
     isDefault: true
     name: VictoriaMetrics
-    type: victoriametrics-datasource
+    type: victoriametrics-metrics-datasource
     url: http://vmsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:8428
   instanceSelector:
     matchLabels:

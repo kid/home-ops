@@ -73,7 +73,7 @@ _: {
           instanceSelector.matchLabels.dashboards = "grafana";
           datasource = {
             name = "VictoriaMetrics";
-            type = "victoriametrics-datasource";
+            type = "victoriametrics-metrics-datasource";
             access = "proxy";
             url = "http://vmsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:8428";
             isDefault = true;
@@ -84,7 +84,7 @@ _: {
           instanceSelector.matchLabels.dashboards = "grafana";
           datasource = {
             name = "VictoriaLogs";
-            type = "victorialogs-datasource";
+            type = "victoriametrics-logs-datasource";
             access = "proxy";
             url = "http://vlsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:9428";
           };
