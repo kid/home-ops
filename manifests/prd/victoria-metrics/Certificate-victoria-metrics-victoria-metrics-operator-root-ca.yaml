@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: victoria-metrics-victoria-metrics-operator-root-ca
+  namespace: monitoring
+spec:
+  commonName: ca.validation.victoriametrics
+  duration: 63800h0m0s
+  isCA: true
+  issuerRef:
+    name: victoria-metrics-victoria-metrics-operator-root
+  secretName: victoria-metrics-victoria-metrics-operator-root-ca

@@ -27,6 +27,8 @@ _: {
             # Dashboards come from the Grafana Operator (grafana-operator/default.nix) instead.
             grafana.enabled = false;
 
+            victoria-metrics-operator.admissionWebhooks.certManager.enabled = true;
+
             vmsingle = {
               spec = {
                 retentionPeriod = "30d";
