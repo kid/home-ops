@@ -53,6 +53,7 @@ locals {
     "oidc-hmac-secret",
     "argocd-client-secret",
     "kubelogin-client-secret",
+    "grafana-client-secret",
   ]
 }
 
