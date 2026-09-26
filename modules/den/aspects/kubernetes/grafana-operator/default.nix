@@ -65,6 +65,30 @@ _: {
             hostnames = [ (cluster.methods.mkAppHostname "grafana") ];
           };
         };
+
+        # Same names/ports as the vmsingle/vlsingle HTTPRoute backendRefs in
+        # victoria-metrics/default.nix — the VM operator names each generated
+        # Service after its owning CR.
+        resources.grafanaDatasources.victoria-metrics.spec = {
+          instanceSelector.matchLabels.dashboards = "grafana";
+          datasource = {
+            name = "VictoriaMetrics";
+            type = "victoriametrics-datasource";
+            access = "proxy";
+            url = "http://vmsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:8428";
+            isDefault = true;
+          };
+        };
+
+        resources.grafanaDatasources.victoria-logs.spec = {
+          instanceSelector.matchLabels.dashboards = "grafana";
+          datasource = {
+            name = "VictoriaLogs";
+            type = "victorialogs-datasource";
+            access = "proxy";
+            url = "http://vlsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:9428";
+          };
+        };
       };
     };
 }

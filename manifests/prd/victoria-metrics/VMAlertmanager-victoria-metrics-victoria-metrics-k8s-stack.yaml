@@ -1,0 +1,21 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlertmanager
+metadata:
+  labels:
+    app.kubernetes.io/component: alertmanager
+    app.kubernetes.io/instance: victoria-metrics
+    app.kubernetes.io/name: victoria-metrics-k8s-stack
+  name: victoria-metrics-victoria-metrics-k8s-stack
+  namespace: monitoring
+spec:
+  configSecret: vmalertmanager-victoria-metrics-victoria-metrics-k8s-stack
+  externalURL: ""
+  image:
+    tag: v0.34.0
+  port: "9093"
+  replicaCount: 1
+  routePrefix: /
+  selectAllByDefault: true
+  templates:
+    - key: monzo.tmpl
+      name: vmalertmanager-victoria-metrics-victoria-metrics-k8s-stack-monzo-tpl

@@ -154,6 +154,7 @@ in
       external-secrets
       kopiur
       authelia
+      victoria-metrics
       grafana-operator
       grafana-oidc
     ])

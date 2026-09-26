@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: syncJob
+    app.kubernetes.io/instance: victoria-metrics
+    app.kubernetes.io/name: victoria-metrics-k8s-stack
+  name: victoria-metrics-victoria-metrics-k8s-stack-sync-job
+  namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: victoria-metrics-victoria-metrics-k8s-stack-sync-job
+subjects:
+  - kind: ServiceAccount
+    name: victoria-metrics-victoria-metrics-k8s-stack-sync-job
+    namespace: monitoring

@@ -1,5 +1,5 @@
 # Typed nixidy options for Gateway API resources (GatewayClass, Gateway,
-# HTTPRoute, GRPCRoute, BackendTLSPolicy, TLSRoute) — this aspect produces
+# HTTPRoute, GRPCRoute, BackendTLSPolicy, TLSRoute, ReferenceGrant) — this aspect produces
 # types only, no CRD manifests. The real CRDs are installed by Envoy
 # Gateway's own chart (envoy-gateway/default.nix's crds.enabled = true),
 # which bundles its own copy of the Gateway API CRDs, so the types are
@@ -23,6 +23,7 @@ _: {
             "BackendTLSPolicy"
             "GatewayClass"
             "TLSRoute"
+            "ReferenceGrant"
           ];
         })
       ];

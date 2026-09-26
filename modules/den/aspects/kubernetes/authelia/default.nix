@@ -1,6 +1,59 @@
-_: {
+_:
+let
+  # Gates an app with no login of its own behind Authelia, via Envoy Gateway's
+  # ext-authz SecurityPolicy (https://www.authelia.com/integration/proxies/envoygateway/).
+  # httpRouteName must be that app's own HTTPRoute, in the same namespace.
+  mkForwardAuth =
+    { name, httpRouteName }:
+    {
+      securityPolicies.${name}.spec = {
+        targetRefs = [
+          {
+            group = "gateway.networking.k8s.io";
+            kind = "HTTPRoute";
+            name = httpRouteName;
+          }
+        ];
+        extAuth = {
+          failOpen = false;
+          headersToExtAuth = [
+            "accept"
+            "cookie"
+            "location"
+            "authorization"
+            "proxy-authorization"
+            "x-forwarded-proto"
+          ];
+          http = {
+            backendRefs = [
+              {
+                name = "authelia";
+                namespace = "authelia";
+                port = 80;
+              }
+            ];
+            path = "/api/authz/ext-authz/";
+            headersToBackend = [
+              "Remote-User"
+              "Remote-Groups"
+              "Remote-Name"
+              "Remote-Email"
+            ];
+          };
+        };
+      };
+    };
+in
+{
+  den.clusters.prd.methods.mkForwardAuth = mkForwardAuth;
+
   den.aspects.kubernetes.authelia.k8s-manifests =
-    { charts, cluster, ... }:
+    {
+      charts,
+      generators,
+      cluster,
+      ...
+    }:
     let
       # The chart only mounts its own known keys from authelia-secrets, so the rest live in authelia-extra.
       extraDir = "/secrets/authelia-extra";
@@ -13,6 +66,17 @@ _: {
       };
     in
     {
+      # Reused by mkForwardAuth above for any app cluster.methods.mkForwardAuth
+      # gets called from — charts.envoyproxy.gateway-helm is already pinned and
+      # installed with crds.enabled = true by envoy-gateway/default.nix.
+      nixidy.applicationImports = [
+        (generators.fromChartCRDModule {
+          name = "envoy-gateway-security-policy";
+          chart = charts.envoyproxy.gateway-helm;
+          kindFilter = [ "SecurityPolicy" ];
+        })
+      ];
+
       applications.authelia = {
         namespace = "authelia";
 
@@ -267,6 +331,26 @@ _: {
                       weight = 1;
                     }
                   ];
+                }
+              ];
+            };
+
+            # Lets a SecurityPolicy created by mkForwardAuth (any namespace)
+            # reference this Service — Gateway API requires explicit opt-in
+            # for cross-namespace refs (https://www.authelia.com/integration/kubernetes/envoy/gateway/).
+            referenceGrants.forward-auth.spec = {
+              from = [
+                {
+                  group = "gateway.envoyproxy.io";
+                  kind = "SecurityPolicy";
+                  namespace = "monitoring";
+                }
+              ];
+              to = [
+                {
+                  group = "";
+                  kind = "Service";
+                  name = "authelia";
                 }
               ];
             };
