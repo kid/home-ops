@@ -14,20 +14,9 @@
 {
   den,
   config,
-  lib,
   ...
 }:
 let
-  miroirNodes = lib.pipe (config.den.hosts.x86_64-linux or { }) [
-    (lib.filterAttrs (_: host: (host.settings or { }) ? k3s-miroir-node))
-    (lib.mapAttrsToList (
-      hostname: host: {
-        inherit hostname;
-        device = host.settings.k3s-miroir-node.settings.device;
-      }
-    ))
-  ];
-
   # host 1 = rb5009's own address on each VLAN (matches rb5009.nix's own
   # `cidrHostPrefixed net 1` for its Management address) — the
   # mikrotik-exporter scrape target talks to the router itself, not crs320.
@@ -140,8 +129,6 @@ in
       branch = "main";
       rootPath = "manifests/prd";
     };
-
-    methods.miroirNodes = miroirNodes;
   };
 
   # cert-manager is included only for Cilium's Hubble mTLS

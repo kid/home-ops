@@ -20,7 +20,7 @@ _: {
       charts,
       generators,
       lib,
-      cluster,
+      miroir-nodes ? [ ],
       ...
     }:
     {
@@ -54,7 +54,7 @@ _: {
                 }
               ];
             }
-          ) cluster.methods.miroirNodes
+          ) miroir-nodes
         );
 
         resources.volumeSnapshotClasses.miroir = {
