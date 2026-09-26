@@ -7,7 +7,7 @@ terraform {
 }
 
 inputs = {
-  cluster_name       = "prd"
   account_id         = "fadfc390b1e5fb0ce019b9f7a8917d42"
   cloudflare_zone_id = "dba2b63221015f1957d718defbf6b871"
+  cluster_name       = "prd"
 }

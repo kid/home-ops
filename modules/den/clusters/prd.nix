@@ -41,6 +41,52 @@ let
   # modules/den/aspects/kubernetes/cilium/bgp.nix) and the firewall forward-rule
   # below, so the two can't drift apart.
   lbCidr = "10.0.42.0/24";
+
+  # Provisions the Incus VLAN + k3s VM node1 runs this cluster on. Not owned
+  # by any single Kubernetes app, so it lives here rather than under
+  # aspects/kubernetes/ — a small local aspect object appended to includes
+  # below, the same shape as nixidy-defaults.nix's nixidyDefaultsAspect.
+  # vlan_id is the one value with an existing Nix source of truth
+  # (den.networks.K3s below); node1's Incus remote address, the physical NIC
+  # name, and the VM's sizing/mac have none and stay literal.
+  incusTerragruntAspect = {
+    name = "prd/incus";
+    "terragrunt-stacks" = { cluster, ... }: {
+      stack = "incus";
+      localModule = "incus-k3s-vlan";
+      generate = {
+        label = "incus_provider";
+        path = "incus_provider.tf";
+        ifExists = "overwrite_terragrunt";
+        contents = ''
+          provider "incus" {
+            default_remote = "node1"
+
+            remote {
+              name    = "node1"
+              address = "https://10.0.10.10:8443"
+            }
+          }
+        '';
+      };
+      inputs = {
+        network = {
+          name = "k3s-${cluster.name}";
+          parent = "enp36s0f1";
+          vlan_id = config.den.networks.K3s.vlanId;
+        };
+        nodes."k3s-${cluster.name}-0" = {
+          nixos_attr = "k3s-${cluster.name}-0";
+          cpu = 4;
+          memory = "8GiB";
+          disk_size = "40GiB";
+          mac = "52:54:00:40:00:01";
+          extra_disks.miroir-data.size = "20GiB";
+        };
+        storage_pool = "default";
+      };
+    };
+  };
 in
 {
   den.networks.K3s = {
@@ -102,25 +148,27 @@ in
   # (modules/den/aspects/kubernetes/cert-manager/default.nix) — Helm's own cert
   # generation isn't idempotent across renders. external-secrets provides
   # Kubernetes secrets (modules/den/aspects/kubernetes/external-secrets/default.nix).
-  den.aspects.prd.includes = with den.aspects.kubernetes; [
-    gateway-api-crds
-    cilium
-    cilium-bgp
-    cilium-host-firewall
-    envoy-gateway
-    cert-manager
-    trust-manager
-    coredns
-    argocd
-    argocd-oidc
-    apiserver
-    snapshot-controller
-    miroir
-    external-dns
-    external-secrets
-    kopiur
-    authelia
-  ];
+  den.aspects.prd.includes =
+    (with den.aspects.kubernetes; [
+      gateway-api-crds
+      cilium
+      cilium-bgp
+      cilium-host-firewall
+      envoy-gateway
+      cert-manager
+      trust-manager
+      coredns
+      argocd
+      argocd-oidc
+      apiserver
+      snapshot-controller
+      miroir
+      external-dns
+      external-secrets
+      kopiur
+      authelia
+    ])
+    ++ [ incusTerragruntAspect ];
 
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
   # quirks/bgp.nix), collected onto rb5009 by modules/den/policies/

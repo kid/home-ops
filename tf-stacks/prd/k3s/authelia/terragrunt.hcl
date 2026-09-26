@@ -7,16 +7,16 @@ terraform {
 }
 
 inputs = {
-  op_vault = "home-ops-prd"
-  url      = "https://auth.kidibox.net"
-
+  op_vault      = "home-ops-prd"
   smtp_password = get_env("GOOGLE_APP_PASSWORD")
-
+  url           = "https://auth.kidibox.net"
   users = {
     kid = {
       displayname = "Arnaud Rebts"
       email       = "arnaud.rebts@gmail.com"
-      groups      = ["admins"]
+      groups = [
+        "admins",
+      ]
     }
   }
 }
