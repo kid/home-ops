@@ -51,6 +51,13 @@
   den.aspects.k3s-miroir-node = {
     settings.device = lib.mkOption { type = lib.types.str; };
 
+    miroir-nodes =
+      { host, ... }:
+      {
+        hostname = host.name;
+        device = host.settings.k3s-miroir-node.settings.device;
+      };
+
     nixos = {
       boot.kernelModules = [ "dm_thin_pool" ];
 

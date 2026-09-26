@@ -47,4 +47,18 @@ in
     den.policies.routeros-device-collect-k3s-nodes
     den.policies.routeros-device-collect-bgp
   ];
+
+  # Collects the `miroir-nodes` quirk (emitted per-host by
+  # modules/den/aspects/services/k3s/miroir.nix, {hostname; device;}) onto
+  # the cluster entity, exposed as the `miroir-nodes` list arg to
+  # modules/den/aspects/kubernetes/miroir/default.nix's k8s-manifests
+  # content. `host` is the entity kind — a bare `_: true` predicate would
+  # match nothing, see routeros-device-collect-firewall above.
+  den.policies.cluster-collect-miroir-nodes = _: [
+    (pipe.from "miroir-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
+  ];
+
+  den.schema.cluster.includes = [
+    den.policies.cluster-collect-miroir-nodes
+  ];
 }
