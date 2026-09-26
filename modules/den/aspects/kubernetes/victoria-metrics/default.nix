@@ -23,7 +23,6 @@ _: {
         helm.releases.victoria-metrics = {
           chart = charts.victoriametrics.victoria-metrics-k8s-stack;
           values = {
-            # Dashboards come from the Grafana Operator (grafana-operator/default.nix) instead.
             grafana.enabled = false;
 
             # Release name "victoria-metrics" + chart name "victoria-metrics-k8s-stack"
@@ -73,6 +72,56 @@ _: {
             name = "vlsingle";
             httpRouteName = "vlsingle-victoria-metrics";
           }).securityPolicies;
+
+        resources.grafanaDatasources.victoria-metrics.spec = {
+          instanceSelector.matchLabels.dashboards = "grafana";
+          datasource = {
+            name = "VictoriaMetrics";
+            type = "victoriametrics-metrics-datasource";
+            access = "proxy";
+            url = "http://vmsingle-victoria-metrics.monitoring.svc:8428";
+            isDefault = true;
+          };
+        };
+
+        resources.grafanaDatasources.victoria-logs.spec = {
+          instanceSelector.matchLabels.dashboards = "grafana";
+          datasource = {
+            name = "VictoriaLogs";
+            type = "victoriametrics-logs-datasource";
+            access = "proxy";
+            url = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
+          };
+        };
+
+        resources.grafanaDashboards =
+          let
+            mkDashboard = url: {
+              spec = {
+                instanceSelector.matchLabels.dashboards = "grafana";
+                inherit url;
+              };
+            };
+            # renovate: datasource=github-releases depName=VictoriaMetrics/VictoriaMetrics
+            vmRef = "v1.152.0";
+            # renovate: datasource=github-releases depName=VictoriaMetrics/VictoriaLogs
+            vlRef = "v1.52.0";
+            vmDashboard =
+              name:
+              mkDashboard "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/${vmRef}/dashboards/vm/${name}.json";
+            vlDashboard =
+              path:
+              mkDashboard "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/${vlRef}/dashboards/${path}.json";
+          in
+          {
+            victoriametrics = vmDashboard "victoriametrics";
+            vmagent = vmDashboard "vmagent";
+            vmalert = vmDashboard "vmalert";
+            victoriametrics-operator = vmDashboard "operator";
+            victorialogs = vlDashboard "vm/victorialogs";
+            vlagent = vlDashboard "vm/vlagent";
+            victorialogs-explorer = vlDashboard "victorialogs-kubernetes-explorer";
+          };
       };
     };
 }
