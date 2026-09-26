@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: victoria-metrics-victoria-metrics-operator-validation
+  namespace: monitoring
+spec:
+  dnsNames:
+    - victoria-metrics-victoria-metrics-operator
+    - victoria-metrics-victoria-metrics-operator.monitoring
+    - victoria-metrics-victoria-metrics-operator.monitoring.svc
+    - victoria-metrics-victoria-metrics-operator.monitoring.svc.cluster.local.
+  duration: 45800h0m0s
+  issuerRef:
+    name: victoria-metrics-victoria-metrics-operator-issuer
+  secretName: victoria-metrics-victoria-metrics-operator-validation

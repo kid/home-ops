@@ -1,0 +1,17 @@
+apiVersion: operator.victoriametrics.com/v1
+kind: VLAgent
+metadata:
+  labels:
+    app.kubernetes.io/component: vlagent
+    app.kubernetes.io/instance: victoria-metrics
+    app.kubernetes.io/name: victoria-metrics-k8s-stack
+  name: victoria-metrics
+  namespace: monitoring
+spec:
+  image:
+    tag: v1.52.0
+  k8sCollector:
+    enabled: true
+  port: "9429"
+  remoteWrite:
+    - url: http://vlsingle-victoria-metrics.monitoring.svc.cluster.local.:9428/insert/native
