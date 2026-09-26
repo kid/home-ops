@@ -12,7 +12,7 @@
     # against a nixpkgs vmTools API change (kernel/kernelModules split) —
     # needed for system.build.vmWithDisko (see modules/den/hosts/test-vm.nix).
     # Switch back to nix-community/disko once merged upstream.
-    url = "github:AlexLov/disko/6747342da148f6cb28c8405a70fe00455a0ba027";
+    url = "github:AlexLov/disko/ff8702b4de27f72b4c78573dfb89ec74e36abdf1";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
