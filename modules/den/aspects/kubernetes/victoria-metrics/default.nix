@@ -19,7 +19,6 @@ _: {
     {
       applications.victoria-metrics = {
         namespace = "monitoring";
-        createNamespace = true;
 
         helm.releases.victoria-metrics = {
           chart = charts.victoriametrics.victoria-metrics-k8s-stack;
