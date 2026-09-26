@@ -30,9 +30,9 @@ _: {
 
         resources.grafanas.grafana.spec = {
           config = {
-            # victoriametrics-datasource/victorialogs-datasource (added by
-            # victoria-metrics/default.nix) are third-party, unsigned plugins.
-            plugins.allow_loading_unsigned_plugins = "victoriametrics-datasource,victorialogs-datasource";
+            # victoriametrics-metrics-datasource/victoriametrics-logs-datasource
+            # (added by victoria-metrics/default.nix) are third-party, unsigned plugins.
+            plugins.allow_loading_unsigned_plugins = "victoriametrics-metrics-datasource,victoriametrics-logs-datasource";
             # Needed so the OIDC callback Grafana computes matches Authelia's registered redirect_uri.
             server.root_url = "https://${cluster.methods.mkAppHostname "grafana"}";
           };
@@ -45,7 +45,7 @@ _: {
               env = [
                 {
                   name = "GF_INSTALL_PLUGINS";
-                  value = "victoriametrics-datasource,victorialogs-datasource";
+                  value = "victoriametrics-metrics-datasource,victoriametrics-logs-datasource";
                 }
               ];
             }
