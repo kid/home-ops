@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: syncJob
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack-sync-job
+  name: victoria-metrics-sync-job
   namespace: monitoring
 spec:
   backoffLimit: 3
@@ -28,7 +28,7 @@ spec:
             - name: RELEASE
               value: victoria-metrics
             - name: RESOURCE_PREFIX
-              value: victoria-metrics-victoria-metrics-k8s-stack
+              value: victoria-metrics
             - name: PRUNE
               value: "true"
             - name: OWNER_REFERENCES
@@ -45,9 +45,9 @@ spec:
               name: config
               readOnly: true
       restartPolicy: OnFailure
-      serviceAccountName: victoria-metrics-victoria-metrics-k8s-stack-sync-job
+      serviceAccountName: victoria-metrics-sync-job
       volumes:
         - configMap:
-            name: victoria-metrics-victoria-metrics-k8s-stack-sync-job-config
+            name: victoria-metrics-sync-job-config
           name: config
   ttlSecondsAfterFinished: 600

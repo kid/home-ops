@@ -27,6 +27,12 @@ _: {
             # Dashboards come from the Grafana Operator (grafana-operator/default.nix) instead.
             grafana.enabled = false;
 
+            # Release name "victoria-metrics" + chart name "victoria-metrics-k8s-stack"
+            # doubles up in every generated resource name by default, and
+            # vmalertmanager's StatefulSet then can't create pods: the
+            # pod-template-hash label exceeds Kubernetes' 63-byte limit.
+            fullnameOverride = "victoria-metrics";
+
             victoria-metrics-operator.admissionWebhooks.certManager.enabled = true;
 
             vmsingle = {
@@ -62,11 +68,11 @@ _: {
         resources.securityPolicies =
           (cluster.methods.mkForwardAuth {
             name = "vmsingle";
-            httpRouteName = "vmsingle-victoria-metrics-victoria-metrics-k8s-stack";
+            httpRouteName = "vmsingle-victoria-metrics";
           }).securityPolicies
           // (cluster.methods.mkForwardAuth {
             name = "vlsingle";
-            httpRouteName = "vlsingle-victoria-metrics-victoria-metrics-k8s-stack";
+            httpRouteName = "vlsingle-victoria-metrics";
           }).securityPolicies;
       };
     };

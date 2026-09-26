@@ -2,18 +2,18 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/component: kube-etcd
+    app.kubernetes.io/component: kube-controller-manager
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack-kube-etcd
+  name: victoria-metrics-kube-controller-manager
   namespace: kube-system
 spec:
   clusterIP: None
   ports:
     - name: http-metrics
-      port: 2379
+      port: 10257
       protocol: TCP
-      targetPort: 2379
+      targetPort: 10257
   selector:
-    component: etcd
+    component: kube-controller-manager
   type: ClusterIP

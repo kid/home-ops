@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/component: syncJob
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack-sync-job
+  name: victoria-metrics-sync-job
   namespace: monitoring
 rules:
   - apiGroups:

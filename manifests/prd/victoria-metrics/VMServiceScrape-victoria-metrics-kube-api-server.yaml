@@ -4,21 +4,21 @@ metadata:
   labels:
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack-kube-etcd
+  name: victoria-metrics-kube-api-server
   namespace: monitoring
 spec:
   endpoints:
     - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      port: http-metrics
+      port: https
       scheme: https
       tlsConfig:
         caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-  jobLabel: app.kubernetes.io/component
+        serverName: kubernetes
+  jobLabel: component
   namespaceSelector:
     matchNames:
-      - kube-system
+      - default
   selector:
     matchLabels:
-      app.kubernetes.io/component: kube-etcd
-      app.kubernetes.io/instance: victoria-metrics
-      app.kubernetes.io/name: victoria-metrics-k8s-stack
+      component: apiserver
+      provider: kubernetes

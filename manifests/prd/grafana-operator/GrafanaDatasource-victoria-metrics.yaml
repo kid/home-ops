@@ -9,7 +9,7 @@ spec:
     isDefault: true
     name: VictoriaMetrics
     type: victoriametrics-metrics-datasource
-    url: http://vmsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:8428
+    url: http://vmsingle-victoria-metrics.monitoring.svc:8428
   instanceSelector:
     matchLabels:
       dashboards: grafana

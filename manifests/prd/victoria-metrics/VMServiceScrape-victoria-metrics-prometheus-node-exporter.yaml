@@ -4,17 +4,18 @@ metadata:
   labels:
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack-kube-state-metrics
+  name: victoria-metrics-prometheus-node-exporter
   namespace: monitoring
 spec:
   endpoints:
-    - honorLabels: true
-      metricRelabelConfigs:
-        - action: labeldrop
-          regex: (uid|container_id|image_id)
-      port: http
-  jobLabel: app.kubernetes.io/name
+    - metricRelabelConfigs:
+        - action: drop
+          regex: /var/lib/kubelet/pods.+
+          source_labels:
+            - mountpoint
+      port: metrics
+  jobLabel: jobLabel
   selector:
     matchLabels:
       app.kubernetes.io/instance: victoria-metrics
-      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/name: prometheus-node-exporter

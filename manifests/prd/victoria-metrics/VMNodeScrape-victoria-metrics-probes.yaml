@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack-kubelet
+  name: victoria-metrics-probes
   namespace: monitoring
 spec:
   bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -20,6 +20,7 @@ spec:
       regex: (rest_client_request_duration_seconds_bucket|rest_client_request_duration_seconds_sum|rest_client_request_duration_seconds_count)
       source_labels:
         - __name__
+  path: /metrics/probes
   relabelConfigs:
     - action: labelmap
       regex: __meta_kubernetes_node_label_(.+)

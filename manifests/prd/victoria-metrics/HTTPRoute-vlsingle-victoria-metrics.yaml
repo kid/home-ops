@@ -2,14 +2,14 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   labels:
-    app.kubernetes.io/component: vmsingle
+    app.kubernetes.io/component: vlsingle
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: vmsingle-victoria-metrics-victoria-metrics-k8s-stack
+  name: vlsingle-victoria-metrics
   namespace: monitoring
 spec:
   hostnames:
-    - metrics.kidibox.net
+    - logs.kidibox.net
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
@@ -20,8 +20,8 @@ spec:
     - backendRefs:
         - group: ""
           kind: Service
-          name: vmsingle-victoria-metrics-victoria-metrics-k8s-stack
-          port: 8428
+          name: vlsingle-victoria-metrics
+          port: 9428
           weight: 1
       matches:
         - path:

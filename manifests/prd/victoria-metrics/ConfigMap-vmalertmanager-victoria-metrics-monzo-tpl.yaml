@@ -92,5 +92,5 @@ metadata:
     app.kubernetes.io/component: alertmanager
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: vmalertmanager-victoria-metrics-victoria-metrics-k8s-stack-monzo-tpl
+  name: vmalertmanager-victoria-metrics-monzo-tpl
   namespace: monitoring

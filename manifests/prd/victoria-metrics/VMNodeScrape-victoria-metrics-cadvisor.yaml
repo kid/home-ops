@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack-cadvisor
+  name: victoria-metrics-cadvisor
   namespace: monitoring
 spec:
   bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token

@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/component: vmauth
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack-internal
+  name: victoria-metrics-internal
   namespace: monitoring
 spec:
   port: "8427"
@@ -14,8 +14,8 @@ spec:
       - src_paths:
           - /select/logsql/.*
         url_prefix:
-          - http://vlsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc.cluster.local.:9428/
+          - http://vlsingle-victoria-metrics.monitoring.svc.cluster.local.:9428/
       - src_paths:
           - /.*
         url_prefix:
-          - http://vmsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc.cluster.local.:8428/
+          - http://vmsingle-victoria-metrics.monitoring.svc.cluster.local.:8428/

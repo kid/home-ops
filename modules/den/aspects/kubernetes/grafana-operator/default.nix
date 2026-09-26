@@ -75,7 +75,7 @@ _: {
             name = "VictoriaMetrics";
             type = "victoriametrics-metrics-datasource";
             access = "proxy";
-            url = "http://vmsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:8428";
+            url = "http://vmsingle-victoria-metrics.monitoring.svc:8428";
             isDefault = true;
           };
         };
@@ -86,7 +86,7 @@ _: {
             name = "VictoriaLogs";
             type = "victoriametrics-logs-datasource";
             access = "proxy";
-            url = "http://vlsingle-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc:9428";
+            url = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
           };
         };
       };

@@ -5,11 +5,11 @@ metadata:
     app.kubernetes.io/component: vmsingle
     app.kubernetes.io/instance: victoria-metrics
     app.kubernetes.io/name: victoria-metrics-k8s-stack
-  name: victoria-metrics-victoria-metrics-k8s-stack
+  name: victoria-metrics
   namespace: monitoring
 spec:
   extraArgs:
-    vmalert.proxyURL: http://vmalert-victoria-metrics-victoria-metrics-k8s-stack.monitoring.svc.cluster.local.:8080
+    vmalert.proxyURL: http://vmalert-victoria-metrics.monitoring.svc.cluster.local.:8080
   image:
     tag: v1.152.0
   port: "8428"

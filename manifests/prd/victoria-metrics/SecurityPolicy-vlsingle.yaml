@@ -27,4 +27,4 @@ spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
-      name: vlsingle-victoria-metrics-victoria-metrics-k8s-stack
+      name: vlsingle-victoria-metrics
