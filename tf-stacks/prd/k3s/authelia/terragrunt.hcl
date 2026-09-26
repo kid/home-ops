@@ -7,6 +7,11 @@ terraform {
 }
 
 inputs = {
+  extra_secret_names = [
+    "argocd-client-secret",
+    "kubelogin-client-secret",
+    "grafana-client-secret",
+  ]
   op_vault      = "home-ops-prd"
   smtp_password = get_env("GOOGLE_APP_PASSWORD")
   url           = "https://auth.kidibox.net"
