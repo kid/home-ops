@@ -12,10 +12,19 @@ in
   den.aspects.kubernetes.envoy-gateway.k8s-manifests =
     {
       charts,
+      generators,
       cluster,
       ...
     }:
     {
+      nixidy.applicationImports = [
+        (generators.fromChartCRDModule {
+          name = "envoy-gateway-client-traffic-policy";
+          chart = charts.envoyproxy.gateway-helm;
+          kindFilter = [ "ClientTrafficPolicy" ];
+        })
+      ];
+
       applications.envoy-gateway = {
         namespace = "envoy-gateway-system";
 
@@ -26,6 +35,17 @@ in
 
         resources.gatewayClasses.envoy.spec.controllerName =
           "gateway.envoyproxy.io/gatewayclass-controller";
+
+        resources.clientTrafficPolicies.apps.spec = {
+          targetRefs = [
+            {
+              group = "gateway.networking.k8s.io";
+              kind = "Gateway";
+              name = "apps";
+            }
+          ];
+          clientIPDetection.xForwardedFor.numTrustedHops = 1;
+        };
 
         resources.gateways.apps.spec = {
           gatewayClassName = "envoy";
