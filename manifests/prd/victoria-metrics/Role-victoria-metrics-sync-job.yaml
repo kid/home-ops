@@ -15,9 +15,9 @@ rules:
     verbs:
       - get
   - apiGroups:
-      - ""
+      - operator.victoriametrics.com
     resources:
-      - configmaps
+      - vmrules
     verbs:
       - get
       - list
@@ -25,9 +25,9 @@ rules:
       - update
       - delete
   - apiGroups:
-      - operator.victoriametrics.com
+      - grafana.integreatly.org
     resources:
-      - vmrules
+      - grafanadashboards
     verbs:
       - get
       - list

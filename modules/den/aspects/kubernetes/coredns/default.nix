@@ -16,6 +16,10 @@ _: {
           values = {
             service.clusterIP = cluster.networks.services.assignments.coredns;
             replicaCount = 1;
+            prometheus = {
+              service.enabled = true;
+              monitor.enabled = true;
+            };
           };
         };
       };

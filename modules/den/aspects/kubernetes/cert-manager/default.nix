@@ -53,6 +53,7 @@ _: {
           values = {
             crds.enabled = true;
             replicaCount = 1;
+            prometheus.servicemonitor.enabled = true;
           };
         };
 

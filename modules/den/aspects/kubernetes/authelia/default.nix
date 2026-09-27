@@ -110,6 +110,11 @@ in
             };
 
             configMap = {
+              telemetry.metrics = {
+                enabled = true;
+                serviceMonitor.enabled = true;
+              };
+
               session.cookies = [
                 {
                   inherit (cluster) domain;

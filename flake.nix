@@ -11,7 +11,7 @@
   };
 
   inputs = {
-    den.url = "github:denful/den/f88d635baecb9f9a82e8b78002cfd28e940c187b";
+    den.url = "github:denful/den/d0d80faa36f735c9390c1f6e0a3a481ae7ae31d0";
     disko = {
       url = "github:AlexLov/disko/ff8702b4de27f72b4c78573dfb89ec74e36abdf1";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -24,13 +24,13 @@
         nixpkgs.follows = "nixpkgs";
       };
     };
-    flake-file.url = "github:denful/flake-file/eccac77d2c2567efb6f368330930f3d55af8668a";
+    flake-file.url = "github:denful/flake-file/de3e0fcfe03b1af5d36b95952f216ea9ba087c8a";
     flake-parts = {
       url = "github:hercules-ci/flake-parts/31729ca8cbdb4fa927b34e5f4353e6a83f39e993";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
     git-hooks-nix = {
-      url = "github:cachix/git-hooks.nix/0d3997c4d3253505f77c9bcea63904bb575da3c5";
+      url = "github:cachix/git-hooks.nix/1a2c48d0a9149ff601d9d8c2cfdb467142c72a04";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     haumea = {
@@ -39,10 +39,10 @@
     };
     impermanence.url = "github:nix-community/impermanence/7b1d382faf603b6d264f58627330f9faa5cba149";
     import-tree.url = "github:vic/import-tree/eb1b52eaecc57f7c136d07ae8a93e724dfecac46";
-    nh.url = "github:nix-community/nh/d2a7aa0c40cb0d2e1c433789e369c61fe63e1a76";
+    nh.url = "github:nix-community/nh/b6869cdf986049621704136f313877c785244ad8";
     nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";
     nixhelm = {
-      url = "github:farcaller/nixhelm/1ffea56dc6d4b603ad3a0d06a5977abcff3abe82";
+      url = "github:farcaller/nixhelm/ad61a61d7e3a8dcdfc7f931c522798975114e276";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixidy = {
@@ -52,7 +52,7 @@
     nixos-anywhere.url = "github:nix-community/nixos-anywhere/da83557d8b0bce57a52371b888ffd6d58724e55c";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     sops-nix = {
-      url = "github:Mic92/sops-nix/2bd00bd9bb35fe6d114888c8f1c2e946c541dd8f";
+      url = "github:Mic92/sops-nix/5efb5a6f4f5ab192817d28557dd4d650fa14d866";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     treefmt-nix = {

@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/name: external-dns
+  name: external-dns-mikrotik
+  namespace: external-dns
+spec:
+  endpoints:
+    - path: /metrics
+      port: http
+    - path: /metrics
+      port: http-webhook
+  jobLabel: app.kubernetes.io/instance
+  namespaceSelector:
+    matchNames:
+      - external-dns
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: external-dns
+      app.kubernetes.io/name: external-dns

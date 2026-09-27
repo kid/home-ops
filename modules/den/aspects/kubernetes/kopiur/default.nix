@@ -95,7 +95,22 @@ in
 
         helm.releases.kopiur = {
           chart = charts.home-operations.kopiur;
-          values.features.credentialProjection.enabled = true;
+          values = {
+            features.credentialProjection.enabled = true;
+
+            monitoring = {
+              serviceMonitor.enabled = true;
+              dashboards = {
+                enabled = true;
+                grafanaOperator = {
+                  enabled = true;
+                  matchLabels.dashboards = "grafana";
+                };
+              };
+            };
+
+            webhook.serviceMonitor.enabled = true;
+          };
         };
 
         resources.externalSecrets.kopiur-r2 = {

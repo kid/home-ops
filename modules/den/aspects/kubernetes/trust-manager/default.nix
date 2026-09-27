@@ -21,7 +21,10 @@ _: {
 
         helm.releases.trust-manager = {
           chart = charts.jetstack.trust-manager;
-          values.crds.enabled = true;
+          values = {
+            crds.enabled = true;
+            app.metrics.service.servicemonitor.enabled = true;
+          };
         };
 
         resources.bundles.internal-ca.spec = {

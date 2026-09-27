@@ -39,6 +39,8 @@ in
               "service"
               "crd"
             ];
+            serviceMonitor.enabled = true;
+
             registry = "txt";
             txtOwnerId = cluster.name;
             txtPrefix = "k8s.";

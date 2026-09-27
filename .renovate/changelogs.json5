@@ -7,5 +7,16 @@
       matchUpdateTypes: ["digest"],
       changelogUrl: "{{sourceUrl}}/compare/{{currentDigest}}..{{newDigest}}",
     },
+    {
+      // Flake-input digest bumps (git-refs custom.regex, no currentValue)
+      // never get a sourceUrl attached, since Renovate only resolves one
+      // through a release lookup that pure digest tracking never runs.
+      // packageNameTemplate already resolves to the GitHub URL though.
+      description: "Link to the upstream commit range for flake-input digest updates",
+      matchManagers: ["custom.regex"],
+      matchDatasources: ["git-refs"],
+      matchUpdateTypes: ["digest"],
+      changelogUrl: "{{packageName}}/compare/{{currentDigest}}..{{newDigest}}",
+    },
   ],
 }
