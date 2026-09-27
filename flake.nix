@@ -39,7 +39,7 @@
     };
     impermanence.url = "github:nix-community/impermanence/7b1d382faf603b6d264f58627330f9faa5cba149";
     import-tree.url = "github:vic/import-tree/eb1b52eaecc57f7c136d07ae8a93e724dfecac46";
-    nh.url = "github:nix-community/nh/d2a7aa0c40cb0d2e1c433789e369c61fe63e1a76";
+    nh.url = "github:nix-community/nh/b6869cdf986049621704136f313877c785244ad8";
     nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";
     nixhelm = {
       url = "github:farcaller/nixhelm/1ffea56dc6d4b603ad3a0d06a5977abcff3abe82";
