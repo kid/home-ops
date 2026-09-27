@@ -124,14 +124,6 @@ in
 
               storage.local.enabled = true;
 
-              # Lets a local MCP server (run from the Trusted LAN, not
-              # through a browser session) query VictoriaMetrics/VictoriaLogs
-              # without an Authelia login. The chart only keeps its implicit
-              # two_factor-by-default behavior while `rules` is empty
-              # (templates/_helpers.tpl's authelia.accessControl.defaultPolicy);
-              # once rules is non-empty it uses default_policy verbatim, so it
-              # must be set explicitly here or every other app falls back to
-              # the chart's raw default of 'deny'.
               access_control = {
                 default_policy = "two_factor";
                 rules = [
