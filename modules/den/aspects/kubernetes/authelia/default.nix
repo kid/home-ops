@@ -23,7 +23,6 @@ let
             "authorization"
             "proxy-authorization"
             "x-forwarded-proto"
-            "x-forwarded-for"
           ];
           http = {
             backendRefs = [
@@ -124,20 +123,6 @@ in
               ];
 
               storage.local.enabled = true;
-
-              access_control = {
-                default_policy = "two_factor";
-                rules = [
-                  {
-                    domain = [
-                      (cluster.methods.mkAppHostname "metrics")
-                      (cluster.methods.mkAppHostname "logs")
-                    ];
-                    policy = "bypass";
-                    networks = [ "10.0.100.0/24" ];
-                  }
-                ];
-              };
 
               # Gmail with an app password, put in 1Password by the authelia tf stack. No startup check: a mail outage must not stop the login for everything.
               notifier = {

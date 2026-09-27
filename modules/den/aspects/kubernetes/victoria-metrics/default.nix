@@ -11,6 +11,25 @@ _: {
     let
       k3sNodeAddresses = map (n: n.address) (lib.filter (n: n.address != null) k3s-nodes);
 
+      mkTrustedNetworkOnly = httpRouteName: {
+        targetRefs = [
+          {
+            group = "gateway.networking.k8s.io";
+            kind = "HTTPRoute";
+            name = httpRouteName;
+          }
+        ];
+        authorization = {
+          defaultAction = "Deny";
+          rules = [
+            {
+              action = "Allow";
+              principal.clientCIDRs = [ "10.0.100.0/24" ];
+            }
+          ];
+        };
+      };
+
       mkStaticScrapeEndpoint =
         {
           job,
@@ -134,19 +153,14 @@ _: {
           })
         ];
 
-        resources.securityPolicies =
-          (cluster.methods.mkForwardAuth {
-            name = "vmsingle";
-            httpRouteName = "vmsingle-victoria-metrics";
-          }).securityPolicies
-          // (cluster.methods.mkForwardAuth {
-            name = "vlsingle";
-            httpRouteName = "vlsingle-victoria-metrics";
-          }).securityPolicies
-          // (cluster.methods.mkForwardAuth {
-            name = "vmalert";
-            httpRouteName = "vmalert-victoria-metrics";
-          }).securityPolicies;
+        resources.securityPolicies = {
+          vmsingle.spec = mkTrustedNetworkOnly "vmsingle-victoria-metrics";
+          vlsingle.spec = mkTrustedNetworkOnly "vlsingle-victoria-metrics";
+        }
+        // (cluster.methods.mkForwardAuth {
+          name = "vmalert";
+          httpRouteName = "vmalert-victoria-metrics";
+        }).securityPolicies;
 
         resources.grafanaDatasources.victoria-metrics.spec = {
           instanceSelector.matchLabels.dashboards = "grafana";
