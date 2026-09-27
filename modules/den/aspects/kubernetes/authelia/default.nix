@@ -23,6 +23,7 @@ let
             "authorization"
             "proxy-authorization"
             "x-forwarded-proto"
+            "x-forwarded-for"
           ];
           http = {
             backendRefs = [
