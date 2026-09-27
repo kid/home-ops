@@ -25,23 +25,12 @@ _: {
           values = {
             grafana.enabled = false;
 
-            # Release name "victoria-metrics" + chart name "victoria-metrics-k8s-stack"
-            # doubles up in every generated resource name by default, and
-            # vmalertmanager's StatefulSet then can't create pods: the
-            # pod-template-hash label exceeds Kubernetes' 63-byte limit.
             fullnameOverride = "victoria-metrics";
 
             victoria-metrics-operator.admissionWebhooks.certManager.enabled = true;
 
-            # Renders every default dashboard (VictoriaMetrics/VictoriaLogs's
-            # own plus community ones — node-exporter-full, kubernetes-views,
-            # etcd, kube-prometheus) as GrafanaDashboard CRs via a PostSync
-            # Job (helm.sh/hook maps to ArgoCD's own PostSync hook).
             defaultDashboards.grafanaOperator.enabled = true;
 
-            # grafana.enabled = false means vm-k8s-stack.grafana.addr falls
-            # back to external.grafana.host — used to build the "view in
-            # Grafana Explore" link in vmalert's own alert notifications.
             external.grafana = {
               host = "https://${cluster.methods.mkAppHostname "grafana"}";
               datasource = "VictoriaMetrics";
@@ -50,7 +39,6 @@ _: {
             vmsingle = {
               spec = {
                 retentionPeriod = "30d";
-                # 20Gi default won't fit alongside vlsingle on the 20GiB miroir-data disk.
                 storage.resources.requests.storage = "5Gi";
               };
               route = mkRoute (cluster.methods.mkAppHostname "metrics");
@@ -61,8 +49,6 @@ _: {
               route = mkRoute (cluster.methods.mkAppHostname "vmalert");
             };
 
-            # The chart natively supports VictoriaLogs alongside VictoriaMetrics
-            # in the same release; both default to disabled.
             vlsingle = {
               enabled = true;
               spec = {
@@ -72,17 +58,10 @@ _: {
               route = mkRoute (cluster.methods.mkAppHostname "logs");
             };
 
-            # vlagent: VictoriaMetrics's own log collector, ships pod logs
-            # straight to the vlsingle this same release creates.
             vlagent.enabled = true;
           };
         };
 
-        # VMUI, VictoriaLogs' own UI, and vmalert's UI have no login of their
-        # own — HTTPRoute names below match the chart's own naming (see the
-        # rendered HTTPRoute-*.yaml under manifests/prd/victoria-metrics/).
-        # `//` merges the three calls' distinct securityPolicies keys, not
-        # the outer attrset.
         resources.securityPolicies =
           (cluster.methods.mkForwardAuth {
             name = "vmsingle";
@@ -118,16 +97,6 @@ _: {
           };
         };
 
-        # The chart's own default dashboards (including community ones like
-        # node-exporter-full/kubernetes-views/etcd) filter their datasource
-        # variable by type: "prometheus" — VictoriaMetrics implements the
-        # Prometheus HTTP API, so a plain prometheus-type datasource resolves
-        # them directly. Kept separate from the native-plugin one above,
-        # which keeps its own query builder UI. uid must be "VictoriaMetrics"
-        # exactly — the sync-job's generated dashboard panels hardcode that
-        # uid (from defaultDatasources.victoriametrics.datasources' own
-        # unrelated chart default, which we never override but which still
-        # feeds this), not a datasource-variable lookup by type.
         resources.grafanaDatasources.victoria-metrics-prometheus.spec = {
           instanceSelector.matchLabels.dashboards = "grafana";
           datasource = {
@@ -141,9 +110,6 @@ _: {
           };
         };
 
-        # Not part of the chart's own default dashboard set (that's
-        # metrics-focused), so kept as its own resource alongside the
-        # sync-job-generated ones above.
         resources.grafanaDashboards.victorialogs-explorer.spec =
           let
             # renovate: datasource=github-releases depName=VictoriaMetrics/VictoriaLogs
