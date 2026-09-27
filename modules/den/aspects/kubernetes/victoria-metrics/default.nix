@@ -31,7 +31,12 @@ _: {
 
             defaultDashboards = {
               grafanaOperator.enabled = true;
-              dashboards.grafana-overview.enabled = true;
+              dashboards = {
+                grafana-overview.enabled = true;
+                victorialogs-cluster.enabled = true;
+                victorialogs-single-node.enabled = true;
+                victorialogs-vlagent.enabled = true;
+              };
             };
 
             external.grafana = {
