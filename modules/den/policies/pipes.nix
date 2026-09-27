@@ -58,7 +58,12 @@ in
     (pipe.from "miroir-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
 
+  den.policies.cluster-collect-k3s-nodes = _: [
+    (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
+  ];
+
   den.schema.cluster.includes = [
     den.policies.cluster-collect-miroir-nodes
+    den.policies.cluster-collect-k3s-nodes
   ];
 }

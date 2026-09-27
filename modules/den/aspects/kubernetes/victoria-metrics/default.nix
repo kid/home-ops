@@ -1,7 +1,27 @@
 _: {
   den.aspects.kubernetes.victoria-metrics.k8s-manifests =
-    { charts, cluster, ... }:
+    {
+      charts,
+      cluster,
+      lib,
+      k3s-nodes ? [ ],
+      ...
+    }:
     let
+      k3sNodeAddresses = map (n: n.address) (lib.filter (n: n.address != null) k3s-nodes);
+
+      mkStaticScrapeComponent = {
+        endpoints = k3sNodeAddresses;
+        vmScrape.spec.endpoints = [
+          {
+            bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+            port = "http-metrics";
+            scheme = "https";
+            tlsConfig.insecureSkipVerify = true;
+          }
+        ];
+      };
+
       mkRoute = hostname: {
         enabled = true;
         parentRefs = [
@@ -43,6 +63,14 @@ _: {
               host = "https://${cluster.methods.mkAppHostname "grafana"}";
               datasource = "VictoriaMetrics";
             };
+
+            # CoreDNS is now scraped via its own chart's ServiceMonitor
+            # (modules/den/aspects/kubernetes/coredns/default.nix).
+            coreDns.enabled = false;
+
+            kubeScheduler = mkStaticScrapeComponent;
+            kubeControllerManager = mkStaticScrapeComponent;
+            kubeEtcd = mkStaticScrapeComponent;
 
             vmsingle = {
               spec = {
