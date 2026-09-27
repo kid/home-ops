@@ -1,0 +1,29 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    app.kubernetes.io/component: vmalert
+    app.kubernetes.io/instance: victoria-metrics
+    app.kubernetes.io/name: victoria-metrics-k8s-stack
+  name: vmalert-victoria-metrics
+  namespace: monitoring
+spec:
+  hostnames:
+    - vmalert.kidibox.net
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: apps
+      namespace: envoy-gateway-system
+      sectionName: https
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: vmalert-victoria-metrics
+          port: 8080
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
