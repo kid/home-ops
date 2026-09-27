@@ -29,7 +29,10 @@ _: {
 
             victoria-metrics-operator.admissionWebhooks.certManager.enabled = true;
 
-            defaultDashboards.grafanaOperator.enabled = true;
+            defaultDashboards = {
+              grafanaOperator.enabled = true;
+              dashboards.grafana-overview.enabled = true;
+            };
 
             external.grafana = {
               host = "https://${cluster.methods.mkAppHostname "grafana"}";
@@ -109,16 +112,6 @@ _: {
             jsonData.timeInterval = "30s";
           };
         };
-
-        resources.grafanaDashboards.victorialogs-explorer.spec =
-          let
-            # renovate: datasource=github-releases depName=VictoriaMetrics/VictoriaLogs
-            vlRef = "v1.52.0";
-          in
-          {
-            instanceSelector.matchLabels.dashboards = "grafana";
-            url = "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/${vlRef}/dashboards/victorialogs-kubernetes-explorer.json";
-          };
       };
     };
 }
