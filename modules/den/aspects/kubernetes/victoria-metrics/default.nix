@@ -2,6 +2,7 @@ _: {
   den.aspects.kubernetes.victoria-metrics.k8s-manifests =
     {
       charts,
+      generators,
       cluster,
       lib,
       k3s-nodes ? [ ],
@@ -10,17 +11,18 @@ _: {
     let
       k3sNodeAddresses = map (n: n.address) (lib.filter (n: n.address != null) k3s-nodes);
 
-      mkStaticScrapeComponent = {
-        endpoints = k3sNodeAddresses;
-        vmScrape.spec.endpoints = [
-          {
-            bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
-            port = "http-metrics";
-            scheme = "https";
-            tlsConfig.insecureSkipVerify = true;
-          }
-        ];
-      };
+      mkStaticScrapeEndpoint =
+        {
+          job,
+          port,
+        }:
+        {
+          targets = map (address: "${address}:${toString port}") k3sNodeAddresses;
+          labels.job = job;
+          bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+          scheme = "https";
+          tlsConfig.insecureSkipVerify = true;
+        };
 
       mkRoute = hostname: {
         enabled = true;
@@ -37,6 +39,14 @@ _: {
       };
     in
     {
+      nixidy.applicationImports = [
+        (generators.fromChartCRDModule {
+          name = "victoria-metrics";
+          chart = charts.victoriametrics.victoria-metrics-k8s-stack;
+          kindFilter = [ "VMStaticScrape" ];
+        })
+      ];
+
       applications.victoria-metrics = {
         namespace = "monitoring";
 
@@ -68,9 +78,20 @@ _: {
             # (modules/den/aspects/kubernetes/coredns/default.nix).
             coreDns.enabled = false;
 
-            kubeScheduler = mkStaticScrapeComponent;
-            kubeControllerManager = mkStaticScrapeComponent;
-            kubeEtcd = mkStaticScrapeComponent;
+            # vmScrape=null drops the chart's own broken scrape config (see
+            # the VMStaticScrape below) while keeping the mixin alert rules.
+            kubeScheduler = {
+              enabled = true;
+              vmScrape = null;
+            };
+            kubeControllerManager = {
+              enabled = true;
+              vmScrape = null;
+            };
+            kubeEtcd = {
+              enabled = true;
+              vmScrape = null;
+            };
 
             vmsingle = {
               spec = {
@@ -97,6 +118,21 @@ _: {
             vlagent.enabled = true;
           };
         };
+
+        resources.vmStaticScrapes.k3s-control-plane.spec.targetEndpoints = [
+          (mkStaticScrapeEndpoint {
+            job = "kube-scheduler";
+            port = 10259;
+          })
+          (mkStaticScrapeEndpoint {
+            job = "kube-controller-manager";
+            port = 10257;
+          })
+          (mkStaticScrapeEndpoint {
+            job = "kube-etcd";
+            port = 2379;
+          })
+        ];
 
         resources.securityPolicies =
           (cluster.methods.mkForwardAuth {
