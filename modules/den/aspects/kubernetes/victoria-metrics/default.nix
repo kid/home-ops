@@ -33,6 +33,20 @@ _: {
 
             victoria-metrics-operator.admissionWebhooks.certManager.enabled = true;
 
+            # Renders every default dashboard (VictoriaMetrics/VictoriaLogs's
+            # own plus community ones — node-exporter-full, kubernetes-views,
+            # etcd, kube-prometheus) as GrafanaDashboard CRs via a PostSync
+            # Job (helm.sh/hook maps to ArgoCD's own PostSync hook).
+            defaultDashboards.grafanaOperator.enabled = true;
+
+            # grafana.enabled = false means vm-k8s-stack.grafana.addr falls
+            # back to external.grafana.host — used to build the "view in
+            # Grafana Explore" link in vmalert's own alert notifications.
+            external.grafana = {
+              host = "https://${cluster.methods.mkAppHostname "grafana"}";
+              datasource = "VictoriaMetrics";
+            };
+
             vmsingle = {
               spec = {
                 retentionPeriod = "30d";
@@ -40,6 +54,11 @@ _: {
                 storage.resources.requests.storage = "5Gi";
               };
               route = mkRoute (cluster.methods.mkAppHostname "metrics");
+            };
+
+            vmalert = {
+              spec.extraArgs."external.url" = "https://${cluster.methods.mkAppHostname "vmalert"}";
+              route = mkRoute (cluster.methods.mkAppHostname "vmalert");
             };
 
             # The chart natively supports VictoriaLogs alongside VictoriaMetrics
@@ -59,10 +78,11 @@ _: {
           };
         };
 
-        # VMUI and VictoriaLogs' own UI have no login of their own — HTTPRoute
-        # names below match the chart's own naming (see the rendered
-        # HTTPRoute-*.yaml under manifests/prd/victoria-metrics/). `//` merges
-        # the two calls' distinct securityPolicies keys, not the outer attrset.
+        # VMUI, VictoriaLogs' own UI, and vmalert's UI have no login of their
+        # own — HTTPRoute names below match the chart's own naming (see the
+        # rendered HTTPRoute-*.yaml under manifests/prd/victoria-metrics/).
+        # `//` merges the three calls' distinct securityPolicies keys, not
+        # the outer attrset.
         resources.securityPolicies =
           (cluster.methods.mkForwardAuth {
             name = "vmsingle";
@@ -71,6 +91,10 @@ _: {
           // (cluster.methods.mkForwardAuth {
             name = "vlsingle";
             httpRouteName = "vlsingle-victoria-metrics";
+          }).securityPolicies
+          // (cluster.methods.mkForwardAuth {
+            name = "vmalert";
+            httpRouteName = "vmalert-victoria-metrics";
           }).securityPolicies;
 
         resources.grafanaDatasources.victoria-metrics.spec = {
@@ -94,33 +118,40 @@ _: {
           };
         };
 
-        resources.grafanaDashboards =
+        # The chart's own default dashboards (including community ones like
+        # node-exporter-full/kubernetes-views/etcd) filter their datasource
+        # variable by type: "prometheus" — VictoriaMetrics implements the
+        # Prometheus HTTP API, so a plain prometheus-type datasource resolves
+        # them directly. Kept separate from the native-plugin one above,
+        # which keeps its own query builder UI. uid must be "VictoriaMetrics"
+        # exactly — the sync-job's generated dashboard panels hardcode that
+        # uid (from defaultDatasources.victoriametrics.datasources' own
+        # unrelated chart default, which we never override but which still
+        # feeds this), not a datasource-variable lookup by type.
+        resources.grafanaDatasources.victoria-metrics-prometheus.spec = {
+          instanceSelector.matchLabels.dashboards = "grafana";
+          datasource = {
+            name = "Prometheus";
+            uid = "VictoriaMetrics";
+            type = "prometheus";
+            access = "proxy";
+            url = "http://vmsingle-victoria-metrics.monitoring.svc:8428/prometheus";
+            isDefault = false;
+            jsonData.timeInterval = "30s";
+          };
+        };
+
+        # Not part of the chart's own default dashboard set (that's
+        # metrics-focused), so kept as its own resource alongside the
+        # sync-job-generated ones above.
+        resources.grafanaDashboards.victorialogs-explorer.spec =
           let
-            mkDashboard = url: {
-              spec = {
-                instanceSelector.matchLabels.dashboards = "grafana";
-                inherit url;
-              };
-            };
-            # renovate: datasource=github-releases depName=VictoriaMetrics/VictoriaMetrics
-            vmRef = "v1.152.0";
             # renovate: datasource=github-releases depName=VictoriaMetrics/VictoriaLogs
             vlRef = "v1.52.0";
-            vmDashboard =
-              name:
-              mkDashboard "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/${vmRef}/dashboards/vm/${name}.json";
-            vlDashboard =
-              path:
-              mkDashboard "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/${vlRef}/dashboards/${path}.json";
           in
           {
-            victoriametrics = vmDashboard "victoriametrics";
-            vmagent = vmDashboard "vmagent";
-            vmalert = vmDashboard "vmalert";
-            victoriametrics-operator = vmDashboard "operator";
-            victorialogs = vlDashboard "vm/victorialogs";
-            vlagent = vlDashboard "vm/vlagent";
-            victorialogs-explorer = vlDashboard "victorialogs-kubernetes-explorer";
+            instanceSelector.matchLabels.dashboards = "grafana";
+            url = "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/${vlRef}/dashboards/victorialogs-kubernetes-explorer.json";
           };
       };
     };
