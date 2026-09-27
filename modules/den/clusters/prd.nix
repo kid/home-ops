@@ -154,6 +154,7 @@ in
       external-secrets
       kopiur
       authelia
+      prometheus-operator-crds
       victoria-metrics
       grafana-operator
       grafana-oidc

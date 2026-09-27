@@ -1,0 +1,17 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  labels:
+    app.kubernetes.io/instance: miroir
+    app.kubernetes.io/name: miroir
+  name: miroir-dashboard
+  namespace: miroir-system
+spec:
+  allowCrossNamespaceImport: true
+  configMapRef:
+    key: miroir.json
+    name: miroir-dashboard
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 10m

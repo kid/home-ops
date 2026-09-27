@@ -40,7 +40,19 @@ _: {
       applications.miroir = {
         namespace = "miroir-system";
 
-        helm.releases.miroir.chart = charts.home-operations.miroir;
+        helm.releases.miroir = {
+          chart = charts.home-operations.miroir;
+          values.monitoring = {
+            podMonitor.enabled = true;
+            dashboards = {
+              enabled = true;
+              grafanaOperator = {
+                enabled = true;
+                matchLabels.dashboards = "grafana";
+              };
+            };
+          };
+        };
 
         resources.miroirNodes = lib.listToAttrs (
           map (

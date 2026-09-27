@@ -9,7 +9,10 @@ _: {
         namespace = "snapshot-controller";
         annotations."argocd.argoproj.io/sync-wave" = "-3";
 
-        helm.releases.snapshot-controller.chart = charts.home-operations.snapshot-controller;
+        helm.releases.snapshot-controller = {
+          chart = charts.home-operations.snapshot-controller;
+          values.monitoring.serviceMonitor.enabled = true;
+        };
       };
     };
 }

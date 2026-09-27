@@ -60,14 +60,44 @@ _: {
             # protocol visibility — none of which this cluster uses now.
             envoy.enabled = false;
 
-            operator.replicas = 1;
+            operator = {
+              replicas = 1;
+              prometheus.serviceMonitor.enabled = true;
+            };
 
-            hubble.tls.auto = {
-              method = "certmanager";
-              certManagerIssuerRef = {
-                group = "cert-manager.io";
-                kind = "ClusterIssuer";
-                name = "hubble-ca-issuer";
+            prometheus = {
+              enabled = true;
+              serviceMonitor = {
+                enabled = true;
+                # nixidy renders manifests offline (no live API server to
+                # check against) — this chart's own validate.yaml otherwise
+                # hard-fails the render demanding this exact escape hatch.
+                trustCRDsExist = true;
+              };
+            };
+
+            hubble = {
+              tls.auto = {
+                method = "certmanager";
+                certManagerIssuerRef = {
+                  group = "cert-manager.io";
+                  kind = "ClusterIssuer";
+                  name = "hubble-ca-issuer";
+                };
+              };
+
+              # The chart's own documented example set (values.yaml comment
+              # next to hubble.metrics.enabled).
+              metrics = {
+                enabled = [
+                  "dns:query;ignoreAAAA"
+                  "drop"
+                  "tcp"
+                  "flow"
+                  "icmp"
+                  "http"
+                ];
+                serviceMonitor.enabled = true;
               };
             };
           };
