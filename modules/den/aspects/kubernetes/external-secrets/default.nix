@@ -23,7 +23,16 @@ _: {
         namespace = "external-secrets";
         annotations."argocd.argoproj.io/sync-wave" = "-3";
 
-        helm.releases.external-secrets.chart = charts.external-secrets.external-secrets;
+        helm.releases.external-secrets = {
+          chart = charts.external-secrets.external-secrets;
+          values.serviceMonitor = {
+            enabled = true;
+            # Default renderMode (skipIfMissing) checks the live API server
+            # for the CRD — nixidy renders offline, so that check is always
+            # false and the ServiceMonitor silently never renders.
+            renderMode = "alwaysRender";
+          };
+        };
 
         resources.clusterSecretStores.onepassword.spec.provider.onepasswordSDK = {
           vault = cluster.secrets.onepasswordVault;

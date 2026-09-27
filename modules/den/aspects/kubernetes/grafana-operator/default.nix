@@ -22,7 +22,10 @@ _: {
       applications.grafana-operator = {
         namespace = "monitoring";
 
-        helm.releases.grafana-operator.chart = charts.grafana.grafana-operator;
+        helm.releases.grafana-operator = {
+          chart = charts.grafana.grafana-operator;
+          values.serviceMonitor.enabled = true;
+        };
 
         # Selected by GrafanaDatasource/GrafanaDashboard CRs' instanceSelector.
         resources.grafanas.grafana.metadata.labels.dashboards = "grafana";

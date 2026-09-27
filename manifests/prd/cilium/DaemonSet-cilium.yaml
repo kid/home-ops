@@ -116,6 +116,18 @@ spec:
               hostPort: 4244
               name: peer-service
               protocol: TCP
+            - containerPort: 9962
+              hostPort: 9962
+              name: prometheus
+              protocol: TCP
+            - containerPort: 9964
+              hostPort: 9964
+              name: envoy-metrics
+              protocol: TCP
+            - containerPort: 9965
+              hostPort: 9965
+              name: hubble-metrics
+              protocol: TCP
           readinessProbe:
             failureThreshold: 3
             httpGet:
