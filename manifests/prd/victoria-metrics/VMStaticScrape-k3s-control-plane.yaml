@@ -1,0 +1,31 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMStaticScrape
+metadata:
+  name: k3s-control-plane
+  namespace: monitoring
+spec:
+  targetEndpoints:
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      labels:
+        job: kube-scheduler
+      scheme: https
+      targets:
+        - 10.0.40.10:10259
+      tlsConfig:
+        insecureSkipVerify: true
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      labels:
+        job: kube-controller-manager
+      scheme: https
+      targets:
+        - 10.0.40.10:10257
+      tlsConfig:
+        insecureSkipVerify: true
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      labels:
+        job: kube-etcd
+      scheme: https
+      targets:
+        - 10.0.40.10:2379
+      tlsConfig:
+        insecureSkipVerify: true
