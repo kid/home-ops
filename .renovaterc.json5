@@ -4,6 +4,7 @@
     "config:recommended",
     "docker:enableMajor",
     "helpers:pinGitHubActionDigests",
+    "github>kid/home-ops//.renovate/changelogs.json5",
     "github>kid/home-ops//.renovate/groups.json5",
     "github>kid/home-ops//.renovate/labels.json5",
     "github>kid/home-ops//.renovate/overrides.json5",

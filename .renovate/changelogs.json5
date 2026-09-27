@@ -1,0 +1,11 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  packageRules: [
+    {
+      description: "Link to the upstream commit range for GitHub-sourced digest updates",
+      matchSourceUrls: ["https://github.com/**/*"],
+      matchUpdateTypes: ["digest"],
+      changelogUrl: "{{sourceUrl}}/compare/{{currentDigest}}..{{newDigest}}",
+    },
+  ],
+}
