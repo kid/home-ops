@@ -140,6 +140,11 @@
                 type = lib.types.str;
                 description = "ID of the Cloudflare zone for `domain`, where cert-manager solves DNS-01";
               };
+              tunnelId = lib.mkOption {
+                type = lib.types.nullOr lib.types.str;
+                default = null;
+                description = "Cloudflare Tunnel ID for this cluster's public ingress (modules/den/aspects/kubernetes/cloudflared) — hand-copied once from the cloudflared terragrunt stack's `tunnel_id` output after its bootstrap apply. Not sensitive on its own: it ends up published in the public wildcard DNS CNAME anyway. Left null renders no cloudflared manifests at all, since the stack must be applied once before the ID exists.";
+              };
             };
 
             storage = lib.mkOption {

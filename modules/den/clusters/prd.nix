@@ -158,6 +158,7 @@ in
       victoria-metrics
       grafana-operator
       grafana-oidc
+      cloudflared
     ])
     ++ [ incusTerragruntAspect ];
 

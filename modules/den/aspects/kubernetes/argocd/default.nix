@@ -195,6 +195,77 @@ in
             ];
           };
 
+          # Internet-facing: UI, still behind ArgoCD's own Authelia OIDC
+          # client (authelia/default.nix) — no forward-auth needed here.
+          # Forwards into Envoy's internal proxy Service so the request is
+          # routed/handled identically to LAN traffic.
+          resources.httpRoutes.argocd-public.spec = {
+            parentRefs = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
+                name = "cloudflare-tunnel";
+                namespace = "cloudflare-tunnel-system";
+                sectionName = "http";
+              }
+            ];
+            hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
+            rules = [
+              {
+                backendRefs = [
+                  {
+                    group = "";
+                    kind = "Service";
+                    name = "envoy-gateway-apps";
+                    namespace = "envoy-gateway-system";
+                    port = 443;
+                    weight = 1;
+                  }
+                ];
+              }
+            ];
+          };
+
+          # Internet-facing: GitHub's webhook receiver only, fully public —
+          # GitHub can't do an interactive SSO login. Deliberately no
+          # SecurityPolicy; ArgoCD's own webhook.github.secret HMAC check
+          # (below) is the only guard. A more specific path match on a
+          # separate HTTPRoute wins over httpRoutes.argocd's "/" rule
+          # regardless of object, same as argocd-grpc below.
+          resources.httpRoutes.argocd-webhook.spec = {
+            parentRefs = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
+                name = "apps";
+                namespace = "envoy-gateway-system";
+                sectionName = "https";
+              }
+            ];
+            hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
+            rules = [
+              {
+                matches = [
+                  {
+                    path = {
+                      type = "PathPrefix";
+                      value = "/api/webhook";
+                    };
+                  }
+                ];
+                backendRefs = [
+                  {
+                    group = "";
+                    kind = "Service";
+                    name = "argocd-server";
+                    port = 443;
+                    weight = 1;
+                  }
+                ];
+              }
+            ];
+          };
+
           resources.grpcRoutes.argocd-grpc.spec = {
             parentRefs = [
               {
@@ -229,6 +300,28 @@ in
                     weight = 1;
                   }
                 ];
+              }
+            ];
+          };
+
+          # ArgoCD's webhook.github.secret HMAC check is its only guard on
+          # /api/webhook now that it's public — nothing needed this before,
+          # since the endpoint was LAN-only. The item must be created by hand
+          # in 1Password before this syncs.
+          resources.externalSecrets.argocd-github-webhook.spec = {
+            secretStoreRef = {
+              name = "onepassword";
+              kind = "ClusterSecretStore";
+            };
+            target = {
+              name = "argocd-secret";
+              creationPolicy = "Merge";
+              template.data."webhook.github.secret" = "{{ .githubWebhookSecret }}";
+            };
+            data = [
+              {
+                secretKey = "githubWebhookSecret";
+                remoteRef.key = "argocd/secrets/github-webhook-secret";
               }
             ];
           };

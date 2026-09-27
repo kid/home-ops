@@ -23,6 +23,11 @@ in
           chart = charts.envoyproxy.gateway-helm;
           kindFilter = [ "ClientTrafficPolicy" ];
         })
+        (generators.fromChartCRDModule {
+          name = "envoy-gateway-envoy-proxy";
+          chart = charts.envoyproxy.gateway-helm;
+          kindFilter = [ "EnvoyProxy" ];
+        })
       ];
 
       applications.envoy-gateway = {
@@ -33,8 +38,23 @@ in
           values.crds.enabled = true;
         };
 
-        resources.gatewayClasses.envoy.spec.controllerName =
-          "gateway.envoyproxy.io/gatewayclass-controller";
+        resources.gatewayClasses.envoy.spec = {
+          controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+          parametersRef = {
+            group = "gateway.envoyproxy.io";
+            kind = "EnvoyProxy";
+            name = "apps";
+            namespace = "envoy-gateway-system";
+          };
+        };
+
+        # Pins the data-plane proxy Service's name, which Envoy Gateway
+        # otherwise auto-generates at runtime — cloudflared/default.nix's
+        # HTTPRoutes need a stable target to forward tunnel traffic to.
+        resources.envoyProxies.apps.spec.provider = {
+          type = "Kubernetes";
+          kubernetes.envoyService.name = "envoy-gateway-apps";
+        };
 
         resources.clientTrafficPolicies.apps.spec = {
           targetRefs = [
@@ -66,6 +86,28 @@ in
                 ];
               };
               allowedRoutes.namespaces.from = "All";
+            }
+          ];
+        };
+
+        # Lets an app's own public HTTPRoute (cross-namespace, on the
+        # "cloudflare-tunnel" Gateway) forward into this Service — Gateway API
+        # requires explicit opt-in per source namespace for cross-namespace
+        # backendRefs. Add a namespace here for every app that gets a
+        # "<app>-public" HTTPRoute (see argocd/default.nix for the pattern).
+        resources.referenceGrants.public-ingress.spec = {
+          from = [
+            {
+              group = "gateway.networking.k8s.io";
+              kind = "HTTPRoute";
+              namespace = "argocd";
+            }
+          ];
+          to = [
+            {
+              group = "";
+              kind = "Service";
+              name = "envoy-gateway-apps";
             }
           ];
         };
