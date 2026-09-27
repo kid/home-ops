@@ -51,6 +51,7 @@
     };
     nixos-anywhere.url = "github:nix-community/nixos-anywhere/da83557d8b0bce57a52371b888ffd6d58724e55c";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts/da796090e8b34326a4aaf0c173df514f135b3907";
     sops-nix = {
       url = "github:Mic92/sops-nix/5efb5a6f4f5ab192817d28557dd4d650fa14d866";
       inputs.nixpkgs.follows = "nixpkgs";
