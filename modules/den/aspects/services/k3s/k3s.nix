@@ -76,6 +76,9 @@ in
             # back, losing per-container metrics. The kubelet normalizes
             # the bare path for CRI itself.
             "--container-runtime-endpoint=/run/containerd/containerd.sock"
+            "--etcd-expose-metrics"
+            "--kube-scheduler-arg=bind-address=0.0.0.0"
+            "--kube-controller-manager-arg=bind-address=0.0.0.0"
           ]
           ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}";
         };

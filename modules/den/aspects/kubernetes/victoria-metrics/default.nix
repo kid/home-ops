@@ -1,7 +1,27 @@
 _: {
   den.aspects.kubernetes.victoria-metrics.k8s-manifests =
-    { charts, cluster, ... }:
+    {
+      charts,
+      cluster,
+      lib,
+      k3s-nodes ? [ ],
+      ...
+    }:
     let
+      k3sNodeAddresses = map (n: n.address) (lib.filter (n: n.address != null) k3s-nodes);
+
+      mkStaticScrapeComponent = {
+        endpoints = k3sNodeAddresses;
+        vmScrape.spec.endpoints = [
+          {
+            bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+            port = "http-metrics";
+            scheme = "https";
+            tlsConfig.insecureSkipVerify = true;
+          }
+        ];
+      };
+
       mkRoute = hostname: {
         enabled = true;
         parentRefs = [
@@ -32,6 +52,12 @@ _: {
             fullnameOverride = "victoria-metrics";
 
             victoria-metrics-operator.admissionWebhooks.certManager.enabled = true;
+
+            coreDns.service.selector."k8s-app" = "coredns";
+
+            kubeScheduler = mkStaticScrapeComponent;
+            kubeControllerManager = mkStaticScrapeComponent;
+            kubeEtcd = mkStaticScrapeComponent;
 
             vmsingle = {
               spec = {
