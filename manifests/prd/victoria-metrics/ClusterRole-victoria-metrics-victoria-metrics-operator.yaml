@@ -9,6 +9,7 @@ rules:
   - nonResourceURLs:
       - /metrics
       - /metrics/resources
+      - /metrics/slis
     verbs:
       - get
       - watch
@@ -197,6 +198,9 @@ rules:
       - vmusers
       - vmusers/finalizers
       - vmusers/status
+      - vtagents
+      - vtagents/finalizers
+      - vtagents/status
       - vtclusters
       - vtclusters/finalizers
       - vtclusters/status

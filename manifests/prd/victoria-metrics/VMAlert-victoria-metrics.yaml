@@ -19,7 +19,7 @@ spec:
     http.pathPrefix: /
     remoteWrite.disablePathAppend: "true"
   image:
-    tag: v1.152.0
+    tag: v1.153.0
   notifiers:
     - url: http://vmalertmanager-victoria-metrics-0.vmalertmanager-victoria-metrics.monitoring.svc.cluster.local.:9093
   port: "8080"
