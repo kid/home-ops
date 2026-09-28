@@ -11,7 +11,7 @@
   };
 
   inputs = {
-    den.url = "github:denful/den/d0d80faa36f735c9390c1f6e0a3a481ae7ae31d0";
+    den.url = "github:denful/den/7594405b45e0ce2d5a418fe104a26e17f6b1dd8f";
     disko = {
       url = "github:AlexLov/disko/ff8702b4de27f72b4c78573dfb89ec74e36abdf1";
       inputs.nixpkgs.follows = "nixpkgs";
