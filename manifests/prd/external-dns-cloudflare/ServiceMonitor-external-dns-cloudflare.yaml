@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/instance: external-dns-cloudflare
+    app.kubernetes.io/name: external-dns
+  name: external-dns-cloudflare
+  namespace: external-dns-cloudflare
+spec:
+  endpoints:
+    - path: /metrics
+      port: http
+  jobLabel: app.kubernetes.io/instance
+  namespaceSelector:
+    matchNames:
+      - external-dns-cloudflare
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: external-dns-cloudflare
+      app.kubernetes.io/name: external-dns

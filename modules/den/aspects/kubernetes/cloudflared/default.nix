@@ -9,16 +9,12 @@
 _: {
   den.aspects.kubernetes.cloudflared.k8s-manifests =
     {
-      lib,
       charts,
       cluster,
       ...
     }:
     {
-      # Renders nothing until the one-time bootstrap terragrunt apply has
-      # happened and its tunnel_id output is copied into
-      # cluster.cloudflare.tunnelId — see cloudflared/terragrunt.nix.
-      applications.cloudflare-tunnel-gateway = lib.mkIf (cluster.cloudflare.tunnelId != null) {
+      applications.cloudflare-tunnel-gateway = {
         namespace = "cloudflare-tunnel-system";
 
         helm.releases.cloudflare-tunnel-gateway-controller = {

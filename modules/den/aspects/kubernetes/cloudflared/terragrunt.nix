@@ -1,5 +1,5 @@
-# Provisions the Cloudflare Tunnel, its credentials, and the one-time public
-# wildcard DNS record cloudflared/default.nix's controller relies on.
+# Provisions the Cloudflare Tunnel and its credentials cloudflared/default.nix's
+# controller relies on. DNS is external-dns-cloudflare's own terragrunt stack.
 _: {
   den.aspects.kubernetes.cloudflared."terragrunt-stacks" = { cluster, ... }: {
     stack = "cloudflared";
@@ -7,7 +7,6 @@ _: {
     inputs = {
       cluster_name = cluster.name;
       account_id = cluster.cloudflare.accountId;
-      cloudflare_zone_id = cluster.cloudflare.zoneId;
     };
   };
 }

@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/instance: cloudflare-tunnel-gateway-controller
+    app.kubernetes.io/name: cloudflare-tunnel-gateway-controller-proxy
+  name: cloudflare-tunnel-gateway-controller-proxy
+  namespace: cloudflare-tunnel-system
+spec:
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudflare-tunnel-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: cloudflare-tunnel-gateway-controller
+              app.kubernetes.io/name: cloudflare-tunnel-gateway-controller
+      ports:
+        - port: 8081
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: proxy
+      app.kubernetes.io/instance: cloudflare-tunnel-gateway-controller
+      app.kubernetes.io/name: cloudflare-tunnel-gateway-controller-proxy
+  policyTypes:
+    - Ingress

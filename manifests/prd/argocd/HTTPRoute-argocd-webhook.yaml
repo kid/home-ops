@@ -1,17 +1,19 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
+  labels:
+    home-ops.dev/public-dns: "true"
   name: argocd-webhook
   namespace: argocd
 spec:
   hostnames:
-    - argocd.kidibox.net
+    - argo-webhook.kidibox.net
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: apps
-      namespace: envoy-gateway-system
-      sectionName: https
+      name: cloudflare-tunnel
+      namespace: cloudflare-tunnel-system
+      sectionName: http
   rules:
     - backendRefs:
         - group: ""

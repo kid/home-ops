@@ -1,0 +1,11 @@
+apiVersion: cf.k8s.lex.la/v1alpha1
+kind: GatewayClassConfig
+metadata:
+  labels:
+    app.kubernetes.io/instance: cloudflare-tunnel-gateway-controller
+    app.kubernetes.io/name: cloudflare-tunnel-gateway-controller
+  name: cloudflare-tunnel-gateway-controller
+spec:
+  cloudflareCredentialsSecretRef:
+    name: cloudflare-tunnel-api-token
+  tunnelID: 00000000-0000-0000-0000-000000000000

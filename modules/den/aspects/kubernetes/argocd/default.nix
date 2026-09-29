@@ -195,11 +195,18 @@ in
             ];
           };
 
-          # Internet-facing: UI, still behind ArgoCD's own Authelia OIDC
-          # client (authelia/default.nix) — no forward-auth needed here.
-          # Forwards into Envoy's internal proxy Service so the request is
-          # routed/handled identically to LAN traffic.
-          resources.httpRoutes.argocd-public.spec = {
+          # Internet-facing: GitHub's webhook receiver only, on its own
+          # dedicated hostname — the UI stays internal-only (httpRoutes.argocd
+          # above), never on the public tunnel. Deliberately no
+          # SecurityPolicy; ArgoCD's own webhook.github.secret HMAC check
+          # (below) is the only guard. Goes straight to argocd-server: this
+          # hostname isn't shared with any other route, so there's nothing
+          # for Envoy to disambiguate — no need to route through it.
+          # Opts this route into external-dns-cloudflare, which only picks up
+          # HTTPRoutes carrying this label (modules/den/aspects/kubernetes/
+          # external-dns-cloudflare/default.nix).
+          resources.httpRoutes.argocd-webhook.metadata.labels."home-ops.dev/public-dns" = "true";
+          resources.httpRoutes.argocd-webhook.spec = {
             parentRefs = [
               {
                 group = "gateway.networking.k8s.io";
@@ -209,40 +216,7 @@ in
                 sectionName = "http";
               }
             ];
-            hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
-            rules = [
-              {
-                backendRefs = [
-                  {
-                    group = "";
-                    kind = "Service";
-                    name = "envoy-gateway-apps";
-                    namespace = "envoy-gateway-system";
-                    port = 443;
-                    weight = 1;
-                  }
-                ];
-              }
-            ];
-          };
-
-          # Internet-facing: GitHub's webhook receiver only, fully public —
-          # GitHub can't do an interactive SSO login. Deliberately no
-          # SecurityPolicy; ArgoCD's own webhook.github.secret HMAC check
-          # (below) is the only guard. A more specific path match on a
-          # separate HTTPRoute wins over httpRoutes.argocd's "/" rule
-          # regardless of object, same as argocd-grpc below.
-          resources.httpRoutes.argocd-webhook.spec = {
-            parentRefs = [
-              {
-                group = "gateway.networking.k8s.io";
-                kind = "Gateway";
-                name = "apps";
-                namespace = "envoy-gateway-system";
-                sectionName = "https";
-              }
-            ];
-            hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
+            hostnames = [ (cluster.methods.mkAppHostname "argo-webhook") ];
             rules = [
               {
                 matches = [

@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: cloudflare-tunnel-gateway-controller
+    app.kubernetes.io/name: cloudflare-tunnel-gateway-controller
+  name: cloudflare-tunnel-gateway-controller
+  namespace: cloudflare-tunnel-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: cloudflare-tunnel-gateway-controller
+      app.kubernetes.io/name: cloudflare-tunnel-gateway-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: cloudflare-tunnel-gateway-controller
+        app.kubernetes.io/name: cloudflare-tunnel-gateway-controller
+    spec:
+      containers:
+        - args:
+            - --controller-name=cf.k8s.lex.la/tunnel-controller
+            - --metrics-addr=:8080
+            - --health-addr=:8081
+            - --log-level=info
+            - --log-format=json
+            - --proxy-endpoints=http://cloudflare-tunnel-gateway-controller-proxy-headless.cloudflare-tunnel-system.svc.cluster.local:8081/config
+            - --proxy-image=ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller-proxy:3.5.0
+            - --proxy-auth-secret-ref=cloudflare-tunnel-system/cloudflare-tunnel-gateway-controller-proxy-auth-token
+            - --proxy-auth-secret-key=auth-token
+            - --proxy-auth-secret-generate=true
+            - --proxy-token-secret=cloudflare-tunnel-system/cloudflare-tunnel-connector-token
+            - --tunnel-protocol=auto
+            - --controller-pod-selector=app.kubernetes.io/instance=cloudflare-tunnel-gateway-controller,app.kubernetes.io/name=cloudflare-tunnel-gateway-controller
+            - --render-network-policy=true
+          env:
+            - name: CONTROLLER_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller:3.5.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+          name: cloudflare-tunnel-gateway-controller
+          ports:
+            - containerPort: 8080
+              name: metrics
+              protocol: TCP
+            - containerPort: 8081
+              name: health
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          startupProbe:
+            failureThreshold: 12
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: cloudflare-tunnel-gateway-controller
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: tmp

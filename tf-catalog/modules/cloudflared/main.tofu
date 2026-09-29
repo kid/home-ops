@@ -19,10 +19,6 @@ variable "account_id" {
   type = string
 }
 
-variable "cloudflare_zone_id" {
-  type = string
-}
-
 provider "onepassword" {}
 
 data "onepassword_vault" "home_ops_prd" {
@@ -38,18 +34,9 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "k8s" {
   config_src = "cloudflare"
 }
 
-# Covers every current and future exposed hostname with one static record —
-# see modules/den/aspects/kubernetes/cloudflared/default.nix. The controller's
-# own explicit per-app HTTPRoute allow-list is the real access boundary, not
-# this DNS record: an unlisted hostname still resolves but has no route.
-resource "cloudflare_dns_record" "tunnel_wildcard" {
-  zone_id = var.cloudflare_zone_id
-  name    = "*"
-  type    = "CNAME"
-  content = "${cloudflare_zero_trust_tunnel_cloudflared.k8s.id}.cfargotunnel.com"
-  proxied = true
-  ttl     = 1
-}
+# DNS is external-dns-cloudflare's job (see
+# tf-catalog/modules/external-dns-cloudflare and modules/den/aspects/
+# kubernetes/external-dns-cloudflare) — no DNS record here.
 
 # TODO: confirm the exact permission group name at apply time (same caveat
 # as tf-catalog/modules/cert-manager's own DNS-Write lookup).
@@ -105,7 +92,7 @@ resource "onepassword_item" "cloudflared_credentials" {
 
 # The one value a human copies once into cluster.cloudflare.tunnelId
 # (modules/den/schema/clusters.nix) after the bootstrap apply — not sensitive
-# on its own, since it ends up published in the wildcard DNS CNAME anyway.
+# on its own, since it ends up published in public DNS CNAMEs anyway.
 output "tunnel_id" {
   value = cloudflare_zero_trust_tunnel_cloudflared.k8s.id
 }
