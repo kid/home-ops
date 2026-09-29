@@ -69,8 +69,7 @@ resource "cloudflare_account_token" "tunnel_gateway" {
 }
 
 # The connector token the in-cluster proxy authenticates with
-# (proxy.tunnelTokenSecretRef). TODO: confirm the exact resource/data-source
-# name against the pinned provider at apply time.
+# (proxy.tunnelTokenSecretRef).
 data "cloudflare_zero_trust_tunnel_cloudflared_token" "k8s" {
   account_id = var.account_id
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.k8s.id

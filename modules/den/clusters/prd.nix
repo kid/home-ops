@@ -95,9 +95,7 @@ in
     cloudflare = {
       accountId = "fadfc390b1e5fb0ce019b9f7a8917d42";
       zoneId = "dba2b63221015f1957d718defbf6b871";
-      # TODO: replace with the real `terragrunt output tunnel_id` from the
-      # cloudflared stack after its one-time bootstrap apply.
-      tunnelId = "00000000-0000-0000-0000-000000000000";
+      tunnelId = "35161cfa-48b9-45eb-ac15-0574ec58fb7f";
     };
 
     networks = {
