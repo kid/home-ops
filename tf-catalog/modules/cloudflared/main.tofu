@@ -28,20 +28,11 @@ data "onepassword_vault" "home_ops_prd" {
 resource "cloudflare_zero_trust_tunnel_cloudflared" "k8s" {
   account_id = var.account_id
   name       = "k8s-${var.cluster_name}"
-  # The lexfrei/cloudflare-tunnel-gateway-controller in-cluster controller
-  # manages ingress registration itself via the Cloudflare API on every
-  # Gateway API route change, not a local cloudflared config file.
   config_src = "cloudflare"
 }
 
-# DNS is external-dns-cloudflare's job (see
-# tf-catalog/modules/external-dns-cloudflare and modules/den/aspects/
-# kubernetes/external-dns-cloudflare) — no DNS record here.
-
-# An exact `name` filter here ("Cloudflare Tunnel") returned an empty result
-# against the real API — Cloudflare's own naming/casing for this group isn't
-# documented reliably enough to hardcode. List everything instead and match
-# on a case-insensitive substring, so exact spelling/casing doesn't matter.
+# Matches on a substring since Cloudflare's exact permission-group name
+# isn't reliable to hardcode (an exact-name lookup returned empty).
 data "cloudflare_account_api_token_permission_groups_list" "account_all" {
   account_id = var.account_id
 }
@@ -68,8 +59,6 @@ resource "cloudflare_account_token" "tunnel_gateway" {
   }]
 }
 
-# The connector token the in-cluster proxy authenticates with
-# (proxy.tunnelTokenSecretRef).
 data "cloudflare_zero_trust_tunnel_cloudflared_token" "k8s" {
   account_id = var.account_id
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.k8s.id
@@ -97,9 +86,6 @@ resource "onepassword_item" "cloudflared_credentials" {
   }
 }
 
-# The one value a human copies once into cluster.cloudflare.tunnelId
-# (modules/den/schema/clusters.nix) after the bootstrap apply — not sensitive
-# on its own, since it ends up published in public DNS CNAMEs anyway.
 output "tunnel_id" {
   value = cloudflare_zero_trust_tunnel_cloudflared.k8s.id
 }

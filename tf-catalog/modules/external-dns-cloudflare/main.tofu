@@ -29,8 +29,6 @@ data "onepassword_vault" "home_ops_prd" {
   name = "home-ops-prd"
 }
 
-# Same "DNS Write" lookup as tf-catalog/modules/cert-manager's own, already
-# proven correct there — this mirrors it with its own, separate token.
 data "cloudflare_account_api_token_permission_groups_list" "dns_write" {
   account_id = var.account_id
   name       = "DNS%20Write"

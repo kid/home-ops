@@ -1,15 +1,8 @@
-# Second external-dns instance: Cloudflare's own zone, for apps opted into
-# the public internet via cloudflared/default.nix's tunnel Gateway. Separate
-# from external-dns/default.nix (Mikrotik provider, internal split-horizon
-# DNS) — different backend, different credential, different policy.
 _: {
   den.aspects.kubernetes.external-dns-cloudflare.k8s-manifests =
     { charts, cluster, ... }:
     {
       applications.external-dns-cloudflare = {
-        # Shares the namespace with the Mikrotik instance
-        # (external-dns/default.nix) — same pattern as cert-manager +
-        # trust-manager, handled by nixidy-defaults.nix's namespace creation.
         namespace = "external-dns";
 
         helm.releases.external-dns-cloudflare = {
@@ -23,9 +16,6 @@ _: {
             registry = "txt";
             txtOwnerId = cluster.name;
             domainFilters = [ cluster.domain ];
-            # Not "sync" like the Mikrotik instance: this writes to the real
-            # public zone, so removing an app's opt-in label must not
-            # auto-delete its public record — cleanup is a manual step.
             policy = "upsert-only";
 
             provider.name = "cloudflare";
@@ -41,12 +31,7 @@ _: {
             ];
 
             extraArgs = [
-              # Cloudflare Tunnel only routes proxied ("orange-cloud") records.
               "--cloudflare-proxied"
-              # The real per-app opt-in gate: only HTTPRoutes carrying this
-              # label get a public DNS record. Without it this instance would
-              # otherwise pick up every gateway-httproute in the cluster,
-              # including ones bound to the internal "apps" Gateway.
               "--label-filter=home-ops.dev/public-dns=true"
             ];
           };

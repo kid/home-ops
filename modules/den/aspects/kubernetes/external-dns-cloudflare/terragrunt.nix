@@ -1,5 +1,3 @@
-# Provisions the Cloudflare DNS-Write API token external-dns-cloudflare's
-# Deployment reads (see default.nix).
 _: {
   den.aspects.kubernetes.external-dns-cloudflare."terragrunt-stacks" = { cluster, ... }: {
     stack = "external-dns-cloudflare";
