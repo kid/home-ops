@@ -195,51 +195,6 @@ in
             ];
           };
 
-          # Internet-facing: GitHub's webhook receiver only, on its own
-          # dedicated hostname — the UI stays internal-only (httpRoutes.argocd
-          # above), never on the public tunnel. Deliberately no
-          # SecurityPolicy; ArgoCD's own webhook.github.secret HMAC check
-          # (below) is the only guard. Goes straight to argocd-server: this
-          # hostname isn't shared with any other route, so there's nothing
-          # for Envoy to disambiguate — no need to route through it.
-          # Opts this route into external-dns-cloudflare, which only picks up
-          # HTTPRoutes carrying this label (modules/den/aspects/kubernetes/
-          # external-dns-cloudflare/default.nix).
-          resources.httpRoutes.argocd-webhook.metadata.labels."home-ops.dev/public-dns" = "true";
-          resources.httpRoutes.argocd-webhook.spec = {
-            parentRefs = [
-              {
-                group = "gateway.networking.k8s.io";
-                kind = "Gateway";
-                name = "cloudflare-tunnel";
-                namespace = "cloudflare-tunnel-system";
-                sectionName = "http";
-              }
-            ];
-            hostnames = [ (cluster.methods.mkAppHostname "argo-webhook") ];
-            rules = [
-              {
-                matches = [
-                  {
-                    path = {
-                      type = "PathPrefix";
-                      value = "/api/webhook";
-                    };
-                  }
-                ];
-                backendRefs = [
-                  {
-                    group = "";
-                    kind = "Service";
-                    name = "argocd-server";
-                    port = 443;
-                    weight = 1;
-                  }
-                ];
-              }
-            ];
-          };
-
           resources.grpcRoutes.argocd-grpc.spec = {
             parentRefs = [
               {
@@ -274,28 +229,6 @@ in
                     weight = 1;
                   }
                 ];
-              }
-            ];
-          };
-
-          # ArgoCD's webhook.github.secret HMAC check is its only guard on
-          # /api/webhook now that it's public — nothing needed this before,
-          # since the endpoint was LAN-only. The item must be created by hand
-          # in 1Password before this syncs.
-          resources.externalSecrets.argocd-github-webhook.spec = {
-            secretStoreRef = {
-              name = "onepassword";
-              kind = "ClusterSecretStore";
-            };
-            target = {
-              name = "argocd-secret";
-              creationPolicy = "Merge";
-              template.data."webhook.github.secret" = "{{ .githubWebhookSecret }}";
-            };
-            data = [
-              {
-                secretKey = "githubWebhookSecret";
-                remoteRef.key = "argocd/secrets/github-webhook-secret";
               }
             ];
           };
