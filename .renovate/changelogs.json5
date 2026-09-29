@@ -16,7 +16,7 @@
       matchManagers: ["custom.regex"],
       matchDatasources: ["git-refs"],
       matchUpdateTypes: ["digest"],
-      changelogUrl: "{{packageName}}/compare/{{currentDigest}}..{{newDigest}}",
+      changelogUrl: "{{packageName}}/compare/{{currentDigest}}...{{newDigest}}",
     },
   ],
 }
