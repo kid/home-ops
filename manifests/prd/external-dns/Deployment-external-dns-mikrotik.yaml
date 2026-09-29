@@ -39,6 +39,7 @@ spec:
             - --managed-record-types=A
             - --managed-record-types=CNAME
             - --managed-record-types=TXT
+            - --label-filter=!home-ops.dev/public-dns
           image: registry.k8s.io/external-dns/external-dns:v0.22.0
           imagePullPolicy: IfNotPresent
           livenessProbe:

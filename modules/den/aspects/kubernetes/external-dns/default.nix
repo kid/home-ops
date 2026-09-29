@@ -111,6 +111,7 @@ in
               "--managed-record-types=A"
               "--managed-record-types=CNAME"
               "--managed-record-types=TXT"
+              "--label-filter=!home-ops.dev/public-dns"
             ];
           };
         };
