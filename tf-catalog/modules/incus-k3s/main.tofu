@@ -121,6 +121,10 @@ resource "incus_instance" "k3s" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [image]
+  }
+
   device {
     name = "eth0"
     type = "nic"

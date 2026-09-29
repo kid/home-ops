@@ -67,7 +67,7 @@ let
         nodes."k3s-${cluster.name}-0" = {
           nixos_attr = "k3s-${cluster.name}-0";
           cpu = 4;
-          memory = "8GiB";
+          memory = "16GiB";
           disk_size = "40GiB";
           mac = "52:54:00:40:00:01";
           extra_disks.miroir-data.size = "20GiB";
