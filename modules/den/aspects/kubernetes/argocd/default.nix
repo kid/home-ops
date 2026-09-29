@@ -280,8 +280,9 @@ in
 
           # ArgoCD's webhook.github.secret HMAC check is its only guard on
           # /api/webhook now that it's public — nothing needed this before,
-          # since the endpoint was LAN-only. The item must be created by hand
-          # in 1Password before this syncs.
+          # since the endpoint was LAN-only. The 1Password item and the
+          # actual GitHub webhook registration are both provisioned by
+          # argocd/terragrunt.nix's terraform stack.
           resources.externalSecrets.argocd-github-webhook.spec = {
             secretStoreRef = {
               name = "onepassword";
