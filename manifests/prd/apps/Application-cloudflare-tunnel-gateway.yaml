@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudflare-tunnel-gateway
+  namespace: argocd
+spec:
+  destination:
+    namespace: cloudflare-tunnel-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./manifests/prd/cloudflare-tunnel-gateway
+    repoURL: https://github.com/kid/home-ops.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+      limit: 10
+    syncOptions:
+      - ServerSideApply=true

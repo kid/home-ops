@@ -95,6 +95,7 @@ in
     cloudflare = {
       accountId = "fadfc390b1e5fb0ce019b9f7a8917d42";
       zoneId = "dba2b63221015f1957d718defbf6b871";
+      tunnelId = "35161cfa-48b9-45eb-ac15-0574ec58fb7f";
     };
 
     networks = {
@@ -158,6 +159,8 @@ in
       victoria-metrics
       grafana-operator
       grafana-oidc
+      cloudflared
+      external-dns-cloudflare
     ])
     ++ [ incusTerragruntAspect ];
 
