@@ -24,7 +24,7 @@
         nixpkgs.follows = "nixpkgs";
       };
     };
-    flake-file.url = "github:denful/flake-file/de3e0fcfe03b1af5d36b95952f216ea9ba087c8a";
+    flake-file.url = "github:denful/flake-file/91280a19eede3b3035e3889a3523c27e8fc07886";
     flake-parts = {
       url = "github:hercules-ci/flake-parts/31729ca8cbdb4fa927b34e5f4353e6a83f39e993";
       inputs.nixpkgs-lib.follows = "nixpkgs";
