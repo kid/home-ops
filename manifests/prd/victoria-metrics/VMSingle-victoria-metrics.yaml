@@ -11,7 +11,7 @@ spec:
   extraArgs:
     vmalert.proxyURL: http://vmalert-victoria-metrics.monitoring.svc.cluster.local.:8080
   image:
-    tag: v1.152.0
+    tag: v1.153.0
   port: "8428"
   replicaCount: 1
   retentionPeriod: 30d
