@@ -33,24 +33,12 @@ variable "webhook_hostname" {
 
 provider "onepassword" {}
 
-data "onepassword_vault" "home_ops" {
-  name = "home-ops"
-}
-
 data "onepassword_vault" "home_ops_prd" {
   name = "home-ops-prd"
 }
 
-# Fine-grained PAT, scoped to just this repo's "Webhooks: Read and write"
-# permission — minted by hand, kept in 1Password. Terraform can't bootstrap
-# this itself: there's no API to create a GitHub token from nothing.
-data "onepassword_item" "github_webhook_token" {
-  vault = data.onepassword_vault.home_ops.uuid
-  title = "github-webhook-token"
-}
-
+# No token set: falls back to `gh auth token` on the machine running apply.
 provider "github" {
-  token = data.onepassword_item.github_webhook_token.password
   owner = var.github_owner
 }
 
@@ -59,8 +47,7 @@ resource "random_password" "argocd_github_webhook" {
   special = false
 }
 
-# title/section/field here must match argocd/default.nix's ExternalSecret
-# remoteRef.key ("argocd/secrets/github-webhook-secret") exactly.
+# Must match argocd/default.nix's ExternalSecret remoteRef.key.
 resource "onepassword_item" "argocd_github_webhook_secret" {
   vault    = data.onepassword_vault.home_ops_prd.uuid
   title    = "argocd"

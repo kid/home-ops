@@ -233,16 +233,6 @@ in
             ];
           };
 
-          # Internet-facing: GitHub's webhook receiver only, on its own
-          # dedicated hostname — the UI stays internal-only (httpRoutes.argocd
-          # above), never on the public tunnel. Deliberately no
-          # SecurityPolicy; ArgoCD's own webhook.github.secret HMAC check
-          # (below) is the only guard. Goes straight to argocd-server: this
-          # hostname isn't shared with any other route, so there's nothing
-          # for Envoy to disambiguate — no need to route through it.
-          # Opts this route into external-dns-cloudflare, which only picks up
-          # HTTPRoutes carrying this label (modules/den/aspects/kubernetes/
-          # external-dns-cloudflare/default.nix).
           resources.httpRoutes.argocd-webhook.metadata.labels."home-ops.dev/public-dns" = "true";
           resources.httpRoutes.argocd-webhook.spec = {
             parentRefs = [
@@ -278,11 +268,6 @@ in
             ];
           };
 
-          # ArgoCD's webhook.github.secret HMAC check is its only guard on
-          # /api/webhook now that it's public — nothing needed this before,
-          # since the endpoint was LAN-only. The 1Password item and the
-          # actual GitHub webhook registration are both provisioned by
-          # argocd/terragrunt.nix's terraform stack.
           resources.externalSecrets.argocd-github-webhook.spec = {
             secretStoreRef = {
               name = "onepassword";
