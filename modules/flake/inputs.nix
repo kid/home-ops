@@ -17,7 +17,7 @@ _: {
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    den.url = "github:denful/den/d0d80faa36f735c9390c1f6e0a3a481ae7ae31d0";
+    den.url = "github:denful/den/7594405b45e0ce2d5a418fe104a26e17f6b1dd8f";
 
     flake-file.url = "github:denful/flake-file/91280a19eede3b3035e3889a3523c27e8fc07886";
 
