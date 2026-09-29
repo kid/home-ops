@@ -31,16 +31,14 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "k8s" {
   config_src = "cloudflare"
 }
 
-# Matches on a substring since Cloudflare's exact permission-group name
-# isn't reliable to hardcode (an exact-name lookup returned empty).
 data "cloudflare_account_api_token_permission_groups_list" "account_all" {
   account_id = var.account_id
 }
 
 locals {
-  tunnel_edit_permission_group_id = [
+  tunnel_write_permission_group_id = [
     for pg in data.cloudflare_account_api_token_permission_groups_list.account_all.result :
-    pg.id if length(regexall("(?i)tunnel", pg.name)) > 0
+    pg.id if pg.name == "Cloudflare Tunnel Write"
   ][0]
 }
 
@@ -51,7 +49,7 @@ resource "cloudflare_account_token" "tunnel_gateway" {
   policies = [{
     effect = "allow"
     permission_groups = [
-      { id = local.tunnel_edit_permission_group_id }
+      { id = local.tunnel_write_permission_group_id }
     ]
     resources = jsonencode({
       "com.cloudflare.api.account.${var.account_id}" = "*"
