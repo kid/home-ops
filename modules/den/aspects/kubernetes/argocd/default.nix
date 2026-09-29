@@ -195,6 +195,44 @@ in
             ];
           };
 
+          resources.grpcRoutes.argocd-grpc.spec = {
+            parentRefs = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
+                name = "apps";
+                namespace = "envoy-gateway-system";
+                sectionName = "https";
+              }
+            ];
+            hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
+            rules = [
+              {
+                # Without a match this ties with the HTTPRoute on /, which is listed first, so gRPC never got here.
+                matches = [
+                  {
+                    headers = [
+                      {
+                        name = "Content-Type";
+                        type = "RegularExpression";
+                        value = "^application/grpc.*$";
+                      }
+                    ];
+                  }
+                ];
+                backendRefs = [
+                  {
+                    group = "";
+                    kind = "Service";
+                    name = "argocd-server";
+                    port = 443;
+                    weight = 1;
+                  }
+                ];
+              }
+            ];
+          };
+
           # Internet-facing: GitHub's webhook receiver only, on its own
           # dedicated hostname — the UI stays internal-only (httpRoutes.argocd
           # above), never on the public tunnel. Deliberately no
@@ -225,44 +263,6 @@ in
                       type = "PathPrefix";
                       value = "/api/webhook";
                     };
-                  }
-                ];
-                backendRefs = [
-                  {
-                    group = "";
-                    kind = "Service";
-                    name = "argocd-server";
-                    port = 443;
-                    weight = 1;
-                  }
-                ];
-              }
-            ];
-          };
-
-          resources.grpcRoutes.argocd-grpc.spec = {
-            parentRefs = [
-              {
-                group = "gateway.networking.k8s.io";
-                kind = "Gateway";
-                name = "apps";
-                namespace = "envoy-gateway-system";
-                sectionName = "https";
-              }
-            ];
-            hostnames = [ (cluster.methods.mkAppHostname "argocd") ];
-            rules = [
-              {
-                # Without a match this ties with the HTTPRoute on /, which is listed first, so gRPC never got here.
-                matches = [
-                  {
-                    headers = [
-                      {
-                        name = "Content-Type";
-                        type = "RegularExpression";
-                        value = "^application/grpc.*$";
-                      }
-                    ];
                   }
                 ];
                 backendRefs = [
