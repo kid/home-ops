@@ -7,7 +7,10 @@ _: {
     { charts, cluster, ... }:
     {
       applications.external-dns-cloudflare = {
-        namespace = "external-dns-cloudflare";
+        # Shares the namespace with the Mikrotik instance
+        # (external-dns/default.nix) — same pattern as cert-manager +
+        # trust-manager, handled by nixidy-defaults.nix's namespace creation.
+        namespace = "external-dns";
 
         helm.releases.external-dns-cloudflare = {
           chart = charts.kubernetes-sigs.external-dns;

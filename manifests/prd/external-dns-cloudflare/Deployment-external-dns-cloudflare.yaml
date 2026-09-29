@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/instance: external-dns-cloudflare
     app.kubernetes.io/name: external-dns
   name: external-dns-cloudflare
-  namespace: external-dns-cloudflare
+  namespace: external-dns
 spec:
   replicas: 1
   selector:

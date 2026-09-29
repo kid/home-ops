@@ -38,11 +38,19 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "k8s" {
 # tf-catalog/modules/external-dns-cloudflare and modules/den/aspects/
 # kubernetes/external-dns-cloudflare) — no DNS record here.
 
-# TODO: confirm the exact permission group name at apply time (same caveat
-# as tf-catalog/modules/cert-manager's own DNS-Write lookup).
-data "cloudflare_account_api_token_permission_groups_list" "tunnel_edit" {
+# An exact `name` filter here ("Cloudflare Tunnel") returned an empty result
+# against the real API — Cloudflare's own naming/casing for this group isn't
+# documented reliably enough to hardcode. List everything instead and match
+# on a case-insensitive substring, so exact spelling/casing doesn't matter.
+data "cloudflare_account_api_token_permission_groups_list" "account_all" {
   account_id = var.account_id
-  name       = "Cloudflare%20Tunnel"
+}
+
+locals {
+  tunnel_edit_permission_group_id = [
+    for pg in data.cloudflare_account_api_token_permission_groups_list.account_all.result :
+    pg.id if length(regexall("(?i)tunnel", pg.name)) > 0
+  ][0]
 }
 
 resource "cloudflare_account_token" "tunnel_gateway" {
@@ -52,7 +60,7 @@ resource "cloudflare_account_token" "tunnel_gateway" {
   policies = [{
     effect = "allow"
     permission_groups = [
-      { id = data.cloudflare_account_api_token_permission_groups_list.tunnel_edit.result[0].id }
+      { id = local.tunnel_edit_permission_group_id }
     ]
     resources = jsonencode({
       "com.cloudflare.api.account.${var.account_id}" = "*"
