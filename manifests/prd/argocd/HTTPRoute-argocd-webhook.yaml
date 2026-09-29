@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    home-ops.dev/public-dns: "true"
+  name: argocd-webhook
+  namespace: argocd
+spec:
+  hostnames:
+    - argo-webhook.kidibox.net
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: cloudflare-tunnel
+      namespace: cloudflare-tunnel-system
+      sectionName: http
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: argocd-server
+          port: 443
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /api/webhook

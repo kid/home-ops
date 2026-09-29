@@ -232,6 +232,59 @@ in
               }
             ];
           };
+
+          resources.httpRoutes.argocd-webhook.metadata.labels."home-ops.dev/public-dns" = "true";
+          resources.httpRoutes.argocd-webhook.spec = {
+            parentRefs = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
+                name = "cloudflare-tunnel";
+                namespace = "cloudflare-tunnel-system";
+                sectionName = "http";
+              }
+            ];
+            hostnames = [ (cluster.methods.mkAppHostname "argo-webhook") ];
+            rules = [
+              {
+                matches = [
+                  {
+                    path = {
+                      type = "PathPrefix";
+                      value = "/api/webhook";
+                    };
+                  }
+                ];
+                backendRefs = [
+                  {
+                    group = "";
+                    kind = "Service";
+                    name = "argocd-server";
+                    port = 443;
+                    weight = 1;
+                  }
+                ];
+              }
+            ];
+          };
+
+          resources.externalSecrets.argocd-github-webhook.spec = {
+            secretStoreRef = {
+              name = "onepassword";
+              kind = "ClusterSecretStore";
+            };
+            target = {
+              name = "argocd-secret";
+              creationPolicy = "Merge";
+              template.data."webhook.github.secret" = "{{ .githubWebhookSecret }}";
+            };
+            data = [
+              {
+                secretKey = "githubWebhookSecret";
+                remoteRef.key = "argocd/secrets/github-webhook-secret";
+              }
+            ];
+          };
         };
       };
     };
