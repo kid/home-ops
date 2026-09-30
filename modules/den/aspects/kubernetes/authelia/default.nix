@@ -321,14 +321,16 @@ in
               };
             };
 
+            # Public, through the Cloudflare tunnel: it is also the login for apps exposed there.
+            httpRoutes.authelia.metadata.labels."home-ops.dev/public-dns" = "true";
             httpRoutes.authelia.spec = {
               parentRefs = [
                 {
                   group = "gateway.networking.k8s.io";
                   kind = "Gateway";
-                  name = "apps";
-                  namespace = "envoy-gateway-system";
-                  sectionName = "https";
+                  name = "cloudflare-tunnel";
+                  namespace = "cloudflare-tunnel-system";
+                  sectionName = "http";
                 }
               ];
               hostnames = [ (cluster.methods.mkAppHostname "auth") ];
