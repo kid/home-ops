@@ -1,8 +1,9 @@
 # AGENTS.md
 
-Personal home infrastructure-as-code: a Nix flake that generates RouterOS
-Terragrunt stacks and Kubernetes manifests, plus NixOS host configs
-installed onto real hardware. There is no build/test/lint in the
+Personal home infrastructure-as-code: a Nix flake that generates
+Terragrunt stacks (RouterOS network config, plus per-cluster Incus/
+Cloudflare/1Password/GitHub plumbing) and Kubernetes manifests, plus NixOS
+host configs for a bare-metal box and the k3s VM it runs. There is no build/test/lint in the
 conventional software sense — `nix flake check` is the whole verification
 surface.
 
@@ -12,26 +13,35 @@ surface.
 ## Commands
 
 - `nix develop` (or let direnv do it) — devshell with `terragrunt`, `opentofu`, `talosctl`, `kubectl`, `sops`, `age`, `just`, etc.
-- `nix flake check --print-build-logs` — the only "test". Runs treefmt's formatting check, `checks.terragrunt` (tf-stacks drift), `checks.manifests` (manifests/ drift), `checks.docs` (docs/clusters drift), and the flake's own evaluation. This is exactly what CI (`.github/workflows/nix-flake-check.yaml`) runs on every PR.
-- `nix run .#write-terragrunt` — regenerate `tf-stacks/prd/network/**/terragrunt.hcl` from Nix. Run after editing any `"terragrunt-stacks"` aspect content or a device's `terragruntInputs`.
-- `nix run .#write-manifests` — regenerate `manifests/prd/**` from nixidy. Run after editing any `k8s-manifests` aspect content.
+- `nix flake check --print-build-logs` — the only "test". Runs treefmt's formatting check, `checks.terragrunt` (tf-stacks drift), `checks.manifests` (manifests/ drift), `checks.docs` (docs/clusters drift), `checks.sops-config` (`.sops.yaml` drift), and the flake's own evaluation. This is exactly what CI (`.github/workflows/nix-flake-check.yaml`) runs on every PR.
+- `nix run .#write-terragrunt` — regenerate `tf-stacks/prd/{network,k3s}/**/terragrunt.hcl` from Nix. Run after editing any `"terragrunt-stacks"` aspect content or a device's `terragruntInputs`.
+- `nix run .#write-sops-config` — regenerate `.sops.yaml` (human recipients from `den.users.registry`, plus path-scoped rules for `secrets/hosts/<host>/` and `secrets/clusters/<cluster>/`). Run after adding a user SSH key, a host key, or a cluster member host.
+- `nix run .#provision-host-key <host>` — generate a host's ed25519 SSH key, sops-encrypt it into `secrets/hosts/<host>/` (plus `.pub` and `.age-pub`), then run `write-sops-config`. `nixos-anywhere-install` injects it so the host has its final identity from first boot.
+- `nix run .#write-manifests` — regenerate `manifests/prd/**` from nixidy. Run after editing any `k8s-manifests` aspect content or a `charts/` pin.
 - `nix run .#write-docs` — regenerate `docs/clusters/<name>.md` (the kubectl login commands) from Nix. Run after changing a cluster's `methods.kubeLogin` (`modules/den/aspects/kubernetes/apiserver/default.nix`).
 - `nix run .#nixos-anywhere-install <host> <ssh-target>` — kexec-based remote NixOS install straight onto real hardware for a `den.hosts` entry (e.g. `nixos-anywhere-install node1 root@10.0.10.10`).
 - `deploy <host> [switch|boot|test|build]` (mode defaults to `switch`) — ongoing config push to an already-installed `den.hosts` entry over SSH via `nh os <mode> --target-host`, e.g. `deploy node1` or `deploy node1 boot` (host must first exist via `nixos-anywhere-install`). Hosts opt in via `fleet.nh.targets.<name>` (not every `den.hosts` entry — `test-vm` isn't).
 - `nix run .#refresh-nix-hash -- <file> <dep-name> <new-value>` — recompute the hash next to a pin after bumping its version by hand: `fetchFromGitHub` pins (`refresh-nix-hash modules/den/aspects/kubernetes/argocd/default.nix argoproj/argo-cd v3.4.5`) or `charts/<org>/<chart>/default.nix` pins (delegates to `helmupdater rehash`; the last two args are unused). Renovate's self-hosted run (`.github/workflows/renovate.yaml`) calls this, then `write-manifests --skip-secrets`, via `postUpgradeTasks` for every `# renovate: datasource=github-releases` pin and every `charts/` pin — the hash must change whenever the version does, or Nix silently keeps serving the old content.
-- `write-terragrunt`, `write-manifests`, `nixos-anywhere-install`, `deploy`, `write-flake`, `write-lock`, `write-inputs`, `refresh-nix-hash` are all available directly as commands inside `nix develop`, not just via `nix run .#<name>`.
+- `helmupdater init|update|update-all|rehash` — add or bump a Helm chart pin under `charts/<org>/<chart>/default.nix` (see `charts/README.md`), then `write-manifests`.
+- `write-terragrunt`, `write-manifests`, `write-sops-config`, `provision-host-key`, `nixos-anywhere-install`, `deploy`, `write-flake`, `write-lock`, `write-inputs`, `refresh-nix-hash`, `helmupdater`, `mcp-victoriametrics`, `mcp-victorialogs` are all available directly as commands inside `nix develop`, not just via `nix run .#<name>`.
 - `treefmt` — formats everything (`nixfmt`, `deadnix`, `statix`, `hclfmt`, `terraform` for `*.tofu`/`*.tfvars`/`*.tftest.hcl`, `yamlfmt`, `just`). `*.sops.*` and `manifests/**` are excluded. Runs automatically pre-commit via git-hooks-nix; the full `nix flake check` runs pre-push instead (kept off pre-commit for speed).
 - `.pre-commit-config.yaml` is a generated symlink into the Nix store — never hand-edit it.
-- Terragrunt `plan`/`apply` happen by hand, from inside `tf-stacks/prd/network/<device>[/<stack>]/`, only after `write-terragrunt` + human review of the diff. Never automate an apply.
+- Terragrunt `plan`/`apply` happen by hand, from inside `tf-stacks/prd/network/<device>[/<stack>]/` or `tf-stacks/prd/k3s/<stack>/`, only after `write-terragrunt` + human review of the diff. Never automate an apply.
+- `.mcp.json` wires the VictoriaMetrics/VictoriaLogs MCP servers (`pkgs/by-name/mcp-*`, only on `PATH` inside the devshell) against the live `metrics.kidibox.net`/`logs.kidibox.net` — use them to inspect the running cluster.
 
-**Generated output — never hand-edit:** `tf-stacks/prd/network/**/terragrunt.hcl`, `manifests/prd/**` (its own `README.md` says so too) and `docs/clusters/**`. Edit the Nix source under `modules/` and regenerate with the commands above. Each has a `nix flake check` drift check that fails CI if the committed file doesn't match a fresh render.
+**Generated output — never hand-edit:** `tf-stacks/prd/{network,k3s}/**/terragrunt.hcl`, `manifests/prd/**` (its own `README.md` says so too), `docs/clusters/**` and `.sops.yaml`. Edit the Nix source under `modules/` and regenerate with the commands above. Each has a `nix flake check` drift check that fails CI if the committed file doesn't match a fresh render.
 
 ## Repo shape
 
 - `modules/`: the dendritic Nix module tree — everything below lives here.
-- `tf-stacks/`: `root.hcl` (SOPS-decrypted Cloudflare R2 remote-state config) plus the generated `prd/network/**/terragrunt.hcl` leaves.
+- `tf-stacks/`: `root.hcl` (SOPS-decrypted Cloudflare R2 remote-state config) plus the generated `prd/network/<device>/**` (RouterOS) and `prd/k3s/<stack>/` (cluster-owned) `terragrunt.hcl` leaves.
+- `tf-catalog/modules/`: this repo's own OpenTofu modules (`*.tofu`) for cluster-owned stacks — Incus VLAN/VM (`incus-k3s*`, `incus-*`), and the Cloudflare/1Password/GitHub plumbing for `argocd`, `authelia`, `cert-manager`, `cloudflared`, `external-dns*`, `kopiur-r2`. Sourced by path (`localModule`), so edit them in place — unlike the RouterOS `ros-*` modules in the private catalog repo.
+- `charts/<org>/<chart>/default.nix`: pinned Helm charts (`{ repo; chart; version; chartHash; }`), loaded by `modules/flake/charts.nix` and consumed by app aspects as `charts.<org>.<chart>`. See `charts/README.md`.
+- `pkgs/by-name/<name>/package.nix`: small local packages, auto-loaded as `packages.<name>` (`modules/flake/pkgs.nix`).
 - `manifests/prd/`: nixidy-generated Kubernetes manifests, synced to the live cluster by ArgoCD.
-- `secrets/`: SOPS-encrypted files (`cloudflare.sops.yaml`, per-environment `routeros.sops.yaml`, `proxmox.sops.yaml`). RouterOS device auth itself has moved off SOPS onto 1Password vault/item references (`op_vault`, `op_item_routeros`, etc. in each device's inputs) — per-user passwords live only in 1Password, never in Nix.
+- `docs/clusters/`: generated per-cluster docs (kubectl OIDC login commands).
+- `secrets/`: SOPS-encrypted files — `cloudflare.sops.yaml`, per-environment `{prd,dev}/routeros.sops.yaml`, `proxmox.sops.yaml`, per-host SSH host keys in `hosts/<host>/`, and cluster-scoped secrets in `clusters/<cluster>/` (today just the 1Password service-account token, decrypted on the k3s node by sops-nix). RouterOS device auth itself has moved off SOPS onto 1Password vault/item references (`op_vault`, `op_item_routeros`, etc. in each device's inputs) — per-user passwords live only in 1Password, never in Nix. In-cluster secrets come from 1Password via external-secrets (`ExternalSecret`s against the `onepassword` `ClusterSecretStore`, vault = `den.clusters.<name>.secrets.onepasswordVault`); no `SopsSecret` manifests remain (the sops-operator path is retired).
+- `.agents/skills/`: repo-local agent skills (`skills-lock.json` pins upstream ones). `talos-zfs-pool-expand` describes the retired Talos cluster, not the current k3s setup.
 
 ## The `den` entity/aspect model
 
@@ -39,9 +49,9 @@ surface.
 core abstraction spanning most of `modules/`. Not obvious from any single
 file, so read this before touching anything under `modules/den/`, which
 holds every den entity, den plumbing file, and aspect: entity instance
-data as flat files `modules/den/{environments,networks,clusters,devices,
+data as flat files `modules/den/{environments,networks,devices,
 groups}.nix` (each a single-instance registry) or directories
-`modules/den/{routerosDevices,hosts,users}/` (multiple instances), den
+`modules/den/{routerosDevices,clusters,hosts,users}/` (multiple instances), den
 plumbing under `modules/den/{schema,policies,quirks,batteries}/`, and
 the aspect library under
 `modules/den/aspects/` — generic NixOS host aspects
@@ -50,7 +60,7 @@ namespaced subtrees for Kubernetes workloads (`aspects/kubernetes/`,
 `den.aspects.kubernetes.<app>`) and RouterOS stacks (`aspects/routeros/`,
 `den.aspects.routeros.<x>`).
 
-- **Entities**: `environment`, `network`, `routerosDevice`, `cluster`, plus den's built-in `host`. Each is declared as a registry under `den.<kind>s` (schema in `modules/den/schema/*.nix`), instantiated in `modules/den/{environments,networks,clusters}.nix` or per-instance files under `modules/den/{routerosDevices,hosts}/`.
+- **Entities**: `environment`, `network`, `routerosDevice`, `cluster`, plus den's built-in `host`. Each is declared as a registry under `den.<kind>s` (schema in `modules/den/schema/*.nix`), instantiated in `modules/den/{environments,networks}.nix` or per-instance files under `modules/den/{routerosDevices,clusters,hosts}/`.
 - **Scope tree** (`modules/den/policies/fleet.nix`): `flake -> fleet -> environment -> {network, routerosDevice, cluster}`, walked via `den.lib.policy.resolve.to`.
 - **Aspects**: per-entity config fragments keyed by content "class" (`"terragrunt-stacks"`, `k8s-manifests`, `nixos`, ...) — `den.aspects.<name>.<class> = ...`. An entity's `aspect` option defaults to `den.aspects.<name>` by naming convention. Content classes shared across a whole entity kind (`k8s-manifests`, `terragrunt-stacks`) are registered as bundled third-party-integration wiring under `modules/den/batteries/` — one subdirectory per integration (`batteries/kubernetes/`: class registration + shared nixidy defaults; `batteries/terragrunt/`: class registration + collection policy + the Nix→HCL codegen mechanics + the RouterOS/cidr shared libs), following den's own "battery" vocabulary for a self-contained bundle, even though this repo doesn't use den's actual `den.batteries.*` cross-flake option (single-flake repo, no need for it).
 - **Quirks/pipes** (`modules/den/quirks/*.nix`, `modules/den/policies/pipes.nix`): lets one entity (e.g. a `cluster`) emit a small data fragment (`firewall`, `bgp`, `k3s-nodes`) that gets collected onto another entity (`routerosDevice`) it has no direct scope-tree link to.
@@ -66,16 +76,21 @@ Known gotchas in this system, worth knowing before you hit them again:
 - `modules/flake/nh-deploy.nix` builds deploy targets via `nh os --target-host`/`-H` against `config.flake.nixosConfigurations` — don't hand-list a host's NixOS modules a second time there; opt a host in via `fleet.nh.targets.<name>` on its own file instead.
 - A host-scope quirk collected via `pipe.collectAll` onto a `cluster` **used to** fail to reach that cluster's `k8s-manifests` content functions as a special arg (den issue upstream, see home-ops issue #266) — fixed by the `den` bump merged 2026-09-26 (rev `f88d635`). `miroir-nodes` (`modules/den/quirks/miroir-nodes.nix`, collected in `modules/den/policies/pipes.nix`'s `cluster-collect-miroir-nodes`, consumed by `modules/den/aspects/kubernetes/miroir/default.nix`) is the first aspect built on this path — copy it for new per-host-into-cluster data instead of the old `cluster.methods.<name>` workaround (still valid where a cluster's own entity file needs to compute something no quirk emits — nothing in the codebase needs this today).
 
-## RouterOS / Terragrunt
+## Terragrunt: RouterOS and cluster stacks
 
 - Real per-device Terraform inputs live on each device's own self-aspect (`modules/den/routerosDevices/{rb5009,crs320}.nix`), because `cidrhost()`-style arithmetic needs `modules/den/batteries/terragrunt/lib.nix`'s `cidrLib`, which den's aspect content functions can't see as a plain module arg. The shared `modules/den/aspects/routeros/*.nix` files are thin: they just look up `routerosDevice.aspect.terragruntInputs.<stack>` by stack name.
-- Each `ros-*` Terraform module (base/capsman/dns/firewall/qos) is sourced from a separate private repo, `git@github.com:kid/terragrunt-infra-catalog`, pinned per-aspect via `moduleVersion` in `modules/den/aspects/routeros/*.nix` (rendered as `terraform.source = "git::...?ref=<module>/v<version>"`). Bump a module version there, not in `tf-stacks/`.
+- Each `ros-*` Terraform module (base/bgp/capsman/dns/firewall/qos) is sourced from a separate private repo, `git@github.com:kid/terragrunt-infra-catalog`, pinned per-aspect via `moduleVersion` in `modules/den/aspects/routeros/*.nix` (rendered as `terraform.source = "git::...?ref=<module>/v<version>"`). Bump a module version there, not in `tf-stacks/`.
 - `routeros_users`/`routeros_groups` are derived, not hand-written per device — `modules/den/aspects/routeros/base.nix` builds both from `den.users.registry`/`den.groups`, filtered to whatever each device actually references. Add/edit users in `modules/den/users/*.nix` or groups in `modules/den/groups.nix`, not in the device files.
 - `dependencies { paths = [...] }` blocks (for `terragrunt run-all` ordering) are computed from each stack's `dependsOn` list in `modules/den/batteries/terragrunt/devshell.nix`. Two quirks in the generated output are intentional, not bugs to fix: rb5009's `qos` stack has no `dependencies` block (unlike its siblings), and crs320's `ether1` input has a stray `command = "vulkan"` field the module never reads.
 - **`den.users.registry.kid`'s `routerosDevices.{rb5009,crs320}.group = "full"` is unverified against the real routers.** Do not run `terragrunt apply` against `prd/network/**` until that's confirmed — it would risk destroying the real users/groups/SSH keys currently on the routers.
+- Cluster-owned stacks are a second `terragrunt-stacks` collection target: any aspect in `den.aspects.<cluster>.includes` can emit `"terragrunt-stacks" = { cluster, ... }: { stack; localModule; inputs; generate?; }`, rendered to `tf-stacks/<env>/k3s/<stack>/terragrunt.hcl` with `source` pointing at `tf-catalog/modules//<localModule>`. They read `cluster.*` directly (no `terragruntInputs` indirection). Convention: an app that needs one keeps it next to its manifests in `modules/den/aspects/kubernetes/<app>/terragrunt.nix`; cluster-wide infra with no app owner (the `incus` stack that creates the K3s VLAN and the `k3s-prd-0` VM on node1) lives as a local aspect in `modules/den/clusters/prd.nix`.
+- The `incus` stack builds the VM image itself (`tf-catalog/modules/incus-k3s/scripts/build-image.sh` runs `nix build` on `nixosConfigurations.<node>.config.system.build.qemuImage`), so applying it needs a working local Nix and the host key from `provision-host-key`.
 
 ## Kubernetes (`prd` cluster)
 
-- `modules/den/clusters.nix`'s `den.aspects.prd.includes` lists which app aspects apply to the `prd` k3s cluster (currently `cilium`, `cilium-bgp`, `cilium-hubble-tls`, `cert-manager`, `coredns`, `argocd`). Each app aspect (`modules/den/aspects/kubernetes/<app>/default.nix`) contributes `k8s-manifests` content — nixidy-flavored NixOS-module options, not raw YAML.
-- Rendered to `manifests/prd/**`, applied once by `modules/den/aspects/services/k3s/bootstrap.nix`, after which ArgoCD (itself one of the app aspects) takes over syncing the rest of the app set from git.
-- The cluster runs on `modules/den/hosts/node1.nix` — a bare-metal box installed via `nixos-anywhere`, doubling as k3s node, Incus VM host, and NFS storage, and kept up to date via `nh --target-host` (`deploy` in the devshell) after initial install.
+- `modules/den/clusters/prd.nix` declares the cluster (`den.clusters.prd`: network/VLAN, pod/service/LB CIDRs, BGP, 1Password vault, Cloudflare ids, nixidy repo) and its `den.aspects.prd.includes` — the app aspects that apply to it (Cilium + BGP + host firewall, Gateway API/Envoy Gateway, cert-manager, trust-manager, CoreDNS, ArgoCD, Authelia, external-dns (internal RouterOS + Cloudflare), external-secrets, cloudflared, miroir, kopiur, snapshot-controller, VictoriaMetrics/VictoriaLogs, Grafana Operator, ...). Read that list rather than trusting a copy here. Each app aspect (`modules/den/aspects/kubernetes/<app>/default.nix`, sometimes plus `oidc.nix`/`terragrunt.nix`) contributes `k8s-manifests` content — nixidy-flavored NixOS-module options, not raw YAML — and sometimes a cluster-owned Terragrunt stack.
+- Every app's Namespace is created centrally under the apps root Application; don't set `createNamespace` per app.
+- Hostnames come from `cluster.methods.mkAppHostname "<name>"`. Apps are internal by default (internal external-dns → RouterOS); selected ones are exposed publicly via the Cloudflare Tunnel Gateway (`cloudflared`) plus `external-dns-cloudflare`, which only picks up routes labeled `home-ops.dev/public-dns=true` (the internal instance excludes them). User-facing auth is Authelia OIDC (ArgoCD, Grafana, kubectl via `methods.kubeLogin`).
+- Rendered to `manifests/prd/**`, applied once by `modules/den/aspects/services/k3s/bootstrap.nix` (oneshot systemd units, manifests baked into the image), after which ArgoCD (itself one of the app aspects) takes over syncing the rest of the app set from git.
+- The cluster runs on a single-node VM, `modules/den/hosts/k3s-prd-0.nix` (NixOS, `k3s-*` service aspects under `modules/den/aspects/services/k3s/`), created on node1's Incus by the `tf-stacks/prd/k3s/incus` stack and then updated with `deploy k3s-prd-0`.
+- `modules/den/hosts/node1.nix` is the bare-metal box (ZFS + impermanence) installed via `nixos-anywhere`, acting as the Incus VM host, and kept up to date with `deploy node1`.
