@@ -22,6 +22,36 @@ _: {
         };
 
         resources = {
+          # The chart's own NetworkPolicy already covers the proxy's ingress.
+          ciliumNetworkPolicies =
+            with cluster.methods.netpol;
+            let
+              proxy = {
+                "app.kubernetes.io/name" = "cloudflare-tunnel-gateway-controller-proxy";
+              };
+            in
+            {
+              cloudflare-tunnel-gateway-controller =
+                mkPolicy { "app.kubernetes.io/name" = "cloudflare-tunnel-gateway-controller"; }
+                  {
+                    egress = [
+                      apiserverEgress
+                      (fqdnEgress [ "api.cloudflare.com" ] [ 443 ])
+                      (toPods proxy [ 8081 ])
+                    ];
+                  };
+              cloudflare-tunnel-gateway-controller-proxy = mkPolicy proxy {
+                egress = [
+                  # Cloudflare edge: QUIC, with HTTP/2 as the fallback.
+                  {
+                    toEntities = [ "world" ];
+                    toPorts = tcpUdp [ 7844 ];
+                  }
+                  clusterEgress
+                ];
+              };
+            };
+
           externalSecrets.cloudflare-tunnel-api-token.spec = {
             secretStoreRef = {
               name = "onepassword";

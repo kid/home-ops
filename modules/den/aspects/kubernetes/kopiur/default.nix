@@ -75,6 +75,9 @@ in
       cluster,
       ...
     }:
+    let
+      r2Endpoint = "${cluster.cloudflare.accountId}.r2.cloudflarestorage.com";
+    in
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -92,6 +95,42 @@ in
       applications.kopiur = {
         namespace = "kopiur-system";
         annotations."argocd.argoproj.io/sync-wave" = "-2";
+
+        resources.ciliumNetworkPolicies =
+          with cluster.methods.netpol;
+          let
+            app = component: {
+              "app.kubernetes.io/name" = "kopiur";
+              "app.kubernetes.io/component" = component;
+            };
+            r2Egress = fqdnEgress [ r2Endpoint ] [ 443 ];
+          in
+          {
+            kopiur-controller = mkPolicy (app "controller") {
+              ingress = [ (scrapeIngress [ 8081 ]) ];
+              egress = [
+                apiserverEgress
+                r2Egress
+              ];
+            };
+            kopiur-webhook = mkPolicy (app "webhook") {
+              ingress = [
+                (webhookIngress 8443)
+                (scrapeIngress [ 8443 ])
+              ];
+              egress = [ apiserverEgress ];
+            };
+          };
+
+        # Clusterwide: mover Jobs run in the namespace of the app they back up.
+        resources.ciliumClusterwideNetworkPolicies.kopiur-mover =
+          with cluster.methods.netpol;
+          mkPolicy { "app.kubernetes.io/managed-by" = "kopiur"; } {
+            egress = [
+              apiserverEgress
+              (fqdnEgress [ r2Endpoint ] [ 443 ])
+            ];
+          };
 
         helm.releases.kopiur = {
           chart = charts.home-operations.kopiur;
@@ -145,7 +184,7 @@ in
           allowedNamespaces.all = true;
           backend.s3 = {
             bucket = "home-ops-${cluster.environment}-kopiur";
-            endpoint = "${cluster.cloudflare.accountId}.r2.cloudflarestorage.com";
+            endpoint = r2Endpoint;
             region = "auto";
             auth.secretRef = {
               name = "kopiur-r2";

@@ -1,0 +1,20 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: cloudflare-tunnel-gateway-controller-proxy
+  namespace: cloudflare-tunnel-system
+spec:
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "7844"
+              protocol: UDP
+            - port: "7844"
+              protocol: TCP
+    - toEntities:
+        - cluster
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: cloudflare-tunnel-gateway-controller-proxy

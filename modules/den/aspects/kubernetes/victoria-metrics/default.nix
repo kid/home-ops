@@ -50,6 +50,37 @@ _: {
       applications.victoria-metrics = {
         namespace = "monitoring";
 
+        resources.ciliumNetworkPolicies =
+          with cluster.methods.netpol;
+          let
+            app = name: { "app.kubernetes.io/name" = name; };
+          in
+          {
+            # The stack's components (and Grafana) talk to each other freely;
+            # only the edges that leave the namespace are listed per workload.
+            monitoring-internal.spec = {
+              endpointSelector = { };
+              ingress = [ { fromEndpoints = [ { } ]; } ];
+              egress = [ { toEndpoints = [ { } ]; } ];
+            };
+            victoria-metrics-operator = mkPolicy (app "victoria-metrics-operator") {
+              ingress = [ (webhookIngress 9443) ];
+              egress = [ apiserverEgress ];
+            };
+            kube-state-metrics = mkPolicy (app "kube-state-metrics") {
+              egress = [ apiserverEgress ];
+            };
+            victoria-metrics-sync-job = mkPolicy (app "victoria-metrics-k8s-stack") {
+              egress = [ apiserverEgress ];
+            };
+            # Scrapes pods in every namespace plus the node's own ports.
+            vmagent = mkPolicy (app "vmagent") { egress = [ clusterEgress ]; };
+            vlagent = mkPolicy (app "vlagent") { egress = [ apiserverEgress ]; };
+            vmsingle = mkPolicy (app "vmsingle") { ingress = [ (gatewayIngress 8428) ]; };
+            vlsingle = mkPolicy (app "vlsingle") { ingress = [ (gatewayIngress 9428) ]; };
+            vmalert = mkPolicy (app "vmalert") { ingress = [ (gatewayIngress 8080) ]; };
+          };
+
         helm.releases.victoria-metrics = {
           chart = charts.victoriametrics.victoria-metrics-k8s-stack;
           values = {

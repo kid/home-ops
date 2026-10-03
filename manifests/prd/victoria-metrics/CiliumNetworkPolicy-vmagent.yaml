@@ -1,0 +1,12 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: vmagent
+  namespace: monitoring
+spec:
+  egress:
+    - toEntities:
+        - cluster
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: vmagent

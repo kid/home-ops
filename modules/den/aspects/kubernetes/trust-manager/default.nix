@@ -2,7 +2,12 @@
 # (it can't read Secrets).
 _: {
   den.aspects.kubernetes.trust-manager.k8s-manifests =
-    { charts, generators, ... }:
+    {
+      charts,
+      generators,
+      cluster,
+      ...
+    }:
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -18,6 +23,16 @@ _: {
 
       applications.trust-manager = {
         namespace = "cert-manager";
+
+        resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
+          trust-manager = mkPolicy { "app.kubernetes.io/name" = "trust-manager"; } {
+            ingress = [
+              (webhookIngress 6443)
+              (scrapeIngress [ 9402 ])
+            ];
+            egress = [ apiserverEgress ];
+          };
+        };
 
         helm.releases.trust-manager = {
           chart = charts.jetstack.trust-manager;

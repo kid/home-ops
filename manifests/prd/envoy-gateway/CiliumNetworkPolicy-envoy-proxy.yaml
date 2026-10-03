@@ -1,0 +1,21 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: envoy-proxy
+  namespace: envoy-gateway-system
+spec:
+  egress:
+    - toEntities:
+        - cluster
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: envoy
+  ingress:
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "10443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP

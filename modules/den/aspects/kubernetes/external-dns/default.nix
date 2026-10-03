@@ -28,6 +28,24 @@ in
       applications.external-dns = {
         namespace = "external-dns";
 
+        resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
+          external-dns-mikrotik = mkPolicy { "app.kubernetes.io/instance" = "external-dns"; } {
+            ingress = [
+              (scrapeIngress [
+                7979
+                8080
+              ])
+            ];
+            egress = [
+              apiserverEgress
+              {
+                toCIDR = [ "${rb5009MgmtAddr}/32" ];
+                toPorts = tcp [ 443 ];
+              }
+            ];
+          };
+        };
+
         helm.releases.external-dns = {
           chart = charts.kubernetes-sigs.external-dns;
           values = {

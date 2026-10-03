@@ -34,6 +34,62 @@ in
         applications.argocd = {
           namespace = "argocd";
 
+          # Egress only: the upstream manifests ship their own ingress
+          # NetworkPolicies, which Cilium enforces alongside these.
+          resources.ciliumNetworkPolicies =
+            with cluster.methods.netpol;
+            let
+              app = name: { "app.kubernetes.io/name" = "argocd-${name}"; };
+              redis = toPods (app "redis") [ 6379 ];
+              repoServer = toPods (app "repo-server") [ 8081 ];
+              authelia = fqdnEgress [ (cluster.methods.mkAppHostname "auth") ] [ 443 ];
+            in
+            {
+              argocd-application-controller = mkPolicy (app "application-controller") {
+                egress = [
+                  apiserverEgress
+                  redis
+                  repoServer
+                ];
+              };
+              argocd-server = mkPolicy (app "server") {
+                egress = [
+                  apiserverEgress
+                  redis
+                  repoServer
+                  (toPods (app "dex-server") [
+                    5556
+                    5557
+                  ])
+                  authelia
+                ];
+              };
+              argocd-repo-server = mkPolicy (app "repo-server") {
+                egress = [
+                  redis
+                  (fqdnEgress [ "github.com" ] [ 443 ])
+                ];
+              };
+              argocd-applicationset-controller = mkPolicy (app "applicationset-controller") {
+                egress = [
+                  apiserverEgress
+                  repoServer
+                ];
+              };
+              argocd-dex-server = mkPolicy (app "dex-server") {
+                egress = [
+                  apiserverEgress
+                  authelia
+                ];
+              };
+              argocd-notifications-controller = mkPolicy (app "notifications-controller") {
+                egress = [
+                  apiserverEgress
+                  repoServer
+                ];
+              };
+            };
+
           kustomize.applications.argocd = {
             namespace = "argocd";
             kustomization = {

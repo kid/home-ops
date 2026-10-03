@@ -5,6 +5,16 @@ _: {
       applications.external-dns-cloudflare = {
         namespace = "external-dns";
 
+        resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
+          external-dns-cloudflare = mkPolicy { "app.kubernetes.io/instance" = "external-dns-cloudflare"; } {
+            ingress = [ (scrapeIngress [ 7979 ]) ];
+            egress = [
+              apiserverEgress
+              (fqdnEgress [ "api.cloudflare.com" ] [ 443 ])
+            ];
+          };
+        };
+
         helm.releases.external-dns-cloudflare = {
           chart = charts.kubernetes-sigs.external-dns;
           values = {

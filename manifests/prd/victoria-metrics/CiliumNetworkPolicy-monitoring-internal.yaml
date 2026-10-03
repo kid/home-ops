@@ -1,0 +1,13 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: monitoring-internal
+  namespace: monitoring
+spec:
+  egress:
+    - toEndpoints:
+        - {}
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - {}

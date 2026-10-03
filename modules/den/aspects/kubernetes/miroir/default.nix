@@ -19,6 +19,7 @@ _: {
     {
       charts,
       generators,
+      cluster,
       lib,
       miroir-nodes ? [ ],
       ...
@@ -39,6 +40,20 @@ _: {
 
       applications.miroir = {
         namespace = "miroir-system";
+
+        # The agent is hostNetwork, so only the controller is a pod endpoint.
+        resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
+          miroir-controller =
+            mkPolicy
+              {
+                "app.kubernetes.io/name" = "miroir";
+                "app.kubernetes.io/component" = "controller";
+              }
+              {
+                ingress = [ (scrapeIngress [ 8081 ]) ];
+                egress = [ apiserverEgress ];
+              };
+        };
 
         helm.releases.miroir = {
           chart = charts.home-operations.miroir;

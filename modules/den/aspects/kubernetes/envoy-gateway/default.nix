@@ -28,6 +28,39 @@ in
       applications.envoy-gateway = {
         namespace = "envoy-gateway-system";
 
+        resources.ciliumNetworkPolicies =
+          with cluster.methods.netpol;
+          let
+            proxy = {
+              "app.kubernetes.io/name" = "envoy";
+            };
+          in
+          {
+            envoy-gateway = mkPolicy { control-plane = "envoy-gateway"; } {
+              ingress = [
+                (fromPods proxy [ 18000 ])
+                (webhookIngress 9443)
+              ];
+              egress = [ apiserverEgress ];
+            };
+            envoy-gateway-certgen = mkPolicy { app = "certgen"; } {
+              egress = [ apiserverEgress ];
+            };
+            envoy-proxy = mkPolicy proxy {
+              ingress = [
+                # Envoy Gateway remaps privileged listener ports to 10000 + port.
+                {
+                  fromEntities = [ "world" ];
+                  toPorts = tcp [
+                    10443
+                    6443
+                  ];
+                }
+              ];
+              egress = [ clusterEgress ];
+            };
+          };
+
         helm.releases.envoy-gateway = {
           chart = charts.envoyproxy.gateway-helm;
           values.crds.enabled = true;
