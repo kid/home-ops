@@ -122,7 +122,6 @@ in
             };
           };
 
-        # Clusterwide: mover Jobs run in the namespace of the app they back up.
         resources.ciliumClusterwideNetworkPolicies.kopiur-mover =
           with cluster.methods.netpol;
           mkPolicy { "app.kubernetes.io/managed-by" = "kopiur"; } {

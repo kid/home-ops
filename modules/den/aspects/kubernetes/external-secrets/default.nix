@@ -33,7 +33,6 @@ _: {
               ingress = [ (scrapeIngress [ 8080 ]) ];
               egress = [
                 apiserverEgress
-                # 1Password's SDK endpoints are not a stable, documented host list.
                 (worldEgress [ 443 ])
               ];
             };

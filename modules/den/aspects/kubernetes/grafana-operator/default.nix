@@ -22,7 +22,6 @@ _: {
       applications.grafana-operator = {
         namespace = "monitoring";
 
-        # In-namespace flows: monitoring-internal (victoria-metrics/default.nix).
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           grafana-operator = mkPolicy { "app.kubernetes.io/name" = "grafana-operator"; } {
             egress = [

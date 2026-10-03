@@ -56,8 +56,6 @@ _: {
             app = name: { "app.kubernetes.io/name" = name; };
           in
           {
-            # The stack's components (and Grafana) talk to each other freely;
-            # only the edges that leave the namespace are listed per workload.
             monitoring-internal.spec = {
               endpointSelector = { };
               ingress = [ { fromEndpoints = [ { } ]; } ];
@@ -73,7 +71,6 @@ _: {
             victoria-metrics-sync-job = mkPolicy (app "victoria-metrics-k8s-stack") {
               egress = [ apiserverEgress ];
             };
-            # Scrapes pods in every namespace plus the node's own ports.
             vmagent = mkPolicy (app "vmagent") { egress = [ clusterEgress ]; };
             vlagent = mkPolicy (app "vlagent") { egress = [ apiserverEgress ]; };
             vmsingle = mkPolicy (app "vmsingle") { ingress = [ (gatewayIngress 8428) ]; };

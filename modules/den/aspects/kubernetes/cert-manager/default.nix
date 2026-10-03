@@ -65,7 +65,6 @@ _: {
                   ]
                   [ 443 ]
                 )
-                # DNS-01 self-check queries the zone's authoritative nameservers.
                 {
                   toEntities = [ "world" ];
                   toPorts = tcpUdp [ 53 ];

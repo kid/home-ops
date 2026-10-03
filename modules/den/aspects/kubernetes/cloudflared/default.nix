@@ -22,7 +22,6 @@ _: {
         };
 
         resources = {
-          # The chart's own NetworkPolicy already covers the proxy's ingress.
           ciliumNetworkPolicies =
             with cluster.methods.netpol;
             let
@@ -42,7 +41,6 @@ _: {
                   };
               cloudflare-tunnel-gateway-controller-proxy = mkPolicy proxy {
                 egress = [
-                  # Cloudflare edge: QUIC, with HTTP/2 as the fallback.
                   {
                     toEntities = [ "world" ];
                     toPorts = tcpUdp [ 7844 ];

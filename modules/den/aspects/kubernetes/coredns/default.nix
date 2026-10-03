@@ -22,7 +22,6 @@ _: {
             ];
             egress = [
               apiserverEgress
-              # Upstream is the node's own resolver (forward . /etc/resolv.conf).
               {
                 toEntities = [ "world" ];
                 toPorts = tcpUdp [ 53 ];

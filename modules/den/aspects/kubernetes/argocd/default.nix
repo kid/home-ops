@@ -123,9 +123,7 @@ in
               };
               path = "manifests/cluster-install";
             };
-            # Upstream's ingress-only NetworkPolicies are wider than the
-            # CiliumNetworkPolicies above (argocd-server: any source), and
-            # allow rules from both kinds add up.
+            # Upstream's NetworkPolicies would widen the CiliumNetworkPolicies above.
             transformer = builtins.filter (o: o.kind != "NetworkPolicy");
           };
 

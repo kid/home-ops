@@ -41,7 +41,6 @@ _: {
       applications.miroir = {
         namespace = "miroir-system";
 
-        # The agent is hostNetwork, so only the controller is a pod endpoint.
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           miroir-controller =
             mkPolicy

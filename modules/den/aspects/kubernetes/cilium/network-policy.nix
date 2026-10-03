@@ -42,8 +42,7 @@ let
       // rules;
     };
 
-    # Same-namespace peers: a CiliumNetworkPolicy scopes a selector with no
-    # namespace label to its own namespace.
+    # Same namespace only.
     fromPods = labels: ports: {
       fromEndpoints = [ { matchLabels = labels; } ];
       toPorts = tcp ports;
@@ -77,8 +76,6 @@ let
       toEntities = [ "world" ];
       toPorts = tcp ports;
     };
-    # Proxies and the scraper reach whatever routes/monitors point them at;
-    # the destination's own ingress rule is what restricts the flow.
     clusterEgress.toEntities = [ "cluster" ];
   };
 in
@@ -117,8 +114,7 @@ in
             ingress = true;
             egress = true;
           };
-          # A section must hold a rule for its default deny to apply; the
-          # kubelet's probes come from the host anyway.
+          # A section needs a rule for its default deny to apply.
           ingress = [ { fromEntities = [ "host" ]; } ];
           egress = [
             {
@@ -133,7 +129,6 @@ in
               toPorts = [
                 {
                   inherit (builtins.head (tcpUdp [ 53 ])) ports;
-                  # Feeds the toFQDNs rules of the per-app policies.
                   rules.dns = [ { matchPattern = "*"; } ];
                 }
               ];
