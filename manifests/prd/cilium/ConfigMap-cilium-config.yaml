@@ -98,7 +98,7 @@ data:
   http-stream-idle-timeout: "300"
   hubble-disable-tls: "false"
   hubble-listen-address: :4244
-  hubble-metrics: dns:query;ignoreAAAA drop tcp flow icmp http
+  hubble-metrics: dns:query;ignoreAAAA drop tcp flow icmp http policy:sourceContext=app|workload-name|pod|reserved-identity;destinationContext=app|workload-name|pod|dns|reserved-identity;labelsContext=source_namespace,destination_namespace
   hubble-metrics-server: :9965
   hubble-metrics-server-enable-tls: "false"
   hubble-network-policy-correlation-enabled: "true"
@@ -135,6 +135,7 @@ data:
   operator-api-serve-addr: 127.0.0.1:9234
   operator-prometheus-serve-addr: :9963
   packetization-layer-pmtud-mode: blackhole
+  policy-audit-mode: "true"
   policy-default-local-cluster: "true"
   policy-deny-response: none
   policy-secrets-namespace: cilium-secrets
