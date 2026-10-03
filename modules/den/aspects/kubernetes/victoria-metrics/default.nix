@@ -69,7 +69,10 @@ _: {
               egress = [ apiserverEgress ];
             };
             victoria-metrics-sync-job = mkPolicy (app "victoria-metrics-k8s-stack") {
-              egress = [ apiserverEgress ];
+              egress = [
+                apiserverEgress
+                (fqdnEgress [ "raw.githubusercontent.com" ] [ 443 ])
+              ];
             };
             vmagent = mkPolicy (app "vmagent") { egress = [ clusterEgress ]; };
             vlagent = mkPolicy (app "vlagent") { egress = [ apiserverEgress ]; };

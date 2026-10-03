@@ -58,6 +58,7 @@ _: {
             plugins.allow_loading_unsigned_plugins = "victoriametrics-metrics-datasource,victoriametrics-logs-datasource";
             # Needed so the OIDC callback Grafana computes matches Authelia's registered redirect_uri.
             server.root_url = "https://${cluster.methods.mkAppHostname "grafana"}";
+            security.disable_gravatar = "true";
           };
 
           # No dedicated "install a plugin" CR field — Grafana's own image
