@@ -8,6 +8,7 @@ spec:
     - toFQDNs:
         - matchName: auth.kidibox.net
         - matchName: grafana.com
+        - matchName: storage.googleapis.com
       toPorts:
         - ports:
             - port: "443"
