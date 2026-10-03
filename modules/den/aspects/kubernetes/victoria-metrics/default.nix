@@ -159,10 +159,11 @@ _: {
             job = "kube-controller-manager";
             port = 10257;
           })
-          (mkStaticScrapeEndpoint {
-            job = "kube-etcd";
-            port = 2379;
-          })
+          # --etcd-expose-metrics serves plain HTTP on 2381; 2379 wants a client cert.
+          {
+            targets = map (address: "${address}:2381") k3sNodeAddresses;
+            labels.job = "kube-etcd";
+          }
         ];
 
         resources.securityPolicies =
