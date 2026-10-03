@@ -116,9 +116,28 @@ _: {
             # protocol visibility — none of which this cluster uses now.
             envoy.enabled = false;
 
+            resources = {
+              requests = {
+                cpu = "50m";
+                memory = "512Mi";
+              };
+              limits.memory = "1Gi";
+            };
+            initResources.requests = {
+              cpu = "10m";
+              memory = "32Mi";
+            };
+
             operator = {
               replicas = 1;
               prometheus.serviceMonitor.enabled = true;
+              resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "128Mi";
+                };
+                limits.memory = "256Mi";
+              };
             };
 
             prometheus = {
@@ -133,8 +152,33 @@ _: {
             };
 
             hubble = {
-              relay.enabled = true;
-              ui.enabled = true;
+              relay = {
+                enabled = true;
+                resources = {
+                  requests = {
+                    cpu = "10m";
+                    memory = "32Mi";
+                  };
+                  limits.memory = "128Mi";
+                };
+              };
+              ui = {
+                enabled = true;
+                backend.resources = {
+                  requests = {
+                    cpu = "10m";
+                    memory = "32Mi";
+                  };
+                  limits.memory = "128Mi";
+                };
+                frontend.resources = {
+                  requests = {
+                    cpu = "10m";
+                    memory = "32Mi";
+                  };
+                  limits.memory = "64Mi";
+                };
+              };
 
               tls.auto = {
                 method = "certmanager";

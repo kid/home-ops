@@ -49,6 +49,12 @@ spec:
           name: redis
           ports:
             - containerPort: 6379
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -63,6 +69,10 @@ spec:
           image: quay.io/argoproj/argocd:v3.5.3
           imagePullPolicy: IfNotPresent
           name: secret-init
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

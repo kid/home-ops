@@ -16,5 +16,11 @@ spec:
   port: "8429"
   remoteWrite:
     - url: http://vmsingle-victoria-metrics.monitoring.svc.cluster.local.:8428/api/v1/write
+  resources:
+    limits:
+      memory: 384Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
   scrapeInterval: 20s
   selectAllByDefault: true

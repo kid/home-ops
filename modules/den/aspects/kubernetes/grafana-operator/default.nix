@@ -47,7 +47,16 @@ _: {
 
         helm.releases.grafana-operator = {
           chart = charts.grafana.grafana-operator;
-          values.serviceMonitor.enabled = true;
+          values = {
+            serviceMonitor.enabled = true;
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "96Mi";
+              };
+              limits.memory = "192Mi";
+            };
+          };
         };
 
         # Selected by GrafanaDatasource/GrafanaDashboard CRs' instanceSelector.
@@ -74,6 +83,13 @@ _: {
                   value = "victoriametrics-metrics-datasource,victoriametrics-logs-datasource";
                 }
               ];
+              resources = {
+                requests = {
+                  cpu = "50m";
+                  memory = "384Mi";
+                };
+                limits.memory = "768Mi";
+              };
             }
           ];
 

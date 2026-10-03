@@ -22,6 +22,13 @@ _: {
             replicaCount = 1;
             sources = [ "gateway-httproute" ];
             serviceMonitor.enabled = true;
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "128Mi";
+              };
+              limits.memory = "256Mi";
+            };
 
             registry = "txt";
             txtOwnerId = cluster.name;

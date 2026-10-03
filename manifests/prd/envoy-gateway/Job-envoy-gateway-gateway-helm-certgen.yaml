@@ -33,6 +33,10 @@ spec:
           image: docker.io/envoyproxy/gateway:v1.9.2
           imagePullPolicy: IfNotPresent
           name: envoy-gateway-certgen
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

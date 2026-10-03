@@ -56,14 +56,25 @@ _: {
 
         helm.releases.miroir = {
           chart = charts.home-operations.miroir;
-          values.monitoring = {
-            podMonitor.enabled = true;
-            dashboards = {
-              enabled = true;
-              grafanaOperator = {
+          values = {
+            monitoring = {
+              podMonitor.enabled = true;
+              dashboards = {
                 enabled = true;
-                matchLabels.dashboards = "grafana";
+                grafanaOperator = {
+                  enabled = true;
+                  matchLabels.dashboards = "grafana";
+                };
               };
+            };
+            resources.requests.memory = "64Mi";
+            sidecars.resizer.resources.requests.memory = "64Mi";
+            agent = {
+              resources = {
+                requests.memory = "64Mi";
+                limits.memory = "192Mi";
+              };
+              registrar.resources.requests.memory = "32Mi";
             };
           };
         };

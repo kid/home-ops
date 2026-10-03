@@ -9,6 +9,12 @@ metadata:
   namespace: monitoring
 spec:
   port: "8427"
+  resources:
+    limits:
+      memory: 64Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
   unauthorizedUserAccessSpec:
     url_map:
       - src_paths:

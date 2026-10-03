@@ -63,7 +63,17 @@ in
 
         helm.releases.envoy-gateway = {
           chart = charts.envoyproxy.gateway-helm;
-          values.crds.enabled = true;
+          values = {
+            crds.enabled = true;
+            certgen.job.resources.requests = {
+              cpu = "10m";
+              memory = "64Mi";
+            };
+            deployment.envoyGateway.resources.requests = {
+              cpu = "10m";
+              memory = "128Mi";
+            };
+          };
         };
 
         resources.gatewayClasses.envoy.spec.controllerName =

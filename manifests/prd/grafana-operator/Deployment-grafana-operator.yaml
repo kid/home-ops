@@ -63,6 +63,12 @@ spec:
             httpGet:
               path: /readyz
               port: 8081
+          resources:
+            limits:
+              memory: 192Mi
+            requests:
+              cpu: 10m
+              memory: 96Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

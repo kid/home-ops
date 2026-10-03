@@ -88,7 +88,37 @@ _: {
 
             fullnameOverride = "victoria-metrics";
 
-            victoria-metrics-operator.admissionWebhooks.certManager.enabled = true;
+            victoria-metrics-operator = {
+              admissionWebhooks.certManager.enabled = true;
+              resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "128Mi";
+                };
+                limits.memory = "256Mi";
+              };
+            };
+
+            syncJob.resources.requests = {
+              cpu = "10m";
+              memory = "64Mi";
+            };
+
+            kube-state-metrics.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits.memory = "128Mi";
+            };
+
+            prometheus-node-exporter.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "32Mi";
+              };
+              limits.memory = "64Mi";
+            };
 
             defaultDashboards = {
               grafanaOperator.enabled = true;
@@ -128,12 +158,28 @@ _: {
               spec = {
                 retentionPeriod = "30d";
                 storage.resources.requests.storage = "5Gi";
+                resources = {
+                  requests = {
+                    cpu = "100m";
+                    memory = "1280Mi";
+                  };
+                  limits.memory = "2Gi";
+                };
               };
               route = mkRoute (cluster.methods.mkAppHostname "metrics");
             };
 
             vmalert = {
-              spec.extraArgs."external.url" = "https://${cluster.methods.mkAppHostname "vmalert"}";
+              spec = {
+                extraArgs."external.url" = "https://${cluster.methods.mkAppHostname "vmalert"}";
+                resources = {
+                  requests = {
+                    cpu = "10m";
+                    memory = "64Mi";
+                  };
+                  limits.memory = "128Mi";
+                };
+              };
               route = mkRoute (cluster.methods.mkAppHostname "vmalert");
             };
 
@@ -142,11 +188,53 @@ _: {
               spec = {
                 retentionPeriod = "30d";
                 storage.resources.requests.storage = "5Gi";
+                resources = {
+                  requests = {
+                    cpu = "10m";
+                    memory = "128Mi";
+                  };
+                  limits.memory = "512Mi";
+                };
               };
               route = mkRoute (cluster.methods.mkAppHostname "logs");
             };
 
-            vlagent.enabled = true;
+            vlagent = {
+              enabled = true;
+              spec.resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "64Mi";
+                };
+                limits.memory = "128Mi";
+              };
+            };
+
+            # No CPU limit: the operator's default 200m throttled vmagent
+            # in ~30% of CFS periods at 60m average use.
+            vmagent.spec.resources = {
+              requests = {
+                cpu = "100m";
+                memory = "128Mi";
+              };
+              limits.memory = "384Mi";
+            };
+
+            internal.vmauth.spec.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "32Mi";
+              };
+              limits.memory = "64Mi";
+            };
+
+            alertmanager.spec.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits.memory = "128Mi";
+            };
           };
         };
 

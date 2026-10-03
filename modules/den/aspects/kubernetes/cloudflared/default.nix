@@ -18,6 +18,27 @@ _: {
               cloudflareCredentialsSecretRef.name = "cloudflare-tunnel-api-token";
             };
             proxy.tunnelTokenSecretRef.name = "cloudflare-tunnel-connector-token";
+            # limits.cpu = null drops the chart's default CPU limit.
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "128Mi";
+              };
+              limits = {
+                cpu = null;
+                memory = "256Mi";
+              };
+            };
+            proxy.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits = {
+                cpu = null;
+                memory = "128Mi";
+              };
+            };
           };
         };
 

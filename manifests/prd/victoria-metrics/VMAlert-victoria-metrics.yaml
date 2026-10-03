@@ -27,4 +27,10 @@ spec:
     url: http://vmsingle-victoria-metrics.monitoring.svc.cluster.local.:8428
   remoteWrite:
     url: http://vmsingle-victoria-metrics.monitoring.svc.cluster.local.:8428/api/v1/write
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
   selectAllByDefault: true

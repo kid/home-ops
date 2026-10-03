@@ -51,12 +51,35 @@ _: {
 
         helm.releases.external-secrets = {
           chart = charts.external-secrets.external-secrets;
-          values.serviceMonitor = {
-            enabled = true;
-            # Default renderMode (skipIfMissing) checks the live API server
-            # for the CRD — nixidy renders offline, so that check is always
-            # false and the ServiceMonitor silently never renders.
-            renderMode = "alwaysRender";
+          values = {
+            serviceMonitor = {
+              enabled = true;
+              # Default renderMode (skipIfMissing) checks the live API server
+              # for the CRD — nixidy renders offline, so that check is always
+              # false and the ServiceMonitor silently never renders.
+              renderMode = "alwaysRender";
+            };
+            resources = {
+              requests = {
+                cpu = "20m";
+                memory = "192Mi";
+              };
+              limits.memory = "384Mi";
+            };
+            webhook.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits.memory = "192Mi";
+            };
+            certController.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "128Mi";
+              };
+              limits.memory = "256Mi";
+            };
           };
         };
 
