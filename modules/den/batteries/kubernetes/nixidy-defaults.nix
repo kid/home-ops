@@ -78,13 +78,41 @@ let
               prune = true;
               selfHeal = true;
             };
-            helm.transformer = map (
-              lib.kube.removeLabels [
-                "app.kubernetes.io/managed-by"
-                "app.kubernetes.io/version"
-                "helm.sh/chart"
-              ]
-            );
+            helm.transformer =
+              let
+                helmLabels = [
+                  "app.kubernetes.io/managed-by"
+                  "app.kubernetes.io/version"
+                  "helm.sh/chart"
+                ];
+              in
+              map (
+                manifest:
+                let
+                  stripped = lib.kube.removeLabels helmLabels manifest;
+                in
+                # removeLabels leaves a monitor's selector alone, so it would
+                # still select on the labels just removed from its target.
+                if
+                  builtins.elem (manifest.kind or "") [
+                    "ServiceMonitor"
+                    "PodMonitor"
+                  ]
+                  && stripped ? spec.selector.matchLabels
+                then
+                  lib.updateManyAttrsByPath [
+                    {
+                      path = [
+                        "spec"
+                        "selector"
+                        "matchLabels"
+                      ];
+                      update = old: removeAttrs old helmLabels;
+                    }
+                  ] stripped
+                else
+                  stripped
+              );
           };
         };
       };
