@@ -45,6 +45,48 @@ _: {
       applications.cert-manager = {
         namespace = "cert-manager";
 
+        resources.ciliumNetworkPolicies =
+          with cluster.methods.netpol;
+          let
+            app = name: {
+              "app.kubernetes.io/name" = name;
+              "app.kubernetes.io/instance" = "cert-manager";
+            };
+          in
+          {
+            cert-manager = mkPolicy (app "cert-manager") {
+              ingress = [ (scrapeIngress [ 9402 ]) ];
+              egress = [
+                apiserverEgress
+                (fqdnEgress
+                  [
+                    "acme-v02.api.letsencrypt.org"
+                    "api.cloudflare.com"
+                  ]
+                  [ 443 ]
+                )
+                {
+                  toEntities = [ "world" ];
+                  toPorts = tcpUdp [ 53 ];
+                }
+              ];
+            };
+            cert-manager-cainjector = mkPolicy (app "cainjector") {
+              ingress = [ (scrapeIngress [ 9402 ]) ];
+              egress = [ apiserverEgress ];
+            };
+            cert-manager-webhook = mkPolicy (app "webhook") {
+              ingress = [
+                (webhookIngress 10250)
+                (scrapeIngress [ 9402 ])
+              ];
+              egress = [ apiserverEgress ];
+            };
+            cert-manager-startupapicheck = mkPolicy (app "startupapicheck") {
+              egress = [ apiserverEgress ];
+            };
+          };
+
         # Before envoy-gateway, which reads the wildcard cert it pushes to 1Password.
         annotations."argocd.argoproj.io/sync-wave" = "-2";
 

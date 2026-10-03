@@ -34,6 +34,83 @@ in
         applications.argocd = {
           namespace = "argocd";
 
+          resources.ciliumNetworkPolicies =
+            with cluster.methods.netpol;
+            let
+              app = name: { "app.kubernetes.io/name" = "argocd-${name}"; };
+              redis = toPods (app "redis") [ 6379 ];
+              repoServer = toPods (app "repo-server") [ 8081 ];
+              authelia = fqdnEgress [ (cluster.methods.mkAppHostname "auth") ] [ 443 ];
+            in
+            {
+              argocd-application-controller = mkPolicy (app "application-controller") {
+                egress = [
+                  apiserverEgress
+                  redis
+                  repoServer
+                ];
+              };
+              argocd-server = mkPolicy (app "server") {
+                ingress = [
+                  (gatewayIngress 8080)
+                  (tunnelIngress 8080)
+                ];
+                egress = [
+                  apiserverEgress
+                  redis
+                  repoServer
+                  (toPods (app "dex-server") [
+                    5556
+                    5557
+                  ])
+                  authelia
+                ];
+              };
+              argocd-repo-server = mkPolicy (app "repo-server") {
+                ingress = map (name: fromPods (app name) [ 8081 ]) [
+                  "server"
+                  "application-controller"
+                  "applicationset-controller"
+                  "notifications-controller"
+                ];
+                egress = [
+                  redis
+                  (fqdnEgress [ "github.com" ] [ 443 ])
+                ];
+              };
+              argocd-applicationset-controller = mkPolicy (app "applicationset-controller") {
+                egress = [
+                  apiserverEgress
+                  repoServer
+                ];
+              };
+              argocd-dex-server = mkPolicy (app "dex-server") {
+                ingress = [
+                  (fromPods (app "server") [
+                    5556
+                    5557
+                  ])
+                ];
+                egress = [
+                  apiserverEgress
+                  authelia
+                ];
+              };
+              argocd-notifications-controller = mkPolicy (app "notifications-controller") {
+                egress = [
+                  apiserverEgress
+                  repoServer
+                ];
+              };
+              argocd-redis = mkPolicy (app "redis") {
+                ingress = map (name: fromPods (app name) [ 6379 ]) [
+                  "server"
+                  "repo-server"
+                  "application-controller"
+                ];
+              };
+            };
+
           kustomize.applications.argocd = {
             namespace = "argocd";
             kustomization = {
@@ -46,6 +123,8 @@ in
               };
               path = "manifests/cluster-install";
             };
+            # Upstream's NetworkPolicies would widen the CiliumNetworkPolicies above.
+            transformer = builtins.filter (o: o.kind != "NetworkPolicy");
           };
 
           resources.appProjects.default.spec = {

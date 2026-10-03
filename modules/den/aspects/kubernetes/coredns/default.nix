@@ -11,6 +11,25 @@ _: {
         namespace = "kube-system";
         syncPolicy.syncOptions.serverSideApply = true;
 
+        resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
+          coredns = mkPolicy { k8s-app = "coredns"; } {
+            ingress = [
+              {
+                fromEntities = [ "cluster" ];
+                toPorts = tcpUdp [ 53 ];
+              }
+              (scrapeIngress [ 9153 ])
+            ];
+            egress = [
+              apiserverEgress
+              {
+                toEntities = [ "world" ];
+                toPorts = tcpUdp [ 53 ];
+              }
+            ];
+          };
+        };
+
         helm.releases.coredns = {
           chart = charts.coredns.coredns;
           values = {

@@ -19,6 +19,7 @@ _: {
     {
       charts,
       generators,
+      cluster,
       lib,
       miroir-nodes ? [ ],
       ...
@@ -39,6 +40,19 @@ _: {
 
       applications.miroir = {
         namespace = "miroir-system";
+
+        resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
+          miroir-controller =
+            mkPolicy
+              {
+                "app.kubernetes.io/name" = "miroir";
+                "app.kubernetes.io/component" = "controller";
+              }
+              {
+                ingress = [ (scrapeIngress [ 8081 ]) ];
+                egress = [ apiserverEgress ];
+              };
+        };
 
         helm.releases.miroir = {
           chart = charts.home-operations.miroir;

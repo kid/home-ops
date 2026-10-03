@@ -22,6 +22,27 @@ _: {
       applications.grafana-operator = {
         namespace = "monitoring";
 
+        resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
+          grafana-operator = mkPolicy { "app.kubernetes.io/name" = "grafana-operator"; } {
+            egress = [
+              apiserverEgress
+              (fqdnEgress [ "grafana.com" ] [ 443 ])
+            ];
+          };
+          grafana = mkPolicy { app = "grafana"; } {
+            ingress = [ (gatewayIngress 3000) ];
+            egress = [
+              (fqdnEgress
+                [
+                  (cluster.methods.mkAppHostname "auth")
+                  "grafana.com"
+                ]
+                [ 443 ]
+              )
+            ];
+          };
+        };
+
         helm.releases.grafana-operator = {
           chart = charts.grafana.grafana-operator;
           values.serviceMonitor.enabled = true;

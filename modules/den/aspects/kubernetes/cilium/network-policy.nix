@@ -1,19 +1,24 @@
-# Typed nixidy options for CiliumNetworkPolicy/CiliumClusterwideNetworkPolicy
-# (types only — the operator registers the real CRDs at runtime, and the
-# chart ships none, hence the separate source pin), plus the rule fragments
-# app aspects compose their policies from (cluster.methods.netpol).
+# Types only: the chart ships no CRDs, the operator registers them at runtime.
 _:
 let
-  tcp = ports: [
+  portsOf = protocols: ports: [
     {
-      ports = map (port: {
-        port = toString port;
-        protocol = "TCP";
-      }) ports;
+      ports = builtins.concatMap (
+        port:
+        map (protocol: {
+          port = toString port;
+          inherit protocol;
+        }) protocols
+      ) ports;
     }
   ];
+  tcp = portsOf [ "TCP" ];
+  tcpUdp = portsOf [
+    "UDP"
+    "TCP"
+  ];
 
-  fromPods = namespace: labels: ports: {
+  fromNamespace = namespace: labels: ports: {
     fromEndpoints = [
       {
         matchLabels = labels // {
@@ -25,6 +30,25 @@ let
   };
 
   netpol = {
+    inherit tcp tcpUdp;
+
+    mkPolicy = labels: rules: {
+      spec = {
+        endpointSelector.matchLabels = labels;
+      }
+      // rules;
+    };
+
+    # Same namespace only.
+    fromPods = labels: ports: {
+      fromEndpoints = [ { matchLabels = labels; } ];
+      toPorts = tcp ports;
+    };
+    toPods = labels: ports: {
+      toEndpoints = [ { matchLabels = labels; } ];
+      toPorts = tcp ports;
+    };
+
     apiserverEgress = {
       toEntities = [ "kube-apiserver" ];
       toPorts = tcp [ 6443 ];
@@ -33,12 +57,12 @@ let
       fromEntities = [ "kube-apiserver" ];
       toPorts = tcp [ port ];
     };
-    scrapeIngress = fromPods "monitoring" { "app.kubernetes.io/name" = "vmagent"; };
+    scrapeIngress = fromNamespace "monitoring" { "app.kubernetes.io/name" = "vmagent"; };
     gatewayIngress =
-      port: fromPods "envoy-gateway-system" { "app.kubernetes.io/name" = "envoy"; } [ port ];
+      port: fromNamespace "envoy-gateway-system" { "app.kubernetes.io/name" = "envoy"; } [ port ];
     tunnelIngress =
       port:
-      fromPods "cloudflare-tunnel-system" {
+      fromNamespace "cloudflare-tunnel-system" {
         "app.kubernetes.io/name" = "cloudflare-tunnel-gateway-controller-proxy";
       } [ port ];
     fqdnEgress = names: ports: {
@@ -49,6 +73,7 @@ let
       toEntities = [ "world" ];
       toPorts = tcp ports;
     };
+    clusterEgress.toEntities = [ "cluster" ];
   };
 in
 {
@@ -77,5 +102,42 @@ in
           ];
         })
       ];
+
+      applications.cilium.resources.ciliumClusterwideNetworkPolicies = {
+        default-deny.spec = {
+          description = "Deny all pod traffic not allowed by another policy; allow DNS to CoreDNS.";
+          endpointSelector = { };
+          enableDefaultDeny = {
+            ingress = true;
+            egress = true;
+          };
+          # A section needs a rule for its default deny to apply.
+          ingress = [ { fromEntities = [ "host" ]; } ];
+          egress = [
+            {
+              toEndpoints = [
+                {
+                  matchLabels = {
+                    "k8s:io.kubernetes.pod.namespace" = "kube-system";
+                    k8s-app = "coredns";
+                  };
+                }
+              ];
+              toPorts = [
+                {
+                  inherit (builtins.head (tcpUdp [ 53 ])) ports;
+                  rules.dns = [ { matchPattern = "*"; } ];
+                }
+              ];
+            }
+          ];
+        };
+
+        cilium-health-checks.spec = {
+          endpointSelector.matchLabels."reserved:health" = "";
+          ingress = [ { fromEntities = [ "remote-node" ]; } ];
+          egress = [ { toEntities = [ "remote-node" ]; } ];
+        };
+      };
     };
 }

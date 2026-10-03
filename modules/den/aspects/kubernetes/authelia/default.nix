@@ -245,6 +245,17 @@ in
             uid = appId;
           }
           // {
+            ciliumNetworkPolicies = with cluster.methods.netpol; {
+              authelia = mkPolicy { "app.kubernetes.io/name" = "authelia"; } {
+                ingress = [
+                  (gatewayIngress 9091)
+                  (tunnelIngress 9091)
+                  (scrapeIngress [ 9959 ])
+                ];
+                egress = [ (fqdnEgress [ "smtp.gmail.com" ] [ 587 ]) ];
+              };
+            };
+
             externalSecrets.authelia-secrets = {
               metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
               spec = {
