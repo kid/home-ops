@@ -378,6 +378,11 @@ in
                   kind = "SecurityPolicy";
                   namespace = "monitoring";
                 }
+                {
+                  group = "gateway.envoyproxy.io";
+                  kind = "SecurityPolicy";
+                  namespace = "kube-system";
+                }
               ];
               to = [
                 {

@@ -31,6 +31,58 @@ _: {
         namespace = "kube-system";
         syncPolicy.syncOptions.serverSideApply = true;
 
+        resources.httpRoutes.hubble-ui.spec = {
+          parentRefs = [
+            {
+              group = "gateway.networking.k8s.io";
+              kind = "Gateway";
+              name = "apps";
+              namespace = "envoy-gateway-system";
+              sectionName = "https";
+            }
+          ];
+          hostnames = [ (cluster.methods.mkAppHostname "hubble") ];
+          rules = [
+            {
+              backendRefs = [
+                {
+                  name = "hubble-ui";
+                  port = 80;
+                }
+              ];
+            }
+          ];
+        };
+
+        # Hubble UI has no login of its own.
+        resources.securityPolicies =
+          (cluster.methods.mkForwardAuth {
+            name = "hubble-ui";
+            httpRouteName = "hubble-ui";
+          }).securityPolicies;
+
+        resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
+          hubble-relay = mkPolicy { k8s-app = "hubble-relay"; } {
+            ingress = [ (fromPods { k8s-app = "hubble-ui"; } [ 4245 ]) ];
+            egress = [
+              {
+                toEntities = [
+                  "host"
+                  "remote-node"
+                ];
+                toPorts = tcp [ 4244 ];
+              }
+            ];
+          };
+          hubble-ui = mkPolicy { k8s-app = "hubble-ui"; } {
+            ingress = [ (gatewayIngress 8081) ];
+            egress = [
+              apiserverEgress
+              (toPods { k8s-app = "hubble-relay"; } [ 4245 ])
+            ];
+          };
+        };
+
         helm.releases.cilium = {
           chart = charts.cilium.cilium;
           values = {
@@ -81,6 +133,9 @@ _: {
             };
 
             hubble = {
+              relay.enabled = true;
+              ui.enabled = true;
+
               tls.auto = {
                 method = "certmanager";
                 certManagerIssuerRef = {
