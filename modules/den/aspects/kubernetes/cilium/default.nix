@@ -51,10 +51,8 @@ _: {
 
             hostFirewall.enabled = true;
 
-            # Temporary, for the network-policy rollout: verdicts are logged,
-            # not enforced. Global, so node-host-firewall is audit-only too.
+            # Temporary: also stops enforcing node-host-firewall.
             policyAuditMode = true;
-            # The agent only reads cilium-config at start.
             rollOutCiliumPods = true;
 
             bgpControlPlane.enabled = true;
