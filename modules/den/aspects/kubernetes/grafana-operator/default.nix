@@ -36,6 +36,8 @@ _: {
                 [
                   (cluster.methods.mkAppHostname "auth")
                   "grafana.com"
+                  # grafana.com redirects plugin downloads here.
+                  "storage.googleapis.com"
                 ]
                 [ 443 ]
               )
