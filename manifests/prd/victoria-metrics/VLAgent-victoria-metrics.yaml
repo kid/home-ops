@@ -15,3 +15,9 @@ spec:
   port: "9429"
   remoteWrite:
     - url: http://vlsingle-victoria-metrics.monitoring.svc.cluster.local.:9428/insert/native
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi

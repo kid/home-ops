@@ -39,6 +39,17 @@ _: {
           values = {
             crds.enabled = true;
             app.metrics.service.servicemonitor.enabled = true;
+            defaultPackage.resources.requests = {
+              cpu = "10m";
+              memory = "32Mi";
+            };
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits.memory = "128Mi";
+            };
           };
         };
 

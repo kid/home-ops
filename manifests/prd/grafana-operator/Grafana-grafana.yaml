@@ -38,6 +38,12 @@ spec:
                 - name: GF_INSTALL_PLUGINS
                   value: victoriametrics-metrics-datasource,victoriametrics-logs-datasource
               name: grafana
+              resources:
+                limits:
+                  memory: 768Mi
+                requests:
+                  cpu: 50m
+                  memory: 384Mi
   httpRoute:
     spec:
       hostnames:

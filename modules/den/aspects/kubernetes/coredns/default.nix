@@ -35,6 +35,17 @@ _: {
           values = {
             service.clusterIP = cluster.networks.services.assignments.coredns;
             replicaCount = 1;
+            # limits.cpu = null drops the chart's default CPU limit.
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits = {
+                cpu = null;
+                memory = "128Mi";
+              };
+            };
             prometheus = {
               service.enabled = true;
               monitor.enabled = true;

@@ -88,6 +88,12 @@ spec:
             tcpSocket:
               port: 9001
           name: argocd-notifications-controller
+          resources:
+            limits:
+              memory: 192Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

@@ -96,6 +96,31 @@ _: {
             crds.enabled = true;
             replicaCount = 1;
             prometheus.servicemonitor.enabled = true;
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits.memory = "192Mi";
+            };
+            webhook.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits.memory = "128Mi";
+            };
+            startupapicheck.resources.requests = {
+              cpu = "10m";
+              memory = "64Mi";
+            };
+            cainjector.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "128Mi";
+              };
+              limits.memory = "384Mi";
+            };
           };
         };
 

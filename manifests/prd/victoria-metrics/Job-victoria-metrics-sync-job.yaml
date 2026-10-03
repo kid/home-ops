@@ -40,6 +40,10 @@ spec:
           image: ghcr.io/victoriametrics/sync-job:v0.0.17
           imagePullPolicy: IfNotPresent
           name: sync-job
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
           volumeMounts:
             - mountPath: /etc/config
               name: config

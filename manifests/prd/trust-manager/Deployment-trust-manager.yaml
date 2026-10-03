@@ -49,7 +49,12 @@ spec:
               port: 6060
             initialDelaySeconds: 3
             periodSeconds: 7
-          resources: {}
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -74,6 +79,10 @@ spec:
           image: quay.io/jetstack/trust-pkg-debian-trixie:20250419.2
           imagePullPolicy: IfNotPresent
           name: cert-manager-package-debian
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

@@ -381,6 +381,12 @@ spec:
               port: 8082
             initialDelaySeconds: 5
             periodSeconds: 10
+          resources:
+            limits:
+              memory: 2560Mi
+            requests:
+              cpu: 50m
+              memory: 768Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

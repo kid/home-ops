@@ -127,6 +127,74 @@ in
             transformer = builtins.filter (o: o.kind != "NetworkPolicy");
           };
 
+          resources.statefulSets.argocd-application-controller.spec.template.spec.containers.argocd-application-controller.resources =
+            {
+              requests = {
+                cpu = "50m";
+                memory = "768Mi";
+              };
+              limits.memory = "2560Mi";
+            };
+
+          resources.deployments = {
+            argocd-applicationset-controller.spec.template.spec.containers.argocd-applicationset-controller.resources =
+              {
+                requests = {
+                  cpu = "10m";
+                  memory = "64Mi";
+                };
+                limits.memory = "192Mi";
+              };
+            argocd-notifications-controller.spec.template.spec.containers.argocd-notifications-controller.resources =
+              {
+                requests = {
+                  cpu = "10m";
+                  memory = "64Mi";
+                };
+                limits.memory = "192Mi";
+              };
+            argocd-repo-server.spec.template.spec.initContainers.copyutil.resources.requests = {
+              cpu = "10m";
+              memory = "32Mi";
+            };
+            argocd-dex-server.spec.template.spec.initContainers.copyutil.resources.requests = {
+              cpu = "10m";
+              memory = "32Mi";
+            };
+            argocd-redis.spec.template.spec.initContainers.secret-init.resources.requests = {
+              cpu = "10m";
+              memory = "32Mi";
+            };
+            argocd-repo-server.spec.template.spec.containers.argocd-repo-server.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "128Mi";
+              };
+              limits.memory = "384Mi";
+            };
+            argocd-server.spec.template.spec.containers.argocd-server.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits.memory = "256Mi";
+            };
+            argocd-dex-server.spec.template.spec.containers.dex.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "128Mi";
+              };
+              limits.memory = "256Mi";
+            };
+            argocd-redis.spec.template.spec.containers.redis.resources = {
+              requests = {
+                cpu = "10m";
+                memory = "32Mi";
+              };
+              limits.memory = "64Mi";
+            };
+          };
+
           resources.appProjects.default.spec = {
             clusterResourceWhitelist = [
               {

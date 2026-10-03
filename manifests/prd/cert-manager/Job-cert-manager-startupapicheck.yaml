@@ -36,6 +36,10 @@ spec:
           image: quay.io/jetstack/cert-manager-startupapicheck:v1.21.2
           imagePullPolicy: IfNotPresent
           name: cert-manager-startupapicheck
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

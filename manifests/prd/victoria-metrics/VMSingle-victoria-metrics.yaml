@@ -14,6 +14,12 @@ spec:
     tag: v1.153.0
   port: "8428"
   replicaCount: 1
+  resources:
+    limits:
+      memory: 2Gi
+    requests:
+      cpu: 100m
+      memory: 1280Mi
   retentionPeriod: 30d
   storage:
     accessModes:

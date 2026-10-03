@@ -18,7 +18,16 @@ _: {
 
         helm.releases.snapshot-controller = {
           chart = charts.home-operations.snapshot-controller;
-          values.monitoring.serviceMonitor.enabled = true;
+          values = {
+            monitoring.serviceMonitor.enabled = true;
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "64Mi";
+              };
+              limits.memory = "128Mi";
+            };
+          };
         };
       };
     };

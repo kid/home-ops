@@ -97,6 +97,13 @@ in
                 fsGroup = appId;
                 fsGroupChangePolicy = "OnRootMismatch";
               };
+              resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "64Mi";
+                };
+                limits.memory = "128Mi";
+              };
             };
 
             persistence = {

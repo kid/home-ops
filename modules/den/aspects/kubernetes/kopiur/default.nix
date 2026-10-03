@@ -28,9 +28,15 @@ let
           name = "r2";
         };
         credentialProjection.enabled = true;
-        mover.securityContext = {
-          runAsUser = uid;
-          runAsGroup = uid;
+        mover = {
+          securityContext = {
+            runAsUser = uid;
+            runAsGroup = uid;
+          };
+          resources.requests = {
+            cpu = "50m";
+            memory = "192Mi";
+          };
         };
         sources = [ { pvc.name = name; } ];
         identity = {
@@ -147,7 +153,24 @@ in
               };
             };
 
-            webhook.serviceMonitor.enabled = true;
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "128Mi";
+              };
+              limits.memory = "256Mi";
+            };
+
+            webhook = {
+              serviceMonitor.enabled = true;
+              resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "64Mi";
+                };
+                limits.memory = "128Mi";
+              };
+            };
           };
         };
 

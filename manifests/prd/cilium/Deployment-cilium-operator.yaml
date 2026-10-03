@@ -92,6 +92,12 @@ spec:
             initialDelaySeconds: 0
             periodSeconds: 5
             timeoutSeconds: 3
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 128Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

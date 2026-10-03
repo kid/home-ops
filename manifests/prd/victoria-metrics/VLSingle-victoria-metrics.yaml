@@ -14,6 +14,12 @@ spec:
     tag: v1.52.0
   port: "9428"
   replicaCount: 1
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      cpu: 10m
+      memory: 128Mi
   retentionPeriod: 30d
   storage:
     accessModes:

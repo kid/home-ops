@@ -58,6 +58,13 @@ in
               "crd"
             ];
             serviceMonitor.enabled = true;
+            resources = {
+              requests = {
+                cpu = "10m";
+                memory = "128Mi";
+              };
+              limits.memory = "256Mi";
+            };
 
             registry = "txt";
             txtOwnerId = cluster.name;
@@ -73,6 +80,13 @@ in
                   # renovate: datasource=docker depName=ghcr.io/mirceanton/external-dns-provider-mikrotik
                   tag = "v1.6.3@sha256:5794c1572153346e030a7de898e58c1fb81e6bd2f3eea563aabfa6d64ed199e0";
                   pullPolicy = "IfNotPresent";
+                };
+                resources = {
+                  requests = {
+                    cpu = "10m";
+                    memory = "64Mi";
+                  };
+                  limits.memory = "128Mi";
                 };
                 env = [
                   {
