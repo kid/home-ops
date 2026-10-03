@@ -44,13 +44,18 @@ spec:
                 secretKeyRef:
                   key: auth-token
                   name: cloudflare-tunnel-gateway-controller-proxy-auth-token
-          image: ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller-proxy:3.5.0
+            - name: PROXY_CONFIG_TLS_CERT_FILE
+              value: /etc/cf-proxy/config-tls/tls.crt
+            - name: PROXY_CONFIG_TLS_KEY_FILE
+              value: /etc/cf-proxy/config-tls/tls.key
+          image: ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller-proxy:4.0.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
             httpGet:
               path: /healthz
               port: config-api
+              scheme: HTTPS
             initialDelaySeconds: 15
             periodSeconds: 20
             timeoutSeconds: 5
@@ -67,6 +72,7 @@ spec:
             httpGet:
               path: /readyz
               port: config-api
+              scheme: HTTPS
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 3
@@ -88,12 +94,21 @@ spec:
             httpGet:
               path: /healthz
               port: config-api
+              scheme: HTTPS
             initialDelaySeconds: 0
             periodSeconds: 5
             timeoutSeconds: 3
+          volumeMounts:
+            - mountPath: /etc/cf-proxy/config-tls
+              name: config-tls
+              readOnly: true
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
         seccompProfile:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 45
+      volumes:
+        - name: config-tls
+          secret:
+            secretName: cloudflare-tunnel-gateway-controller-proxy-config-tls

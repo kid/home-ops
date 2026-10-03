@@ -5,6 +5,7 @@ metadata:
     app.kubernetes.io/component: proxy
     app.kubernetes.io/instance: cloudflare-tunnel-gateway-controller
     app.kubernetes.io/name: cloudflare-tunnel-gateway-controller-proxy
+    cf.k8s.lex.la/metrics: "true"
   name: cloudflare-tunnel-gateway-controller-proxy
   namespace: cloudflare-tunnel-system
 spec:
