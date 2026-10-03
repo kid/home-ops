@@ -1,7 +1,4 @@
-# Typed nixidy options for CiliumNetworkPolicy/CiliumClusterwideNetworkPolicy
-# (types only — the operator registers the real CRDs at runtime, and the
-# chart ships none, hence the separate source pin), plus the rule fragments
-# app aspects compose their policies from (cluster.methods.netpol).
+# Types only: the chart ships no CRDs, the operator registers them at runtime.
 _:
 let
   tcp = ports: [
