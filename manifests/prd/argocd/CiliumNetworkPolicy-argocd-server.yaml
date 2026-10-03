@@ -43,3 +43,20 @@ spec:
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: argocd-server
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: envoy
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: cloudflare-tunnel-gateway-controller-proxy
+            k8s:io.kubernetes.pod.namespace: cloudflare-tunnel-system
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

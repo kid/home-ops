@@ -34,8 +34,6 @@ in
         applications.argocd = {
           namespace = "argocd";
 
-          # Egress only: the upstream manifests ship their own ingress
-          # NetworkPolicies, which Cilium enforces alongside these.
           resources.ciliumNetworkPolicies =
             with cluster.methods.netpol;
             let
@@ -53,6 +51,10 @@ in
                 ];
               };
               argocd-server = mkPolicy (app "server") {
+                ingress = [
+                  (gatewayIngress 8080)
+                  (tunnelIngress 8080)
+                ];
                 egress = [
                   apiserverEgress
                   redis
@@ -65,6 +67,12 @@ in
                 ];
               };
               argocd-repo-server = mkPolicy (app "repo-server") {
+                ingress = map (name: fromPods (app name) [ 8081 ]) [
+                  "server"
+                  "application-controller"
+                  "applicationset-controller"
+                  "notifications-controller"
+                ];
                 egress = [
                   redis
                   (fqdnEgress [ "github.com" ] [ 443 ])
@@ -77,6 +85,12 @@ in
                 ];
               };
               argocd-dex-server = mkPolicy (app "dex-server") {
+                ingress = [
+                  (fromPods (app "server") [
+                    5556
+                    5557
+                  ])
+                ];
                 egress = [
                   apiserverEgress
                   authelia
@@ -86,6 +100,13 @@ in
                 egress = [
                   apiserverEgress
                   repoServer
+                ];
+              };
+              argocd-redis = mkPolicy (app "redis") {
+                ingress = map (name: fromPods (app name) [ 6379 ]) [
+                  "server"
+                  "repo-server"
+                  "application-controller"
                 ];
               };
             };
@@ -102,6 +123,10 @@ in
               };
               path = "manifests/cluster-install";
             };
+            # Upstream's ingress-only NetworkPolicies are wider than the
+            # CiliumNetworkPolicies above (argocd-server: any source), and
+            # allow rules from both kinds add up.
+            transformer = builtins.filter (o: o.kind != "NetworkPolicy");
           };
 
           resources.appProjects.default.spec = {
