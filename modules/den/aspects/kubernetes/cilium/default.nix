@@ -51,6 +51,12 @@ _: {
 
             hostFirewall.enabled = true;
 
+            # Temporary, for the network-policy rollout: verdicts are logged,
+            # not enforced. Global, so node-host-firewall is audit-only too.
+            policyAuditMode = true;
+            # The agent only reads cilium-config at start.
+            rollOutCiliumPods = true;
+
             bgpControlPlane.enabled = true;
 
             # Gateway API is served by Envoy Gateway instead (see
@@ -96,6 +102,7 @@ _: {
                   "flow"
                   "icmp"
                   "http"
+                  "policy:sourceContext=app|workload-name|pod|reserved-identity;destinationContext=app|workload-name|pod|dns|reserved-identity;labelsContext=source_namespace,destination_namespace"
                 ];
                 serviceMonitor.enabled = true;
               };

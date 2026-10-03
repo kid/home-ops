@@ -142,6 +142,7 @@ in
       cilium
       cilium-bgp
       cilium-host-firewall
+      cilium-network-policy
       envoy-gateway
       cert-manager
       trust-manager
