@@ -42,7 +42,7 @@
     nh.url = "github:nix-community/nh/25da175ed91650523ac7a8b7aa38aedb736546bc";
     nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";
     nixhelm = {
-      url = "github:farcaller/nixhelm/00542807dbadb5127780226ae70ca1a66f9eb44c";
+      url = "github:farcaller/nixhelm/4cdf995205c042d114f14dbe76402f755c67d928";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixidy = {
