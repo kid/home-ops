@@ -27,6 +27,7 @@ let
   inherit (environment) networks;
 
   allVlanIds = rosLib.allVlanIds networks;
+  jumboL2mtu = rosLib.jumboL2mtu networks;
   routedNetworks = lib.filterAttrs (_: net: net.routed) networks;
 
   # Every ros-* stack needs its own onepassword provider auth — the routeros
@@ -101,22 +102,27 @@ in
             ethernet_interfaces = {
               "sfp-sfpplus1" = {
                 comment = "uplink to crs320";
+                l2mtu = jumboL2mtu;
                 tagged = allVlanIds;
               };
               ether1 = {
                 comment = "pve1";
+                l2mtu = jumboL2mtu;
                 tagged = allVlanIds;
               };
               ether2 = {
                 comment = "switch";
+                l2mtu = jumboL2mtu;
                 untagged = networks.Management.vlanId;
               };
               ether3 = {
                 comment = "capxr1";
+                l2mtu = jumboL2mtu;
                 tagged = allVlanIds;
               };
               ether4 = {
                 comment = "capxr0";
+                l2mtu = jumboL2mtu;
                 tagged = allVlanIds;
               };
               ether7 = {

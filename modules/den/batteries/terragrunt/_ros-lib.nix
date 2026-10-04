@@ -7,6 +7,13 @@
 {
   allVlanIds = networks: lib.sort (a: b: a < b) (lib.mapAttrsToList (_: net: net.vlanId) networks);
 
+  # Bridge L2MTU is the lowest of its ports, and a VLAN interface whose mtu
+  # exceeds it shows "MTU > L2MTU" on the router. +18: Ethernet header + tag.
+  jumboL2mtu =
+    networks:
+    lib.foldl' lib.max 1500 (lib.filter (m: m != null) (lib.mapAttrsToList (_: net: net.mtu) networks))
+    + 18;
+
   # Matches terragrunt-infra-catalog's ros-base module `vlans` variable
   # object shape (name, vlan_id, mtu?, interface_lists?).
   toVlanInput =

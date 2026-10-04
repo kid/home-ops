@@ -14,6 +14,7 @@ let
   inherit (environment) networks;
 
   allVlanIds = rosLib.allVlanIds networks;
+  jumboL2mtu = rosLib.jumboL2mtu networks;
 
   managementHostNum = 2;
   managementMac = "f4:1e:57:d1:75:94";
@@ -77,10 +78,12 @@ in
           ethernet_interfaces = {
             "sfp-sfpplus1" = {
               comment = "uplink to rb5009";
+              l2mtu = jumboL2mtu;
               tagged = allVlanIds;
             };
             "sfp-sfpplus3" = {
               comment = "node1";
+              l2mtu = jumboL2mtu;
               untagged = networks.Servers.vlanId;
               tagged = lib.sort (a: b: a < b) [
                 networks.Storage.vlanId
@@ -89,6 +92,7 @@ in
             };
             "sfp-sfpplus4" = {
               comment = "pve1";
+              l2mtu = jumboL2mtu;
               tagged = allVlanIds;
             };
             ether1 = {

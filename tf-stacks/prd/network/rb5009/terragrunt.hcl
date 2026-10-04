@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-base?ref=ros-base/v2.0.0"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-base?ref=ros-base/v2.1.0"
   copy_terraform_lock_file = false
 }
 
@@ -258,6 +258,7 @@ inputs = {
   ethernet_interfaces = {
     ether1 = {
       comment = "pve1"
+      l2mtu   = 9018
       tagged = [
         10,
         20,
@@ -272,10 +273,12 @@ inputs = {
     }
     ether2 = {
       comment  = "switch"
+      l2mtu    = 9018
       untagged = 99
     }
     ether3 = {
       comment = "capxr1"
+      l2mtu   = 9018
       tagged = [
         10,
         20,
@@ -290,6 +293,7 @@ inputs = {
     }
     ether4 = {
       comment = "capxr0"
+      l2mtu   = 9018
       tagged = [
         10,
         20,
@@ -318,6 +322,7 @@ inputs = {
     }
     sfp-sfpplus1 = {
       comment = "uplink to crs320"
+      l2mtu   = 9018
       tagged = [
         10,
         20,
