@@ -174,7 +174,7 @@ inputs = {
       {
         address = "10.0.40.10"
         mac     = "52:54:00:40:00:01"
-        name    = "k3s-prd-0-k3s"
+        name    = "k3s-prd-0"
       },
     ]
     Management = [
@@ -236,8 +236,8 @@ inputs = {
     Storage = [
       {
         address = "10.0.20.126"
-        mac     = "bc:24:11:9f:50:bf"
-        name    = "truenas-storage"
+        mac     = "bc:24:11:64:8c:c1"
+        name    = "truenas"
       },
     ]
     Trusted = [

@@ -21,7 +21,7 @@ let
         builtins.attrNames allHosts
       );
     in
-    config.den.devices."${builtins.head members}-k3s".address;
+    config.den.devices.${builtins.head members}.address;
 
   render =
     name: cluster:

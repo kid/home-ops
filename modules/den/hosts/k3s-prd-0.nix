@@ -5,10 +5,14 @@
     settings.k3s-miroir-node.settings.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir--data";
   };
 
-  den.devices."k3s-prd-0-k3s" = {
-    network = "K3s";
-    hostNum = 10;
-    mac = "52:54:00:40:00:01";
+  den.devices.k3s-prd-0 = {
+    interfaces = [
+      {
+        network = "K3s";
+        hostNum = 10;
+        mac = "52:54:00:40:00:01";
+      }
+    ];
   };
 
   den.aspects.k3s-prd-0.nixos =
@@ -45,5 +49,5 @@
 
   fleet.user-access.by-host.k3s-prd-0.groups = [ "admin" ];
 
-  fleet.nh.targets.k3s-prd-0.hostname = config.den.devices."k3s-prd-0-k3s".address;
+  fleet.nh.targets.k3s-prd-0.hostname = config.den.devices.k3s-prd-0.address;
 }

@@ -7,14 +7,22 @@
 
   den.devices = {
     node1 = {
-      network = "Servers";
-      hostNum = 10;
-      mac = "d0:50:99:fe:51:b5";
+      interfaces = [
+        {
+          network = "Servers";
+          hostNum = 10;
+          mac = "d0:50:99:fe:51:b5";
+        }
+      ];
     };
     node1-ipmi = {
-      network = "Management";
-      hostNum = (den.networks.Servers.vlanId * 256) + 10;
-      mac = "d0:50:99:f7:ee:15";
+      interfaces = [
+        {
+          network = "Management";
+          hostNum = (den.networks.Servers.vlanId * 256) + 10;
+          mac = "d0:50:99:f7:ee:15";
+        }
+      ];
     };
   };
 

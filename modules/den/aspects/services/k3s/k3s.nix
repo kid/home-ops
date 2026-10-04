@@ -10,8 +10,8 @@
 # rb5009 by modules/den/policies/pipes.nix's
 # routeros-device-collect-k3s-nodes (consumed by modules/den/aspects/routeros/
 # ros-bgp.nix, to build its per-node BGP connections) — `address` is this
-# host's own IP on the K3s VLAN, read from the `<hostname>-k3s` den.devices
-# entry every k3s host declares (see modules/den/hosts/node1.nix).
+# host's primary (first-interface) address from its own den.devices entry,
+# which for a k3s host is the K3s VLAN one (see modules/den/hosts/k3s-prd-0.nix).
 {
   config,
   den,
@@ -28,11 +28,11 @@ in
       { host, ... }:
       {
         hostname = host.name;
-        # null for hosts with no `<hostname>-k3s` den.devices entry (e.g.
+        # null for hosts with no den.devices entry (e.g.
         # test-vm, a throwaway QEMU smoke-test host with no real network
         # attachment) — modules/den/aspects/routeros/bgp.nix filters these
         # out rather than feeding a bogus peer IP to RouterOS.
-        address = (config.den.devices."${host.name}-k3s" or { }).address or null;
+        address = (config.den.devices.${host.name} or { }).address or null;
       };
 
     persist.directories = [
@@ -53,7 +53,7 @@ in
         cluster = clusters.${clusterName};
         podCIDR = cluster.networks.pods.cidr;
         serviceCIDR = cluster.networks.services.cidr;
-        nodeIp = (config.den.devices."${host.name}-k3s" or { }).address or null;
+        nodeIp = (config.den.devices.${host.name} or { }).address or null;
       in
       {
         services.k3s = {
