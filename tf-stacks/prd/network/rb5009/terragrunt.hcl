@@ -103,15 +103,11 @@ inputs = {
       ]
     }
     Storage = {
-      cidr = "10.0.20.0/24"
-      dns_servers = [
-        "10.0.20.1",
-      ]
-      domain  = "storage.home.kidibox.net"
-      gateway = "10.0.20.1"
-      ntp_servers = [
-        "10.0.20.1",
-      ]
+      cidr        = "10.0.20.0/24"
+      dns_servers = []
+      domain      = "storage.home.kidibox.net"
+      gateway     = null
+      ntp_servers = []
     }
     Trusted = {
       cidr = "10.0.100.0/24"
