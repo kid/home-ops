@@ -65,6 +65,14 @@ in
         name = "onepassword";
         kind = "ClusterSecretStore";
       };
+      valkeyLabels."app.kubernetes.io/name" = "authelia-valkey";
+      # renovate: datasource=docker depName=docker.io/valkey/valkey
+      valkeyTag = "9.1.2@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd";
+      # The consent page then has a "remember" checkbox, instead of a prompt at each login.
+      rememberConsent = {
+        consent_mode = "pre-configured";
+        pre_configured_consent_duration = "1 year";
+      };
     in
     {
       # Reused by mkForwardAuth above for any app cluster.methods.mkForwardAuth
@@ -123,12 +131,22 @@ in
                 serviceMonitor.enabled = true;
               };
 
-              session.cookies = [
-                {
-                  inherit (cluster) domain;
-                  subdomain = "auth";
-                }
-              ];
+              session = {
+                inactivity = "1 week";
+                expiration = "1 month";
+                cookies = [
+                  {
+                    inherit (cluster) domain;
+                    subdomain = "auth";
+                  }
+                ];
+                # Without it the sessions are in memory, lost at each restart. No password: only the authelia pod reaches it.
+                redis = {
+                  enabled = true;
+                  host = "authelia-valkey";
+                  password.disabled = true;
+                };
+              };
 
               storage.local.enabled = true;
 
@@ -170,6 +188,7 @@ in
               identity_providers.oidc = {
                 enabled = true;
                 jwks = [ { key.path = "${extraDir}/oidc.jwks.rsa.key"; } ];
+                lifespans.refresh_token = "30 days";
 
                 # Authelia 4.39 leaves these claims out of the ID token unless a policy adds them.
                 claims_policies.oidc-id-token.id_token = [
@@ -181,7 +200,7 @@ in
                   "name"
                 ];
 
-                clients = [
+                clients = map (client: client // rememberConsent) [
                   {
                     client_id = "argocd";
                     client_name = "ArgoCD";
@@ -259,7 +278,61 @@ in
                   (tunnelIngress 9091)
                   (scrapeIngress [ 9959 ])
                 ];
-                egress = [ (fqdnEgress [ "smtp.gmail.com" ] [ 587 ]) ];
+                egress = [
+                  (fqdnEgress [ "smtp.gmail.com" ] [ 587 ])
+                  (toPods valkeyLabels [ 6379 ])
+                ];
+              };
+              authelia-valkey = mkPolicy valkeyLabels {
+                ingress = [ (fromPods { "app.kubernetes.io/name" = "authelia"; } [ 6379 ]) ];
+              };
+            };
+
+            # Sessions only, so no kopiur backup. The volume keeps them over a Valkey restart.
+            statefulSets.authelia-valkey.spec = {
+              serviceName = "authelia-valkey";
+              selector.matchLabels = valkeyLabels;
+              template = {
+                metadata.labels = valkeyLabels;
+                spec = {
+                  securityContext = {
+                    runAsNonRoot = true;
+                    runAsUser = 999;
+                    runAsGroup = 999;
+                    fsGroup = 999;
+                    fsGroupChangePolicy = "OnRootMismatch";
+                  };
+                  containers.valkey = {
+                    image = "docker.io/valkey/valkey:${valkeyTag}";
+                    ports.redis.containerPort = 6379;
+                    volumeMounts."/data".name = "data";
+                    resources = {
+                      requests = {
+                        cpu = "10m";
+                        memory = "32Mi";
+                      };
+                      limits.memory = "64Mi";
+                    };
+                  };
+                };
+              };
+              volumeClaimTemplates = [
+                {
+                  metadata.name = "data";
+                  spec = {
+                    storageClassName = "miroir";
+                    accessModes = [ "ReadWriteOnce" ];
+                    resources.requests.storage = "1Gi";
+                  };
+                }
+              ];
+            };
+
+            services.authelia-valkey.spec = {
+              selector = valkeyLabels;
+              ports.redis = {
+                port = 6379;
+                targetPort = "redis";
               };
             };
 
