@@ -37,11 +37,11 @@ in
   # routerosDevices/aspects reference (e.g. rb5009's dhcp_static_leases/
   # firewall-rule entries for crs320, via config.den.devices.crs320).
   den.devices.crs320 = {
-    mac = managementMac;
     interfaces = [
       {
         network = "Management";
         hostNum = managementHostNum;
+        mac = managementMac;
       }
     ];
   };

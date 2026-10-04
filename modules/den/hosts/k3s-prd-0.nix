@@ -6,11 +6,11 @@
   };
 
   den.devices.k3s-prd-0 = {
-    mac = "52:54:00:40:00:01";
     interfaces = [
       {
         network = "K3s";
         hostNum = 10;
+        mac = "52:54:00:40:00:01";
       }
     ];
   };

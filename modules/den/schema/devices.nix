@@ -1,6 +1,6 @@
 # Network client-device registry — a Proxmox host, a camera, a vacuum robot,
-# ... anything with a known MAC and one or more host-number/VLAN
-# interfaces, used to derive
+# ... anything with one or more known MAC/host-number/VLAN interfaces,
+# used to derive
 # `dhcp_static_leases` dynamically (modules/den/batteries/terragrunt/_ros-lib.nix's
 # `staticLeasesByNetwork`, wired in modules/den/routerosDevices/rb5009.nix).
 #
@@ -30,21 +30,12 @@ in
     type = lib.types.attrsOf (
       lib.types.submodule (
         { name, config, ... }:
-        let
-          device = config;
-        in
         {
           options = {
             name = lib.mkOption {
               type = lib.types.str;
               default = name;
               description = "Device name";
-            };
-
-            mac = lib.mkOption {
-              type = lib.types.nullOr lib.types.str;
-              default = null;
-              description = "MAC address, the default for every interface";
             };
 
             # Ordered: the first interface is the device's primary address.
@@ -66,9 +57,7 @@ in
 
                       mac = lib.mkOption {
                         type = lib.types.str;
-                        default = device.mac;
-                        defaultText = "<device's mac>";
-                        description = "MAC address, when it differs from the device's";
+                        description = "MAC address";
                       };
 
                       address = lib.mkOption {
@@ -86,7 +75,7 @@ in
                   }
                 )
               );
-              description = "Network attachments (VLAN/host-number, optionally its own MAC)";
+              description = "Network attachments (VLAN/host-number/MAC)";
             };
 
             # Resolved directly here (not left to every consumer to redo
@@ -103,6 +92,6 @@ in
       )
     );
     default = { };
-    description = "Network client device registry (hostname/MAC/interfaces) — used to derive dhcp_static_leases";
+    description = "Network client device registry (hostname/interfaces) — used to derive dhcp_static_leases";
   };
 }
