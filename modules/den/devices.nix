@@ -50,6 +50,13 @@
       mac = "bc:24:11:9f:50:bf";
     };
 
+    # Storage
+    truenas-storage = {
+      network = "Storage";
+      hostNum = 126;
+      inherit (den.devices.truenas) mac;
+    };
+
     # Trusted
     "everything-presence-lite-20b1c4" = {
       network = "Trusted";

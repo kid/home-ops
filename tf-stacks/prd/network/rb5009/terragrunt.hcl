@@ -233,6 +233,13 @@ inputs = {
         name    = "pve1"
       },
     ]
+    Storage = [
+      {
+        address = "10.0.20.126"
+        mac     = "bc:24:11:9f:50:bf"
+        name    = "truenas-storage"
+      },
+    ]
     Trusted = [
       {
         address = "10.0.100.108"
