@@ -35,7 +35,7 @@
     address = net.methods.host 1;
   };
 
-  # Groups den.devices entries by network and reshapes each into the
+  # Groups every den.devices interface by network and reshapes each into the
   # dhcp_static_leases Terraform shape ({name, mac, address}) — den.devices
   # already resolves `address` itself (modules/den/schema/devices.nix), no
   # cidrLib needed here. Keyed the same way dhcp_servers already is
@@ -46,8 +46,16 @@
   # (terragrunt-infra-catalog's ros-dhcp-server/main.tofu).
   staticLeasesByNetwork =
     devices:
-    lib.mapAttrs (_: devs: map (d: { inherit (d) name mac address; }) devs) (
-      lib.groupBy (d: d.network) (builtins.attrValues devices)
+    lib.mapAttrs (_: map (i: removeAttrs i [ "network" ])) (
+      lib.groupBy (i: i.network) (
+        lib.concatMap (
+          d:
+          map (i: {
+            inherit (d) name;
+            inherit (i) network mac address;
+          }) d.interfaces
+        ) (builtins.attrValues devices)
+      )
     );
 
   # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
