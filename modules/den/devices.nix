@@ -78,6 +78,7 @@
         {
           network = "Storage";
           hostNum = 126;
+          mac = "bc:24:11:64:8c:c1";
         }
       ];
     };

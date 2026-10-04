@@ -236,7 +236,7 @@ inputs = {
     Storage = [
       {
         address = "10.0.20.126"
-        mac     = "bc:24:11:9f:50:bf"
+        mac     = "bc:24:11:64:8c:c1"
         name    = "truenas"
       },
     ]
