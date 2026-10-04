@@ -87,6 +87,12 @@
               description = "DHCP gateway override (defaults to the network's own .1 address)";
             };
 
+            dhcpAdvertiseGateway = lib.mkOption {
+              type = lib.types.bool;
+              default = true;
+              description = "Whether the DHCP server hands out a default gateway (false for an address-only VLAN multi-homed hosts must not route through)";
+            };
+
             dhcpDnsServers = lib.mkOption {
               type = lib.types.nullOr (lib.types.listOf lib.types.str);
               default = null;
