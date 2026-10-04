@@ -43,7 +43,10 @@ _: {
         (generators.fromChartCRDModule {
           name = "victoria-metrics";
           chart = charts.victoriametrics.victoria-metrics-k8s-stack;
-          kindFilter = [ "VMStaticScrape" ];
+          kindFilter = [
+            "VMStaticScrape"
+            "VMProbe"
+          ];
         })
       ];
 
