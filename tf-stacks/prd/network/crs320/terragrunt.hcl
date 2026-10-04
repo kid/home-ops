@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-base?ref=ros-base/v2.0.0"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-base?ref=ros-base/v2.1.0"
   copy_terraform_lock_file = false
 }
 
@@ -97,6 +97,7 @@ inputs = {
     }
     sfp-sfpplus1 = {
       comment = "uplink to rb5009"
+      l2mtu   = 9018
       tagged = [
         10,
         20,
@@ -111,6 +112,7 @@ inputs = {
     }
     sfp-sfpplus3 = {
       comment = "node1"
+      l2mtu   = 9018
       tagged = [
         20,
         40,
@@ -119,6 +121,7 @@ inputs = {
     }
     sfp-sfpplus4 = {
       comment = "pve1"
+      l2mtu   = 9018
       tagged = [
         10,
         20,
