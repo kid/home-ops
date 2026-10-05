@@ -58,6 +58,7 @@ in
       {
         services.k3s = {
           enable = true;
+          package = pkgs.k3s_1_37;
           role = "server";
           clusterInit = true;
           # CNI-agnostic disables only — CNI-dependent flags live in the

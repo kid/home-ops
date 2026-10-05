@@ -158,6 +158,8 @@ in
       authelia
       prometheus-operator-crds
       victoria-metrics
+      blackbox-exporter
+      prometheus-adapter
       grafana-operator
       grafana-oidc
       cloudflared
