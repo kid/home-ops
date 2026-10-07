@@ -236,6 +236,8 @@ in
                     redirect_uris = [
                       "http://localhost:8000"
                       "http://localhost:18000"
+                      # Headlamp logs in with this client too, so its ID token has the audience the API server checks.
+                      "https://${cluster.methods.mkAppHostname "headlamp"}/oidc-callback"
                     ];
                     # Authelia's kubelogin page (integration/openid-connect/clients/kubelogin) plus offline_access
                     # and refresh_token, without which the login expires with the ID token after an hour.
