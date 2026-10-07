@@ -48,7 +48,7 @@ spec:
               value: /etc/cf-proxy/config-tls/tls.crt
             - name: PROXY_CONFIG_TLS_KEY_FILE
               value: /etc/cf-proxy/config-tls/tls.key
-          image: ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller-proxy:4.0.0
+          image: ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller-proxy:5.0.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
