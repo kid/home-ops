@@ -57,7 +57,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     treefmt-nix = {
-      url = "github:numtide/treefmt-nix/27b3b12a8e6375f28ebe122f07d230ca5459bbfa";
+      url = "github:numtide/treefmt-nix/4cfe8d7065cc8ca91c0a50361b6dd74920eeb1f5";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
