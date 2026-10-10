@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: headlamp
+    app.kubernetes.io/name: headlamp
+  name: headlamp
+  namespace: headlamp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: headlamp
+      app.kubernetes.io/name: headlamp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: headlamp
+        app.kubernetes.io/name: headlamp
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - -in-cluster
+            - -in-cluster-context-name=main
+            - -plugins-dir=/headlamp/plugins
+            - -session-ttl=86400
+            - -oidc-client-id=$(OIDC_CLIENT_ID)
+            - -oidc-client-secret=$(OIDC_CLIENT_SECRET)
+            - -oidc-idp-issuer-url=$(OIDC_ISSUER_URL)
+            - -oidc-scopes=$(OIDC_SCOPES)
+            - -oidc-callback-url=$(OIDC_CALLBACK_URL)
+          envFrom:
+            - secretRef:
+                name: headlamp-oidc
+          image: ghcr.io/headlamp-k8s/headlamp:v0.45.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: headlamp
+          ports:
+            - containerPort: 4466
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            privileged: false
+            runAsGroup: 101
+            runAsNonRoot: true
+            runAsUser: 100
+          volumeMounts:
+            - mountPath: /headlamp/plugins
+              name: plugins-dir
+        - args:
+            - |
+              if [ -f "/config/plugin.yml" ]; then
+                echo "Installing plugins from config..."
+                cat /config/plugin.yml
+                # Use a writable cache directory
+                export NPM_CONFIG_CACHE=/tmp/npm-cache
+                # Use a writable config directory
+                export NPM_CONFIG_USERCONFIG=/tmp/npm-userconfig
+                mkdir -p /tmp/npm-cache /tmp/npm-userconfig
+                npx --yes @headlamp-k8s/pluginctl@0.1.1 install --config /config/plugin.yml --folderName /headlamp/plugins --watch
+              fi
+          command:
+            - /bin/sh
+            - -c
+          image: node:lts-alpine
+          name: headlamp-plugin
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            privileged: false
+            runAsGroup: 101
+            runAsNonRoot: true
+            runAsUser: 100
+          volumeMounts:
+            - mountPath: /headlamp/plugins
+              name: plugins-dir
+            - mountPath: /config
+              name: plugin-config
+      hostUsers: true
+      securityContext: {}
+      serviceAccountName: headlamp
+      volumes:
+        - emptyDir: {}
+          name: plugins-dir
+        - configMap:
+            name: headlamp-plugin-config
+          name: plugin-config
