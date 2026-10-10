@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  plugin.yml: |
+    {"plugins":[{"name":"argocd","source":"https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_argocd","version":"0.1.0-alpha"}]}
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: headlamp
+    app.kubernetes.io/name: headlamp
+  name: headlamp-plugin-config
+  namespace: headlamp
