@@ -1,10 +1,8 @@
 # k3s agent (worker) aspect. Joins the server named by the freeform
-# host.k3s.serverHost field, with the server's node-token from
-# secrets/clusters/<cluster>/k3s-token.sops.
+# host.k3s.serverHost field, with the cluster token from k3s-token.
 {
   config,
   den,
-  inputs,
   ...
 }:
 let
@@ -15,6 +13,7 @@ in
     includes = [
       den.aspects.k3s-containerd
       den.aspects.k3s-node-base
+      den.aspects.k3s-token
     ];
 
     k3s-nodes =
@@ -26,34 +25,17 @@ in
       };
 
     nixos =
-      { host, config, ... }:
-      let
-        clusterName = host.k3s.clusterName or "prd";
-      in
+      { host, ... }:
       {
-        imports = [ inputs.sops-nix.nixosModules.sops ];
-
-        sops.secrets.k3s-token = {
-          sopsFile = ../../../../../secrets/clusters/${clusterName}/k3s-token.sops;
-          format = "binary";
-        };
-
         services.k3s = {
           enable = true;
           role = "agent";
           serverAddr = "https://${devices.${host.k3s.serverHost}.address}:6443";
-          tokenFile = config.sops.secrets.k3s-token.path;
           extraFlags = [
             # Bare path, not unix://…, see k3s.nix.
             "--container-runtime-endpoint=/run/containerd/containerd.sock"
             "--node-ip=${devices.${host.name}.address}"
           ];
-        };
-
-        # Only exists with sops.useSystemdActivation; a no-op otherwise.
-        systemd.services.k3s = {
-          after = [ "sops-install-secrets.service" ];
-          wants = [ "sops-install-secrets.service" ];
         };
       };
   };
