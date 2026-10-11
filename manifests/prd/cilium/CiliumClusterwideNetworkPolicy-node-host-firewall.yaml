@@ -32,6 +32,4 @@ spec:
         - ports:
             - port: "22"
               protocol: TCP
-  nodeSelector:
-    matchLabels:
-      kubernetes.io/os: linux
+  nodeSelector: {}
