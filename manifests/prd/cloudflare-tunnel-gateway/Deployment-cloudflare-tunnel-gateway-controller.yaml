@@ -28,7 +28,7 @@ spec:
             - --proxy-endpoints=https://cloudflare-tunnel-gateway-controller-proxy-headless.cloudflare-tunnel-system.svc:8081/config
             - --proxy-config-ca-secret=cloudflare-tunnel-system/cloudflare-tunnel-gateway-controller-config-ca
             - --proxy-config-tls-secret=cloudflare-tunnel-system/cloudflare-tunnel-gateway-controller-proxy-config-tls
-            - --proxy-image=ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller-proxy:4.0.0
+            - --proxy-image=ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller-proxy:5.0.0
             - --proxy-auth-secret-ref=cloudflare-tunnel-system/cloudflare-tunnel-gateway-controller-proxy-auth-token
             - --proxy-auth-secret-key=auth-token
             - --proxy-auth-secret-generate=true
@@ -41,7 +41,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller:4.0.0
+          image: ghcr.io/lexfrei/cloudflare-tunnel-gateway-controller:5.0.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
