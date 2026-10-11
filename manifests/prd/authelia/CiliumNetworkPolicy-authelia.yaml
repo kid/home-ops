@@ -11,6 +11,12 @@ spec:
         - ports:
             - port: "587"
               protocol: TCP
+    - toFQDNs:
+        - matchName: time.cloudflare.com
+      toPorts:
+        - ports:
+            - port: "123"
+              protocol: UDP
     - toEndpoints:
         - matchLabels:
             app.kubernetes.io/name: authelia-valkey
