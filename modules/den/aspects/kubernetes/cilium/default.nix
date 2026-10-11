@@ -22,6 +22,26 @@ _: {
         "remote-node"
       ];
     }
+    # Metrics, scraped by vmagent. The agent, Hubble and the operator run
+    # hostNetwork, so these are host ports.
+    {
+      port = 9962;
+      protocol = "TCP";
+      description = "cilium-agent metrics";
+      from = [ "cluster" ];
+    }
+    {
+      port = 9965;
+      protocol = "TCP";
+      description = "Hubble metrics";
+      from = [ "cluster" ];
+    }
+    {
+      port = 9963;
+      protocol = "TCP";
+      description = "cilium-operator metrics";
+      from = [ "cluster" ];
+    }
   ];
 
   den.aspects.kubernetes.cilium.k8s-manifests =
