@@ -173,4 +173,9 @@ in
   ];
 
   fleet.user-access.by-host.k3s-prd-1.groups = [ "admin" ];
+
+  fleet.nh.targets.k3s-prd-1 = {
+    hostname = config.den.devices.k3s-prd-1.address;
+    microvmHost = "node1";
+  };
 }
