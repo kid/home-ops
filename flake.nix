@@ -53,7 +53,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts/da796090e8b34326a4aaf0c173df514f135b3907";
     sops-nix = {
-      url = "github:Mic92/sops-nix/dcd241ba97088c22569d1573286e1b9daad340c0";
+      url = "github:Mic92/sops-nix/ee48786c6f9160d2c1a084aac841f68195b8420c";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     treefmt-nix = {
