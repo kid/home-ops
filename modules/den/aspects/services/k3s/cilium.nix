@@ -3,16 +3,28 @@
 # host's CNI. Only hosts that actually run Cilium should include this.
 _: {
   den.aspects.k3s-cilium.nixos =
-    { lib, pkgs, ... }:
     {
-      services.k3s.extraFlags = [
-        "--flannel-backend=none"
-        "--disable-network-policy"
-        "--disable-kube-proxy"
-        # traefik -> Cilium Gateway API, servicelb -> Cilium BGP LB
-        "--disable=traefik"
-        "--disable=servicelb"
-      ];
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
+    {
+      services.k3s.extraFlags =
+        if config.services.k3s.role == "server" then
+          [
+            "--flannel-backend=none"
+            "--disable-network-policy"
+            "--disable-kube-proxy"
+            # traefik -> Cilium Gateway API, servicelb -> Cilium BGP LB
+            "--disable=traefik"
+            "--disable=servicelb"
+          ]
+        else
+          # Cilium reaches the API at 127.0.0.1:6443 on every node
+          # (kubernetes/cilium's k8sServiceHost). An agent has no apiserver
+          # there, so move its own apiserver load balancer (default 6444) to it.
+          [ "--lb-server-port=6443" ];
 
       # Cilium's own host firewall (modules/den/aspects/kubernetes/cilium/host-firewall.nix) replaces it.
       networking.firewall.enable = lib.mkForce false;
