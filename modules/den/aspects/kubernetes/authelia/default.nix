@@ -282,6 +282,20 @@ in
                 ];
                 egress = [
                   (fqdnEgress [ "smtp.gmail.com" ] [ 587 ])
+                  # Startup clock check (authelia's default ntp.address).
+                  {
+                    toFQDNs = [ { matchName = "time.cloudflare.com"; } ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "123";
+                            protocol = "UDP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
                   (toPods valkeyLabels [ 6379 ])
                 ];
               };

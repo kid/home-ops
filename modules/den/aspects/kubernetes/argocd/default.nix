@@ -108,6 +108,8 @@ in
                   "repo-server"
                   "application-controller"
                 ];
+                # The secret-init init container creates the redis password Secret.
+                egress = [ apiserverEgress ];
               };
             };
 
