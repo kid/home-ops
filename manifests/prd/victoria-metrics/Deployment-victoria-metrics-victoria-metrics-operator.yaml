@@ -34,7 +34,7 @@ spec:
             - name: VM_ANOMALY_VERSION
               value: v1.30.4
             - name: VM_LOGS_VERSION
-              value: v1.52.0
+              value: v1.53.0
             - name: VM_METRICS_VERSION
               value: v1.153.0
             - name: VM_TRACES_VERSION
