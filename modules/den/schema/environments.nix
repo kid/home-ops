@@ -74,7 +74,13 @@ in
                       inherit cidr methods;
                     }
                     // lib.optionalAttrs (cidr != null) {
-                      gateway = if net.dhcpGateway != null then net.dhcpGateway else methods.host 1;
+                      gateway =
+                        if !net.dhcpAdvertiseGateway then
+                          null
+                        else if net.dhcpGateway != null then
+                          net.dhcpGateway
+                        else
+                          methods.host 1;
                     };
                 in
                 lib.mapAttrs (_: withComputedCidr) ownNetworks;
