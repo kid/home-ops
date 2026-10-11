@@ -19,6 +19,11 @@
             default = null;
             description = "SSH user for `deploy`; falls back to the invoking user if unset";
           };
+          microvmHost = lib.mkOption {
+            type = lib.types.nullOr lib.types.str;
+            default = null;
+            description = "For a microvm.nix guest: the fleet.nh.targets name of its hypervisor. `deploy` then uses the guest's microvm.deploy.* scripts instead of nh";
+          };
         };
       }
     );
@@ -52,6 +57,31 @@
           sshUser=$(nix eval --raw ".#nhTargets.$host.sshUser" 2>/dev/null) || true
           sshUser=''${sshUser:-$(whoami)}
           target="$sshUser@$hostname"
+
+          # nh cannot switch a microvm.nix guest (read-only shared store, no
+          # nix-daemon): build and install on the hypervisor instead.
+          microvmHost=$(nix eval --raw ".#nhTargets.$host.microvmHost" 2>/dev/null) || true
+          if [[ -n "$microvmHost" ]]; then
+            hvHostname=$(nix eval --raw ".#nhTargets.$microvmHost.hostname")
+            hvUser=$(nix eval --raw ".#nhTargets.$microvmHost.sshUser" 2>/dev/null) || true
+            hvTarget="''${hvUser:-$(whoami)}@$hvHostname"
+            deployAttr=".#nixosConfigurations.$host.config.microvm.deploy"
+
+            case "$mode" in
+              switch)
+                echo "==> Deploying microvm '$host' (switch) via $hvTarget, then $target..."
+                exec nix run "$deployAttr.rebuild" -- "$hvTarget" "$target" --use-remote-sudo
+                ;;
+              boot)
+                echo "==> Installing microvm '$host' on $hvTarget (active after 'systemctl restart microvm@$host')..."
+                exec nix run "$deployAttr.installOnHost" -- "$hvTarget" --use-remote-sudo
+                ;;
+              *)
+                echo "error: a microvm guest only supports switch and boot" >&2
+                exit 1
+                ;;
+            esac
+          fi
 
           echo "==> Deploying '$host' ($mode) to $target via nh..."
           # -H must be explicit: with --target-host set but -H unset, nh
