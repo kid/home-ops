@@ -160,7 +160,8 @@ _: {
             vmsingle = {
               spec = {
                 retentionPeriod = "30d";
-                storage.resources.requests.storage = "5Gi";
+                # 15 days of data filled 5Gi and put the storage in read-only mode.
+                storage.resources.requests.storage = "10Gi";
                 resources = {
                   requests = {
                     cpu = "100m";
