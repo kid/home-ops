@@ -103,8 +103,6 @@ _: {
 
             hostFirewall.enabled = true;
 
-            # Temporary: also stops enforcing node-host-firewall.
-            policyAuditMode = true;
             rollOutCiliumPods = true;
 
             bgpControlPlane.enabled = true;
