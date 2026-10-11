@@ -63,7 +63,7 @@
     den.aspects.impermanence.tmpfs
     den.aspects.incus
     den.aspects.power-saving
-    (den.aspects.ssh { addresses = [ config.den.devices.node1.address ]; })
+    den.aspects.ssh
   ];
 
   fleet.user-access.by-host.node1.groups = [ "admin" ];
