@@ -1,5 +1,8 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  // addLabels, not labels: the update-type rules below set `labels`, which
+  // would replace a top-level `labels` value.
+  addLabels: ["dependencies"],
   packageRules: [
     {
       matchUpdateTypes: ["major"],
