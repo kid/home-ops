@@ -1,6 +1,8 @@
-# k3s server aspect. Single-node only (clusterInit=true unconditionally) —
-# multi-node join-token logic is future work, only needed if/when a second
-# host joins the `prd` cluster. CIDRs come from the host's own cluster
+# k3s server aspect. A cluster's only declared server starts embedded etcd
+# (clusterInit); once a second server is declared, none does and each points
+# at another one. So a cluster has to start with one server: the flag is
+# only needed to create the datastore, and a server that already has one
+# ignores both settings. CIDRs come from the host's own cluster
 # (config.den.clusters.<name>, cross-referenced via the freeform
 # host.k3s.clusterName field), matching the cluster entity as the single
 # source of truth pattern already used throughout this repo's
@@ -15,10 +17,25 @@
 {
   config,
   den,
+  lib,
   ...
 }:
 let
   clusters = config.den.clusters or { };
+
+  allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
+
+  # A cluster's servers: its member hosts that are not agents
+  # (k3s.serverHost) and have a real address. test-vm has none, so it is no
+  # one's peer and stays a standalone server.
+  serversOf =
+    clusterName:
+    lib.filter (
+      name:
+      (allHosts.${name}.k3s.clusterName or null) == clusterName
+      && !(allHosts.${name}.k3s ? serverHost)
+      && config.den.devices ? ${name}
+    ) (lib.sort lib.lessThan (builtins.attrNames allHosts));
 in
 {
   den.aspects.k3s-server = {
@@ -57,12 +74,17 @@ in
         podCIDR = cluster.networks.pods.cidr;
         serviceCIDR = cluster.networks.services.cidr;
         nodeIp = (config.den.devices.${host.name} or { }).address or null;
+
+        servers = serversOf clusterName;
+        peers = lib.optionals (lib.elem host.name servers) (lib.remove host.name servers);
+        shouldInit = peers == [ ];
       in
       {
         services.k3s = {
           enable = true;
           role = "server";
-          clusterInit = true;
+          clusterInit = shouldInit;
+          serverAddr = lib.mkIf (!shouldInit) "https://${config.den.devices.${lib.head peers}.address}:6443";
           # CNI-agnostic disables only — CNI-dependent flags live in the
           # sibling den.aspects.k3s-cilium aspect instead. A plain list, not
           # a concatStringsSep string: extraFlags accepts `listOf str`, and
