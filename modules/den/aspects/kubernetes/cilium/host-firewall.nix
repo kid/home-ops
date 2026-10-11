@@ -12,7 +12,7 @@
         {
           port = 22;
           protocol = "TCP";
-          description = "SSH (node1)";
+          description = "SSH";
           from = [ "world" ];
         }
         {
@@ -54,7 +54,10 @@
         metadata.name = "node-host-firewall";
         spec = {
           # nodeSelector, not podSelector/endpointSelector — the shape Cilium's host firewall uses.
-          nodeSelector.matchLabels."kubernetes.io/os" = "linux";
+          # Every node: Cilium's default label filter drops kubernetes.io/*
+          # labels from the host endpoint, so a kubernetes.io/os selector
+          # matches no node.
+          nodeSelector = { };
           inherit ingress;
         };
       };
