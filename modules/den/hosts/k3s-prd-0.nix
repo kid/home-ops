@@ -44,7 +44,7 @@
     den.aspects.k3s-bootstrap
     den.aspects.k3s-external-secrets
     den.aspects.k3s-miroir-node
-    (den.aspects.ssh { })
+    den.aspects.ssh
   ];
 
   fleet.user-access.by-host.k3s-prd-0.groups = [ "admin" ];
