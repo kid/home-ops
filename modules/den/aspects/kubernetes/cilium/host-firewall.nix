@@ -12,7 +12,7 @@
         {
           port = 22;
           protocol = "TCP";
-          description = "SSH (node1)";
+          description = "SSH";
           from = [ "world" ];
         }
         {
@@ -20,6 +20,7 @@
           protocol = "TCP";
           description = "kube-apiserver";
           from = [ "cluster" ];
+          controlPlane = true;
         }
         {
           port = 10250;
@@ -30,32 +31,49 @@
       ];
 
       ports = firewall-ports ++ hostPorts;
-      byScope = lib.groupBy (p: lib.concatStringsSep "," (lib.sort lib.lessThan p.from)) ports;
+      # A port with `controlPlane = true` is only opened on control-plane nodes.
+      isControlPlane = p: p.controlPlane or false;
 
-      ingress = lib.mapAttrsToList (_: group: {
-        fromEntities = (builtins.head group).from;
-        toPorts = [
-          {
-            ports = map (p: {
-              port = toString p.port;
-              inherit (p) protocol;
-            }) group;
-          }
-        ];
-      }) byScope;
+      mkIngress =
+        ports:
+        lib.mapAttrsToList (_: group: {
+          fromEntities = (builtins.head group).from;
+          toPorts = [
+            {
+              ports = map (
+                p:
+                {
+                  port = toString p.port;
+                  inherit (p) protocol;
+                }
+                // lib.optionalAttrs (p ? endPort) { inherit (p) endPort; }
+              ) group;
+            }
+          ];
+        }) (lib.groupBy (p: lib.concatStringsSep "," (lib.sort lib.lessThan p.from)) ports);
 
-      policy = {
+      # nodeSelector, not podSelector/endpointSelector — the shape Cilium's host firewall uses.
+      # It matches the host endpoint's labels, not the Node object's: Cilium's
+      # default label filter drops kubernetes.io/* there (a kubernetes.io/os
+      # selector matches no node) but keeps node-role.kubernetes.io/*.
+      mkPolicy = name: nodeSelector: ports: {
         apiVersion = "cilium.io/v2";
         kind = "CiliumClusterwideNetworkPolicy";
-        metadata.name = "node-host-firewall";
+        metadata.name = name;
         spec = {
-          # nodeSelector, not podSelector/endpointSelector — the shape Cilium's host firewall uses.
-          nodeSelector.matchLabels."kubernetes.io/os" = "linux";
-          inherit ingress;
+          inherit nodeSelector;
+          ingress = mkIngress ports;
         };
       };
+
+      policies = [
+        (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports))
+        (mkPolicy "node-host-firewall-control-plane" {
+          matchLabels."node-role.kubernetes.io/control-plane" = "true";
+        } (lib.filter isControlPlane ports))
+      ];
     in
     {
-      applications.cilium.yamls = lib.optionals (ports != [ ]) [ (builtins.toJSON policy) ];
+      applications.cilium.yamls = map builtins.toJSON (lib.filter (p: p.spec.ingress != [ ]) policies);
     };
 }

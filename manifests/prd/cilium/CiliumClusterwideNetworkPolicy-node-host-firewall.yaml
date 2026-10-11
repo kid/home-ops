@@ -8,8 +8,6 @@ spec:
         - cluster
       toPorts:
         - ports:
-            - port: "6443"
-              protocol: TCP
             - port: "10250"
               protocol: TCP
     - fromEntities:
@@ -23,12 +21,13 @@ spec:
               protocol: TCP
             - port: "9810"
               protocol: TCP
+            - endPort: 7999
+              port: "7000"
+              protocol: TCP
     - fromEntities:
         - world
       toPorts:
         - ports:
             - port: "22"
               protocol: TCP
-  nodeSelector:
-    matchLabels:
-      kubernetes.io/os: linux
+  nodeSelector: {}
