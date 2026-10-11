@@ -22,7 +22,10 @@ let
 in
 {
   den.aspects.k3s-server = {
-    includes = [ den.aspects.k3s-containerd ];
+    includes = [
+      den.aspects.k3s-containerd
+      den.aspects.k3s-node-base
+    ];
 
     k3s-nodes =
       { host, ... }:
@@ -33,6 +36,7 @@ in
         # attachment) — modules/den/aspects/routeros/bgp.nix filters these
         # out rather than feeding a bogus peer IP to RouterOS.
         address = (config.den.devices.${host.name} or { }).address or null;
+        role = "server";
       };
 
     persist.directories = [
@@ -45,7 +49,6 @@ in
       {
         host,
         lib,
-        pkgs,
         ...
       }:
       let
@@ -82,26 +85,6 @@ in
           ]
           ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}";
         };
-
-        boot.kernelModules = [
-          "br_netfilter"
-          "overlay"
-          "ip_vs"
-          "ip_vs_rr"
-          "ip_vs_wrr"
-          "ip_vs_sh"
-        ];
-        boot.kernel.sysctl = {
-          "net.bridge.bridge-nf-call-iptables" = 1;
-          "net.bridge.bridge-nf-call-ip6tables" = 1;
-          "net.core.bpf_jit_enable" = 1;
-          "net.core.bpf_jit_harden" = 0;
-        };
-
-        environment.systemPackages = [
-          pkgs.iptables
-          pkgs.nftables
-        ];
       };
   };
 }

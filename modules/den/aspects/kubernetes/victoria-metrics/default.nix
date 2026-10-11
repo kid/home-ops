@@ -9,7 +9,10 @@ _: {
       ...
     }:
     let
-      k3sNodeAddresses = map (n: n.address) (lib.filter (n: n.address != null) k3s-nodes);
+      # Control-plane ports only exist on servers.
+      k3sNodeAddresses = map (n: n.address) (
+        lib.filter (n: n.address != null && n.role == "server") k3s-nodes
+      );
 
       mkStaticScrapeEndpoint =
         {
