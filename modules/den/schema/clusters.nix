@@ -120,6 +120,12 @@
               description = "BGP keepalive time (seconds), applied identically on both BGP peers";
             };
 
+            k3s.initServer = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+              description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/den/aspects/services/k3s/k3s.nix)";
+            };
+
             letsencrypt.staging = lib.mkOption {
               type = lib.types.bool;
               default = false;

@@ -1,8 +1,16 @@
-# k3s server aspect. A cluster's only declared server starts embedded etcd
-# (clusterInit); once a second server is declared, none does and each points
-# at another one. So a cluster has to start with one server: the flag is
-# only needed to create the datastore, and a server that already has one
-# ignores both settings. CIDRs come from the host's own cluster
+# k3s server aspect. Which server starts embedded etcd (clusterInit):
+#
+# - den.clusters.<name>.k3s.initServer set: that server, and every other one
+#   joins it. All servers can be declared and started together, so the
+#   cluster can be wiped and recreated with no config change. A rebuilt
+#   initServer creates a new cluster instead of rejoining a surviving one —
+#   only rebuild it together with the others.
+# - unset: a cluster's only declared server; once a second one is declared,
+#   none does and each points at another one, so the cluster has to start
+#   with one server.
+#
+# A server that already has a datastore ignores both settings. CIDRs come
+# from the host's own cluster
 # (config.den.clusters.<name>, cross-referenced via the freeform
 # host.k3s.clusterName field), matching the cluster entity as the single
 # source of truth pattern already used throughout this repo's
@@ -77,14 +85,23 @@ in
 
         servers = serversOf clusterName;
         peers = lib.optionals (lib.elem host.name servers) (lib.remove host.name servers);
-        shouldInit = peers == [ ];
+        initServer = if lib.elem cluster.k3s.initServer peers then cluster.k3s.initServer else null;
+        shouldInit = peers == [ ] || cluster.k3s.initServer == host.name;
+        joinServer = if initServer != null then initServer else lib.head peers;
       in
       {
+        assertions = [
+          {
+            assertion = cluster.k3s.initServer == null || lib.elem cluster.k3s.initServer servers;
+            message = "den.clusters.${clusterName}.k3s.initServer (${toString cluster.k3s.initServer}) is not one of the cluster's servers: ${lib.concatStringsSep ", " servers}";
+          }
+        ];
+
         services.k3s = {
           enable = true;
           role = "server";
           clusterInit = shouldInit;
-          serverAddr = lib.mkIf (!shouldInit) "https://${config.den.devices.${lib.head peers}.address}:6443";
+          serverAddr = lib.mkIf (!shouldInit) "https://${config.den.devices.${joinServer}.address}:6443";
           # CNI-agnostic disables only — CNI-dependent flags live in the
           # sibling den.aspects.k3s-cilium aspect instead. A plain list, not
           # a concatStringsSep string: extraFlags accepts `listOf str`, and
