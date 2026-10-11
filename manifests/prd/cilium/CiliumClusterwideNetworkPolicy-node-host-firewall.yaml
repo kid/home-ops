@@ -8,8 +8,6 @@ spec:
         - cluster
       toPorts:
         - ports:
-            - port: "6443"
-              protocol: TCP
             - port: "10250"
               protocol: TCP
     - fromEntities:
