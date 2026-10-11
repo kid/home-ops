@@ -14,10 +14,17 @@ _: {
         lib.filter (n: n.address != null && n.role == "server") k3s-nodes
       );
 
+      # k3s runs every control-plane component in one process, and each of
+      # their ports serves that process's whole metric registry (~80k series,
+      # mostly apiserver_*). Only the apiserver job keeps all of it; the others
+      # keep their own families plus the process-level ones their dashboards use.
+      processMetrics = "rest_client|process|go";
+
       mkStaticScrapeEndpoint =
         {
           job,
           port,
+          keep,
         }:
         {
           targets = map (address: "${address}:${toString port}") k3sNodeAddresses;
@@ -25,6 +32,13 @@ _: {
           bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
           scheme = "https";
           tlsConfig.insecureSkipVerify = true;
+          metricRelabelConfigs = [
+            {
+              action = "keep";
+              sourceLabels = [ "__name__" ];
+              regex = "(${keep}|${processMetrics})_.*";
+            }
+          ];
         };
 
       mkRoute = hostname: {
@@ -106,6 +120,31 @@ _: {
               cpu = "10m";
               memory = "64Mi";
             };
+
+            # The kubelet port of a k3s server serves the same whole-process
+            # registry as the apiserver job; drop the other components'
+            # families there. A list replaces the chart's, so its three
+            # default entries are restated.
+            kubelet.vmScrapes.kubelet.spec.metricRelabelConfigs = [
+              {
+                action = "labeldrop";
+                regex = "(uid)";
+              }
+              {
+                action = "labeldrop";
+                regex = "(id|name)";
+              }
+              {
+                action = "drop";
+                source_labels = [ "__name__" ];
+                regex = "(rest_client_request_duration_seconds_bucket|rest_client_request_duration_seconds_sum|rest_client_request_duration_seconds_count)";
+              }
+              {
+                action = "drop";
+                source_labels = [ "__name__" ];
+                regex = "(apiserver|etcd|scheduler|apiextensions|workqueue)_.*";
+              }
+            ];
 
             kube-state-metrics.resources = {
               requests = {
@@ -246,10 +285,12 @@ _: {
           (mkStaticScrapeEndpoint {
             job = "kube-scheduler";
             port = 10259;
+            keep = "scheduler";
           })
           (mkStaticScrapeEndpoint {
             job = "kube-controller-manager";
             port = 10257;
+            keep = "workqueue|node_collector|garbagecollector|pv_collector|[a-z_]+_controller|root_ca_cert_publisher";
           })
           # --etcd-expose-metrics serves plain HTTP on 2381; 2379 wants a client cert.
           {
