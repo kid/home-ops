@@ -54,6 +54,7 @@ _: {
             config.packages.deploy
             config.packages.nixos-anywhere-install
             config.packages.provision-host-key
+            config.packages.provision-k3s-token
             config.packages.write-manifests
             config.packages.write-terragrunt
             config.packages.refresh-nix-hash
