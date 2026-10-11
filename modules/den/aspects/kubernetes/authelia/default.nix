@@ -131,6 +131,10 @@ in
                 serviceMonitor.enabled = true;
               };
 
+              # The pod's clock is the node's, which is already synchronized;
+              # the check would need NTP egress to time.cloudflare.com.
+              ntp.disable_startup_check = true;
+
               session = {
                 inactivity = "1 week";
                 expiration = "1 month";
