@@ -8,6 +8,14 @@ spec:
         - cluster
       toPorts:
         - ports:
+            - port: "9962"
+              protocol: TCP
+            - port: "9965"
+              protocol: TCP
+            - port: "9963"
+              protocol: TCP
+            - port: "9100"
+              protocol: TCP
             - port: "10250"
               protocol: TCP
     - fromEntities:

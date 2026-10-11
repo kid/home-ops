@@ -8,6 +8,12 @@ spec:
         - cluster
       toPorts:
         - ports:
+            - port: "10259"
+              protocol: TCP
+            - port: "10257"
+              protocol: TCP
+            - port: "2381"
+              protocol: TCP
             - port: "6443"
               protocol: TCP
   nodeSelector:
