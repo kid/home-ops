@@ -30,11 +30,25 @@ let
   # provision-host-key) just doesn't get a rule — no error.
   provisionedHosts = builtins.filter (host: builtins.pathExists (hostPubKeyPath host)) hostNames;
 
+  # A microvm guest's key is also decrypted by its hypervisor
+  # (host.microvm.parent), which passes it to the guest as a credential.
+  hostParentKeys =
+    host:
+    let
+      parent = allHosts.${host}.microvm.parent or null;
+    in
+    lib.optional (parent != null) (
+      lib.removeSuffix "\n" (builtins.readFile (hostAgePubKeyPath parent))
+    );
+
   hostRule = host: {
     path_regex = "secrets/hosts/${host}/.*";
     key_groups = [
       {
-        age = humanKeys ++ [ (lib.removeSuffix "\n" (builtins.readFile (hostPubKeyPath host))) ];
+        age =
+          humanKeys
+          ++ [ (lib.removeSuffix "\n" (builtins.readFile (hostPubKeyPath host))) ]
+          ++ hostParentKeys host;
       }
     ];
   };
