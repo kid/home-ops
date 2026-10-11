@@ -20,6 +20,10 @@ spec:
       regex: (rest_client_request_duration_seconds_bucket|rest_client_request_duration_seconds_sum|rest_client_request_duration_seconds_count)
       source_labels:
         - __name__
+    - action: drop
+      regex: (apiserver|etcd|scheduler|apiextensions|workqueue)_.*
+      source_labels:
+        - __name__
   relabelConfigs:
     - action: labelmap
       regex: __meta_kubernetes_node_label_(.+)
