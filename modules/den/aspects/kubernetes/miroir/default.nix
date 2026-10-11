@@ -13,6 +13,18 @@ _: {
         "remote-node"
       ];
     }
+    # DRBD replication links: one port per replicated volume, ascending
+    # from the chart's drbd.portBase (7000) with no upper bound of its own.
+    {
+      port = 7000;
+      endPort = 7999;
+      protocol = "TCP";
+      description = "miroir DRBD replication";
+      from = [
+        "cluster"
+        "remote-node"
+      ];
+    }
   ];
 
   den.aspects.kubernetes.miroir.k8s-manifests =
