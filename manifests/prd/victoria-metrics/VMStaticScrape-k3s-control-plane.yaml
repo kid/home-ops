@@ -8,6 +8,11 @@ spec:
     - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
       labels:
         job: kube-scheduler
+      metricRelabelConfigs:
+        - action: keep
+          regex: (scheduler|rest_client|process|go)_.*
+          sourceLabels:
+            - __name__
       scheme: https
       targets:
         - 10.0.40.10:10259
@@ -16,6 +21,11 @@ spec:
     - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
       labels:
         job: kube-controller-manager
+      metricRelabelConfigs:
+        - action: keep
+          regex: (workqueue|node_collector|garbagecollector|pv_collector|[a-z_]+_controller|root_ca_cert_publisher|rest_client|process|go)_.*
+          sourceLabels:
+            - __name__
       scheme: https
       targets:
         - 10.0.40.10:10257
