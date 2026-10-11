@@ -93,6 +93,18 @@
       enabled: true,
     },
     {
+      // flake.lock moves nixpkgs, and with it the Helm that renders the
+      // charts: one that reads .Capabilities.KubeVersion (the
+      // victoria-metrics-operator cleanup hook's kubectl image) renders
+      // differently. Regenerate manifests/ so the PR passes checks.manifests.
+      matchUpdateTypes: ["lockFileMaintenance"],
+      postUpgradeTasks: {
+        commands: ["nix run .#write-manifests -- --skip-secrets"],
+        fileFilters: ["manifests/**"],
+        executionMode: "branch",
+      },
+    },
+    {
       matchManagers: ["nix"],
       matchDepNames: ["nixhelm"],
       enabled: true,
