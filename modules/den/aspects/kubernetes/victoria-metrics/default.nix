@@ -1,4 +1,36 @@
 _: {
+  # Host ports vmagent scrapes: node-exporter on every node, and the
+  # control-plane components of the static scrapes below.
+  den.aspects.kubernetes.victoria-metrics.firewall-ports = _: [
+    {
+      port = 9100;
+      protocol = "TCP";
+      description = "node-exporter";
+      from = [ "cluster" ];
+    }
+    {
+      port = 10259;
+      protocol = "TCP";
+      description = "kube-scheduler metrics";
+      from = [ "cluster" ];
+      controlPlane = true;
+    }
+    {
+      port = 10257;
+      protocol = "TCP";
+      description = "kube-controller-manager metrics";
+      from = [ "cluster" ];
+      controlPlane = true;
+    }
+    {
+      port = 2381;
+      protocol = "TCP";
+      description = "etcd metrics";
+      from = [ "cluster" ];
+      controlPlane = true;
+    }
+  ];
+
   den.aspects.kubernetes.victoria-metrics.k8s-manifests =
     {
       charts,
