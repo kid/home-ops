@@ -44,6 +44,7 @@
     den.aspects.k3s-oidc
     den.aspects.k3s-bootstrap
     den.aspects.k3s-external-secrets
+    den.aspects.k3s-miroir
     den.aspects.k3s-miroir-node
     den.aspects.ssh
   ];

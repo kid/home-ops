@@ -36,10 +36,14 @@
         fromEntities = (builtins.head group).from;
         toPorts = [
           {
-            ports = map (p: {
-              port = toString p.port;
-              inherit (p) protocol;
-            }) group;
+            ports = map (
+              p:
+              {
+                port = toString p.port;
+                inherit (p) protocol;
+              }
+              // lib.optionalAttrs (p ? endPort) { inherit (p) endPort; }
+            ) group;
           }
         ];
       }) byScope;

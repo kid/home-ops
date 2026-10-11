@@ -13,6 +13,18 @@ _: {
         "remote-node"
       ];
     }
+    # DRBD replication links: one port per replicated volume, ascending
+    # from the chart's drbd.portBase (7000) with no upper bound of its own.
+    {
+      port = 7000;
+      endPort = 7999;
+      protocol = "TCP";
+      description = "miroir DRBD replication";
+      from = [
+        "cluster"
+        "remote-node"
+      ];
+    }
   ];
 
   den.aspects.kubernetes.miroir.k8s-manifests =
@@ -105,8 +117,20 @@ _: {
           volumeBindingMode = "WaitForFirstConsumer";
           allowVolumeExpansion = true;
           parameters = {
-            # "2" would leave PVCs Pending — no second node to place a replica on yet.
             "miroir.home-operations.com/replicas" = "1";
+            "csi.storage.k8s.io/fstype" = "ext4";
+          };
+        };
+
+        # A second class, not a change to the default one: StorageClass
+        # parameters are immutable, and a volume cannot gain a replication
+        # layer in place.
+        resources.storageClasses.miroir-replicated = {
+          provisioner = "miroir.home-operations.com";
+          volumeBindingMode = "WaitForFirstConsumer";
+          allowVolumeExpansion = true;
+          parameters = {
+            "miroir.home-operations.com/replicas" = "2";
             "csi.storage.k8s.io/fstype" = "ext4";
           };
         };
