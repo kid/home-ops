@@ -48,6 +48,7 @@ _: {
 
             nil
             nixd
+            ipmitool
           ]
           ++ [
             config.packages.deploy

@@ -32,6 +32,13 @@
       boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
+      # IPMI Serial-over-LAN (`ipmitool sol activate`). The last console=
+      # is the one systemd puts a serial getty on.
+      boot.kernelParams = [
+        "console=tty0"
+        "console=ttyS1,115200n8"
+      ];
+
       networking.hostId = lib.mkDefault "795500d2";
 
       networking.hostName = "node1";
