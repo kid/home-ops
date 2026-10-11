@@ -118,8 +118,8 @@ in
                 owner = "argoproj";
                 repo = "argo-cd";
                 # renovate: datasource=github-releases depName=argoproj/argo-cd
-                rev = "v3.5.3";
-                hash = "sha256-9Q+t9a5tYIiWYoJ2IM9OjCkT6+ZnjjwEMlq7fUsXv5E=";
+                rev = "v3.5.4";
+                hash = "sha256-9AeBLGMcfhNDWs54xSdD0HzEbLIDNRNfBSkdrbm/DvQ=";
               };
               path = "manifests/cluster-install";
             };
