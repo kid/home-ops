@@ -82,6 +82,9 @@ _: {
             vmsingle = mkPolicy (app "vmsingle") { ingress = [ (gatewayIngress 8428) ]; };
             vlsingle = mkPolicy (app "vlsingle") { ingress = [ (gatewayIngress 9428) ]; };
             vmalert = mkPolicy (app "vmalert") { ingress = [ (gatewayIngress 8080) ]; };
+            # Their config-reloader sidecars watch the config Secret.
+            vmalertmanager = mkPolicy (app "vmalertmanager") { egress = [ apiserverEgress ]; };
+            vmauth = mkPolicy (app "vmauth") { egress = [ apiserverEgress ]; };
           };
 
         helm.releases.victoria-metrics = {
