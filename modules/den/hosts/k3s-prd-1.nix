@@ -168,7 +168,6 @@ in
     den.aspects.base
     den.aspects.k3s-agent
     den.aspects.k3s-cilium
-    den.aspects.k3s-miroir
     den.aspects.k3s-miroir-node
     den.aspects.ssh
   ];
