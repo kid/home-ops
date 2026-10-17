@@ -12,7 +12,7 @@
     # against a nixpkgs vmTools API change (kernel/kernelModules split) —
     # needed for system.build.vmWithDisko (see modules/den/hosts/test-vm.nix).
     # Switch back to nix-community/disko once merged upstream.
-    url = "github:AlexLov/disko/ff8702b4de27f72b4c78573dfb89ec74e36abdf1";
+    url = "github:AlexLov/disko";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -21,7 +21,7 @@
   # via the `datasets` quirk (see zfs-datasets-collector.nix) without a
   # reformat. Auto-adopts datasets already declared under disko.devices.
   flake-file.inputs.disko-zfs = {
-    url = "github:numtide/disko-zfs/4a0e131be44004fcd8493c9249ab42016a90a4bb";
+    url = "github:numtide/disko-zfs";
     inputs.nixpkgs.follows = "nixpkgs";
     inputs.flake-parts.follows = "flake-parts";
     inputs.disko.follows = "disko";

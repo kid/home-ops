@@ -12,7 +12,6 @@
       "original": {
         "owner": "denful",
         "repo": "den",
-        "rev": "65c9fd40e958109f5a352c1a93ae8254bf1ed29f",
         "type": "github"
       }
     },
@@ -33,7 +32,6 @@
       "original": {
         "owner": "AlexLov",
         "repo": "disko",
-        "rev": "ff8702b4de27f72b4c78573dfb89ec74e36abdf1",
         "type": "github"
       }
     },
@@ -60,7 +58,6 @@
       "original": {
         "owner": "numtide",
         "repo": "disko-zfs",
-        "rev": "4a0e131be44004fcd8493c9249ab42016a90a4bb",
         "type": "github"
       }
     },
@@ -114,7 +111,6 @@
       "original": {
         "owner": "denful",
         "repo": "flake-file",
-        "rev": "4ccd0b92aee0943b94324ec4c39949df1769f123",
         "type": "github"
       }
     },
@@ -135,7 +131,6 @@
       "original": {
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "024633cd702b10285db5cb19b40ad48d2399ba60",
         "type": "github"
       }
     },
@@ -193,7 +188,6 @@
       "original": {
         "owner": "cachix",
         "repo": "git-hooks.nix",
-        "rev": "a0e4241b51206fbcbf52fd322eb5f0cd80f153c4",
         "type": "github"
       }
     },
@@ -277,7 +271,6 @@
       "original": {
         "owner": "nix-community",
         "repo": "impermanence",
-        "rev": "7b1d382faf603b6d264f58627330f9faa5cba149",
         "type": "github"
       }
     },
@@ -293,7 +286,6 @@
       "original": {
         "owner": "vic",
         "repo": "import-tree",
-        "rev": "eb1b52eaecc57f7c136d07ae8a93e724dfecac46",
         "type": "github"
       }
     },
@@ -312,7 +304,6 @@
       "original": {
         "owner": "nix-community",
         "repo": "nh",
-        "rev": "d9192c1521a067eeaa5669964fb8ae7816d4787c",
         "type": "github"
       }
     },
@@ -453,7 +444,6 @@
       "original": {
         "owner": "nix-community",
         "repo": "nixos-anywhere",
-        "rev": "b6be7b277b468d55082584441cbef1fed8530eb3",
         "type": "github"
       }
     },
@@ -571,7 +561,6 @@
       "original": {
         "owner": "drupol",
         "repo": "pkgs-by-name-for-flake-parts",
-        "rev": "da796090e8b34326a4aaf0c173df514f135b3907",
         "type": "github"
       }
     },
@@ -664,7 +653,6 @@
       "original": {
         "owner": "Mic92",
         "repo": "sops-nix",
-        "rev": "ee48786c6f9160d2c1a084aac841f68195b8420c",
         "type": "github"
       }
     },
@@ -736,7 +724,6 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "rev": "4cfe8d7065cc8ca91c0a50361b6dd74920eeb1f5",
         "type": "github"
       }
     },

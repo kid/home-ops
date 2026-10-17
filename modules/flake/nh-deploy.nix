@@ -3,8 +3,7 @@
 # nixos-anywhere-install). Hosts opt in via fleet.nh.targets.<name>.
 { lib, config, ... }:
 {
-  config.flake-file.inputs.nh.url =
-    "github:nix-community/nh/d9192c1521a067eeaa5669964fb8ae7816d4787c";
+  config.flake-file.inputs.nh.url = "github:nix-community/nh";
 
   options.fleet.nh.targets = lib.mkOption {
     type = lib.types.attrsOf (
