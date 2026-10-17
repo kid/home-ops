@@ -84,7 +84,9 @@
     enabled: true,
   },
   // Moves every input not pinned by rev (nixpkgs, the other flake inputs,
-  // transitive ones) together in one weekly PR.
+  // transitive ones) together in one weekly PR. Manifests must not change
+  // with it: pin anything a chart derives from Helm's own version (e.g.
+  // .Capabilities.KubeVersion) in the chart values instead.
   lockFileMaintenance: {
     enabled: true,
     schedule: ["before 4am on monday"],
@@ -95,16 +97,10 @@
       enabled: true,
     },
     {
-      // flake.lock moves nixpkgs, and with it the Helm that renders the
-      // charts: one that reads .Capabilities.KubeVersion (the
-      // victoria-metrics-operator cleanup hook's kubectl image) renders
-      // differently. Regenerate manifests/ so the PR passes checks.manifests.
+      // Provider lock refreshes get their own PR, apart from flake.lock.
+      matchManagers: ["terraform", "terragrunt"],
       matchUpdateTypes: ["lockFileMaintenance"],
-      postUpgradeTasks: {
-        commands: ["nix run .#write-manifests -- --skip-secrets"],
-        fileFilters: ["manifests/**"],
-        executionMode: "branch",
-      },
+      groupName: "terraform providers",
     },
     {
       matchManagers: ["nix"],
@@ -123,6 +119,18 @@
       postUpgradeTasks: {
         commands: ["nix run .#write-flake", "nix flake lock"],
         fileFilters: ["flake.nix", "flake.lock"],
+        executionMode: "update",
+      },
+    },
+    {
+      // Image pins in chart values: regenerate manifests/ so the PR passes
+      // checks.manifests.
+      matchManagers: ["custom.regex"],
+      matchDatasources: ["docker"],
+      matchFileNames: ["modules/**"],
+      postUpgradeTasks: {
+        commands: ["nix run .#write-manifests -- --skip-secrets"],
+        fileFilters: ["manifests/**"],
         executionMode: "update",
       },
     },

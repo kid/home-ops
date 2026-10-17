@@ -149,6 +149,13 @@ _: {
                 };
                 limits.memory = "256Mi";
               };
+              # Unset, the tag follows Helm's .Capabilities.KubeVersion: the
+              # Kubernetes version the nixpkgs helm was built against, so any
+              # nixpkgs bump would re-render it.
+              crds.cleanup.image = {
+                # renovate: datasource=docker depName=registry.k8s.io/kubectl
+                tag = "v1.37.0@sha256:5ed410ebac5dc976cc717098994dcdb29bbbd38f6bd65f582311f5be4ba719cf";
+              };
             };
 
             syncJob.resources.requests = {
