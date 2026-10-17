@@ -41,7 +41,12 @@
       {
         # Note this might jump back and forth as kernels are added or removed.
         boot.kernelPackages = latestKernelPackages;
+        # Load at boot whatever miroir-agent needs: extraModulePackages turns
+        # kernel-modules into a tree of /nix/store symlinks, which the agent's
+        # own modprobe can't follow (only /lib/modules is mounted into it).
+        # dm_snapshot backs lvcreate --snapshot (VolumeSnapshots).
         boot.kernelModules = [
+          "dm_snapshot"
           "dm_thin_pool"
           "drbd"
         ];
