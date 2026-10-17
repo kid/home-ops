@@ -3,7 +3,7 @@
 # nesting) — for small local packages not (yet) in nixpkgs.
 { inputs, ... }:
 {
-  flake-file.inputs.pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts/da796090e8b34326a4aaf0c173df514f135b3907";
+  flake-file.inputs.pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
 
   imports = [ inputs.pkgs-by-name-for-flake-parts.flakeModule ];
 

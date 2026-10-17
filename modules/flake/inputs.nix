@@ -13,18 +13,18 @@ _: {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     flake-parts = {
-      url = "github:hercules-ci/flake-parts/024633cd702b10285db5cb19b40ad48d2399ba60";
+      url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    den.url = "github:denful/den/65c9fd40e958109f5a352c1a93ae8254bf1ed29f";
+    den.url = "github:denful/den";
 
-    flake-file.url = "github:denful/flake-file/4ccd0b92aee0943b94324ec4c39949df1769f123";
+    flake-file.url = "github:denful/flake-file";
 
-    import-tree.url = "github:vic/import-tree/eb1b52eaecc57f7c136d07ae8a93e724dfecac46";
+    import-tree.url = "github:vic/import-tree";
 
     sops-nix = {
-      url = "github:Mic92/sops-nix/ee48786c6f9160d2c1a084aac841f68195b8420c";
+      url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
