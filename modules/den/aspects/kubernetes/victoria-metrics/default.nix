@@ -231,6 +231,17 @@ _: {
               vmScrape = null;
             };
 
+            # Rules that are empty by design here: no container sets a CPU limit,
+            # count:up0 is empty while every target is up, and the scheduler
+            # quantiles are NaN (dropped) unless a pod was scheduled in the last 5m.
+            defaultRules = {
+              groups = {
+                "k8s.rules.container_cpu_limits".enabled = false;
+                "kube-prometheus-general.rules".rules."count:up0".enabled = false;
+              };
+              rules.RecordingRulesNoData.spec.expr = ''sum(vmalert_recording_rules_last_evaluation_samples{group!="kube-scheduler.rules"}) without(id) < 1'';
+            };
+
             vmsingle = {
               spec = {
                 retentionPeriod = "30d";
