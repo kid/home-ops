@@ -172,6 +172,11 @@ inputs = {
         mac     = "52:54:00:40:00:01"
         name    = "k3s-prd-0"
       },
+      {
+        address = "10.0.40.11"
+        mac     = "52:54:00:40:00:02"
+        name    = "k3s-prd-1"
+      },
     ]
     Management = [
       {
@@ -230,6 +235,11 @@ inputs = {
       },
     ]
     Storage = [
+      {
+        address = "10.0.20.11"
+        mac     = "52:54:00:20:00:02"
+        name    = "k3s-prd-1"
+      },
       {
         address = "10.0.20.126"
         mac     = "bc:24:11:64:8c:c1"
