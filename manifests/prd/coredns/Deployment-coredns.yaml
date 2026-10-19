@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: e8089baf8eea5db635230a84b78ed4c24ae8f645b572affcd88e6691e70a58bd
+        checksum/config: 5209fbd1ff3111951d591a809326c57792a1d5531188b835c850c2213d0839fb
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
       labels:
         app.kubernetes.io/instance: coredns
@@ -91,7 +91,7 @@ spec:
             - mountPath: /etc/coredns
               name: config-volume
       dnsPolicy: Default
-      serviceAccountName: default
+      serviceAccountName: coredns
       terminationGracePeriodSeconds: 30
       volumes:
         - configMap:
