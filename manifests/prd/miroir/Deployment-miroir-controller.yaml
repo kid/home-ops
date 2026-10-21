@@ -39,7 +39,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: ghcr.io/home-operations/miroir-controller@sha256:2d0bfbd456f594cd3751fc43e081542b7c3db493430f2c173aeb2719c6337da7
+          image: ghcr.io/home-operations/miroir-controller@sha256:27bb55417b2b2b8ae4199e6f5c7089b541f97723a5c288b2c24208c95e9b4a08
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -74,7 +74,7 @@ spec:
             - --leader-election=false
             - --default-fstype=ext4
             - --extra-create-metadata
-          image: registry.k8s.io/sig-storage/csi-provisioner:v6.3.0
+          image: registry.k8s.io/sig-storage/csi-provisioner:v6.4.0
           name: csi-provisioner
           resources:
             limits:
@@ -89,7 +89,7 @@ spec:
             - --csi-address=/csi/csi.sock
             - --timeout=120s
             - --leader-election=false
-          image: registry.k8s.io/sig-storage/csi-snapshotter:v8.6.0
+          image: registry.k8s.io/sig-storage/csi-snapshotter:v8.7.0
           name: csi-snapshotter
           resources:
             limits:
@@ -104,7 +104,7 @@ spec:
             - --csi-address=/csi/csi.sock
             - --timeout=120s
             - --leader-election=false
-          image: registry.k8s.io/sig-storage/csi-resizer:v2.2.1
+          image: registry.k8s.io/sig-storage/csi-resizer:v2.3.0
           name: csi-resizer
           resources:
             limits:
