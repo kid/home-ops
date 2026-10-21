@@ -1,35 +1,12 @@
+// Base config (presets, the `# renovate:` comment manager, the Nix hash
+// refresh) is inherited from kid/renovate-config, which also runs Renovate.
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
-  extends: [
-    "config:recommended",
-    "docker:enableMajor",
-    "helpers:pinGitHubActionDigests",
-    "github>kid/home-ops//.renovate/changelogs.json5",
-    "github>kid/home-ops//.renovate/groups.json5",
-    "github>kid/home-ops//.renovate/labels.json5",
-    "github>kid/home-ops//.renovate/overrides.json5",
-    "github>kid/home-ops//.renovate/semanticCommits.json5",
-    ":automergeBranch",
-    ":disableRateLimiting",
-    ":dependencyDashboard",
-    ":semanticCommits",
-    ":timezone(Europe/Brussels)",
-  ],
   ignorePaths: [
     '**/resources/**',
     // nixidy-generated, regenerated from modules/kubernetes/**/*.nix via `nix run .#write-manifests`
     'manifests/**',
   ],
-  suppressNotifications: [
-    "prEditedNotification",
-    "prIgnoreNotification",
-  ],
-  // Adopt the PRs the hosted Renovate GitHub App opened before this repo
-  // self-hosted: without this the self-hosted run reads the App's commits as
-  // manual edits and never updates them. Its other half, ignorePrAuthor, is
-  // global-only (RENOVATE_IGNORE_PR_AUTHOR in .github/workflows/renovate.yaml).
-  // Keep both while any of those PRs is still open.
-  gitIgnoredAuthors: ["29139614+renovate[bot]@users.noreply.github.com"],
   flux: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
@@ -40,13 +17,6 @@
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
   customManagers: [
-    {
-      customType: "regex",
-      managerFilePatterns: ["/.*\\.nix$/"],
-      matchStrings: [
-        "# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?\\s+\\S+\\s*=\\s*\"(?<currentValue>[^\"]+)\";",
-      ],
-    },
     // charts/<org>/<chart>/default.nix pins (see charts/README.md): a plain
     // helm repo, or an oci:// one which Renovate reads as a docker image.
     {
@@ -80,17 +50,6 @@
       packageNameTemplate: "https://github.com/{{{depName}}}",
     },
   ],
-  nix: {
-    enabled: true,
-  },
-  // Moves every input not pinned by rev (nixpkgs, the other flake inputs,
-  // transitive ones) together in one weekly PR. Manifests must not change
-  // with it: pin anything a chart derives from Helm's own version (e.g.
-  // .Capabilities.KubeVersion) in the chart values instead.
-  lockFileMaintenance: {
-    enabled: true,
-    schedule: ["before 4am on monday"],
-  },
   packageRules: [
     {
       matchManagers: ["nix"],
@@ -108,6 +67,11 @@
       enabled: true,
     },
     {
+      // Moves every input not pinned by rev (nixpkgs, the other flake
+      // inputs, transitive ones) together in the weekly lockFileMaintenance
+      // PR. Manifests must not change with it: pin anything a chart derives
+      // from Helm's own version (e.g. .Capabilities.KubeVersion) in the
+      // chart values instead.
       matchManagers: ["nix"],
       matchUpdateTypes: ["major", "minor", "patch", "digest", "pin", "pinDigest", "bump"],
       enabled: false,
@@ -135,15 +99,13 @@
       },
     },
     {
-      // Every pin has a content hash next to its version, which Renovate
-      // cannot recompute: left stale, Nix silently keeps serving the old
-      // content. Recompute it, then regenerate manifests/ so the PR passes
-      // checks.manifests.
+      // Overrides the inherited hash refresh to also regenerate manifests/
+      // so the PR passes checks.manifests.
       matchManagers: ["custom.regex"],
       matchDatasources: ["github-releases"],
       postUpgradeTasks: {
         commands: [
-          "nix run .#refresh-nix-hash -- {{{packageFile}}} {{{depName}}} {{{newValue}}}",
+          "refresh-nix-hash {{{packageFile}}} {{{depName}}} {{{newValue}}}",
           "nix run .#write-manifests -- --skip-secrets",
         ],
         fileFilters: ["**/*.nix", "manifests/**"],
@@ -155,7 +117,7 @@
       matchFileNames: ["charts/**"],
       postUpgradeTasks: {
         commands: [
-          "nix run .#refresh-nix-hash -- {{{packageFile}}} {{{depName}}} {{{newValue}}}",
+          "nix run .#rehash-chart -- {{{packageFile}}}",
           "nix run .#write-manifests -- --skip-secrets",
         ],
         fileFilters: ["**/*.nix", "manifests/**"],

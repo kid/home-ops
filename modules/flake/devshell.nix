@@ -57,7 +57,7 @@ _: {
             config.packages.provision-k3s-token
             config.packages.write-manifests
             config.packages.write-terragrunt
-            config.packages.refresh-nix-hash
+            config.packages.rehash-chart
             config.packages.write-sops-config
             config.packages.write-flake
             config.packages.write-lock
