@@ -149,26 +149,22 @@ resource "terraform_data" "install_id" {
   }
 }
 
-# The base image needs a while to boot and run cloud-init.
-resource "terraform_data" "wait_for_ssh" {
+# Before each install: build the kexec installer (nixos-anywhere's default
+# one is older than this flake's nixpkgs, which disko needs, see
+# modules/flake/kexec-installer.nix), then wait for the base image to boot
+# and run cloud-init. Its output is the install id, so each install depends
+# on its own node only and `-target` can pick one node.
+resource "terraform_data" "prepare_install" {
   for_each = var.nodes
 
-  triggers_replace = terraform_data.install_id[each.key].id
-
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/wait-for-ssh.sh root@${each.value.address}"
-  }
-}
-
-# nixos-anywhere's default installer is older than this flake's nixpkgs,
-# which disko needs (see modules/flake/kexec-installer.nix).
-resource "terraform_data" "kexec_installer" {
-  for_each = var.nodes
-
-  triggers_replace = terraform_data.install_id[each.key].id
+  input = terraform_data.install_id[each.key].id
 
   provisioner "local-exec" {
     command = "nix build '${data.external.repo_root.result.path}#kexec-installer' --out-link '${local.kexec_installer}'"
+  }
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/wait-for-ssh.sh root@${each.value.address}"
   }
 }
 
@@ -177,7 +173,7 @@ module "install" {
   for_each = var.nodes
 
   target_host        = each.value.address
-  instance_id        = terraform_data.install_id[each.key].id
+  instance_id        = terraform_data.prepare_install[each.key].output
   flake              = "${data.external.repo_root.result.path}#${each.value.nixos_attr}"
   kexec_tarball_url  = "${local.kexec_installer}/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz"
   extra_files_script = "${path.module}/scripts/host-files.sh"
@@ -185,6 +181,4 @@ module "install" {
     HOST      = each.key
     REPO_ROOT = data.external.repo_root.result.path
   }
-
-  depends_on = [terraform_data.kexec_installer, terraform_data.wait_for_ssh]
 }
