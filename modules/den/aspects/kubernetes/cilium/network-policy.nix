@@ -89,8 +89,8 @@ in
             owner = "cilium";
             repo = "cilium";
             # renovate: datasource=github-releases depName=cilium/cilium
-            rev = "v1.20.3";
-            hash = "sha256-3pGgJjCYmN6tC7emy7inlxl+6ydV3LhFO+FtQ7HCUnQ=";
+            rev = "v1.20.4";
+            hash = "sha256-VA9b7KuLlyVsI1gON6oXm0s/JTKED9wHGGJ1cMeOVJI=";
           };
           crdFiles = [
             "pkg/k8s/apis/cilium.io/client/crds/v2/ciliumnetworkpolicies.yaml"
