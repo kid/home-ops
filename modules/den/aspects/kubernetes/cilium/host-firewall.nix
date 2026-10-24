@@ -4,6 +4,7 @@
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
     {
       firewall-ports ? [ ],
+      k3s-nodes ? [ ],
       ...
     }:
     let
@@ -56,21 +57,38 @@
       # It matches the host endpoint's labels, not the Node object's: Cilium's
       # default label filter drops kubernetes.io/* there (a kubernetes.io/os
       # selector matches no node) but keeps node-role.kubernetes.io/*.
-      mkPolicy = name: nodeSelector: ports: {
+      mkPolicy = name: nodeSelector: ports: extraIngress: {
         apiVersion = "cilium.io/v2";
         kind = "CiliumClusterwideNetworkPolicy";
         metadata.name = name;
         spec = {
           inherit nodeSelector;
-          ingress = mkIngress ports;
+          ingress = mkIngress ports ++ extraIngress;
         };
       };
 
+      # A node joins over the API port while Cilium still counts it as
+      # `world`: it is only `cluster` once registered.
+      nodeAddresses = map (n: "${n.address}/32") (lib.filter (n: n.address != null) k3s-nodes);
+      nodeJoinIngress = lib.optional (nodeAddresses != [ ]) {
+        fromCIDR = nodeAddresses;
+        toPorts = [
+          {
+            ports = [
+              {
+                port = "6443";
+                protocol = "TCP";
+              }
+            ];
+          }
+        ];
+      };
+
       policies = [
-        (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports))
+        (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports) [ ])
         (mkPolicy "node-host-firewall-control-plane" {
           matchLabels."node-role.kubernetes.io/control-plane" = "true";
-        } (lib.filter isControlPlane ports))
+        } (lib.filter isControlPlane ports) nodeJoinIngress)
       ];
     in
     {

@@ -16,6 +16,12 @@ spec:
               protocol: TCP
             - port: "6443"
               protocol: TCP
+    - fromCIDR:
+        - 10.0.40.10/32
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
   nodeSelector:
     matchLabels:
       node-role.kubernetes.io/control-plane: "true"
