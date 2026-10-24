@@ -64,8 +64,16 @@ _: {
                 cpu = "20m";
                 memory = "192Mi";
               };
-              limits.memory = "384Mi";
+              limits.memory = "768Mi";
             };
+            # Without it the Go GC ignores the cgroup limit: startup briefly
+            # holds ~430MB of mostly freed heap (live ~90MB) and gets OOMKilled.
+            extraEnv = [
+              {
+                name = "GOMEMLIMIT";
+                valueFrom.resourceFieldRef.resource = "limits.memory";
+              }
+            ];
             webhook.resources = {
               requests = {
                 cpu = "10m";
