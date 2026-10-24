@@ -127,10 +127,10 @@ resource "incus_instance" "k3s" {
     }
   }
 
-  # The image only matters at creation: nixos-anywhere replaces the system,
-  # and `deploy <host>` updates it after that.
+  # The image and its cloud-init only matter at creation: nixos-anywhere
+  # replaces the system, and `deploy <host>` updates it after that.
   lifecycle {
-    ignore_changes = [image]
+    ignore_changes = [image, config["cloud-init.user-data"]]
   }
 
   device {

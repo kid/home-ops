@@ -33,11 +33,6 @@
       services.openssh.enable = true;
       services.openssh.generateHostKeys = false;
 
-      services.cloud-init = {
-        enable = true;
-        settings.datasource_list = [ "NoCloud" ];
-      };
-
       system.stateVersion = "26.05";
     };
 
