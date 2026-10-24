@@ -122,6 +122,15 @@
         }
       ];
     };
+    uzg-01 = {
+      interfaces = [
+        {
+          network = "IotLocal";
+          hostNum = 40;
+          mac = "78:21:84:6d:37:63";
+        }
+      ];
+    };
     "litters camera" = {
       interfaces = [
         {

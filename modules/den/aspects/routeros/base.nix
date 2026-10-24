@@ -58,7 +58,7 @@
       {
         stack = "base";
         moduleSource = "ros-base";
-        moduleVersion = "2.1.0";
+        moduleVersion = "2.2.0";
         inherit (stack) dependsOn;
         inputs = stack.inputs // {
           inherit routeros_users routeros_groups;
