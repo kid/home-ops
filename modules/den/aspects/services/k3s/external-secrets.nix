@@ -28,10 +28,9 @@
             "k3s.service"
             "sops-install-secrets.service"
           ];
-          requires = [
-            "k3s.service"
-            "sops-install-secrets.service"
-          ];
+          requires = [ "k3s.service" ];
+          # Only exists with sops.useSystemdActivation, as in token.nix.
+          wants = [ "sops-install-secrets.service" ];
           path = [ pkgs.kubectl ];
           environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
           serviceConfig = {
