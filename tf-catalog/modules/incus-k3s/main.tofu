@@ -17,20 +17,19 @@ variable "nodes" {
     mac        = optional(string)
     # The node's den.devices address: nixos-anywhere connects to it.
     address = string
-    # Extra NICs, keyed by a network_names key.
+    # Extra NICs, keyed by a networks key.
     extra_nics = optional(map(object({ mac = optional(string) })), {})
   }))
 }
 
-variable "network_name" {
-  description = "Existing Incus network for node NICs."
-  type        = string
-}
-
-variable "network_names" {
-  description = "Existing Incus networks extra_nics refer to, by key."
-  type        = map(string)
-  default     = {}
+variable "networks" {
+  description = "Incus bridges to create, each tagging one VLAN on a parent NIC. Every node's first NIC is on the `k3s` one; extra_nics use the other keys."
+  type = map(object({
+    name    = string
+    parent  = string
+    vlan_id = number
+    mtu     = optional(number)
+  }))
 }
 
 variable "storage_pool" {
@@ -62,6 +61,22 @@ locals {
 
   # A GC root in the working directory, outside the repo.
   kexec_installer = "${abspath(path.root)}/.kexec-installer"
+}
+
+resource "incus_network" "this" {
+  for_each = var.networks
+
+  name = each.value.name
+  type = "bridge"
+
+  config = merge(
+    {
+      "bridge.external_interfaces" = "vlan${each.value.vlan_id}/${each.value.parent}/${each.value.vlan_id}"
+      "ipv4.address"               = "none"
+      "ipv6.address"               = "none"
+    },
+    each.value.mtu != null ? { "bridge.mtu" = tostring(each.value.mtu) } : {}
+  )
 }
 
 data "external" "repo_root" {
@@ -111,7 +126,7 @@ resource "incus_instance" "k3s" {
     name = "eth0"
     type = "nic"
     properties = merge(
-      { network = var.network_name },
+      { network = incus_network.this["k3s"].name },
       each.value.mac != null ? { hwaddr = each.value.mac } : {}
     )
   }
@@ -123,7 +138,7 @@ resource "incus_instance" "k3s" {
       name = device.key
       type = "nic"
       properties = merge(
-        { network = var.network_names[device.key] },
+        { network = incus_network.this[device.key].name },
         device.value.mac != null ? { hwaddr = device.value.mac } : {}
       )
     }

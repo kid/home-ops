@@ -37,7 +37,7 @@ surface.
 
 - `modules/`: the dendritic Nix module tree — everything below lives here.
 - `tf-stacks/`: `root.hcl` (SOPS-decrypted Cloudflare R2 remote-state config) plus the generated `<env>/network/<device>/**` (RouterOS) and `<env>/k3s/<stack>/` (cluster-owned) `terragrunt.hcl` leaves, one `<env>` tree per environment.
-- `tf-catalog/modules/`: this repo's own OpenTofu modules (`*.tofu`) for cluster-owned stacks — Incus VLAN/VM (`incus-k3s*`, `incus-*`), and the Cloudflare/1Password/GitHub plumbing for `argocd`, `authelia`, `cert-manager`, `cloudflared`, `external-dns*`, `kopiur-r2`. Sourced by path (`localModule`), so edit them in place — unlike the RouterOS `ros-*` modules in the private catalog repo.
+- `tf-catalog/modules/`: this repo's own OpenTofu modules (`*.tofu`) for cluster-owned stacks — Incus VLANs and VMs (`incus-k3s`), and the Cloudflare/1Password/GitHub plumbing for `argocd`, `authelia`, `cert-manager`, `cloudflared`, `external-dns*`, `kopiur-r2`. Sourced by path (`localModule`), so edit them in place — unlike the RouterOS `ros-*` modules in the private catalog repo.
 - `charts/<org>/<chart>/default.nix`: pinned Helm charts (`{ repo; chart; version; chartHash; }`), loaded by `modules/flake/charts.nix` and consumed by app aspects as `charts.<org>.<chart>`. See `charts/README.md`.
 - `pkgs/by-name/<name>/package.nix`: small local packages, auto-loaded as `packages.<name>` (`modules/flake/pkgs.nix`).
 - `manifests/<cluster>/`: nixidy-generated Kubernetes manifests, one tree per cluster (at `den.clusters.<name>.nixidy.rootPath`), each synced to its cluster by ArgoCD. The whole directory is generated.
