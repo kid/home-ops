@@ -1,10 +1,10 @@
 # builtins.toJSON (valid YAML) avoids hand-indented YAML silently nesting `ingress`/`toPorts` wrong.
-{ lib, ... }:
+{ config, lib, ... }:
 {
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
     {
+      cluster,
       firewall-ports ? [ ],
-      k3s-nodes ? [ ],
       ...
     }:
     let
@@ -68,21 +68,23 @@
       };
 
       # A node joins over the API port while Cilium still counts it as
-      # `world`: it is only `cluster` once registered.
-      nodeAddresses = map (n: "${n.address}/32") (lib.filter (n: n.address != null) k3s-nodes);
-      nodeJoinIngress = lib.optional (nodeAddresses != [ ]) {
-        fromCIDR = nodeAddresses;
-        toPorts = [
-          {
-            ports = [
-              {
-                port = "6443";
-                protocol = "TCP";
-              }
-            ];
-          }
-        ];
-      };
+      # `world`: it is only `cluster` once registered. The whole node VLAN,
+      # so a new node needs no policy change first.
+      nodeJoinIngress = [
+        {
+          fromCIDR = [ config.den.environments.${cluster.environment}.networks.${cluster.network}.cidr ];
+          toPorts = [
+            {
+              ports = [
+                {
+                  port = "6443";
+                  protocol = "TCP";
+                }
+              ];
+            }
+          ];
+        }
+      ];
 
       policies = [
         (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports) [ ])

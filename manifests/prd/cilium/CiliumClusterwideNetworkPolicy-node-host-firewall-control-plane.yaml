@@ -17,7 +17,7 @@ spec:
             - port: "6443"
               protocol: TCP
     - fromCIDR:
-        - 10.0.40.10/32
+        - 10.0.40.0/24
       toPorts:
         - ports:
             - port: "6443"
