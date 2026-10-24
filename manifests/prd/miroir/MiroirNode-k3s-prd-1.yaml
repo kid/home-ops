@@ -1,0 +1,8 @@
+apiVersion: miroir.home-operations.com/v1alpha1
+kind: MiroirNode
+metadata:
+  name: k3s-prd-1
+spec:
+  pools:
+    - lvmthin: {}
+      name: default

@@ -20,6 +20,7 @@ _: {
             expect
             age
             sops
+            ssh-to-age
             openssh
             opentofu
             tofu-ls

@@ -8,7 +8,6 @@
       {
         host,
         pkgs,
-        lib,
         config,
         ...
       }:
@@ -23,30 +22,15 @@
           format = "binary";
         };
 
-        sops.useSystemdActivation = lib.mkIf config.services.cloud-init.enable true;
-        systemd.services.sops-install-secrets = lib.mkIf config.services.cloud-init.enable {
-          after = [ "cloud-config.service" ];
-          wants = [ "cloud-config.service" ];
-          # sops-nix's own systemd-activation mode adds `before = [ "sysinit.target" ]`,
-          # which conflicts with waiting on cloud-init (itself ordered after
-          # sysinit.target) and forms a cycle systemd breaks by dropping this
-          # unit from the boot entirely. The age key (an SSH host key) only
-          # exists once cloud-init writes it, so this host can't decrypt
-          # before sysinit.target anyway; drop that participation instead.
-          wantedBy = lib.mkForce [ "multi-user.target" ];
-          before = lib.mkForce [ ];
-        };
-
         systemd.services.k3s-external-secrets-seed = {
           description = "Sync the 1Password service account token Secret";
           after = [
             "k3s.service"
             "sops-install-secrets.service"
           ];
-          requires = [
-            "k3s.service"
-            "sops-install-secrets.service"
-          ];
+          requires = [ "k3s.service" ];
+          # Only exists with sops.useSystemdActivation, as in token.nix.
+          wants = [ "sops-install-secrets.service" ];
           path = [ pkgs.kubectl ];
           environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
           serviceConfig = {
