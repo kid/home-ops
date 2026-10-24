@@ -8,8 +8,6 @@
       clusterName = "prd";
       serverHost = "k3s-prd-0";
     };
-    settings.k3s-miroir-node.settings.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir--data";
-    settings.disko.vm-ext4.settings.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_root";
   };
 
   den.devices.k3s-prd-1 = {
@@ -27,31 +25,22 @@
     ];
   };
 
-  den.aspects.k3s-prd-1.nixos =
-    { modulesPath, ... }:
-    {
-      imports = [ (modulesPath + "/profiles/qemu-guest.nix") ];
+  den.aspects.k3s-prd-1.nixos = {
+    networking.hostName = "k3s-prd-1";
+    # Both NICs: the Storage DHCP server sends no gateway.
+    networking.useDHCP = true;
 
-      boot.loader.systemd-boot.enable = true;
-      boot.loader.efi.canTouchEfiVariables = true;
+    users.mutableUsers = false;
 
-      virtualisation.incus.agent.enable = true;
+    # nixos-anywhere puts the key from secrets/hosts/k3s-prd-1 in place.
+    services.openssh.generateHostKeys = false;
 
-      networking.hostName = "k3s-prd-1";
-      # Both NICs: the Storage DHCP server sends no gateway.
-      networking.useDHCP = true;
-
-      users.mutableUsers = false;
-
-      # nixos-anywhere puts the key from secrets/hosts/k3s-prd-1 in place.
-      services.openssh.generateHostKeys = false;
-
-      system.stateVersion = "26.05";
-    };
+    system.stateVersion = "26.05";
+  };
 
   den.aspects.k3s-prd-1.includes = [
     den.aspects.base
-    den.aspects.disko.vm-ext4
+    den.aspects.incus-vm
     den.aspects.k3s-agent
     den.aspects.k3s-cilium
     den.aspects.k3s-miroir-node

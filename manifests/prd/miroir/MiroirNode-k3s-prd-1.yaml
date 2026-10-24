@@ -4,6 +4,5 @@ metadata:
   name: k3s-prd-1
 spec:
   pools:
-    - lvmthin:
-        device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir--data
+    - lvmthin: {}
       name: default

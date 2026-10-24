@@ -82,26 +82,23 @@ let
           inherit (config.den.networks.Storage) mtu;
         };
         nodes = {
-          # Made from a per-host image before nodes were installed with
-          # nixos-anywhere; never kexec'd.
+          # 40G root LV (den.aspects.incus-vm), the rest for miroir.
           "k3s-${cluster.name}-0" = {
             nixos_attr = "k3s-${cluster.name}-0";
             cpu = 4;
             memory = "16GiB";
-            disk_size = "40GiB";
+            disk_size = "64GiB";
             mac = macOf "k3s-${cluster.name}-0" "K3s";
-            install = false;
-            extra_disks.miroir-data.size = "20GiB";
+            inherit (config.den.devices."k3s-${cluster.name}-0") address;
             extra_nics.storage.mac = macOf "k3s-${cluster.name}-0" "Storage";
           };
           "k3s-${cluster.name}-1" = {
             nixos_attr = "k3s-${cluster.name}-1";
             cpu = 4;
             memory = "8GiB";
-            disk_size = "40GiB";
+            disk_size = "64GiB";
             mac = macOf "k3s-${cluster.name}-1" "K3s";
             inherit (config.den.devices."k3s-${cluster.name}-1") address;
-            extra_disks.miroir-data.size = "20GiB";
             extra_nics.storage.mac = macOf "k3s-${cluster.name}-1" "Storage";
           };
         };

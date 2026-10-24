@@ -43,19 +43,14 @@ inputs = {
   }
   nodes = {
     k3s-prd-0 = {
+      address   = "10.0.40.10"
       cpu       = 4
-      disk_size = "40GiB"
-      extra_disks = {
-        miroir-data = {
-          size = "20GiB"
-        }
-      }
+      disk_size = "64GiB"
       extra_nics = {
         storage = {
           mac = "52:54:00:20:00:01"
         }
       }
-      install    = false
       mac        = "52:54:00:40:00:01"
       memory     = "16GiB"
       nixos_attr = "k3s-prd-0"
@@ -63,12 +58,7 @@ inputs = {
     k3s-prd-1 = {
       address   = "10.0.40.11"
       cpu       = 4
-      disk_size = "40GiB"
-      extra_disks = {
-        miroir-data = {
-          size = "20GiB"
-        }
-      }
+      disk_size = "64GiB"
       extra_nics = {
         storage = {
           mac = "52:54:00:20:00:02"

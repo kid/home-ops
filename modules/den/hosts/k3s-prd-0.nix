@@ -2,7 +2,6 @@
 {
   den.hosts.x86_64-linux.k3s-prd-0 = {
     k3s.clusterName = "prd";
-    settings.k3s-miroir-node.settings.device = "/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_incus_miroir--data";
   };
 
   den.devices.k3s-prd-0 = {
@@ -20,24 +19,22 @@
     ];
   };
 
-  den.aspects.k3s-prd-0.nixos =
-    { modulesPath, lib, ... }:
-    {
-      imports = [ (modulesPath + "/virtualisation/incus-virtual-machine.nix") ];
+  den.aspects.k3s-prd-0.nixos = {
+    networking.hostName = "k3s-prd-0";
+    # Both NICs: the Storage DHCP server sends no gateway.
+    networking.useDHCP = true;
 
-      networking.hostName = "k3s-prd-0";
-      networking.useDHCP = lib.mkDefault true;
+    users.mutableUsers = false;
 
-      users.mutableUsers = false;
+    # nixos-anywhere puts the key from secrets/hosts/k3s-prd-0 in place.
+    services.openssh.generateHostKeys = false;
 
-      services.openssh.enable = true;
-      services.openssh.generateHostKeys = false;
-
-      system.stateVersion = "26.05";
-    };
+    system.stateVersion = "26.05";
+  };
 
   den.aspects.k3s-prd-0.includes = [
     den.aspects.base
+    den.aspects.incus-vm
     den.aspects.k3s-server
     den.aspects.k3s-token
     den.aspects.k3s-cilium

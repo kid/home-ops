@@ -16,12 +16,7 @@ variable "nodes" {
     disk_size  = string
     mac        = optional(string)
     # The node's den.devices address: nixos-anywhere connects to it.
-    address = optional(string)
-    # false for a node made before this module installed with nixos-anywhere
-    # (from a per-host image): it is never kexec'd.
-    install = optional(bool, true)
-    # Extra raw block devices beyond the root disk, keyed by device name.
-    extra_disks = optional(map(object({ size = string })), {})
+    address = string
     # Extra NICs, keyed by a network_names key.
     extra_nics = optional(map(object({ mac = optional(string) })), {})
   }))
@@ -55,8 +50,6 @@ variable "ssh_authorized_keys" {
 }
 
 locals {
-  install_nodes = { for k, v in var.nodes : k => v if v.install }
-
   # The images: cloud variants ship without an SSH server.
   cloud_init_user_data = "#cloud-config\n${yamlencode({
     disable_root = false
@@ -67,12 +60,8 @@ locals {
     }]
   })}"
 
-  extra_disks = merge([
-    for node_key, node in var.nodes : {
-      for disk_key, disk in node.extra_disks :
-      "${node_key}/${disk_key}" => merge(disk, { node = node_key, disk = disk_key })
-    }
-  ]...)
+  # A GC root in the working directory, outside the repo.
+  kexec_installer = "${abspath(path.root)}/.kexec-installer"
 }
 
 data "external" "repo_root" {
@@ -87,21 +76,6 @@ resource "incus_image" "base" {
   }
 }
 
-# A plain disk device with `pool`+`size` and no `path`/`source` is only
-# valid for the special-cased root disk — any other disk needs a real
-# custom volume to attach as its `source`.
-resource "incus_storage_volume" "extra" {
-  for_each = local.extra_disks
-
-  name         = "${each.value.node}-${each.value.disk}"
-  pool         = var.storage_pool
-  content_type = "block"
-
-  config = {
-    size = each.value.size
-  }
-}
-
 resource "incus_instance" "k3s" {
   for_each = var.nodes
 
@@ -109,15 +83,13 @@ resource "incus_instance" "k3s" {
   image = incus_image.base.fingerprint
   type  = "virtual-machine"
 
-  config = merge(
-    {
-      "limits.cpu"           = each.value.cpu
-      "limits.memory"        = each.value.memory
-      "cloud-init.user-data" = local.cloud_init_user_data
-    },
+  config = {
+    "limits.cpu"           = each.value.cpu
+    "limits.memory"        = each.value.memory
+    "cloud-init.user-data" = local.cloud_init_user_data
     # The installed system boots an unsigned systemd-boot.
-    each.value.install ? { "security.secureboot" = "false" } : {}
-  )
+    "security.secureboot" = "false"
+  }
 
   device {
     name = "root"
@@ -165,27 +137,12 @@ resource "incus_instance" "k3s" {
       source = "cloud-init:config"
     }
   }
-
-  # No `path`, so these appear as raw block devices in the guest rather
-  # than mounted filesystems.
-  dynamic "device" {
-    for_each = each.value.extra_disks
-
-    content {
-      name = device.key
-      type = "disk"
-      properties = {
-        pool   = var.storage_pool
-        source = incus_storage_volume.extra["${each.key}/${device.key}"].name
-      }
-    }
-  }
 }
 
 # A new id each time the instance is replaced: the install module's only
 # trigger, so a NixOS change never reinstalls a node.
 resource "terraform_data" "install_id" {
-  for_each = local.install_nodes
+  for_each = var.nodes
 
   lifecycle {
     replace_triggered_by = [incus_instance.k3s[each.key]]
@@ -194,7 +151,7 @@ resource "terraform_data" "install_id" {
 
 # The base image needs a while to boot and run cloud-init.
 resource "terraform_data" "wait_for_ssh" {
-  for_each = local.install_nodes
+  for_each = var.nodes
 
   triggers_replace = terraform_data.install_id[each.key].id
 
@@ -203,18 +160,31 @@ resource "terraform_data" "wait_for_ssh" {
   }
 }
 
+# nixos-anywhere's default installer is older than this flake's nixpkgs,
+# which disko needs (see modules/flake/kexec-installer.nix).
+resource "terraform_data" "kexec_installer" {
+  for_each = var.nodes
+
+  triggers_replace = terraform_data.install_id[each.key].id
+
+  provisioner "local-exec" {
+    command = "nix build '${data.external.repo_root.result.path}#kexec-installer' --out-link '${local.kexec_installer}'"
+  }
+}
+
 module "install" {
   source   = "github.com/nix-community/nixos-anywhere//terraform/install?ref=1.13.0"
-  for_each = local.install_nodes
+  for_each = var.nodes
 
   target_host        = each.value.address
   instance_id        = terraform_data.install_id[each.key].id
   flake              = "${data.external.repo_root.result.path}#${each.value.nixos_attr}"
+  kexec_tarball_url  = "${local.kexec_installer}/nixos-kexec-installer-noninteractive-x86_64-linux.tar.gz"
   extra_files_script = "${path.module}/scripts/host-files.sh"
   extra_environment = {
     HOST      = each.key
     REPO_ROOT = data.external.repo_root.result.path
   }
 
-  depends_on = [terraform_data.wait_for_ssh]
+  depends_on = [terraform_data.kexec_installer, terraform_data.wait_for_ssh]
 }
