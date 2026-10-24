@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "${get_repo_root()}/tf-catalog/modules//incus-k3s-vlan"
+  source = "${get_repo_root()}/tf-catalog/modules//incus-k3s"
 }
 
 generate "incus_provider" {
@@ -28,18 +28,18 @@ EOF
 }
 
 inputs = {
-  extra_networks = {
+  networks = {
+    k3s = {
+      name    = "k3s-prd"
+      parent  = "enp36s0f1"
+      vlan_id = 40
+    }
     storage = {
       mtu     = 9000
       name    = "storage-prd"
       parent  = "enp36s0f1"
       vlan_id = 20
     }
-  }
-  network = {
-    name    = "k3s-prd"
-    parent  = "enp36s0f1"
-    vlan_id = 40
   }
   nodes = {
     k3s-prd-0 = {

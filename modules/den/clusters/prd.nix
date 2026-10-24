@@ -47,7 +47,7 @@ let
     name = "prd/incus";
     "terragrunt-stacks" = { cluster, ... }: {
       stack = "incus";
-      localModule = "incus-k3s-vlan";
+      localModule = "incus-k3s";
       generate = {
         label = "incus_provider";
         path = "incus_provider.tf";
@@ -70,12 +70,12 @@ let
         '';
       };
       inputs = {
-        network = {
+        networks.k3s = {
           name = "k3s-${cluster.name}";
           parent = "enp36s0f1";
           vlan_id = config.den.networks.K3s.vlanId;
         };
-        extra_networks.storage = {
+        networks.storage = {
           name = "storage-${cluster.name}";
           parent = "enp36s0f1";
           vlan_id = config.den.networks.Storage.vlanId;
