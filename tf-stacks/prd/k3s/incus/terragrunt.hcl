@@ -17,11 +17,25 @@ provider "incus" {
     name    = "node1"
     address = "https://10.0.10.10:8443"
   }
+
+  remote {
+    name     = "images"
+    address  = "https://images.linuxcontainers.org"
+    protocol = "simplestreams"
+  }
 }
 EOF
 }
 
 inputs = {
+  extra_networks = {
+    storage = {
+      mtu     = 9000
+      name    = "storage-prd"
+      parent  = "enp36s0f1"
+      vlan_id = 20
+    }
+  }
   network = {
     name    = "k3s-prd"
     parent  = "enp36s0f1"
@@ -36,10 +50,33 @@ inputs = {
           size = "20GiB"
         }
       }
+      install    = false
       mac        = "52:54:00:40:00:01"
       memory     = "16GiB"
       nixos_attr = "k3s-prd-0"
     }
+    k3s-prd-1 = {
+      address   = "10.0.40.11"
+      cpu       = 4
+      disk_size = "40GiB"
+      extra_disks = {
+        miroir-data = {
+          size = "20GiB"
+        }
+      }
+      extra_nics = {
+        storage = {
+          mac = "52:54:00:20:00:02"
+        }
+      }
+      mac        = "52:54:00:40:00:02"
+      memory     = "8GiB"
+      nixos_attr = "k3s-prd-1"
+    }
   }
+  ssh_authorized_keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan",
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13",
+  ]
   storage_pool = "default"
 }
