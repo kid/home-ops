@@ -241,6 +241,11 @@ inputs = {
     ]
     Storage = [
       {
+        address = "10.0.20.10"
+        mac     = "52:54:00:20:00:01"
+        name    = "k3s-prd-0"
+      },
+      {
         address = "10.0.20.11"
         mac     = "52:54:00:20:00:02"
         name    = "k3s-prd-1"

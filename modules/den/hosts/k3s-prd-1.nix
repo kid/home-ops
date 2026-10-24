@@ -2,9 +2,6 @@
 # nixos-anywhere by the tf-stacks/prd/k3s/incus stack, then updated with
 # `deploy k3s-prd-1`.
 { den, config, ... }:
-let
-  storageMac = (builtins.elemAt config.den.devices.k3s-prd-1.interfaces 1).mac;
-in
 {
   den.hosts.x86_64-linux.k3s-prd-1 = {
     k3s = {
@@ -43,10 +40,6 @@ in
       networking.hostName = "k3s-prd-1";
       # Both NICs: the Storage DHCP server sends no gateway.
       networking.useDHCP = true;
-      systemd.network.links."10-storage" = {
-        matchConfig.MACAddress = storageMac;
-        linkConfig.MTUBytes = den.networks.Storage.mtu;
-      };
 
       users.mutableUsers = false;
 

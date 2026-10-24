@@ -50,6 +50,11 @@ inputs = {
           size = "20GiB"
         }
       }
+      extra_nics = {
+        storage = {
+          mac = "52:54:00:20:00:01"
+        }
+      }
       install    = false
       mac        = "52:54:00:40:00:01"
       memory     = "16GiB"

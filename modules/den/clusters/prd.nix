@@ -92,6 +92,7 @@ let
             mac = macOf "k3s-${cluster.name}-0" "K3s";
             install = false;
             extra_disks.miroir-data.size = "20GiB";
+            extra_nics.storage.mac = macOf "k3s-${cluster.name}-0" "Storage";
           };
           "k3s-${cluster.name}-1" = {
             nixos_attr = "k3s-${cluster.name}-1";
