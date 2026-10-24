@@ -62,6 +62,16 @@
       groupName: "terraform providers",
     },
     {
+      // The chart and the CRD source pin (cilium/network-policy.nix) share a
+      // version, so bump them in one PR.
+      matchDatasources: ["helm", "github-releases"],
+      matchDepNames: ["cilium", "cilium/cilium"],
+      groupName: "cilium",
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+    },
+    {
       matchManagers: ["nix"],
       matchDepNames: ["nixhelm"],
       enabled: true,
