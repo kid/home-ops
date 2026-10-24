@@ -13,6 +13,7 @@ variable "networks" {
     name    = string
     parent  = string
     vlan_id = number
+    mtu     = optional(number)
   }))
 }
 
@@ -22,11 +23,14 @@ resource "incus_network" "this" {
   name = each.value.name
   type = "bridge"
 
-  config = {
-    "bridge.external_interfaces" = "vlan${each.value.vlan_id}/${each.value.parent}/${each.value.vlan_id}"
-    "ipv4.address"               = "none"
-    "ipv6.address"               = "none"
-  }
+  config = merge(
+    {
+      "bridge.external_interfaces" = "vlan${each.value.vlan_id}/${each.value.parent}/${each.value.vlan_id}"
+      "ipv4.address"               = "none"
+      "ipv6.address"               = "none"
+    },
+    each.value.mtu != null ? { "bridge.mtu" = tostring(each.value.mtu) } : {}
+  )
 }
 
 output "network_names" {

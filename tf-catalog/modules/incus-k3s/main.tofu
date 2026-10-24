@@ -15,8 +15,15 @@ variable "nodes" {
     memory     = string
     disk_size  = string
     mac        = optional(string)
+    # The node's den.devices address: nixos-anywhere connects to it.
+    address = optional(string)
+    # false for a node made before this module installed with nixos-anywhere
+    # (from a per-host image): it is never kexec'd.
+    install = optional(bool, true)
     # Extra raw block devices beyond the root disk, keyed by device name.
     extra_disks = optional(map(object({ size = string })), {})
+    # Extra NICs, keyed by a network_names key.
+    extra_nics = optional(map(object({ mac = optional(string) })), {})
   }))
 }
 
@@ -25,42 +32,38 @@ variable "network_name" {
   type        = string
 }
 
+variable "network_names" {
+  description = "Existing Incus networks extra_nics refer to, by key."
+  type        = map(string)
+  default     = {}
+}
+
 variable "storage_pool" {
   description = "Existing Incus storage pool for node root disks."
   type        = string
 }
 
-data "external" "image" {
-  for_each = var.nodes
-
-  program = ["${path.module}/scripts/build-image.sh"]
-
-  query = {
-    attr = each.value.nixos_attr
-  }
+variable "base_image" {
+  description = "Image on the images: remote that a node boots before nixos-anywhere replaces it."
+  type        = string
+  default     = "debian/13/cloud"
 }
 
-# Lands in this stack's tfstate as plaintext — fine for a throwaway dev key,
-# not for a real host's without reconsidering state handling first.
-data "external" "host_key" {
-  for_each = var.nodes
-
-  program = ["${path.module}/scripts/host-key.sh"]
-
-  query = {
-    host = each.key
-  }
+variable "ssh_authorized_keys" {
+  description = "Keys put on the base image's root account, for nixos-anywhere."
+  type        = list(string)
 }
 
 locals {
-  cloud_init_user_data = {
-    for k, v in var.nodes : k => "#cloud-config\n${yamlencode({
-      ssh_keys = {
-        ed25519_private = data.external.host_key[k].result.private
-        ed25519_public  = data.external.host_key[k].result.public
-      }
-    })}"
-  }
+  install_nodes = { for k, v in var.nodes : k => v if v.install }
+
+  cloud_init_user_data = "#cloud-config\n${yamlencode({
+    disable_root = false
+    users = [{
+      name                = "root"
+      ssh_authorized_keys = var.ssh_authorized_keys
+    }]
+  })}"
 
   extra_disks = merge([
     for node_key, node in var.nodes : {
@@ -70,16 +73,15 @@ locals {
   ]...)
 }
 
-resource "incus_image" "k3s" {
-  for_each = var.nodes
+data "external" "repo_root" {
+  program = ["${path.module}/scripts/repo-root.sh"]
+}
 
-  source_file = {
-    data_path     = data.external.image[each.key].result.qcow2
-    metadata_path = data.external.image[each.key].result.metadata
-  }
-
-  alias {
-    name = "nixos/${each.key}"
+resource "incus_image" "base" {
+  source_image = {
+    remote = "images"
+    name   = var.base_image
+    type   = "virtual-machine"
   }
 }
 
@@ -102,14 +104,18 @@ resource "incus_instance" "k3s" {
   for_each = var.nodes
 
   name  = each.key
-  image = incus_image.k3s[each.key].fingerprint
+  image = incus_image.base.fingerprint
   type  = "virtual-machine"
 
-  config = {
-    "limits.cpu"           = each.value.cpu
-    "limits.memory"        = each.value.memory
-    "cloud-init.user-data" = local.cloud_init_user_data[each.key]
-  }
+  config = merge(
+    {
+      "limits.cpu"           = each.value.cpu
+      "limits.memory"        = each.value.memory
+      "cloud-init.user-data" = local.cloud_init_user_data
+    },
+    # The installed system boots an unsigned systemd-boot.
+    each.value.install ? { "security.secureboot" = "false" } : {}
+  )
 
   device {
     name = "root"
@@ -121,6 +127,8 @@ resource "incus_instance" "k3s" {
     }
   }
 
+  # The image only matters at creation: nixos-anywhere replaces the system,
+  # and `deploy <host>` updates it after that.
   lifecycle {
     ignore_changes = [image]
   }
@@ -134,7 +142,20 @@ resource "incus_instance" "k3s" {
     )
   }
 
-  # Agent-independent cloud-init seed: no incus-agent runs in this image.
+  dynamic "device" {
+    for_each = each.value.extra_nics
+
+    content {
+      name = device.key
+      type = "nic"
+      properties = merge(
+        { network = var.network_names[device.key] },
+        device.value.mac != null ? { hwaddr = device.value.mac } : {}
+      )
+    }
+  }
+
+  # Agent-independent cloud-init seed for the base image.
   device {
     name = "cloud-init"
     type = "disk"
@@ -157,4 +178,41 @@ resource "incus_instance" "k3s" {
       }
     }
   }
+}
+
+# A new id each time the instance is replaced: the install module's only
+# trigger, so a NixOS change never reinstalls a node.
+resource "terraform_data" "install_id" {
+  for_each = local.install_nodes
+
+  lifecycle {
+    replace_triggered_by = [incus_instance.k3s[each.key]]
+  }
+}
+
+# The base image needs a while to boot and run cloud-init.
+resource "terraform_data" "wait_for_ssh" {
+  for_each = local.install_nodes
+
+  triggers_replace = terraform_data.install_id[each.key].id
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/wait-for-ssh.sh root@${each.value.address}"
+  }
+}
+
+module "install" {
+  source   = "github.com/nix-community/nixos-anywhere//terraform/install?ref=1.13.0"
+  for_each = local.install_nodes
+
+  target_host        = each.value.address
+  instance_id        = terraform_data.install_id[each.key].id
+  flake              = "${data.external.repo_root.result.path}#${each.value.nixos_attr}"
+  extra_files_script = "${path.module}/scripts/host-files.sh"
+  extra_environment = {
+    HOST      = each.key
+    REPO_ROOT = data.external.repo_root.result.path
+  }
+
+  depends_on = [terraform_data.wait_for_ssh]
 }
