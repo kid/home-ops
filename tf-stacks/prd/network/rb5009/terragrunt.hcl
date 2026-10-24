@@ -165,6 +165,11 @@ inputs = {
         mac     = "e0:01:c7:e4:e0:f3"
         name    = "litters camera"
       },
+      {
+        address = "10.0.50.40"
+        mac     = "78:21:84:6d:37:63"
+        name    = "uzg-01"
+      },
     ]
     K3s = [
       {
@@ -304,6 +309,10 @@ inputs = {
         100,
         101,
       ]
+    }
+    ether5 = {
+      comment  = "uzg-01"
+      untagged = 50
     }
     ether7 = {
       bridge_port = false

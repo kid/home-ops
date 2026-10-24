@@ -119,6 +119,10 @@ in
                 comment = "capxr0";
                 tagged = allVlanIds;
               };
+              ether5 = {
+                comment = "uzg-01";
+                untagged = networks.IotLocal.vlanId;
+              };
               ether7 = {
                 comment = "oob";
                 bridge_port = false;
