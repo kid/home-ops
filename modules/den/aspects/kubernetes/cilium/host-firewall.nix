@@ -1,8 +1,9 @@
 # builtins.toJSON (valid YAML) avoids hand-indented YAML silently nesting `ingress`/`toPorts` wrong.
-{ lib, ... }:
+{ config, lib, ... }:
 {
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
     {
+      cluster,
       firewall-ports ? [ ],
       ...
     }:
@@ -56,21 +57,40 @@
       # It matches the host endpoint's labels, not the Node object's: Cilium's
       # default label filter drops kubernetes.io/* there (a kubernetes.io/os
       # selector matches no node) but keeps node-role.kubernetes.io/*.
-      mkPolicy = name: nodeSelector: ports: {
+      mkPolicy = name: nodeSelector: ports: extraIngress: {
         apiVersion = "cilium.io/v2";
         kind = "CiliumClusterwideNetworkPolicy";
         metadata.name = name;
         spec = {
           inherit nodeSelector;
-          ingress = mkIngress ports;
+          ingress = mkIngress ports ++ extraIngress;
         };
       };
 
+      # A node joins over the API port while Cilium still counts it as
+      # `world`: it is only `cluster` once registered. The whole node VLAN,
+      # so a new node needs no policy change first.
+      nodeJoinIngress = [
+        {
+          fromCIDR = [ config.den.environments.${cluster.environment}.networks.${cluster.network}.cidr ];
+          toPorts = [
+            {
+              ports = [
+                {
+                  port = "6443";
+                  protocol = "TCP";
+                }
+              ];
+            }
+          ];
+        }
+      ];
+
       policies = [
-        (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports))
+        (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports) [ ])
         (mkPolicy "node-host-firewall-control-plane" {
           matchLabels."node-role.kubernetes.io/control-plane" = "true";
-        } (lib.filter isControlPlane ports))
+        } (lib.filter isControlPlane ports) nodeJoinIngress)
       ];
     in
     {
