@@ -57,8 +57,10 @@ variable "ssh_authorized_keys" {
 locals {
   install_nodes = { for k, v in var.nodes : k => v if v.install }
 
+  # The images: cloud variants ship without an SSH server.
   cloud_init_user_data = "#cloud-config\n${yamlencode({
     disable_root = false
+    packages     = ["openssh-server"]
     users = [{
       name                = "root"
       ssh_authorized_keys = var.ssh_authorized_keys
