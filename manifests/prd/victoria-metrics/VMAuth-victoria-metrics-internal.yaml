@@ -16,12 +16,16 @@ spec:
       cpu: 10m
       memory: 32Mi
   unauthorizedUserAccessSpec:
-    url_map:
-      - src_paths:
+    targetRefs:
+      - crd:
+          kind: VLSingle
+          name: victoria-metrics
+          namespace: monitoring
+        paths:
           - /select/logsql/.*
-        url_prefix:
-          - http://vlsingle-victoria-metrics.monitoring.svc.cluster.local.:9428/
-      - src_paths:
+      - crd:
+          kind: VMSingle
+          name: victoria-metrics
+          namespace: monitoring
+        paths:
           - /.*
-        url_prefix:
-          - http://vmsingle-victoria-metrics.monitoring.svc.cluster.local.:8428/
