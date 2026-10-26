@@ -168,11 +168,14 @@ resource "terraform_data" "install_id" {
 # one is older than this flake's nixpkgs, which disko needs, see
 # modules/flake/kexec-installer.nix), then wait for the base image to boot
 # and run cloud-init. Its output is the install id, so each install depends
-# on its own node only and `-target` can pick one node.
+# on its own node only and `-target` can pick one node. Provisioners run
+# only on create, and a changed `input` updates in place: it must also
+# replace on a new id.
 resource "terraform_data" "prepare_install" {
   for_each = var.nodes
 
-  input = terraform_data.install_id[each.key].id
+  triggers_replace = terraform_data.install_id[each.key].id
+  input            = terraform_data.install_id[each.key].id
 
   provisioner "local-exec" {
     command = "nix build '${data.external.repo_root.result.path}#kexec-installer' --out-link '${local.kexec_installer}'"
