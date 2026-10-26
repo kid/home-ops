@@ -275,6 +275,31 @@ in
               return hs
             '';
 
+          # ArgoCD's built-in check keeps a GrafanaDashboard Progressing until
+          # grafana-operator sets its status. An app in an earlier wave than
+          # grafana-operator (kopiur) then never gets healthy, and the apps
+          # Application never reaches grafana-operator's wave. A False
+          # condition is still Degraded.
+          resources.configMaps.argocd-cm.data."resource.customizations.health.grafana.integreatly.org_GrafanaDashboard" =
+            ''
+              hs = {}
+              hs.status = "Healthy"
+              hs.message = "Not reconciled by grafana-operator yet"
+              if obj.status ~= nil and obj.status.conditions ~= nil then
+                for i, condition in ipairs(obj.status.conditions) do
+                  if condition.status == "False" then
+                    hs.status = "Degraded"
+                    hs.message = (condition.reason or "") .. ": " .. (condition.message or "")
+                    return hs
+                  end
+                  if condition.status == "True" then
+                    hs.message = condition.message or ""
+                  end
+                end
+              end
+              return hs
+            '';
+
           # Replaces argocd-server's ephemeral self-signed cert with one off Hubble's CA.
           resources.certificates.argocd-server-tls.spec = {
             secretName = "argocd-server-tls";

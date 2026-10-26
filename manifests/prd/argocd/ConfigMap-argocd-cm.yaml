@@ -41,6 +41,23 @@ data:
     hs.status = "Progressing"
     hs.message = "Waiting for PushSecret to sync"
     return hs
+  resource.customizations.health.grafana.integreatly.org_GrafanaDashboard: |
+    hs = {}
+    hs.status = "Healthy"
+    hs.message = "Not reconciled by grafana-operator yet"
+    if obj.status ~= nil and obj.status.conditions ~= nil then
+      for i, condition in ipairs(obj.status.conditions) do
+        if condition.status == "False" then
+          hs.status = "Degraded"
+          hs.message = (condition.reason or "") .. ": " .. (condition.message or "")
+          return hs
+        end
+        if condition.status == "True" then
+          hs.message = condition.message or ""
+        end
+      end
+    end
+    return hs
   resource.customizations.ignoreResourceUpdates.ConfigMap: |
     jqPathExpressions:
       # Ignore the cluster-autoscaler status
