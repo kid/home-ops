@@ -1,21 +1,18 @@
 # Node side of miroir (modules/den/aspects/kubernetes/miroir/default.nix):
-# an LVM-thin pool on `settings.device`, replicated between nodes with DRBD.
+# an LVM-thin pool in the node's existing `vg-miroir` VG (den.aspects.incus-vm),
+# replicated between nodes with DRBD.
 #
 # DRBD9 (>= 9.3.1) is needed on every node before miroir can replicate. The
 # default kernel's drbd build can be marked broken in nixpkgs (driver.nix,
 # e.g. for 6.18), so this picks the newest kernel where it is not.
 # Deliberately not `lib.mkDefault`: nothing else in this repo sets
 # boot.kernelPackages.
-{ lib, ... }:
 {
   den.aspects.k3s-miroir-node = {
-    settings.device = lib.mkOption { type = lib.types.str; };
-
     miroir-nodes =
       { host, ... }:
       {
         hostname = host.name;
-        device = host.settings.k3s-miroir-node.settings.device;
       };
 
     nixos =

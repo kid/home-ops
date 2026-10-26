@@ -98,7 +98,8 @@ _: {
               spec.pools = [
                 {
                   name = "default";
-                  lvmthin.device = n.device;
+                  # The VG exists: the agent makes its thin pool there.
+                  lvmthin = { };
                 }
               ];
             }

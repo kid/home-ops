@@ -14,6 +14,7 @@
 {
   den,
   config,
+  lib,
   ...
 }:
 let
@@ -31,18 +32,22 @@ let
   # below, so the two can't drift apart.
   lbCidr = "10.0.42.0/24";
 
+  macOf =
+    host: network:
+    (lib.findFirst (i: i.network == network) null config.den.devices.${host}.interfaces).mac;
+
   # Provisions the Incus VLAN + k3s VM node1 runs this cluster on. Not owned
   # by any single Kubernetes app, so it lives here rather than under
   # aspects/kubernetes/ — a small local aspect object appended to includes
   # below, the same shape as nixidy-defaults.nix's nixidyDefaultsAspect.
-  # vlan_id is the one value with an existing Nix source of truth
-  # (den.networks.K3s below); node1's Incus remote address, the physical NIC
-  # name, and the VM's sizing/mac have none and stay literal.
+  # VLANs, MACs and addresses come from den.networks/den.devices; node1's
+  # Incus remote address, the physical NIC name and the VM sizing have no
+  # Nix source and stay literal.
   incusTerragruntAspect = {
     name = "prd/incus";
     "terragrunt-stacks" = { cluster, ... }: {
       stack = "incus";
-      localModule = "incus-k3s-vlan";
+      localModule = "incus-k3s";
       generate = {
         label = "incus_provider";
         path = "incus_provider.tf";
@@ -55,24 +60,52 @@ let
               name    = "node1"
               address = "https://10.0.10.10:8443"
             }
+
+            remote {
+              name     = "images"
+              address  = "https://images.linuxcontainers.org"
+              protocol = "simplestreams"
+            }
           }
         '';
       };
       inputs = {
-        network = {
+        networks.k3s = {
           name = "k3s-${cluster.name}";
           parent = "enp36s0f1";
           vlan_id = config.den.networks.K3s.vlanId;
         };
-        nodes."k3s-${cluster.name}-0" = {
-          nixos_attr = "k3s-${cluster.name}-0";
-          cpu = 4;
-          memory = "16GiB";
-          disk_size = "40GiB";
-          mac = "52:54:00:40:00:01";
-          extra_disks.miroir-data.size = "20GiB";
+        networks.storage = {
+          name = "storage-${cluster.name}";
+          parent = "enp36s0f1";
+          vlan_id = config.den.networks.Storage.vlanId;
+          inherit (config.den.networks.Storage) mtu;
+        };
+        nodes = {
+          # 40G root LV (den.aspects.incus-vm), the rest for miroir.
+          "k3s-${cluster.name}-0" = {
+            nixos_attr = "k3s-${cluster.name}-0";
+            cpu = 4;
+            memory = "16GiB";
+            disk_size = "64GiB";
+            mac = macOf "k3s-${cluster.name}-0" "K3s";
+            inherit (config.den.devices."k3s-${cluster.name}-0") address;
+            extra_nics.storage.mac = macOf "k3s-${cluster.name}-0" "Storage";
+          };
+          "k3s-${cluster.name}-1" = {
+            nixos_attr = "k3s-${cluster.name}-1";
+            cpu = 4;
+            memory = "8GiB";
+            disk_size = "64GiB";
+            mac = macOf "k3s-${cluster.name}-1" "K3s";
+            inherit (config.den.devices."k3s-${cluster.name}-1") address;
+            extra_nics.storage.mac = macOf "k3s-${cluster.name}-1" "Storage";
+          };
         };
         storage_pool = "default";
+        ssh_authorized_keys = lib.unique (
+          lib.concatMap (u: u.sshKeys) (lib.attrValues config.den.users.registry)
+        );
       };
     };
   };

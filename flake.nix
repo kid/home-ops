@@ -50,6 +50,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
+    nixos-images = {
+      url = "github:nix-community/nixos-images";
+      inputs = {
+        nixos-stable.follows = "nixpkgs";
+        nixos-unstable.follows = "nixpkgs";
+      };
+    };
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
     sops-nix = {

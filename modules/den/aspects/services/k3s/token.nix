@@ -1,7 +1,9 @@
 # The cluster's join token, from secrets/clusters/<cluster>/k3s-token.sops
 # (`nix run .#provision-k3s-token <cluster>`). A server that has it at its
 # first start adopts it instead of generating one; an existing server only
-# accepts the token its datastore was bootstrapped with.
+# accepts the token its datastore was bootstrapped with. The file holds the
+# bare secret, never a `K10<ca-hash>::server:<secret>` token: agents trust
+# only the CA with that hash, and a rebuilt server has a new CA.
 { inputs, ... }:
 {
   den.aspects.k3s-token.nixos =
