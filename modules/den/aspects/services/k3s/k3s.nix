@@ -99,6 +99,7 @@ in
 
         services.k3s = {
           enable = true;
+          package = pkgs.k3s_1_37;
           role = "server";
           clusterInit = shouldInit;
           serverAddr = lib.mkIf (!shouldInit) "https://${config.den.devices.${joinServer}.address}:6443";

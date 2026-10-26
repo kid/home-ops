@@ -1,0 +1,15 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
+metadata:
+  name: nfs
+  namespace: monitoring
+spec:
+  interval: 15s
+  jobName: nfs
+  module: tcp_connect
+  targets:
+    staticConfig:
+      targets:
+        - 10.0.30.126:2049
+  vmProberSpec:
+    url: blackbox-exporter.monitoring.svc:9115

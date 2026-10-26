@@ -111,6 +111,13 @@ inputs = {
         dst_port    = 8729
         protocol    = "tcp"
       },
+      {
+        action      = "accept"
+        comment     = "Allow access to truenas NFS from K3s"
+        dst_address = "10.0.30.126"
+        dst_port    = 2049
+        protocol    = "tcp"
+      },
     ]
     Management = [
       {
