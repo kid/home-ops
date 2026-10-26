@@ -43,9 +43,19 @@ in
               ];
               egress = [ apiserverEgress ];
             };
-            envoy-gateway-certgen = mkPolicy { app = "certgen"; } {
-              egress = [ apiserverEgress ];
-            };
+            # The certgen Job is a PreSync hook (Helm pre-install): its policy
+            # must be a hook too, in an earlier wave, or default-deny blocks
+            # the Job on a new cluster.
+            envoy-gateway-certgen =
+              mkPolicy { app = "certgen"; } {
+                egress = [ apiserverEgress ];
+              }
+              // {
+                metadata.annotations = {
+                  "argocd.argoproj.io/hook" = "PreSync";
+                  "argocd.argoproj.io/sync-wave" = "-1";
+                };
+              };
             envoy-proxy = mkPolicy proxy {
               ingress = [
                 # Envoy Gateway remaps privileged listener ports to 10000 + port.

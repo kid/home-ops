@@ -221,7 +221,9 @@ in
           # child Application counts as healthy the moment it exists, so the
           # sync-wave annotations on the Applications in manifests/*/apps
           # order nothing: the next wave starts seconds later, while the
-          # previous app's pods are still starting.
+          # previous app's pods are still starting. A new Application also
+          # shows Healthy for a moment before its first sync, so it stays
+          # Progressing until it is Synced or has synced once (status.history).
           resources.configMaps.argocd-cm.data."resource.customizations.health.argoproj.io_Application" = ''
             hs = {}
             hs.status = "Progressing"
@@ -231,6 +233,11 @@ in
               if obj.status.health.message ~= nil then
                 hs.message = obj.status.health.message
               end
+            end
+            if hs.status == "Healthy" and (obj.status.history == nil or #obj.status.history == 0)
+                and (obj.status.sync == nil or obj.status.sync.status ~= "Synced") then
+              hs.status = "Progressing"
+              hs.message = "Waiting for the first successful sync"
             end
             return hs
           '';
