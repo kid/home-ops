@@ -162,7 +162,6 @@ in
       grafana-oidc
       cloudflared
       external-dns-cloudflare
-      headlamp
     ])
     ++ [ incusTerragruntAspect ];
 
