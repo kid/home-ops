@@ -12,6 +12,11 @@ data:
         hs.message = obj.status.health.message
       end
     end
+    if hs.status == "Healthy" and (obj.status.history == nil or #obj.status.history == 0)
+        and (obj.status.sync == nil or obj.status.sync.status ~= "Synced") then
+      hs.status = "Progressing"
+      hs.message = "Waiting for the first successful sync"
+    end
     return hs
   resource.customizations.health.external-secrets.io_ExternalSecret: |
     hs = {}
