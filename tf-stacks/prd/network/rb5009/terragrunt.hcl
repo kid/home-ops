@@ -17,7 +17,8 @@ inputs = {
   ]
   dhcp_clients = [
     {
-      interface = "ether8"
+      interface    = "ether8"
+      use_peer_dns = false
     },
   ]
   dhcp_servers = {
