@@ -13,7 +13,6 @@ _: {
           chart = charts.external-secrets.external-secrets;
           kindFilter = [
             "ClusterSecretStore"
-            "PushSecret"
             "ExternalSecret"
           ];
         })

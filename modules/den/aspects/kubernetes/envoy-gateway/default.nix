@@ -114,31 +114,12 @@ in
                   {
                     group = "";
                     kind = "Secret";
-                    name = "apps-tls";
+                    # Issued by cert-manager's own app, see cert-manager/default.nix.
+                    name = "wildcard-tls";
                   }
                 ];
               };
               allowedRoutes.namespaces.from = "All";
-            }
-          ];
-        };
-
-        # Issued once by cert-manager's own app, see cert-manager/default.nix.
-        resources.externalSecrets.apps-tls.spec = {
-          secretStoreRef = {
-            name = "onepassword";
-            kind = "ClusterSecretStore";
-          };
-          target = {
-            name = "apps-tls";
-            template.type = "kubernetes.io/tls";
-          };
-          dataFrom = [
-            {
-              extract = {
-                key = "wildcard-tls";
-                decodingStrategy = "Base64";
-              };
             }
           ];
         };
