@@ -1,6 +1,6 @@
 {
   repo = "https://charts.jetstack.io";
   chart = "trust-manager";
-  version = "v0.25.0";
-  chartHash = "sha256-M4XHIa8bvIF69pFYsYcR4IpRERg2BpxAfjAY00LFzbM=";
+  version = "v0.26.0";
+  chartHash = "sha256-Su7VikmaV5FxtHebBbdyaDpmE12jOahLuIh8CKkRvtw=";
 }
