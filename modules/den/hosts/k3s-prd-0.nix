@@ -47,5 +47,5 @@
 
   fleet.user-access.by-host.k3s-prd-0.groups = [ "admin" ];
 
-  fleet.nh.targets.k3s-prd-0.hostname = config.den.devices.k3s-prd-0.address;
+  fleet.colmena.deployment.k3s-prd-0.targetHost = config.den.devices.k3s-prd-0.address;
 }

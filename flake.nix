@@ -11,6 +11,13 @@
   };
 
   inputs = {
+    colmena = {
+      url = "github:nix-community/colmena";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        stable.follows = "nixpkgs";
+      };
+    };
     den.url = "github:denful/den";
     disko = {
       url = "github:AlexLov/disko";
@@ -39,7 +46,6 @@
     };
     impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
-    nh.url = "github:nix-community/nh";
     nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";
     nixhelm = {
       url = "github:farcaller/nixhelm/23d6f9fa277491a6c1af4dc39ab7392f93ac1db4";

@@ -1,6 +1,6 @@
 # k3s worker for the prd cluster: an Incus VM on node1, installed with
 # nixos-anywhere by the tf-stacks/prd/k3s/incus stack, then updated with
-# `deploy k3s-prd-1`.
+# `colmena apply --on k3s-prd-1`.
 { den, config, ... }:
 {
   den.hosts.x86_64-linux.k3s-prd-1 = {
@@ -49,5 +49,5 @@
 
   fleet.user-access.by-host.k3s-prd-1.groups = [ "admin" ];
 
-  fleet.nh.targets.k3s-prd-1.hostname = config.den.devices.k3s-prd-1.address;
+  fleet.colmena.deployment.k3s-prd-1.targetHost = config.den.devices.k3s-prd-1.address;
 }
