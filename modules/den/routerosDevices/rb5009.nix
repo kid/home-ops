@@ -141,7 +141,12 @@ in
             }
             // lib.mapAttrs (_: net: cidrHostPrefixed net 1) routedNetworks;
 
-            dhcp_clients = [ { interface = "ether8"; } ];
+            dhcp_clients = [
+              {
+                interface = "ether8";
+                use_peer_dns = false;
+              }
+            ];
 
             dhcp_servers = {
               ether7 = {
