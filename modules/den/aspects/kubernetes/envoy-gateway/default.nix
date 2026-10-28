@@ -66,6 +66,12 @@ in
                     6443
                   ];
                 }
+                # In-cluster clients of an app's hostname: the Gateway already
+                # takes any LAN client, and each pod still needs netpol.gatewayEgress.
+                {
+                  fromEntities = [ "cluster" ];
+                  toPorts = tcp [ 10443 ];
+                }
               ];
               egress = [ clusterEgress ];
             };

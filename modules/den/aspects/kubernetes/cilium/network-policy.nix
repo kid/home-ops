@@ -60,6 +60,19 @@ let
     scrapeIngress = fromNamespace "monitoring" { "app.kubernetes.io/name" = "vmagent"; };
     gatewayIngress =
       port: fromNamespace "envoy-gateway-system" { "app.kubernetes.io/name" = "envoy"; } [ port ];
+    # In-cluster client of an app's public hostname on the apps Gateway: the
+    # LoadBalancer IP is translated to the Envoy pod, on its remapped port.
+    gatewayEgress = {
+      toEndpoints = [
+        {
+          matchLabels = {
+            "app.kubernetes.io/name" = "envoy";
+            "k8s:io.kubernetes.pod.namespace" = "envoy-gateway-system";
+          };
+        }
+      ];
+      toPorts = tcp [ 10443 ];
+    };
     tunnelIngress =
       port:
       fromNamespace "cloudflare-tunnel-system" {

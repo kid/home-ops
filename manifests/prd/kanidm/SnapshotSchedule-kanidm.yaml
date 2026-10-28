@@ -1,0 +1,12 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: kanidm
+  namespace: kanidm
+spec:
+  policyRef:
+    name: kanidm
+  schedule:
+    cron: H * * * *
+    jitter: 5m
+    runOnCreate: false

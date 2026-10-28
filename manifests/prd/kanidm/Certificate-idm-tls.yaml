@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: idm-tls
+  namespace: kanidm
+spec:
+  dnsNames:
+    - idm.kidibox.net
+    - idm
+    - idm.kanidm.svc.cluster.local
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: cluster-ca
+  privateKey:
+    algorithm: ECDSA
+    encoding: PKCS8
+    size: 256
+  secretName: idm-tls

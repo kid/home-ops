@@ -1,0 +1,75 @@
+apiVersion: kaniop.rs/v1beta1
+kind: Kanidm
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  name: idm
+  namespace: kanidm
+spec:
+  automountServiceAccountToken: false
+  containers:
+    - name: kanidm
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+  domain: idm.kidibox.net
+  env:
+    - name: KANIDM_TRUST_X_FORWARDED_FOR
+      value: "true"
+    - name: KANIDM_ONLINE_BACKUP_PATH
+      value: /data/backups
+    - name: KANIDM_ONLINE_BACKUP_SCHEDULE
+      value: 00 03 * * *
+    - name: KANIDM_ONLINE_BACKUP_VERSIONS
+      value: "7"
+  groupNamespaceSelector: {}
+  image: docker.io/kanidm/server:1.11.2@sha256:e45f00bd354c1fc1c06a4be484b4e87b094c431e78280f1d19e911815e63efb5
+  mailSender:
+    credentialsSecret:
+      name: kanidm-smtp
+    fromAddress: arnaud.rebts@gmail.com
+    image: docker.io/kanidm/tools:1.11.2@sha256:144783fc589ac9611f6149f54f95d0d9472c1bf6078e7ed5781be441bcca7d24
+    relay: smtp://smtp.gmail.com:587
+    resources:
+      limits:
+        memory: 64Mi
+      requests:
+        cpu: 10m
+        memory: 16Mi
+  oauth2ClientNamespaceSelector: {}
+  origin: https://idm.kidibox.net
+  personNamespaceSelector: {}
+  replicaGroups:
+    - name: default
+      replicas: 1
+      resources:
+        limits:
+          memory: 512Mi
+        requests:
+          cpu: 50m
+          memory: 128Mi
+  securityContext:
+    fsGroup: 389
+    fsGroupChangePolicy: OnRootMismatch
+    runAsGroup: 389
+    runAsNonRoot: true
+    runAsUser: 389
+    seccompProfile:
+      type: RuntimeDefault
+  serviceAccountNamespaceSelector: {}
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        dataSourceRef:
+          apiGroup: kopiur.home-operations.com
+          kind: Restore
+          name: kanidm
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: miroir
+  tlsSecretName: idm-tls

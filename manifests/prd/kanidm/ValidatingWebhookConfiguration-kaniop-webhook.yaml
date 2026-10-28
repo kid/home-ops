@@ -1,0 +1,184 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: kanidm/kaniop-webhook-cert
+  labels:
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/instance: kaniop
+    app.kubernetes.io/name: kaniop
+    app.kubernetes.io/part-of: kaniop
+  name: kaniop-webhook
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kaniop-webhook
+        namespace: kanidm
+        path: /validate-kanidm-group
+        port: 8443
+    failurePolicy: Fail
+    name: validate-kanidm-group.kaniop.rs
+    rules:
+      - apiGroups:
+          - kaniop.rs
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+        resources:
+          - kanidmgroups
+    sideEffects: None
+    timeoutSeconds: 10
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kaniop-webhook
+        namespace: kanidm
+        path: /validate-kanidm-person
+        port: 8443
+    failurePolicy: Fail
+    name: validate-kanidm-person.kaniop.rs
+    rules:
+      - apiGroups:
+          - kaniop.rs
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+        resources:
+          - kanidmpersonaccounts
+    sideEffects: None
+    timeoutSeconds: 10
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kaniop-webhook
+        namespace: kanidm
+        path: /validate-kanidm-oauth2
+        port: 8443
+    failurePolicy: Fail
+    name: validate-kanidm-oauth2.kaniop.rs
+    rules:
+      - apiGroups:
+          - kaniop.rs
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+        resources:
+          - kanidmoauth2clients
+    sideEffects: None
+    timeoutSeconds: 10
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kaniop-webhook
+        namespace: kanidm
+        path: /validate-kanidm-service-account
+        port: 8443
+    failurePolicy: Fail
+    name: validate-kanidm-service-account.kaniop.rs
+    rules:
+      - apiGroups:
+          - kaniop.rs
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+        resources:
+          - kanidmserviceaccounts
+    sideEffects: None
+    timeoutSeconds: 10
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kaniop-webhook
+        namespace: kanidm
+        path: /validate-backup-repository
+        port: 8443
+    failurePolicy: Fail
+    name: validate-backup-repository.kaniop.rs
+    rules:
+      - apiGroups:
+          - kaniop.rs
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - kanidmbackuprepositories
+    sideEffects: None
+    timeoutSeconds: 10
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kaniop-webhook
+        namespace: kanidm
+        path: /validate-backup-schedule
+        port: 8443
+    failurePolicy: Fail
+    name: validate-backup-schedule.kaniop.rs
+    rules:
+      - apiGroups:
+          - kaniop.rs
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - kanidmbackupschedules
+    sideEffects: None
+    timeoutSeconds: 10
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kaniop-webhook
+        namespace: kanidm
+        path: /validate-backup
+        port: 8443
+    failurePolicy: Fail
+    name: validate-backup.kaniop.rs
+    rules:
+      - apiGroups:
+          - kaniop.rs
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - kanidmbackups
+    sideEffects: None
+    timeoutSeconds: 10
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kaniop-webhook
+        namespace: kanidm
+        path: /validate-kanidm-restore
+        port: 8443
+    failurePolicy: Fail
+    name: validate-kanidm-restore.kaniop.rs
+    rules:
+      - apiGroups:
+          - kaniop.rs
+        apiVersions:
+          - v1beta1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - kanidmrestores
+    sideEffects: None
+    timeoutSeconds: 10

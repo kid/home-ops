@@ -1,0 +1,28 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: kanidm
+  namespace: kanidm
+spec:
+  credentialProjection:
+    enabled: true
+  identity:
+    hostname: kanidm
+    username: kanidm
+  mover:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 389
+      runAsUser: 389
+  repository:
+    kind: ClusterRepository
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: kanidm-data-idm-default-0

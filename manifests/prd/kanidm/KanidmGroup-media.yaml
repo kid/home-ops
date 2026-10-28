@@ -1,0 +1,14 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  name: media
+  namespace: kanidm
+spec:
+  accountPolicy:
+    credentialTypeMinimum: mfa
+  kanidmRef:
+    name: idm
+  members:
+    - kid

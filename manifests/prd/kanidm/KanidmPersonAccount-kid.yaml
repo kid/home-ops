@@ -1,0 +1,14 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmPersonAccount
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  name: kid
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: idm
+  personAttributes:
+    displayname: Arnaud Rebts
+    mail:
+      - arnaud.rebts@gmail.com

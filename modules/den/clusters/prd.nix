@@ -189,6 +189,7 @@ in
       external-secrets
       kopiur
       authelia
+      kanidm
       prometheus-operator-crds
       victoria-metrics
       grafana-operator

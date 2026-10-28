@@ -1,17 +1,21 @@
-_:
+{ lib, ... }:
 let
   # Builds the four kopiur objects a PVC-backed app needs: the PVC itself
   # (restored from the named Restore), the SnapshotPolicy, its hourly
   # SnapshotSchedule, and the Restore. uid must match the app's own pod
   # uid/gid — the kopiur mover only reads files it owns or that are
   # world-readable (https://kopiur.home-operations.com/permissions/).
+  # existingClaim backs up a PVC something else creates (e.g. a StatefulSet
+  # volumeClaimTemplate) instead: no PVC here, and that claim must carry the
+  # dataSourceRef to Restore `name` itself.
   mkKopiurBackup =
     {
       name,
       uid ? 1000,
       storage ? "1Gi",
+      existingClaim ? null,
     }:
-    {
+    lib.optionalAttrs (existingClaim == null) {
       persistentVolumeClaims.${name}.spec = {
         storageClassName = "miroir";
         accessModes = [ "ReadWriteOnce" ];
@@ -22,6 +26,8 @@ let
           inherit name;
         };
       };
+    }
+    // {
       snapshotPolicies.${name}.spec = {
         repository = {
           kind = "ClusterRepository";
@@ -38,7 +44,7 @@ let
             memory = "192Mi";
           };
         };
-        sources = [ { pvc.name = name; } ];
+        sources = [ { pvc.name = if existingClaim == null then name else existingClaim; } ];
         identity = {
           username = name;
           hostname = name;
