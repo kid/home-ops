@@ -4,15 +4,17 @@
 # The login side is modules/den/aspects/services/k3s/oidc.nix.
 { config, ... }:
 let
-  mkAppHostname = config.den.clusters.prd.methods.mkAppHostname;
+  inherit (config.den.clusters.prd) methods;
+  clientId = "kube_login";
 in
 {
-  # Shared by the Authelia client, the k3s API server flags and modules/flake/docs.nix, so they cannot drift.
+  # Shared by the Kanidm client below, the k3s API server flags and modules/flake/docs.nix, so they cannot
+  # drift. Kanidm gives each client its own issuer, so the issuer follows the client ID.
   den.clusters.prd.methods.kubeLogin = {
-    clientId = "kube_login";
+    inherit clientId;
     group = "admins";
-    issuerUrl = "https://${mkAppHostname "auth"}";
-    server = mkAppHostname "kube";
+    issuerUrl = methods.kanidm.issuer clientId;
+    server = methods.mkAppHostname "kube";
   };
 
   den.aspects.kubernetes.apiserver.k8s-manifests =
@@ -61,7 +63,36 @@ in
           ];
         };
 
-        # kube-apiserver adds no groups prefix, so this is the group name as Authelia sends it.
+        # kubelogin is a public client: it runs on the user's machine and cannot keep a secret, so Kanidm
+        # enforces PKCE and only public clients may redirect to localhost (kubelogin's ports 8000 and 18000).
+        # The Kubernetes name cannot hold an underscore, hence kanidmName. Kanidm hands out refresh tokens
+        # without an offline_access scope, and refuses scopes the map does not grant, so it is not listed.
+        # groups_name makes the groups claim carry plain names (admins) rather than SPNs.
+        resources.kanidmOAuth2Clients.kube-login.spec = {
+          kanidmRef = cluster.methods.kanidm.ref;
+          kanidmName = cluster.methods.kubeLogin.clientId;
+          displayname = "Kubernetes";
+          public = true;
+          allowLocalhostRedirect = true;
+          origin = "http://localhost:8000";
+          redirectUrl = [
+            "http://localhost:8000"
+            "http://localhost:18000"
+          ];
+          scopeMap = [
+            {
+              group = cluster.methods.kubeLogin.group;
+              scopes = [
+                "openid"
+                "profile"
+                "email"
+                "groups_name"
+              ];
+            }
+          ];
+        };
+
+        # kube-apiserver adds no groups prefix, so this is the group name as Kanidm sends it.
         resources.clusterRoleBindings.oidc-admins = {
           roleRef = {
             apiGroup = "rbac.authorization.k8s.io";

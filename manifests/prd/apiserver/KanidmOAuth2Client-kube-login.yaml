@@ -1,0 +1,24 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: kube-login
+  namespace: default
+spec:
+  allowLocalhostRedirect: true
+  displayname: Kubernetes
+  kanidmName: kube_login
+  kanidmRef:
+    name: idm
+    namespace: kanidm
+  origin: http://localhost:8000
+  public: true
+  redirectUrl:
+    - http://localhost:8000
+    - http://localhost:18000
+  scopeMap:
+    - group: admins
+      scopes:
+        - openid
+        - profile
+        - email
+        - groups_name
