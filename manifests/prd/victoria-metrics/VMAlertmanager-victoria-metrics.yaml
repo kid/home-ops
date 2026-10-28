@@ -11,7 +11,7 @@ spec:
   configSecret: vmalertmanager-victoria-metrics
   externalURL: ""
   image:
-    tag: v0.34.0
+    tag: v0.34.1
   port: "9093"
   replicaCount: 1
   resources:

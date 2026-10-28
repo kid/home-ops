@@ -1,0 +1,10 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: sabnzbd
+  namespace: media
+spec:
+  endpoints:
+    - ip:
+        address: 10.0.30.150
+        port: 8080

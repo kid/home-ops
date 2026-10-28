@@ -111,6 +111,41 @@ inputs = {
         dst_port    = 8729
         protocol    = "tcp"
       },
+      {
+        action      = "accept"
+        comment     = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel"
+        dst_address = "10.0.10.101"
+        dst_port    = 8123
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to prowlarr from K3s for Envoy Gateway"
+        dst_address = "10.0.30.110"
+        dst_port    = 9696
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to radarr from K3s for Envoy Gateway"
+        dst_address = "10.0.30.120"
+        dst_port    = 7878
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to sabnzbd from K3s for Envoy Gateway"
+        dst_address = "10.0.30.150"
+        dst_port    = 8080
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to sonarr from K3s for Envoy Gateway"
+        dst_address = "10.0.30.130"
+        dst_port    = 8989
+        protocol    = "tcp"
+      },
     ]
     Management = [
       {
