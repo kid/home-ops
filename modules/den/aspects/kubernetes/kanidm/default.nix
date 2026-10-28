@@ -78,6 +78,7 @@ in
             "Kanidm"
             "KanidmGroup"
             "KanidmPersonAccount"
+            "KanidmOAuth2Client"
           ];
         })
       ];
