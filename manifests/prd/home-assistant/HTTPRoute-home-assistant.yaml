@@ -19,5 +19,5 @@ spec:
         - group: ""
           kind: Service
           name: home-assistant
-          port: 443
+          port: 8123
           weight: 1

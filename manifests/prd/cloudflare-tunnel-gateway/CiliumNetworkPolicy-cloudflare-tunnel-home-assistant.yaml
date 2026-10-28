@@ -9,7 +9,7 @@ spec:
         - 10.0.10.101/32
       toPorts:
         - ports:
-            - port: "443"
+            - port: "8123"
               protocol: TCP
   endpointSelector:
     matchLabels:

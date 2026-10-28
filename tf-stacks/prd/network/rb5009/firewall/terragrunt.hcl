@@ -115,7 +115,7 @@ inputs = {
         action      = "accept"
         comment     = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel"
         dst_address = "10.0.10.101"
-        dst_port    = 443
+        dst_port    = 8123
         protocol    = "tcp"
       },
     ]

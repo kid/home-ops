@@ -6,8 +6,8 @@ metadata:
 spec:
   externalName: ha.kidibox.net
   ports:
-    - appProtocol: kubernetes.io/wss
-      name: https
-      port: 443
+    - appProtocol: kubernetes.io/ws
+      name: http
+      port: 8123
       protocol: TCP
   type: ExternalName

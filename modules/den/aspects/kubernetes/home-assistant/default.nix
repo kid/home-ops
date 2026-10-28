@@ -4,8 +4,8 @@
 { config, ... }:
 let
   haAddress = config.den.devices.homeassistant.address;
+  haPort = 8123;
   hostname = "ha.kidibox.net";
-  namespace = "home-assistant";
 in
 {
   # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
@@ -16,7 +16,7 @@ in
         {
           action = "accept";
           dst_address = haAddress;
-          dst_port = 443;
+          dst_port = haPort;
           protocol = "tcp";
           comment = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel";
         }
@@ -33,15 +33,16 @@ in
           egress = [
             {
               toCIDR = [ "${haAddress}/32" ];
-              toPorts = tcp [ 443 ];
+              toPorts = tcp [ haPort ];
             }
           ];
         };
 
       applications.home-assistant = {
-        inherit namespace;
+        namespace = "home-assistant";
 
-        # Through HA's nginx on 443, not HA itself on 8123: HA rejects X-Forwarded-For from untrusted proxies.
+        # Straight to HA, whose trusted_proxies must list the K3s node addresses
+        # (Cilium masquerades traffic leaving the pod CIDR).
         # ExternalName, not an EndpointSlice: ArgoCD excludes EndpointSlices from sync.
         # rb5009's static DNS entry resolves the name to the LAN address.
         # ExternalBackend can't be used: the tunnel proxy only passes WebSocket upgrades
@@ -51,41 +52,12 @@ in
           externalName = hostname;
           ports = [
             {
-              name = "https";
-              port = 443;
+              name = "http";
+              port = haPort;
               protocol = "TCP";
-              appProtocol = "kubernetes.io/wss";
+              appProtocol = "kubernetes.io/ws";
             }
           ];
-        };
-
-        # The tunnel proxy only trusts explicit caCertificateRefs, not the system roots; HA's certificate is Let's Encrypt.
-        resources.bundles.public-ca.spec = {
-          sources = [ { useDefaultCAs = true; } ];
-          target = {
-            configMap.key = "ca.crt";
-            namespaceSelector.matchLabels."kubernetes.io/metadata.name" = namespace;
-          };
-        };
-
-        resources.backendTLSPolicies.home-assistant.spec = {
-          targetRefs = [
-            {
-              kind = "Service";
-              name = "home-assistant";
-              group = "";
-            }
-          ];
-          validation = {
-            inherit hostname;
-            caCertificateRefs = [
-              {
-                kind = "ConfigMap";
-                name = "public-ca";
-                group = "";
-              }
-            ];
-          };
         };
 
         resources.httpRoutes.home-assistant.metadata.labels."home-ops.dev/public-dns" = "true";
@@ -107,7 +79,7 @@ in
                   group = "";
                   kind = "Service";
                   name = "home-assistant";
-                  port = 443;
+                  port = haPort;
                   weight = 1;
                 }
               ];
