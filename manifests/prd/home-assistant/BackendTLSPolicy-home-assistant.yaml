@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: BackendTLSPolicy
+metadata:
+  name: home-assistant
+  namespace: home-assistant
+spec:
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: home-assistant
+  validation:
+    caCertificateRefs:
+      - group: ""
+        kind: ConfigMap
+        name: public-ca
+    hostname: ha.kidibox.net
