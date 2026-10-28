@@ -40,7 +40,6 @@ in
               app = name: { "app.kubernetes.io/name" = "argocd-${name}"; };
               redis = toPods (app "redis") [ 6379 ];
               repoServer = toPods (app "repo-server") [ 8081 ];
-              authelia = fqdnEgress [ (cluster.methods.mkAppHostname "auth") ] [ 443 ];
             in
             {
               argocd-application-controller = mkPolicy (app "application-controller") {
@@ -63,7 +62,8 @@ in
                     5556
                     5557
                   ])
-                  authelia
+                  # Kanidm's discovery, JWKS and token endpoints, at idm.<domain> behind the apps Gateway.
+                  gatewayEgress
                 ];
               };
               argocd-repo-server = mkPolicy (app "repo-server") {
@@ -91,10 +91,8 @@ in
                     5557
                   ])
                 ];
-                egress = [
-                  apiserverEgress
-                  authelia
-                ];
+                # Dex is unused (oidc.config, no dex.config), so it reaches no IdP.
+                egress = [ apiserverEgress ];
               };
               argocd-notifications-controller = mkPolicy (app "notifications-controller") {
                 egress = [

@@ -34,11 +34,13 @@ spec:
               protocol: TCP
             - port: "5557"
               protocol: TCP
-    - toFQDNs:
-        - matchName: auth.kidibox.net
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: envoy
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
       toPorts:
         - ports:
-            - port: "443"
+            - port: "10443"
               protocol: TCP
   endpointSelector:
     matchLabels:
