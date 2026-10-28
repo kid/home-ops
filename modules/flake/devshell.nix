@@ -63,8 +63,6 @@ _: {
             config.packages.write-flake
             config.packages.write-lock
             config.packages.write-inputs
-            config.packages.mcp-victoriametrics
-            config.packages.mcp-victorialogs
 
             inputs'.nixhelm.packages.helmupdater
           ];

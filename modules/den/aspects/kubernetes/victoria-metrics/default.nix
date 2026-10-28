@@ -125,8 +125,19 @@ _: {
             };
             vmagent = mkPolicy (app "vmagent") { egress = [ clusterEgress ]; };
             vlagent = mkPolicy (app "vlagent") { egress = [ apiserverEgress ]; };
-            vmsingle = mkPolicy (app "vmsingle") { ingress = [ (gatewayIngress 8428) ]; };
-            vlsingle = mkPolicy (app "vlsingle") { ingress = [ (gatewayIngress 9428) ]; };
+            # Queried in-cluster by the MCP servers (mcp/default.nix).
+            vmsingle = mkPolicy (app "vmsingle") {
+              ingress = [
+                (gatewayIngress 8428)
+                (fromNamespace "mcp" (app "mcp-victoriametrics") [ 8428 ])
+              ];
+            };
+            vlsingle = mkPolicy (app "vlsingle") {
+              ingress = [
+                (gatewayIngress 9428)
+                (fromNamespace "mcp" (app "mcp-victorialogs") [ 9428 ])
+              ];
+            };
             vmalert = mkPolicy (app "vmalert") { ingress = [ (gatewayIngress 8080) ]; };
             # Their config-reloader sidecars watch the config Secret.
             vmalertmanager = mkPolicy (app "vmalertmanager") { egress = [ apiserverEgress ]; };
