@@ -1,6 +1,7 @@
 # Media apps running outside the cluster (on the Media VLAN), published on the
 # internal "apps" Gateway only; internal external-dns points their hostnames at
-# it. No forward auth yet: they rely on their own login.
+# it. Kanidm's media group gates them on top of their own login, so app-to-app
+# and API clients must use their LAN addresses, not these hostnames.
 { config, lib, ... }:
 let
   media = config.den.environments.prd.networks.Media.methods.host;
@@ -52,6 +53,16 @@ in
 
       applications.media = {
         namespace = "media";
+
+        imports = lib.mapAttrsToList (
+          name: _:
+          cluster.methods.mkOidcAuth {
+            inherit name;
+            httpRouteName = name;
+            hostname = cluster.methods.mkAppHostname name;
+            group = "media";
+          }
+        ) apps;
 
         # Envoy Gateway rejects ExternalName Services and ArgoCD skips EndpointSlices, hence its Backend API.
         resources.backends = lib.mapAttrs (_: app: {

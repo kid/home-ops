@@ -11,6 +11,14 @@ spec:
         - ports:
             - port: "6443"
               protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: envoy
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "10443"
+              protocol: TCP
   endpointSelector:
     matchLabels:
       control-plane: envoy-gateway

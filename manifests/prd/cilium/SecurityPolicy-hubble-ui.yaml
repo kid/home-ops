@@ -4,27 +4,18 @@ metadata:
   name: hubble-ui
   namespace: kube-system
 spec:
-  extAuth:
-    failOpen: false
-    headersToExtAuth:
-      - accept
-      - cookie
-      - location
-      - authorization
-      - proxy-authorization
-      - x-forwarded-proto
-      - x-forwarded-for
-    http:
-      backendRefs:
-        - name: authelia
-          namespace: authelia
-          port: 80
-      headersToBackend:
-        - Remote-User
-        - Remote-Groups
-        - Remote-Name
-        - Remote-Email
-      path: /api/authz/ext-authz/
+  oidc:
+    clientID: hubble-ui
+    clientSecret:
+      name: hubble-ui-kanidm-oauth2-credentials
+    logoutPath: /oauth2/logout
+    provider:
+      issuer: https://idm.kidibox.net/oauth2/openid/hubble-ui
+    redirectURL: https://hubble.kidibox.net/oauth2/callback
+    scopes:
+      - openid
+      - profile
+      - email
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute

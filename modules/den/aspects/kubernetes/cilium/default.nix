@@ -75,11 +75,14 @@ _: {
         };
 
         # Hubble UI has no login of its own.
-        resources.securityPolicies =
-          (cluster.methods.mkForwardAuth {
+        imports = [
+          (cluster.methods.mkOidcAuth {
             name = "hubble-ui";
             httpRouteName = "hubble-ui";
-          }).securityPolicies;
+            hostname = cluster.methods.mkAppHostname "hubble";
+            group = "admins";
+          })
+        ];
 
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           hubble-relay = mkPolicy { k8s-app = "hubble-relay"; } {

@@ -4,27 +4,18 @@ metadata:
   name: vlsingle
   namespace: monitoring
 spec:
-  extAuth:
-    failOpen: false
-    headersToExtAuth:
-      - accept
-      - cookie
-      - location
-      - authorization
-      - proxy-authorization
-      - x-forwarded-proto
-      - x-forwarded-for
-    http:
-      backendRefs:
-        - name: authelia
-          namespace: authelia
-          port: 80
-      headersToBackend:
-        - Remote-User
-        - Remote-Groups
-        - Remote-Name
-        - Remote-Email
-      path: /api/authz/ext-authz/
+  oidc:
+    clientID: vlsingle
+    clientSecret:
+      name: vlsingle-kanidm-oauth2-credentials
+    logoutPath: /oauth2/logout
+    provider:
+      issuer: https://idm.kidibox.net/oauth2/openid/vlsingle
+    redirectURL: https://logs.kidibox.net/oauth2/callback
+    scopes:
+      - openid
+      - profile
+      - email
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute

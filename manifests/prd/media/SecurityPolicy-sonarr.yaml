@@ -1,0 +1,22 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: sonarr
+  namespace: media
+spec:
+  oidc:
+    clientID: sonarr
+    clientSecret:
+      name: sonarr-kanidm-oauth2-credentials
+    logoutPath: /oauth2/logout
+    provider:
+      issuer: https://idm.kidibox.net/oauth2/openid/sonarr
+    redirectURL: https://sonarr.kidibox.net/oauth2/callback
+    scopes:
+      - openid
+      - profile
+      - email
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: sonarr

@@ -1,53 +1,4 @@
-_:
-let
-  # Gates an app with no login of its own behind Authelia, via Envoy Gateway's
-  # ext-authz SecurityPolicy (https://www.authelia.com/integration/proxies/envoygateway/).
-  # httpRouteName must be that app's own HTTPRoute, in the same namespace.
-  mkForwardAuth =
-    { name, httpRouteName }:
-    {
-      securityPolicies.${name}.spec = {
-        targetRefs = [
-          {
-            group = "gateway.networking.k8s.io";
-            kind = "HTTPRoute";
-            name = httpRouteName;
-          }
-        ];
-        extAuth = {
-          failOpen = false;
-          headersToExtAuth = [
-            "accept"
-            "cookie"
-            "location"
-            "authorization"
-            "proxy-authorization"
-            "x-forwarded-proto"
-            "x-forwarded-for"
-          ];
-          http = {
-            backendRefs = [
-              {
-                name = "authelia";
-                namespace = "authelia";
-                port = 80;
-              }
-            ];
-            path = "/api/authz/ext-authz/";
-            headersToBackend = [
-              "Remote-User"
-              "Remote-Groups"
-              "Remote-Name"
-              "Remote-Email"
-            ];
-          };
-        };
-      };
-    };
-in
-{
-  den.clusters.prd.methods.mkForwardAuth = mkForwardAuth;
-
+_: {
   den.aspects.kubernetes.authelia.k8s-manifests =
     {
       charts,
@@ -75,9 +26,9 @@ in
       };
     in
     {
-      # Reused by mkForwardAuth above for any app cluster.methods.mkForwardAuth
-      # gets called from — charts.envoyproxy.gateway-helm is already pinned and
-      # installed with crds.enabled = true by envoy-gateway/default.nix.
+      # SecurityPolicy types, for kanidm/envoy-oidc.nix's cluster.methods.mkOidcAuth
+      # — charts.envoyproxy.gateway-helm is already pinned and installed with
+      # crds.enabled = true by envoy-gateway/default.nix.
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
           name = "envoy-gateway-security-policy";
@@ -154,19 +105,7 @@ in
 
               storage.local.enabled = true;
 
-              access_control = {
-                default_policy = "two_factor";
-                rules = [
-                  {
-                    domain = [
-                      (cluster.methods.mkAppHostname "metrics")
-                      (cluster.methods.mkAppHostname "logs")
-                    ];
-                    policy = "bypass";
-                    networks = [ "10.0.100.0/24" ];
-                  }
-                ];
-              };
+              access_control.default_policy = "two_factor";
 
               # Gmail with an app password, put in 1Password by the authelia tf stack. No startup check: a mail outage must not stop the login for everything.
               notifier = {
@@ -278,7 +217,6 @@ in
             ciliumNetworkPolicies = with cluster.methods.netpol; {
               authelia = mkPolicy { "app.kubernetes.io/name" = "authelia"; } {
                 ingress = [
-                  (gatewayIngress 9091)
                   (tunnelIngress 9091)
                   (scrapeIngress [ 9959 ])
                 ];
@@ -448,31 +386,6 @@ in
                       weight = 1;
                     }
                   ];
-                }
-              ];
-            };
-
-            # Lets a SecurityPolicy created by mkForwardAuth (any namespace)
-            # reference this Service — Gateway API requires explicit opt-in
-            # for cross-namespace refs (https://www.authelia.com/integration/kubernetes/envoy/gateway/).
-            referenceGrants.forward-auth.spec = {
-              from = [
-                {
-                  group = "gateway.envoyproxy.io";
-                  kind = "SecurityPolicy";
-                  namespace = "monitoring";
-                }
-                {
-                  group = "gateway.envoyproxy.io";
-                  kind = "SecurityPolicy";
-                  namespace = "kube-system";
-                }
-              ];
-              to = [
-                {
-                  group = "";
-                  kind = "Service";
-                  name = "authelia";
                 }
               ];
             };

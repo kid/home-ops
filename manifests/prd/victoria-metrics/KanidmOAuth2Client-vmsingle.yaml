@@ -1,0 +1,23 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: vmsingle
+  namespace: monitoring
+spec:
+  disableConsentPrompt: true
+  displayname: vmsingle
+  kanidmRef:
+    name: idm
+    namespace: kanidm
+  origin: https://metrics.kidibox.net
+  redirectUrl:
+    - https://metrics.kidibox.net/oauth2/callback
+  scopeMap:
+    - group: admins
+      scopes:
+        - openid
+        - profile
+        - email
+  secretKeyAliases:
+    clientSecret:
+      - client-secret

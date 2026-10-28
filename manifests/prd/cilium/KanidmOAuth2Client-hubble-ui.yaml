@@ -1,0 +1,23 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: hubble-ui
+  namespace: kube-system
+spec:
+  disableConsentPrompt: true
+  displayname: hubble-ui
+  kanidmRef:
+    name: idm
+    namespace: kanidm
+  origin: https://hubble.kidibox.net
+  redirectUrl:
+    - https://hubble.kidibox.net/oauth2/callback
+  scopeMap:
+    - group: admins
+      scopes:
+        - openid
+        - profile
+        - email
+  secretKeyAliases:
+    clientSecret:
+      - client-secret

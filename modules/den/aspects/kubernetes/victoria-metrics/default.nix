@@ -352,19 +352,23 @@ _: {
           }
         ];
 
-        resources.securityPolicies =
-          (cluster.methods.mkForwardAuth {
-            name = "vmsingle";
-            httpRouteName = "vmsingle-victoria-metrics";
-          }).securityPolicies
-          // (cluster.methods.mkForwardAuth {
-            name = "vlsingle";
-            httpRouteName = "vlsingle-victoria-metrics";
-          }).securityPolicies
-          // (cluster.methods.mkForwardAuth {
-            name = "vmalert";
-            httpRouteName = "vmalert-victoria-metrics";
-          }).securityPolicies;
+        # The chart names each route <component>-victoria-metrics.
+        imports =
+          lib.mapAttrsToList
+            (
+              name: host:
+              cluster.methods.mkOidcAuth {
+                inherit name;
+                httpRouteName = "${name}-victoria-metrics";
+                hostname = cluster.methods.mkAppHostname host;
+                group = "admins";
+              }
+            )
+            {
+              vmsingle = "metrics";
+              vlsingle = "logs";
+              vmalert = "vmalert";
+            };
 
         resources.grafanaDatasources.victoria-metrics.spec = {
           instanceSelector.matchLabels.dashboards = "grafana";

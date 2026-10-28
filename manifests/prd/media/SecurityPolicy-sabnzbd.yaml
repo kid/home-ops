@@ -1,0 +1,22 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: sabnzbd
+  namespace: media
+spec:
+  oidc:
+    clientID: sabnzbd
+    clientSecret:
+      name: sabnzbd-kanidm-oauth2-credentials
+    logoutPath: /oauth2/logout
+    provider:
+      issuer: https://idm.kidibox.net/oauth2/openid/sabnzbd
+    redirectURL: https://sabnzbd.kidibox.net/oauth2/callback
+    scopes:
+      - openid
+      - profile
+      - email
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: sabnzbd
