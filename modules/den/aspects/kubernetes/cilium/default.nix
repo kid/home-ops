@@ -203,7 +203,7 @@ _: {
                 certManagerIssuerRef = {
                   group = "cert-manager.io";
                   kind = "ClusterIssuer";
-                  name = "hubble-ca-issuer";
+                  name = "cluster-ca";
                 };
               };
 

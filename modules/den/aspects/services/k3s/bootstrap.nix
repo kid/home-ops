@@ -241,7 +241,7 @@
           };
 
           k3s-bootstrap-cert-manager = {
-            description = "Bootstrap cert-manager and the Hubble CA";
+            description = "Bootstrap cert-manager and the cluster CA";
             after = [
               "k3s.service"
               "k3s-bootstrap-coredns.service"
@@ -280,7 +280,7 @@
                 kubectl rollout status -n cert-manager deployment/cert-manager-webhook --timeout=120s
                 kubectl rollout status -n cert-manager deployment/cert-manager-cainjector --timeout=120s
 
-                echo "Applying Hubble CA issuer chain..."
+                echo "Applying cluster CA issuer chain..."
                 declare -a issuer_files
                 while IFS= read -r f; do issuer_files+=("-f" "$f"); done < <(
                   find ${certManagerDir} -name "ClusterIssuer-*.yaml" -o -name "Certificate-*.yaml" | sort
@@ -288,8 +288,8 @@
                 [[ ''${#issuer_files[@]} -gt 0 ]] && \
                   kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${issuer_files[@]}"
 
-                echo "Waiting for the Hubble CA to be signed..."
-                kubectl wait --for=condition=Ready certificate/hubble-ca -n cert-manager --timeout=60s
+                echo "Waiting for the cluster CA to be signed..."
+                kubectl wait --for=condition=Ready certificate/cluster-ca -n cert-manager --timeout=60s
 
                 echo "cert-manager bootstrap complete."
               '';

@@ -165,8 +165,8 @@ in
     };
   };
 
-  # cert-manager is included only for Cilium's Hubble mTLS
-  # (modules/den/aspects/kubernetes/cert-manager/default.nix) — Helm's own cert
+  # cert-manager provides the cluster CA (Hubble mTLS, backend TLS) and the
+  # wildcard cert (modules/den/aspects/kubernetes/cert-manager/default.nix) — Helm's own cert
   # generation isn't idempotent across renders. external-secrets provides
   # Kubernetes secrets (modules/den/aspects/kubernetes/external-secrets/default.nix).
   den.aspects.prd.includes =
