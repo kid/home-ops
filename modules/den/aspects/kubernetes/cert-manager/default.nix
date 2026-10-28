@@ -133,25 +133,8 @@ _: {
         # application's own namespace (cert-manager).
         resources.clusterIssuers.selfsigned-issuer.spec.selfSigned = { };
 
-        resources.certificates.hubble-ca.spec = {
-          isCA = true;
-          commonName = "hubble-ca";
-          secretName = "hubble-ca-secret";
-          privateKey = {
-            algorithm = "ECDSA";
-            size = 256;
-          };
-          issuerRef = {
-            name = "selfsigned-issuer";
-            kind = "ClusterIssuer";
-            group = "cert-manager.io";
-          };
-        };
-
-        resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
-
-        # 10-year CA: cert-manager's 90d default rotated the key mid-life of
-        # the leaf certs it signed.
+        # 10-year CA: cert-manager's 90d default would rotate the key mid-life
+        # of the leaf certs it signs.
         resources.certificates.cluster-ca.spec = {
           isCA = true;
           commonName = "cluster-ca";
