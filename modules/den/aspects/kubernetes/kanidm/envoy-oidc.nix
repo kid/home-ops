@@ -7,12 +7,11 @@
 # objects then land in the HTTPRoute's namespace, where kaniop also writes
 # the client's Secret.
 #
-# Envoy reaches Kanidm at its origin, through the apps Gateway: the
-# controller to discover the endpoints (envoy-gateway/default.nix gives it
-# netpol.gatewayEgress), the proxy for the token exchange. A
-# provider.backendRefs to the Kanidm Service would not avoid the first: the
-# controller dials the issuer hostname either way, and would then check the
-# Gateway's certificate against the BackendTLSPolicy's cluster-ca.
+# Both endpoints are set explicitly: with either missing, Envoy Gateway
+# fetches the issuer's discovery document on every config recompute and
+# turns the route into a 500 when that fails, e.g. while Kanidm restarts.
+# They are the same for every Kanidm client. Only the proxy reaches Kanidm,
+# for the token exchange, through the apps Gateway.
 { config, ... }:
 let
   inherit (config.den.clusters.prd.methods) kanidm;
@@ -53,7 +52,11 @@ let
           }
         ];
         oidc = {
-          provider.issuer = kanidm.issuer name;
+          provider = {
+            issuer = kanidm.issuer name;
+            authorizationEndpoint = "${kanidm.origin}/ui/oauth2";
+            tokenEndpoint = "${kanidm.origin}/oauth2/token";
+          };
           clientID = name;
           clientSecret.name = "${name}-kanidm-oauth2-credentials";
           inherit scopes;

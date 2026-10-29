@@ -13,5 +13,6 @@ spec:
     name: selfsigned-issuer
   privateKey:
     algorithm: ECDSA
+    rotationPolicy: Never
     size: 256
   secretName: cluster-ca

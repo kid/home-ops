@@ -48,12 +48,7 @@ in
                 (fromPods proxy [ 18000 ])
                 (webhookIngress 9443)
               ];
-              egress = [
-                apiserverEgress
-                # OIDC discovery at each SecurityPolicy's issuer, Kanidm on
-                # this same Gateway (kanidm/envoy-oidc.nix).
-                gatewayEgress
-              ];
+              egress = [ apiserverEgress ];
             };
             # The certgen Job is a PreSync hook (Helm pre-install): its policy
             # must be a hook too, in an earlier wave, or default-deny blocks
