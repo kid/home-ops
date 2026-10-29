@@ -1,8 +1,7 @@
-# Provisions the "authelia" 1Password vault secrets (OIDC/session/storage
-# keys, SMTP password, users database) default.nix's ExternalSecrets read.
-# `users` has no existing Nix source of truth (den.users.registry's groups
-# are a different, RouterOS/NixOS access-policy axis, not Authelia's OIDC
-# groups) and stays a literal attrset.
+# Kept only so `terragrunt destroy` can still run from tf-stacks/prd/k3s/authelia:
+# Authelia is gone from the cluster, but this stack's state still owns its
+# 1Password items. Remove this file, its include in modules/den/clusters/prd.nix,
+# tf-catalog/modules/authelia and tf-stacks/prd/k3s/authelia once it is destroyed.
 _: {
   den.aspects.kubernetes.authelia."terragrunt-stacks" =
     { cluster, hcl, ... }:
@@ -13,9 +12,8 @@ _: {
         op_vault = cluster.secrets.onepasswordVault;
         url = "https://${cluster.methods.mkAppHostname "auth"}";
         smtp_password = hcl.raw ''get_env("GOOGLE_APP_PASSWORD")'';
-        # One per OIDC client in default.nix's identity_providers.oidc.clients
-        # that has a client_secret.path — kept here, not in the module itself,
-        # so a new client needs no tf-catalog change.
+        # The former OIDC clients' secrets, left as applied so the destroy plan
+        # matches the state.
         extra_secret_names = [
           "argocd-client-secret"
           "kubelogin-client-secret"

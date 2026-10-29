@@ -250,7 +250,7 @@ in
                 ];
                 automountServiceAccountToken = false;
 
-                # Gmail with the app password Authelia uses (1Password item authelia).
+                # Gmail with an app password, put in 1Password by terragrunt.nix.
                 mailSender = {
                   relay = "smtp://smtp.gmail.com:587";
                   credentialsSecret.name = "kanidm-smtp";
@@ -360,7 +360,7 @@ in
               ];
             };
 
-            # The SMTP login Authelia's notifier uses today.
+            # The Gmail app password from terragrunt.nix's 1Password item.
             externalSecrets.kanidm-smtp = {
               metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
               spec = {
@@ -378,7 +378,7 @@ in
                 data = [
                   {
                     secretKey = "password";
-                    remoteRef.key = "authelia/secrets/smtp-password";
+                    remoteRef.key = "kanidm/secrets/smtp-password";
                   }
                 ];
               };

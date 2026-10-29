@@ -67,14 +67,10 @@ resource "random_password" "secret" {
   special = false
 }
 
-# Losing this key makes the SQLite database unreadable, so it must survive a destroy.
+# Its SQLite database went with Authelia, so this key no longer needs prevent_destroy.
 resource "random_password" "storage_encryption_key" {
   length  = 64
   special = false
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "random_password" "user" {
@@ -89,7 +85,7 @@ resource "tls_private_key" "oidc_jwks" {
   rsa_bits  = 4096
 }
 
-# Read by modules/den/aspects/kubernetes/authelia/default.nix as authelia/secrets/<field>.
+# Was read by the removed authelia aspect's ExternalSecrets as authelia/secrets/<field>.
 resource "onepassword_item" "authelia" {
   vault    = data.onepassword_vault.this.uuid
   title    = "authelia"

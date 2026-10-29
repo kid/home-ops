@@ -188,6 +188,7 @@ in
       external-dns
       external-secrets
       kopiur
+      # Only its terragrunt stack, kept until it is destroyed (authelia/terragrunt.nix).
       authelia
       kanidm
       prometheus-operator-crds

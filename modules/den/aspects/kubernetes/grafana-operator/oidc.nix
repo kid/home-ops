@@ -18,7 +18,7 @@ _: {
             # Grafana's API with it to reconcile dashboards/datasources.
             auth = {
               disable_login_form = "true";
-              # The existing user was created by Authelia logins, whose `sub`
+              # The existing user was created by the previous OIDC provider, whose `sub`
               # Kanidm doesn't share. Grafana looks an OAuth login up by
               # (module, sub) only; without this the first Kanidm login misses
               # it, then fails to create a second user with the same email.

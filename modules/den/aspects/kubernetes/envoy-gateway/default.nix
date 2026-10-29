@@ -21,9 +21,11 @@ in
         (generators.fromChartCRDModule {
           name = "envoy-gateway-extension-crds";
           chart = charts.envoyproxy.gateway-helm;
+          # SecurityPolicy: kanidm/envoy-oidc.nix's mkOidcAuth and mcp/default.nix.
           kindFilter = [
             "ClientTrafficPolicy"
             "Backend"
+            "SecurityPolicy"
           ];
         })
       ];
