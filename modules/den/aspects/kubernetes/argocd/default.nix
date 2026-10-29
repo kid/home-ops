@@ -263,25 +263,6 @@ in
               return hs
             '';
 
-          # Same reason as ExternalSecret above: a PushSecret is healthy only
-          # once it has actually pushed.
-          resources.configMaps.argocd-cm.data."resource.customizations.health.external-secrets.io_PushSecret" =
-            ''
-              hs = {}
-              if obj.status ~= nil and obj.status.conditions ~= nil then
-                for i, condition in ipairs(obj.status.conditions) do
-                  if condition.type == "Ready" and condition.status == "True" then
-                    hs.status = "Healthy"
-                    hs.message = condition.message
-                    return hs
-                  end
-                end
-              end
-              hs.status = "Progressing"
-              hs.message = "Waiting for PushSecret to sync"
-              return hs
-            '';
-
           # ArgoCD's built-in check keeps a GrafanaDashboard Progressing until
           # grafana-operator sets its status. An app in an earlier wave than
           # grafana-operator (kopiur) then never gets healthy, and the apps
