@@ -97,6 +97,12 @@ _: {
             namespace = "external-secrets";
             key = "token";
           };
+          # The account is capped at 1,000 requests per 24h, shared by every
+          # service account, and each ExternalSecret re-reads every ref on its
+          # default 1h refresh. Serve those refreshes from memory: a secret
+          # rotated in 1Password reaches the cluster within a day, or at once
+          # after an ESO restart.
+          cache.ttl = "24h";
         };
       };
     };
