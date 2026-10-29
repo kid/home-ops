@@ -62,6 +62,10 @@ in
       # After the operator's wave is Healthy: its webhook (failurePolicy Fail)
       # must serve before persons and groups are created.
       afterOperator."argocd.argoproj.io/sync-wave" = "1";
+      # kaniop creates the `idm` Service from the Kanidm resource (wave 1).
+      # ArgoCD waits for the route and its BackendTLSPolicy to be Healthy,
+      # which needs that Service, so they must sync after it.
+      afterKanidm."argocd.argoproj.io/sync-wave" = "2";
       mfaGroup = {
         kanidmRef.name = ref.name;
         members = [ "kid" ];
@@ -306,58 +310,64 @@ in
             };
 
             # cluster-ca ConfigMap comes from trust-manager/default.nix's Bundle.
-            backendTLSPolicies.${ref.name}.spec = {
-              targetRefs = [
-                {
-                  kind = "Service";
-                  inherit (ref) name;
-                  group = "";
-                }
-              ];
-              validation = {
-                hostname = serviceHostname;
-                caCertificateRefs = [
+            backendTLSPolicies.${ref.name} = {
+              metadata.annotations = afterKanidm;
+              spec = {
+                targetRefs = [
                   {
-                    kind = "ConfigMap";
-                    name = "cluster-ca";
+                    kind = "Service";
+                    inherit (ref) name;
                     group = "";
                   }
                 ];
+                validation = {
+                  hostname = serviceHostname;
+                  caCertificateRefs = [
+                    {
+                      kind = "ConfigMap";
+                      name = "cluster-ca";
+                      group = "";
+                    }
+                  ];
+                };
               };
             };
 
-            httpRoutes.${ref.name}.spec = {
-              parentRefs = [
-                {
-                  group = "gateway.networking.k8s.io";
-                  kind = "Gateway";
-                  name = "apps";
-                  namespace = "envoy-gateway-system";
-                  sectionName = "https";
-                }
-              ];
-              hostnames = [ domain ];
-              rules = [
-                {
-                  matches = [
-                    {
-                      path = {
-                        type = "PathPrefix";
-                        value = "/";
-                      };
-                    }
-                  ];
-                  backendRefs = [
-                    {
-                      group = "";
-                      kind = "Service";
-                      inherit (ref) name;
-                      port = 8443;
-                      weight = 1;
-                    }
-                  ];
-                }
-              ];
+            httpRoutes.${ref.name} = {
+              metadata.annotations = afterKanidm;
+              spec = {
+                parentRefs = [
+                  {
+                    group = "gateway.networking.k8s.io";
+                    kind = "Gateway";
+                    name = "apps";
+                    namespace = "envoy-gateway-system";
+                    sectionName = "https";
+                  }
+                ];
+                hostnames = [ domain ];
+                rules = [
+                  {
+                    matches = [
+                      {
+                        path = {
+                          type = "PathPrefix";
+                          value = "/";
+                        };
+                      }
+                    ];
+                    backendRefs = [
+                      {
+                        group = "";
+                        kind = "Service";
+                        inherit (ref) name;
+                        port = 8443;
+                        weight = 1;
+                      }
+                    ];
+                  }
+                ];
+              };
             };
 
             # The Gmail app password from terragrunt.nix's 1Password item.

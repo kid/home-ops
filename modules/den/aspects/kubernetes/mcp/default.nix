@@ -1,9 +1,6 @@
-# The VictoriaMetrics and VictoriaLogs MCP servers, run in-cluster in
-# streamable HTTP mode against vmsingle/vlsingle (victoria-metrics/default.nix).
-# Envoy only lets through bearer tokens Kanidm issued to the public `mcp`
-# client, which only admins can obtain. MCP clients find that client from
-# the RFC 9728 protected resource metadata each host serves without auth, and
-# log in with PKCE on a fixed loopback callback (.mcp.json).
+# VictoriaMetrics and VictoriaLogs MCP servers in streamable HTTP mode, behind
+# an Envoy JWT check for tokens Kanidm issued to the public `mcp` client. Clients
+# discover it from the RFC 9728 metadata each host serves without auth.
 _: {
   den.aspects.kubernetes.mcp.k8s-manifests =
     {
@@ -16,8 +13,7 @@ _: {
       namespace = "mcp";
       clientId = "mcp";
       issuer = kanidm.issuer clientId;
-      # Kanidm accepts any loopback redirect on this client; the registered
-      # one matches the callbackPort of both servers in .mcp.json.
+      # Matches callbackPort in .mcp.json.
       callbackPort = 33418;
       scopes = [
         "openid"
@@ -25,9 +21,7 @@ _: {
         "email"
       ];
       port = 8080;
-      # The streamable HTTP endpoint (cmd/mcp-*/main.go).
       mcpPath = "/mcp";
-      # The images run as this user (Dockerfile.goreleaser), by name only.
       appId = 1000;
 
       servers = {
@@ -68,10 +62,7 @@ _: {
         }
       ];
 
-      # RFC 9728 metadata, at both well-known URIs the MCP authorization spec
-      # (2025-11-25) has clients probe: suffixed with the MCP endpoint path
-      # first, then the root. `resource` is the URI each one is derived from.
-      # The rules need names: nixidy keys HTTPRoute rules by name.
+      # Both well-known URIs MCP clients probe. nixidy keys HTTPRoute rules by name, so they need one.
       metadataPath = "/.well-known/oauth-protected-resource";
       metadataDocuments = server: {
         root = {
@@ -244,9 +235,7 @@ _: {
             ) (metadataDocuments server)
           );
 
-          # Kanidm signs access tokens (ES256) with the client's own key and
-          # sets `aud` to the client name. The proxy fetches the keys through
-          # the apps Gateway, like Kanidm's other in-cluster clients.
+          # Kanidm sets `aud` to the client name.
           securityPolicies.mcp.spec = {
             targetRefs = lib.mapAttrsToList (name: _: {
               group = "gateway.networking.k8s.io";
@@ -266,12 +255,10 @@ _: {
           kanidmOAuth2Clients.${clientId}.spec = {
             kanidmRef = kanidm.ref;
             displayname = "MCP servers";
-            # A native client: PKCE and loopback redirects only.
             public = true;
             allowLocalhostRedirect = true;
             origin = "http://localhost:${toString callbackPort}";
             redirectUrl = [ "http://localhost:${toString callbackPort}/callback" ];
-            # Only admins get these scopes, so only admins can get a token.
             scopeMap = [
               {
                 group = "admins";

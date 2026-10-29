@@ -32,7 +32,7 @@ _: {
           grafana = mkPolicy { app = "grafana"; } {
             ingress = [ (gatewayIngress 3000) ];
             egress = [
-              # Token and userinfo calls to Kanidm (oidc.nix) at its origin.
+              # Kanidm token and userinfo calls.
               gatewayEgress
               (fqdnEgress
                 [

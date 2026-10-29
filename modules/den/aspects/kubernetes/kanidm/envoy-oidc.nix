@@ -1,17 +1,9 @@
-# Gates an app with no login of its own behind Kanidm, with Envoy Gateway's
-# native OIDC (https://gateway.envoyproxy.io/docs/tasks/security/oidc/): one
-# confidential Kanidm OAuth2 client per app, which only members of `group`
-# may authorize, and a SecurityPolicy on the app's HTTPRoute.
+# Gates an app behind Kanidm with Envoy Gateway's native OIDC: one Kanidm client
+# per app, only granted to `group`, and a SecurityPolicy on the app's HTTPRoute.
+# Returns an application module, for that application's `imports`.
 #
-# Returns an application module, for that application's `imports`: both
-# objects then land in the HTTPRoute's namespace, where kaniop also writes
-# the client's Secret.
-#
-# Both endpoints are set explicitly: with either missing, Envoy Gateway
-# fetches the issuer's discovery document on every config recompute and
-# turns the route into a 500 when that fails, e.g. while Kanidm restarts.
-# They are the same for every Kanidm client. Only the proxy reaches Kanidm,
-# for the token exchange, through the apps Gateway.
+# The endpoints are explicit: otherwise Envoy Gateway fetches discovery on every
+# config recompute and serves a 500 when Kanidm is unreachable.
 { config, ... }:
 let
   inherit (config.den.clusters.prd.methods) kanidm;
@@ -36,7 +28,6 @@ let
         displayname = name;
         inherit origin;
         redirectUrl = [ "${origin}/oauth2/callback" ];
-        # Non-members get no scope, so Kanidm refuses their authorization.
         scopeMap = [ { inherit group scopes; } ];
         disableConsentPrompt = true;
         # The key Envoy Gateway reads the client secret from.
@@ -61,7 +52,7 @@ let
           clientSecret.name = "${name}-kanidm-oauth2-credentials";
           inherit scopes;
           redirectURL = "${origin}/oauth2/callback";
-          # Kanidm has no end-session endpoint: this only clears Envoy's cookies.
+          # Only clears Envoy's cookies: Kanidm has no end-session endpoint.
           logoutPath = "/oauth2/logout";
         };
       };
