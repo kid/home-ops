@@ -151,7 +151,8 @@ _: {
         resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
 
         # 10-year CA: cert-manager's 90d default rotated the key mid-life of
-        # the leaf certs it signed.
+        # the leaf certs it signed. rotationPolicy Never keeps the key on
+        # renewal, so leaves signed before it still verify.
         resources.certificates.cluster-ca.spec = {
           isCA = true;
           commonName = "cluster-ca";
@@ -160,6 +161,7 @@ _: {
           privateKey = {
             algorithm = "ECDSA";
             size = 256;
+            rotationPolicy = "Never";
           };
           issuerRef = {
             name = "selfsigned-issuer";
