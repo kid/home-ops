@@ -289,8 +289,12 @@ in
             '';
 
           # Replaces argocd-server's ephemeral self-signed cert with one off the cluster CA.
+          # argocd-server only reloads its settings, this cert included, when a
+          # Secret labeled part-of=argocd changes: without the label it keeps
+          # serving the cert it started with after cert-manager renews it.
           resources.certificates.argocd-server-tls.spec = {
             secretName = "argocd-server-tls";
+            secretTemplate.labels."app.kubernetes.io/part-of" = "argocd";
             dnsNames = [
               "argocd-server"
               "argocd-server.argocd.svc.cluster.local"
