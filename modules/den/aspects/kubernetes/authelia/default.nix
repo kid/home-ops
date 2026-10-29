@@ -2,7 +2,6 @@ _: {
   den.aspects.kubernetes.authelia.k8s-manifests =
     {
       charts,
-      generators,
       cluster,
       ...
     }:
@@ -26,17 +25,6 @@ _: {
       };
     in
     {
-      # SecurityPolicy types, for kanidm/envoy-oidc.nix's cluster.methods.mkOidcAuth
-      # — charts.envoyproxy.gateway-helm is already pinned and installed with
-      # crds.enabled = true by envoy-gateway/default.nix.
-      nixidy.applicationImports = [
-        (generators.fromChartCRDModule {
-          name = "envoy-gateway-security-policy";
-          chart = charts.envoyproxy.gateway-helm;
-          kindFilter = [ "SecurityPolicy" ];
-        })
-      ];
-
       applications.authelia = {
         namespace = "authelia";
 
