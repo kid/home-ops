@@ -10,7 +10,9 @@ spec:
       name: sabnzbd-kanidm-oauth2-credentials
     logoutPath: /oauth2/logout
     provider:
+      authorizationEndpoint: https://idm.kidibox.net/ui/oauth2
       issuer: https://idm.kidibox.net/oauth2/openid/sabnzbd
+      tokenEndpoint: https://idm.kidibox.net/oauth2/token
     redirectURL: https://sabnzbd.kidibox.net/oauth2/callback
     scopes:
       - openid
