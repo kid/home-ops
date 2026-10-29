@@ -32,9 +32,10 @@ _: {
           grafana = mkPolicy { app = "grafana"; } {
             ingress = [ (gatewayIngress 3000) ];
             egress = [
+              # Kanidm token and userinfo calls.
+              gatewayEgress
               (fqdnEgress
                 [
-                  (cluster.methods.mkAppHostname "auth")
                   "grafana.com"
                   # grafana.com redirects plugin downloads here.
                   "storage.googleapis.com"
@@ -67,7 +68,7 @@ _: {
             # victoriametrics-metrics-datasource/victoriametrics-logs-datasource
             # (added by victoria-metrics/default.nix) are third-party, unsigned plugins.
             plugins.allow_loading_unsigned_plugins = "victoriametrics-metrics-datasource,victoriametrics-logs-datasource";
-            # Needed so the OIDC callback Grafana computes matches Authelia's registered redirect_uri.
+            # Needed so the OIDC callback Grafana computes matches Kanidm's registered redirect URL.
             server.root_url = "https://${cluster.methods.mkAppHostname "grafana"}";
             security.disable_gravatar = "true";
           };

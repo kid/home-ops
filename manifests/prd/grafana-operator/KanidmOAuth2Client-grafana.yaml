@@ -1,0 +1,26 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  name: grafana
+  namespace: monitoring
+spec:
+  displayname: Grafana
+  kanidmRef:
+    name: idm
+    namespace: kanidm
+  origin: https://grafana.kidibox.net
+  preferShortUsername: true
+  redirectUrl:
+    - https://grafana.kidibox.net/login/generic_oauth
+  scopeMap:
+    - group: admins
+      scopes:
+        - openid
+        - profile
+        - email
+        - groups_name
+  secretKeyAliases:
+    clientSecret:
+      - clientSecret

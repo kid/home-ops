@@ -1,29 +1,35 @@
-# Log in through Authelia (kubernetes/authelia/default.nix defines the
-# "grafana" client). Separate from default.nix so that file doesn't
-# hard-depend on Authelia or External Secrets being present.
+# Log in through Kanidm. Separate from default.nix so that file doesn't depend on Kanidm.
 _: {
   den.aspects.kubernetes.grafana-oidc.k8s-manifests =
     { cluster, ... }:
+    let
+      inherit (cluster.methods) kanidm;
+      clientId = "grafana";
+      origin = "https://${cluster.methods.mkAppHostname "grafana"}";
+    in
     {
       applications.grafana-operator = {
         resources.grafanas.grafana.spec = {
           config = {
-            # No local login, so the form is hidden. If Authelia is down, fix it through git and kubectl on the node.
-            # auth.basic stays enabled — the operator itself authenticates to
-            # Grafana's API with it to reconcile dashboards/datasources.
-            auth.disable_login_form = "true";
+            # auth.basic stays enabled: the operator uses it to reconcile dashboards and datasources.
+            auth = {
+              disable_login_form = "true";
+              # Links a login to an existing user with the same email. Safe: Kanidm
+              # is the only OAuth provider and emails are set by admins.
+              oauth_allow_insecure_email_lookup = "true";
+            };
 
+            # client_secret comes from GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET below.
             "auth.generic_oauth" = {
               enabled = "true";
-              name = "Authelia";
-              client_id = "grafana";
-              # client_secret comes in via GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET below —
-              # Grafana maps GF_<SECTION>_<KEY> env vars onto config automatically.
-              auth_url = "https://${cluster.methods.mkAppHostname "auth"}/api/oidc/authorization";
-              token_url = "https://${cluster.methods.mkAppHostname "auth"}/api/oidc/token";
-              api_url = "https://${cluster.methods.mkAppHostname "auth"}/api/oidc/userinfo";
-              scopes = "openid profile email groups";
-              # Matches argocd/default.nix's own "admins" -> role:admin RBAC mapping.
+              name = "Kanidm";
+              client_id = clientId;
+              auth_url = "${kanidm.origin}/ui/oauth2";
+              token_url = "${kanidm.origin}/oauth2/token";
+              api_url = "${kanidm.issuer clientId}/userinfo";
+              use_pkce = "true";
+              # groups_name puts plain group names in the groups claim.
+              scopes = "openid profile email groups_name";
               role_attribute_path = "contains(groups[*], 'admins') && 'Admin' || 'Viewer'";
             };
           };
@@ -35,7 +41,7 @@ _: {
                 {
                   name = "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET";
                   valueFrom.secretKeyRef = {
-                    name = "grafana-oidc";
+                    name = "${clientId}-kanidm-oauth2-credentials";
                     key = "clientSecret";
                   };
                 }
@@ -44,20 +50,27 @@ _: {
           ];
         };
 
-        resources.externalSecrets.grafana-oidc = {
+        resources.kanidmOAuth2Clients.${clientId} = {
           metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
           spec = {
-            secretStoreRef = {
-              name = "onepassword";
-              kind = "ClusterSecretStore";
-            };
-            target.name = "grafana-oidc";
-            data = [
+            kanidmRef = kanidm.ref;
+            displayname = "Grafana";
+            inherit origin;
+            redirectUrl = [ "${origin}/login/generic_oauth" ];
+            # Grafana logins use the short name, not the user@domain SPN.
+            preferShortUsername = true;
+            scopeMap = [
               {
-                secretKey = "clientSecret";
-                remoteRef.key = "authelia/secrets/grafana-client-secret";
+                group = "admins";
+                scopes = [
+                  "openid"
+                  "profile"
+                  "email"
+                  "groups_name"
+                ];
               }
             ];
+            secretKeyAliases.clientSecret = [ "clientSecret" ];
           };
         };
       };
