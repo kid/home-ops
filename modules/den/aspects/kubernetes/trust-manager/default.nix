@@ -54,34 +54,11 @@ _: {
           };
         };
 
-        resources.bundles.internal-ca.spec = {
-          sources = [
-            {
-              secret = {
-                name = "hubble-ca-secret";
-                key = "ca.crt";
-              };
-            }
-          ];
-          target = {
-            configMap.key = "ca.crt";
-            namespaceSelector.matchLabels."kubernetes.io/metadata.name" = "argocd";
-          };
-        };
-
-        # hubble-ca-secret stays as a source until every certificate is
-        # reissued by cluster-ca.
         resources.bundles.cluster-ca.spec = {
           sources = [
             {
               secret = {
                 name = "cluster-ca";
-                key = "ca.crt";
-              };
-            }
-            {
-              secret = {
-                name = "hubble-ca-secret";
                 key = "ca.crt";
               };
             }

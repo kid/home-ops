@@ -7,9 +7,6 @@ spec:
     - secret:
         key: ca.crt
         name: cluster-ca
-    - secret:
-        key: ca.crt
-        name: hubble-ca-secret
   target:
     configMap:
       key: ca.crt
