@@ -7,8 +7,6 @@
 _: {
   den.aspects.kubernetes.mcp.k8s-manifests =
     {
-      charts,
-      generators,
       cluster,
       lib,
       ...
@@ -90,14 +88,6 @@ _: {
       perServer = f: lib.concatMapAttrs f servers;
     in
     {
-      nixidy.applicationImports = [
-        (generators.fromChartCRDModule {
-          name = "envoy-gateway-http-route-filter";
-          chart = charts.envoyproxy.gateway-helm;
-          kindFilter = [ "HTTPRouteFilter" ];
-        })
-      ];
-
       applications.mcp = {
         inherit namespace;
 
