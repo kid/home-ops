@@ -8,8 +8,7 @@ let
   clientId = "kube_login";
 in
 {
-  # Shared by the Kanidm client below, the k3s API server flags and modules/flake/docs.nix, so they cannot
-  # drift. Kanidm gives each client its own issuer, so the issuer follows the client ID.
+  # Shared by the Kanidm client below, the k3s API server flags and modules/flake/docs.nix.
   den.clusters.prd.methods.kubeLogin = {
     inherit clientId;
     group = "admins";
@@ -63,11 +62,8 @@ in
           ];
         };
 
-        # kubelogin is a public client: it runs on the user's machine and cannot keep a secret, so Kanidm
-        # enforces PKCE and only public clients may redirect to localhost (kubelogin's ports 8000 and 18000).
-        # The Kubernetes name cannot hold an underscore, hence kanidmName. Kanidm hands out refresh tokens
-        # without an offline_access scope, and refuses scopes the map does not grant, so it is not listed.
-        # groups_name makes the groups claim carry plain names (admins) rather than SPNs.
+        # Public: kubelogin runs locally and redirects to localhost. kanidmName because
+        # Kubernetes names can't hold an underscore.
         resources.kanidmOAuth2Clients.kube-login.spec = {
           kanidmRef = cluster.methods.kanidm.ref;
           kanidmName = cluster.methods.kubeLogin.clientId;

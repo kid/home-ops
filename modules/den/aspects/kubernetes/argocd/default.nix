@@ -62,7 +62,7 @@ in
                     5556
                     5557
                   ])
-                  # Kanidm's discovery, JWKS and token endpoints, at idm.<domain> behind the apps Gateway.
+                  # Kanidm discovery, JWKS and token calls.
                   gatewayEgress
                 ];
               };
@@ -91,7 +91,6 @@ in
                     5557
                   ])
                 ];
-                # Dex is unused (oidc.config, no dex.config), so it reaches no IdP.
                 egress = [ apiserverEgress ];
               };
               argocd-notifications-controller = mkPolicy (app "notifications-controller") {
@@ -287,8 +286,12 @@ in
             '';
 
           # Replaces argocd-server's ephemeral self-signed cert with one off the cluster CA.
+          # argocd-server only reloads its settings, this cert included, when a
+          # Secret labeled part-of=argocd changes: without the label it keeps
+          # serving the cert it started with after cert-manager renews it.
           resources.certificates.argocd-server-tls.spec = {
             secretName = "argocd-server-tls";
+            secretTemplate.labels."app.kubernetes.io/part-of" = "argocd";
             dnsNames = [
               "argocd-server"
               "argocd-server.argocd.svc.cluster.local"
