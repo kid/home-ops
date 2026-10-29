@@ -1,7 +1,6 @@
 # Media apps running outside the cluster (on the Media VLAN), published on the
 # internal "apps" Gateway only; internal external-dns points their hostnames at
-# it. Kanidm's media group gates them on top of their own login, so app-to-app
-# and API clients must use their LAN addresses, not these hostnames.
+# it. Kanidm gates them, so app-to-app calls must use their LAN addresses.
 { config, lib, ... }:
 let
   media = config.den.environments.prd.networks.Media.methods.host;
