@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/instance: kaniop
+    app.kubernetes.io/name: kaniop
+    app.kubernetes.io/part-of: kaniop
+  name: kaniop
+  namespace: kanidm
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: metrics
+      scheme: http
+  namespaceSelector:
+    matchNames:
+      - kanidm
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: operator
+      app.kubernetes.io/instance: kaniop
+      app.kubernetes.io/name: kaniop

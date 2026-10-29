@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: BackendTLSPolicy
+metadata:
+  name: idm
+  namespace: kanidm
+spec:
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: idm
+  validation:
+    caCertificateRefs:
+      - group: ""
+        kind: ConfigMap
+        name: cluster-ca
+    hostname: idm.kanidm.svc.cluster.local

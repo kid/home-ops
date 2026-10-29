@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/instance: kaniop
+    app.kubernetes.io/name: kaniop
+    app.kubernetes.io/part-of: kaniop
+  name: kaniop
+  namespace: kanidm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: operator
+      app.kubernetes.io/instance: kaniop
+      app.kubernetes.io/name: kaniop
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: operator
+        app.kubernetes.io/instance: kaniop
+        app.kubernetes.io/name: kaniop
+    spec:
+      containers:
+        - env:
+            - name: PORT
+              value: "8080"
+            - name: LOG_FILTER
+              value: info
+            - name: LOG_FORMAT
+              value: text
+            - name: IDM_RECONCILE_INTERVAL_SECONDS
+              value: "60"
+            - name: CLUSTER_DOMAIN
+              value: cluster.local
+            - name: DATA_MOVER_IMAGE
+              value: ghcr.io/pando85/kaniop-data-mover:0.19.2
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: RUST_MIN_STACK
+              value: "8388608"
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: ghcr.io/pando85/kaniop:0.19.2
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: metrics
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: kaniop
+          ports:
+            - containerPort: 8080
+              name: metrics
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: metrics
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tmp
+              name: kanidm-tls-ca-tmp
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kaniop
+      volumes:
+        - emptyDir: {}
+          name: kanidm-tls-ca-tmp

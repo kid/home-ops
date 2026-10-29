@@ -19,3 +19,9 @@ spec:
               protocol: TCP
             - port: "6443"
               protocol: TCP
+    - fromEntities:
+        - cluster
+      toPorts:
+        - ports:
+            - port: "10443"
+              protocol: TCP

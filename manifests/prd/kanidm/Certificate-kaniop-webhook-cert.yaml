@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kaniop-webhook-cert
+  namespace: kanidm
+spec:
+  dnsNames:
+    - kaniop-webhook
+    - kaniop-webhook.kanidm
+    - kaniop-webhook.kanidm.svc
+    - kaniop-webhook.kanidm.svc.cluster.local
+  duration: 8760h0m0s
+  issuerRef:
+    kind: ClusterIssuer
+    name: cluster-ca
+  secretName: kaniop-webhook-cert
+  subject:
+    organizations:
+      - kaniop
