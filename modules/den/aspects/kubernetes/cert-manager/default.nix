@@ -134,7 +134,8 @@ _: {
         resources.clusterIssuers.selfsigned-issuer.spec.selfSigned = { };
 
         # 10-year CA: cert-manager's 90d default would rotate the key mid-life
-        # of the leaf certs it signs.
+        # of the leaf certs it signs. rotationPolicy Never keeps the key on
+        # renewal, so leaves signed before it still verify.
         resources.certificates.cluster-ca.spec = {
           isCA = true;
           commonName = "cluster-ca";
@@ -143,6 +144,7 @@ _: {
           privateKey = {
             algorithm = "ECDSA";
             size = 256;
+            rotationPolicy = "Never";
           };
           issuerRef = {
             name = "selfsigned-issuer";
