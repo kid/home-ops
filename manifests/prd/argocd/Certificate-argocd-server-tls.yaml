@@ -12,3 +12,6 @@ spec:
     kind: ClusterIssuer
     name: cluster-ca
   secretName: argocd-server-tls
+  secretTemplate:
+    labels:
+      app.kubernetes.io/part-of: argocd
