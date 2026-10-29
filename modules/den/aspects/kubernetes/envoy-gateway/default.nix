@@ -25,6 +25,7 @@ in
             "ClientTrafficPolicy"
             "Backend"
             "SecurityPolicy"
+            "HTTPRouteFilter"
           ];
         })
       ];
