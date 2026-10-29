@@ -1,5 +1,6 @@
-# Syncs hubble-ca-secret into a ConfigMap so BackendTLSPolicy can read it
-# (it can't read Secrets).
+# Publishes the cluster CA (modules/den/aspects/kubernetes/cert-manager/default.nix)
+# as the cluster-ca ConfigMap in every namespace, so BackendTLSPolicy (which
+# can't read Secrets) and workloads can trust in-cluster certificates.
 _: {
   den.aspects.kubernetes.trust-manager.k8s-manifests =
     {
@@ -66,6 +67,26 @@ _: {
             configMap.key = "ca.crt";
             namespaceSelector.matchLabels."kubernetes.io/metadata.name" = "argocd";
           };
+        };
+
+        # hubble-ca-secret stays as a source until every certificate is
+        # reissued by cluster-ca.
+        resources.bundles.cluster-ca.spec = {
+          sources = [
+            {
+              secret = {
+                name = "cluster-ca";
+                key = "ca.crt";
+              };
+            }
+            {
+              secret = {
+                name = "hubble-ca-secret";
+                key = "ca.crt";
+              };
+            }
+          ];
+          target.configMap.key = "ca.crt";
         };
       };
     };

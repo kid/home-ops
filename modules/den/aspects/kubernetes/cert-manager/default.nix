@@ -125,10 +125,11 @@ _: {
         };
 
         # Standard cert-manager self-signed-root bootstrap: a selfSigned
-        # ClusterIssuer signs one CA Certificate, then hubble-ca-issuer
-        # (referenced by modules/den/aspects/kubernetes/cilium/default.nix's
-        # hubble.tls.auto.certManagerIssuerRef) signs everything else off
-        # that CA's secret. Certificate's namespace defaults to this
+        # ClusterIssuer signs the cluster CA Certificate, then the cluster-ca
+        # ClusterIssuer signs every in-cluster certificate (Hubble mTLS via
+        # modules/den/aspects/kubernetes/cilium/default.nix, backend TLS for
+        # Envoy) off that CA's secret. trust-manager publishes the CA as the
+        # cluster-ca ConfigMap. Certificate's namespace defaults to this
         # application's own namespace (cert-manager).
         resources.clusterIssuers.selfsigned-issuer.spec.selfSigned = { };
 
@@ -148,6 +149,28 @@ _: {
         };
 
         resources.clusterIssuers.hubble-ca-issuer.spec.ca.secretName = "hubble-ca-secret";
+
+        # 10-year CA: cert-manager's 90d default rotated the key mid-life of
+        # the leaf certs it signed. rotationPolicy Never keeps the key on
+        # renewal, so leaves signed before it still verify.
+        resources.certificates.cluster-ca.spec = {
+          isCA = true;
+          commonName = "cluster-ca";
+          secretName = "cluster-ca";
+          duration = "87600h";
+          privateKey = {
+            algorithm = "ECDSA";
+            size = 256;
+            rotationPolicy = "Never";
+          };
+          issuerRef = {
+            name = "selfsigned-issuer";
+            kind = "ClusterIssuer";
+            group = "cert-manager.io";
+          };
+        };
+
+        resources.clusterIssuers.cluster-ca.spec.ca.secretName = "cluster-ca";
 
         resources.clusterIssuers.${issuerName}.spec.acme = {
           server = acmeServer;

@@ -12,5 +12,5 @@ spec:
     caCertificateRefs:
       - group: ""
         kind: ConfigMap
-        name: internal-ca
+        name: cluster-ca
     hostname: argocd-server.argocd.svc.cluster.local

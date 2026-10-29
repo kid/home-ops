@@ -288,7 +288,7 @@ in
               return hs
             '';
 
-          # Replaces argocd-server's ephemeral self-signed cert with one off Hubble's CA.
+          # Replaces argocd-server's ephemeral self-signed cert with one off the cluster CA.
           resources.certificates.argocd-server-tls.spec = {
             secretName = "argocd-server-tls";
             dnsNames = [
@@ -296,13 +296,13 @@ in
               "argocd-server.argocd.svc.cluster.local"
             ];
             issuerRef = {
-              name = "hubble-ca-issuer";
+              name = "cluster-ca";
               kind = "ClusterIssuer";
               group = "cert-manager.io";
             };
           };
 
-          # internal-ca ConfigMap comes from trust-manager/default.nix's Bundle.
+          # cluster-ca ConfigMap comes from trust-manager/default.nix's Bundle.
           resources.backendTLSPolicies.argocd-server.spec = {
             targetRefs = [
               {
@@ -316,7 +316,7 @@ in
               caCertificateRefs = [
                 {
                   kind = "ConfigMap";
-                  name = "internal-ca";
+                  name = "cluster-ca";
                   group = "";
                 }
               ];
