@@ -62,7 +62,7 @@ in
                     5556
                     5557
                   ])
-                  # Kanidm's discovery, JWKS and token endpoints, at idm.<domain> behind the apps Gateway.
+                  # Kanidm discovery, JWKS and token calls.
                   gatewayEgress
                 ];
               };
@@ -91,7 +91,6 @@ in
                     5557
                   ])
                 ];
-                # Dex is unused (oidc.config, no dex.config), so it reaches no IdP.
                 egress = [ apiserverEgress ];
               };
               argocd-notifications-controller = mkPolicy (app "notifications-controller") {

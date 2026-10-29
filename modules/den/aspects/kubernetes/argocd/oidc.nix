@@ -1,5 +1,4 @@
-# Log in through Kanidm (kubernetes/kanidm/default.nix). Separate from default.nix so default.nix
-# doesn't hard-depend on Kanidm being present.
+# Log in through Kanidm. Separate from default.nix so that file doesn't depend on Kanidm.
 _: {
   den.aspects.kubernetes.argocd-oidc.k8s-manifests =
     { cluster, ... }:
@@ -11,19 +10,16 @@ _: {
       applications.argocd = {
         resources.configMaps.argocd-cm.data.url = "https://${hostname}";
 
-        # No local login, so the form is hidden. If Kanidm is down, fix it through git and kubectl on the node.
+        # No local login. If Kanidm is down, fix it through git and kubectl on the node.
         resources.configMaps.argocd-cm.data."admin.enabled" = "false";
 
-        # One public client for the UI and `argocd login --sso`: Kanidm gives each client its own
-        # issuer, so tokens from a separate cliClientID would fail argocd-server's issuer check.
-        # argocd-server runs the UI's code flow with PKCE and no secret; the CLI falls back to
-        # clientID and always sends PKCE.
+        # One public client for the UI and the CLI: Kanidm gives each client its own issuer,
+        # so a separate cliClientID would fail the issuer check.
         resources.configMaps.argocd-cm.data."oidc.config" = builtins.toJSON {
           name = "Kanidm";
           issuer = cluster.methods.kanidm.issuer clientId;
           clientID = clientId;
           enablePKCEAuthentication = true;
-          # groups_name puts plain group names (admins) in the groups claim.
           requestedScopes = [
             "openid"
             "profile"
@@ -45,10 +41,7 @@ _: {
           origin = "https://${hostname}";
           redirectUrl = [ "https://${hostname}/auth/callback" ];
           public = true;
-          # The CLI listens on http://localhost:8085/auth/callback (--sso-port). Kanidm accepts any
-          # loopback redirect on a public client with this set, so it needs no redirectUrl entry.
           allowLocalhostRedirect = true;
-          # The scopes are only granted to admins, so nobody else can finish a login.
           scopeMap = [
             {
               group = "admins";
