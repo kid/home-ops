@@ -162,6 +162,13 @@ inputs = {
       },
       {
         action      = "accept"
+        comment     = "Allow access to the cluster apps from Media"
+        dst_address = "10.0.42.0/24"
+        dst_port    = 443
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
         comment     = "Allow cloudflared access to HomeAssistant"
         dst_address = "10.0.10.101"
         src_address = "10.0.30.11"
