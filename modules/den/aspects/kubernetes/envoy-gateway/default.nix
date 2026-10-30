@@ -21,7 +21,10 @@ in
         (generators.fromChartCRDModule {
           name = "envoy-gateway-client-traffic-policy";
           chart = charts.envoyproxy.gateway-helm;
-          kindFilter = [ "ClientTrafficPolicy" ];
+          kindFilter = [
+            "ClientTrafficPolicy"
+            "SecurityPolicy"
+          ];
         })
       ];
 
