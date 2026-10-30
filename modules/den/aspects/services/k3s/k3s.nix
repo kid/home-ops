@@ -121,6 +121,19 @@ in
             "--etcd-expose-metrics"
             "--kube-scheduler-arg=bind-address=0.0.0.0"
             "--kube-controller-manager-arg=bind-address=0.0.0.0"
+            # Every control-plane port serves this process's whole registry,
+            # so vmagent downloads it four times. These histograms feed no
+            # alert, recording rule or dashboard.
+            "--kube-apiserver-arg=disabled-metrics=${
+              lib.concatStringsSep "," [
+                "apiserver_request_body_size_bytes"
+                "apiserver_response_sizes"
+                "apiserver_watch_cache_read_wait_seconds"
+                "apiserver_watch_events_sizes"
+                "apiserver_watch_list_duration_seconds"
+                "etcd_request_duration_seconds"
+              ]
+            }"
           ]
           ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}";
         };
