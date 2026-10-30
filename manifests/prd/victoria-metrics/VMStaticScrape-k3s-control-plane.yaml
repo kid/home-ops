@@ -8,6 +8,7 @@ spec:
     - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
       labels:
         job: kube-scheduler
+      max_scrape_size: 64MiB
       metricRelabelConfigs:
         - action: keep
           regex: (scheduler|rest_client|process|go)_.*
@@ -21,6 +22,7 @@ spec:
     - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
       labels:
         job: kube-controller-manager
+      max_scrape_size: 64MiB
       metricRelabelConfigs:
         - action: keep
           regex: (workqueue|node_collector|garbagecollector|pv_collector|[a-z_]+_controller|root_ca_cert_publisher|rest_client|process|go)_.*

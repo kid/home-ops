@@ -52,6 +52,11 @@ _: {
       # keep their own families plus the process-level ones their dashboards use.
       processMetrics = "rest_client|process|go";
 
+      # That registry outgrows vmagent's default 16 MiB limit: its apiserver
+      # histograms gain series until k3s restarts. The limit applies to the
+      # raw body, before any metricRelabelConfigs.
+      maxScrapeSize = "64MiB";
+
       mkStaticScrapeEndpoint =
         {
           job,
@@ -64,6 +69,7 @@ _: {
           bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
           scheme = "https";
           tlsConfig.insecureSkipVerify = true;
+          max_scrape_size = maxScrapeSize;
           metricRelabelConfigs = [
             {
               action = "keep";
@@ -174,6 +180,8 @@ _: {
               memory = "64Mi";
             };
 
+            kubelet.vmScrapes.kubelet.spec.max_scrape_size = maxScrapeSize;
+
             # The kubelet port of a k3s server serves the same whole-process
             # registry as the apiserver job; drop the other components'
             # families there. A list replaces the chart's, so its three
@@ -196,6 +204,20 @@ _: {
                 action = "drop";
                 source_labels = [ "__name__" ];
                 regex = "(apiserver|etcd|scheduler|apiextensions|workqueue)_.*";
+              }
+            ];
+
+            # A list replaces the chart's, so its endpoint is restated.
+            kubeApiServer.vmScrape.spec.endpoints = [
+              {
+                bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+                port = "https";
+                scheme = "https";
+                tlsConfig = {
+                  caFile = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
+                  serverName = "kubernetes";
+                };
+                max_scrape_size = maxScrapeSize;
               }
             ];
 
