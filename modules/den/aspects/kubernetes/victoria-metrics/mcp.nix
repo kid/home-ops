@@ -43,7 +43,12 @@ _: {
           host = "mcp-logs";
           # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victorialogs
           tag = "1.9.0@sha256:753bb4fbe402ca1a782842f44636830f9895736f11d7fe783b924f8a0daf083d";
-          env.VL_INSTANCE_ENTRYPOINT = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
+          env = {
+            VL_INSTANCE_ENTRYPOINT = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
+            # No default list upstream. Also skips the docs resources, whose
+            # in-memory index outgrows the 128Mi limit.
+            MCP_DISABLED_TOOLS = "documentation";
+          };
           backend = {
             name = "vlsingle";
             port = 9428;
