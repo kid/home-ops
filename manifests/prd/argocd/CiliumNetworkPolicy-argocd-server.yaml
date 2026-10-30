@@ -62,3 +62,10 @@ spec:
         - ports:
             - port: "8080"
               protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: mcp-argocd
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

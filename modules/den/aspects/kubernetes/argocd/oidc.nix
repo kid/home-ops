@@ -28,10 +28,8 @@ _: {
           ];
         };
 
-        # policy.default applies to every authenticated user, so policy.csv adds nothing until the default is lowered.
         resources.configMaps.argocd-rbac-cm.data = {
           scopes = "[groups]";
-          "policy.default" = "role:admin";
           "policy.csv" = "g, admins, role:admin";
         };
 

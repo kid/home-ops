@@ -182,6 +182,7 @@ in
       coredns
       argocd
       argocd-oidc
+      argocd-mcp
       apiserver
       snapshot-controller
       miroir

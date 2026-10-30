@@ -1,0 +1,12 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: HTTPRouteFilter
+metadata:
+  name: mcp-argocd-metadata-root
+  namespace: argocd
+spec:
+  directResponse:
+    body:
+      inline: '{"authorization_servers":["https://idm.kidibox.net/oauth2/openid/mcp"],"bearer_methods_supported":["header"],"resource":"https://mcp-argocd.kidibox.net","scopes_supported":["openid","profile","email"]}'
+      type: Inline
+    contentType: application/json
+    statusCode: 200

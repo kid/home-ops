@@ -22,6 +22,31 @@ provider "registry.opentofu.org/1password/onepassword" {
   ]
 }
 
+provider "registry.opentofu.org/argoproj-labs/argocd" {
+  version     = "7.17.2"
+  constraints = "~> 7.0"
+  hashes = [
+    "h1:+EGXVqYMpLZ8E/2F7sJpgeBl8bb/+i8hCcjbAcxgTLg=",
+    "h1:+ZhL2YbZKIxfifJP+J64LUjgsqcVEYSnMABDakZThow=",
+    "h1:Ri6jif0a81sV4RpCbWYQZEZD2ru121fsxkj0ZvdCoHA=",
+    "h1:bH8voKN8xT8xcGdPn5xCXqWbNnzE2t6SygHX6VvGrEU=",
+    "h1:eohYi9jdnk+Lr5Cuc1uWC3t4PicLR5NlepyP68wNXbw=",
+    "h1:hmeSqOtWhytij4VymACmvEJqonjzMVX3oy01kNjgS3E=",
+    "h1:tIlzOnvf8hP02GmlGE/tprbO97BHRwDuITZxj1N/gLg=",
+    "h1:tnyBkxEZZ+nHMLqGliVL/BH8TWbs9sILAJSqph5TMUM=",
+    "h1:vsffv4627suigsRt089WBM0kK04YzVQTKaCa9CrqviE=",
+    "zh:1939afb83ac5d8636feae2121b2eeedc97f1cedad3701ab4f2c4db813bdeefd4",
+    "zh:2f56cb0731c391ad329e24f2fbcee71b2761fbf6397b901cdc7d4cda5338f16c",
+    "zh:38b9fdd2e7cf9913e84aa65e3db0682166cf2b0df68722dd163af0fb5953f710",
+    "zh:464ce5092904f6f19101e803463d8ca7be493e67d6a9d5821ea17b44bb59f690",
+    "zh:71eba2bfc7feb78674ab7f4c8fe0bb1424c5723a198117b1c6e8e2526d5c660b",
+    "zh:855f74dc7fdbf67428855a3668dde560409f83919710ace553f3dd0592a7bc24",
+    "zh:937d2b002948f7d2ea391624a182a50648a4b8d9daf70d6718a3574659f34ebf",
+    "zh:cee2d658160d2ee5a59aaee1009addd867ddf17c1e9a33ca1bb3010b7cb173ef",
+    "zh:df16280e9ad3b542f7690ea7bcd0e20a52c520cd300e00f44b1817dabac66c92",
+  ]
+}
+
 provider "registry.opentofu.org/hashicorp/random" {
   version     = "3.9.1"
   constraints = "~> 3.0"

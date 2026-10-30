@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-argocd
+  namespace: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp-argocd
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mcp-argocd
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - http
+            - --bind-address
+            - 0.0.0.0
+            - --allow-unauthenticated
+            - --allowed-host-header
+            - mcp-argocd.kidibox.net
+          env:
+            - name: ARGOCD_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: ARGOCD_API_TOKEN
+                  name: mcp-argocd
+            - name: ARGOCD_BASE_URL
+              value: https://argocd-server.argocd.svc.cluster.local
+            - name: NODE_EXTRA_CA_CERTS
+              value: /etc/cluster-ca/ca.crt
+          image: ghcr.io/argoproj-labs/mcp-for-argocd:0.9.0@sha256:dffc6c719d8635be2d5f2c8ad1c0178540325da4b40da0b373307e12b4c48f86
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          name: mcp-argocd
+          ports:
+            - containerPort: 3000
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /etc/cluster-ca
+              name: cluster-ca
+              readOnly: true
+      securityContext:
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - configMap:
+            name: cluster-ca
+          name: cluster-ca

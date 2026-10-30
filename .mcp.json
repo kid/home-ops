@@ -17,6 +17,15 @@
         "callbackPort": 33418,
         "scope": "openid profile email"
       }
+    },
+    "argocd": {
+      "type": "http",
+      "url": "https://mcp-argocd.kidibox.net/mcp",
+      "oauth": {
+        "clientId": "mcp",
+        "callbackPort": 33418,
+        "scope": "openid profile email"
+      }
     }
   }
 }
