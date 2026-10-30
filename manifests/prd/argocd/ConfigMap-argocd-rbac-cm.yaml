@@ -1,9 +1,7 @@
 apiVersion: v1
 data:
   policy.csv: g, admins, role:admin
-  policy.mcp.csv: |
-    g, mcp, role:readonly
-    p, mcp, applications, sync, */*, allow
+  policy.default: role:admin
   scopes: '[groups]'
 kind: ConfigMap
 metadata:

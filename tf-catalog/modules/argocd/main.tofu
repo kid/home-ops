@@ -1,9 +1,5 @@
 terraform {
   required_providers {
-    argocd = {
-      source  = "argoproj-labs/argocd"
-      version = "~> 7.0"
-    }
     github = {
       source  = "integrations/github"
       version = "~> 6.0"
@@ -46,22 +42,12 @@ provider "github" {
   owner = var.github_owner
 }
 
-# No credentials here: uses the session from `argocd login argocd.kidibox.net --sso` on the machine running apply.
-provider "argocd" {
-  use_local_config = true
-}
-
 resource "random_password" "argocd_github_webhook" {
   length  = 32
   special = false
 }
 
-# Account from argocd/mcp.nix's argocd-cm; must be synced before apply.
-resource "argocd_account_token" "mcp" {
-  account = "mcp"
-}
-
-# Must match the ExternalSecret remoteRef.keys in argocd/default.nix and argocd/mcp.nix.
+# Must match argocd/default.nix's ExternalSecret remoteRef.key.
 resource "onepassword_item" "argocd_github_webhook_secret" {
   vault    = data.onepassword_vault.home_ops_prd.uuid
   title    = "argocd"
@@ -74,12 +60,6 @@ resource "onepassword_item" "argocd_github_webhook_secret" {
       label = "github-webhook-secret"
       type  = "CONCEALED"
       value = random_password.argocd_github_webhook.result
-    }
-
-    field {
-      label = "mcp-api-token"
-      type  = "CONCEALED"
-      value = argocd_account_token.mcp.jwt
     }
   }
 }
