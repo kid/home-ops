@@ -33,7 +33,7 @@ _: {
             registry = "txt";
             txtOwnerId = cluster.name;
             domainFilters = [ cluster.domain ];
-            policy = "upsert-only";
+            policy = "sync";
 
             provider.name = "cloudflare";
 
