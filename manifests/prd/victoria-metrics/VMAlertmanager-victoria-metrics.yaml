@@ -21,6 +21,8 @@ spec:
       cpu: 10m
       memory: 64Mi
   routePrefix: /
+  secrets:
+    - alertmanager-homeassistant
   selectAllByDefault: true
   templates:
     - key: monzo.tmpl
