@@ -1,6 +1,6 @@
-# VictoriaMetrics and VictoriaLogs MCP servers in streamable HTTP mode, behind
-# an Envoy JWT check for tokens Kanidm issued to the public `mcp` client. Clients
-# discover it from the RFC 9728 metadata each host serves without auth.
+# VictoriaMetrics and VictoriaLogs MCP servers, behind cluster.methods.mcp's
+# Kanidm JWT check (kanidm/mcp-auth.nix). Owns the cluster's one public `mcp`
+# Kanidm client, which every MCP server's tokens come from.
 _: {
   den.aspects.kubernetes.victoria-metrics-mcp.k8s-manifests =
     {
@@ -9,23 +9,13 @@ _: {
       ...
     }:
     let
-      inherit (cluster.methods) kanidm;
-      clientId = "mcp";
-      issuer = kanidm.issuer clientId;
-      # Matches callbackPort in .mcp.json.
-      callbackPort = 33418;
-      scopes = [
-        "openid"
-        "profile"
-        "email"
-      ];
+      inherit (cluster.methods) kanidm mcp;
       port = 8080;
-      mcpPath = "/mcp";
       appId = 1000;
 
       servers = {
         mcp-victoriametrics = {
-          host = "mcp-metrics";
+          host = "metrics";
           # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victoriametrics
           tag = "1.20.2@sha256:bcbf84f945d6efb03fb8b2d2ccc3294420dccdc0b445752dce96f02619416dfe";
           env = {
@@ -40,7 +30,7 @@ _: {
           };
         };
         mcp-victorialogs = {
-          host = "mcp-logs";
+          host = "logs";
           # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victorialogs
           tag = "1.9.0@sha256:753bb4fbe402ca1a782842f44636830f9895736f11d7fe783b924f8a0daf083d";
           env = {
@@ -57,35 +47,20 @@ _: {
       };
 
       labels = name: { "app.kubernetes.io/name" = name; };
-      hostname = server: cluster.methods.mkAppHostname server.host;
-      parentRefs = [
-        {
-          group = "gateway.networking.k8s.io";
-          kind = "Gateway";
-          name = "apps";
-          namespace = "envoy-gateway-system";
-          sectionName = "https";
-        }
-      ];
-
-      # Both well-known URIs MCP clients probe. nixidy keys HTTPRoute rules by name, so they need one.
-      metadataPath = "/.well-known/oauth-protected-resource";
-      metadataDocuments = server: {
-        root = {
-          path = metadataPath;
-          resource = "https://${hostname server}";
-        };
-        mcp = {
-          path = "${metadataPath}${mcpPath}";
-          resource = "https://${hostname server}${mcpPath}";
-        };
-      };
-      metadataFilter = name: rule: "${name}-metadata-${rule}";
 
       perServer = f: lib.concatMapAttrs f servers;
     in
     {
       applications.victoria-metrics = {
+        imports = [
+          (mcp.mkAuth (
+            lib.mapAttrs (_: server: {
+              hostname = cluster.methods.mkAppHostname server.host;
+              inherit port;
+            }) servers
+          ))
+        ];
+
         resources = {
           ciliumNetworkPolicies =
             with cluster.methods.netpol;
@@ -162,111 +137,17 @@ _: {
             }
           );
 
-          httpRoutes = perServer (
-            name: server: {
-              ${name}.spec = {
-                inherit parentRefs;
-                hostnames = [ (hostname server) ];
-                rules = [
-                  {
-                    matches = [
-                      {
-                        path = {
-                          type = "PathPrefix";
-                          value = "/";
-                        };
-                      }
-                    ];
-                    backendRefs = [
-                      {
-                        group = "";
-                        kind = "Service";
-                        inherit name port;
-                        weight = 1;
-                      }
-                    ];
-                  }
-                ];
-              };
-              # A route of its own, so the SecurityPolicy below leaves it open.
-              "${name}-metadata".spec = {
-                inherit parentRefs;
-                hostnames = [ (hostname server) ];
-                rules = lib.mapAttrsToList (rule: document: {
-                  name = rule;
-                  matches = [
-                    {
-                      path = {
-                        type = "Exact";
-                        value = document.path;
-                      };
-                    }
-                  ];
-                  filters = [
-                    {
-                      type = "ExtensionRef";
-                      extensionRef = {
-                        group = "gateway.envoyproxy.io";
-                        kind = "HTTPRouteFilter";
-                        name = metadataFilter name rule;
-                      };
-                    }
-                  ];
-                }) (metadataDocuments server);
-              };
-            }
-          );
-
-          httpRouteFilters = perServer (
-            name: server:
-            lib.mapAttrs' (
-              rule: document:
-              lib.nameValuePair (metadataFilter name rule) {
-                spec.directResponse = {
-                  contentType = "application/json";
-                  statusCode = 200;
-                  body = {
-                    type = "Inline";
-                    inline = builtins.toJSON {
-                      inherit (document) resource;
-                      authorization_servers = [ issuer ];
-                      bearer_methods_supported = [ "header" ];
-                      scopes_supported = scopes;
-                    };
-                  };
-                };
-              }
-            ) (metadataDocuments server)
-          );
-
-          # Kanidm sets `aud` to the client name.
-          securityPolicies.mcp.spec = {
-            targetRefs = lib.mapAttrsToList (name: _: {
-              group = "gateway.networking.k8s.io";
-              kind = "HTTPRoute";
-              inherit name;
-            }) servers;
-            jwt.providers = [
-              {
-                name = "kanidm";
-                inherit issuer;
-                audiences = [ clientId ];
-                remoteJWKS.uri = "${issuer}/public_key.jwk";
-              }
-            ];
-          };
-
-          kanidmOAuth2Clients.${clientId}.spec = {
+          kanidmOAuth2Clients.${mcp.clientId}.spec = {
             kanidmRef = kanidm.ref;
             displayname = "MCP servers";
             public = true;
             allowLocalhostRedirect = true;
-            origin = "http://localhost:${toString callbackPort}";
-            redirectUrl = [ "http://localhost:${toString callbackPort}/callback" ];
+            origin = "http://localhost:${toString mcp.callbackPort}";
+            redirectUrl = [ "http://localhost:${toString mcp.callbackPort}/callback" ];
             scopeMap = [
               {
                 group = "admins";
-                inherit scopes;
+                inherit (mcp) scopes;
               }
             ];
           };
