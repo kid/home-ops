@@ -6,7 +6,7 @@ metadata:
 spec:
   directResponse:
     body:
-      inline: '{"authorization_servers":["https://idm.kidibox.net/oauth2/openid/mcp"],"bearer_methods_supported":["header"],"resource":"https://mcp-argocd.kidibox.net/mcp","scopes_supported":["openid","profile","email"]}'
+      inline: '{"authorization_servers":["https://idm.kidibox.net/oauth2/openid/mcp"],"bearer_methods_supported":["header"],"resource":"https://argocd.kidibox.net/mcp","scopes_supported":["openid","profile","email"]}'
       type: Inline
     contentType: application/json
     statusCode: 200

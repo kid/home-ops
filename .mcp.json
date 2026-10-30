@@ -20,7 +20,7 @@
     },
     "argocd": {
       "type": "http",
-      "url": "https://mcp-argocd.kidibox.net/mcp",
+      "url": "https://argocd.kidibox.net/mcp",
       "oauth": {
         "clientId": "mcp",
         "callbackPort": 33418,

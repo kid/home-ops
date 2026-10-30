@@ -1,7 +1,8 @@
-# Argo CD MCP server (argoproj-labs/mcp-for-argocd) behind cluster.methods.mcp's
-# Kanidm JWT check, as local account `mcp`: role:readonly plus sync (which also
-# covers terminating one). Needs victoria-metrics-mcp for the `mcp` Kanidm client
-# and the argocd terragrunt stack for its token.
+# Argo CD MCP server (argoproj-labs/mcp-for-argocd) at /mcp on ArgoCD's own
+# host, behind cluster.methods.mcp's Kanidm JWT check, as local account `mcp`:
+# role:readonly plus sync (which also covers terminating one). Needs
+# victoria-metrics-mcp for the `mcp` Kanidm client and the argocd terragrunt
+# stack for its token.
 _: {
   den.aspects.kubernetes.argocd-mcp.k8s-manifests =
     { cluster, ... }:
@@ -11,7 +12,7 @@ _: {
       # The image's USER.
       appId = 1000;
       account = "mcp";
-      hostname = cluster.methods.mkAppHostname name;
+      hostname = cluster.methods.mkAppHostname "argocd";
       labels = {
         "app.kubernetes.io/name" = name;
       };
@@ -20,7 +21,14 @@ _: {
     in
     {
       applications.argocd = {
-        imports = [ (cluster.methods.mcp.mkAuth { ${name} = { inherit hostname port; }; }) ];
+        imports = [
+          (cluster.methods.mcp.mkAuth {
+            ${name} = {
+              inherit hostname port;
+              sharedHost = true;
+            };
+          })
+        ];
 
         resources = {
           configMaps.argocd-cm.data."accounts.${account}" = "apiKey";

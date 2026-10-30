@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 spec:
   hostnames:
-    - mcp-argocd.kidibox.net
+    - argocd.kidibox.net
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
@@ -22,4 +22,4 @@ spec:
       matches:
         - path:
             type: PathPrefix
-            value: /
+            value: /mcp

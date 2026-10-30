@@ -21,7 +21,7 @@ spec:
             - 0.0.0.0
             - --allow-unauthenticated
             - --allowed-host-header
-            - mcp-argocd.kidibox.net
+            - argocd.kidibox.net
           env:
             - name: ARGOCD_API_TOKEN
               valueFrom:
