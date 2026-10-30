@@ -18,3 +18,7 @@ spec:
           kind: Backend
           name: prowlarr
           weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /

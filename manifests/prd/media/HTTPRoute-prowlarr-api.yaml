@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: prowlarr-api
+  namespace: media
+spec:
+  hostnames:
+    - prowlarr.kidibox.net
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: apps
+      namespace: envoy-gateway-system
+      sectionName: https
+  rules:
+    - backendRefs:
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: prowlarr
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /api
+        - path:
+            type: RegularExpression
+            value: /[0-9]+/(api|download)(/.*)?
