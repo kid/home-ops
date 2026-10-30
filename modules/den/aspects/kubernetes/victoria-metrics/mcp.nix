@@ -31,6 +31,8 @@ _: {
           env = {
             VM_INSTANCE_ENTRYPOINT = "http://vmsingle-victoria-metrics.monitoring.svc:8428";
             VM_INSTANCE_TYPE = "single";
+            # Upstream's defaults plus documentation, whose in-memory docs index needs ~512 MiB.
+            MCP_DISABLED_TOOLS = "export,flags,metric_relabel_debug,downsampling_filters_debug,retention_filters_debug,test_rules,documentation";
           };
           backend = {
             name = "vmsingle";
