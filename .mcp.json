@@ -1,16 +1,21 @@
 {
   "mcpServers": {
     "victoriametrics": {
-      "command": "mcp-victoriametrics",
-      "env": {
-        "VM_INSTANCE_ENTRYPOINT": "https://metrics.kidibox.net",
-        "VM_INSTANCE_TYPE": "single"
+      "type": "http",
+      "url": "https://mcp-metrics.kidibox.net/mcp",
+      "oauth": {
+        "clientId": "mcp",
+        "callbackPort": 33418,
+        "scope": "openid profile email"
       }
     },
     "victorialogs": {
-      "command": "mcp-victorialogs",
-      "env": {
-        "VL_INSTANCE_ENTRYPOINT": "https://logs.kidibox.net"
+      "type": "http",
+      "url": "https://mcp-logs.kidibox.net/mcp",
+      "oauth": {
+        "clientId": "mcp",
+        "callbackPort": 33418,
+        "scope": "openid profile email"
       }
     }
   }

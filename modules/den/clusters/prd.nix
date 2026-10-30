@@ -192,6 +192,7 @@ in
       kanidm
       prometheus-operator-crds
       victoria-metrics
+      victoria-metrics-mcp
       grafana-operator
       grafana-oidc
       cloudflared

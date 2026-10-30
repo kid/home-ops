@@ -16,3 +16,10 @@ spec:
         - ports:
             - port: "8428"
               protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: mcp-victoriametrics
+      toPorts:
+        - ports:
+            - port: "8428"
+              protocol: TCP

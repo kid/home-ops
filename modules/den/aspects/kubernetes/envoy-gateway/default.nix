@@ -24,6 +24,7 @@ in
           kindFilter = [
             "ClientTrafficPolicy"
             "SecurityPolicy"
+            "HTTPRouteFilter"
           ];
         })
       ];

@@ -1,0 +1,37 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mcp-victorialogs-metadata
+  namespace: monitoring
+spec:
+  hostnames:
+    - mcp-logs.kidibox.net
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: apps
+      namespace: envoy-gateway-system
+      sectionName: https
+  rules:
+    - filters:
+        - extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: mcp-victorialogs-metadata-mcp
+          type: ExtensionRef
+      matches:
+        - path:
+            type: Exact
+            value: /.well-known/oauth-protected-resource/mcp
+      name: mcp
+    - filters:
+        - extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: mcp-victorialogs-metadata-root
+          type: ExtensionRef
+      matches:
+        - path:
+            type: Exact
+            value: /.well-known/oauth-protected-resource
+      name: root
