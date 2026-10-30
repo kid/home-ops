@@ -95,7 +95,7 @@ let
           "k3s-${cluster.name}-1" = {
             nixos_attr = "k3s-${cluster.name}-1";
             cpu = 4;
-            memory = "8GiB";
+            memory = "16GiB";
             disk_size = "64GiB";
             mac = macOf "k3s-${cluster.name}-1" "K3s";
             inherit (config.den.devices."k3s-${cluster.name}-1") address;

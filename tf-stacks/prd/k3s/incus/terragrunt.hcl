@@ -65,7 +65,7 @@ inputs = {
         }
       }
       mac        = "52:54:00:40:00:02"
-      memory     = "8GiB"
+      memory     = "16GiB"
       nixos_attr = "k3s-prd-1"
     }
   }
