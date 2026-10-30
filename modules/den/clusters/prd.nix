@@ -198,8 +198,6 @@ in
       grafana-oidc
       cloudflared
       external-dns-cloudflare
-      home-assistant
-      media
     ])
     ++ [ incusTerragruntAspect ];
 
