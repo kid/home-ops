@@ -73,13 +73,11 @@
     },
     {
       // Kanidm only supports upgrading one minor at a time, so a jump over
-      // several minors becomes one PR each. The tools image (mail sender)
-      // must match the server. kaniop shares the group, but its own minors
-      // land on their own branch: the group slug carries the minor.
+      // several minors becomes one PR each. kaniop shares the group, but its
+      // own minors land on their own branch: the group slug carries the minor.
       matchDatasources: ["docker"],
       matchDepNames: [
         "docker.io/kanidm/server",
-        "docker.io/kanidm/tools",
         "ghcr.io/pando85/helm-charts/kaniop",
       ],
       groupName: "kanidm",

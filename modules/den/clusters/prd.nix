@@ -188,7 +188,6 @@ in
       external-dns
       external-secrets
       kopiur
-      authelia
       kanidm
       prometheus-operator-crds
       victoria-metrics

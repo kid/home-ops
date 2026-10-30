@@ -34,11 +34,6 @@ in
       appId = 389;
       # renovate: datasource=docker depName=docker.io/kanidm/server
       serverTag = "1.11.2@sha256:e45f00bd354c1fc1c06a4be484b4e87b094c431e78280f1d19e911815e63efb5";
-      # kaniop derives the mail sender image from the server image by
-      # swapping /server: for /tools:, which keeps the server's digest.
-      # renovate: datasource=docker depName=docker.io/kanidm/tools
-      toolsTag = "1.11.2@sha256:144783fc589ac9611f6149f54f95d0d9472c1bf6078e7ed5781be441bcca7d24";
-      smtpUser = "arnaud.rebts@gmail.com";
       tlsSecretName = "${ref.name}-tls";
       serviceHostname = "${ref.name}.${namespace}.svc.cluster.local";
       # kaniop names the StatefulSet <Kanidm>-<replica group> and its
@@ -165,13 +160,6 @@ in
                   (fromPods (operatorLabels "operator") [ 8443 ])
                 ];
               };
-              # Reaches Kanidm at its origin, so through the apps Gateway.
-              kanidm-mail-sender = mkPolicy { "app.kubernetes.io/name" = "kanidm-mail-sender"; } {
-                egress = [
-                  gatewayEgress
-                  (fqdnEgress [ "smtp.gmail.com" ] [ 587 ])
-                ];
-              };
             };
 
             kanidms.${ref.name} = {
@@ -253,21 +241,6 @@ in
                   }
                 ];
                 automountServiceAccountToken = false;
-
-                # Gmail with the app password Authelia uses (1Password item authelia).
-                mailSender = {
-                  relay = "smtp://smtp.gmail.com:587";
-                  credentialsSecret.name = "kanidm-smtp";
-                  fromAddress = smtpUser;
-                  image = "docker.io/kanidm/tools:${toolsTag}";
-                  resources = {
-                    requests = {
-                      cpu = "10m";
-                      memory = "16Mi";
-                    };
-                    limits.memory = "64Mi";
-                  };
-                };
               };
             };
 
@@ -277,7 +250,7 @@ in
                 kanidmRef.name = ref.name;
                 personAttributes = {
                   displayname = "Arnaud Rebts";
-                  mail = [ smtpUser ];
+                  mail = [ "arnaud.rebts@gmail.com" ];
                 };
               };
             };
@@ -365,30 +338,6 @@ in
                         weight = 1;
                       }
                     ];
-                  }
-                ];
-              };
-            };
-
-            # The SMTP login Authelia's notifier uses today.
-            externalSecrets.kanidm-smtp = {
-              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-              spec = {
-                secretStoreRef = {
-                  name = "onepassword";
-                  kind = "ClusterSecretStore";
-                };
-                target = {
-                  name = "kanidm-smtp";
-                  template.data = {
-                    username = smtpUser;
-                    password = "{{ .password }}";
-                  };
-                };
-                data = [
-                  {
-                    secretKey = "password";
-                    remoteRef.key = "authelia/secrets/smtp-password";
                   }
                 ];
               };
