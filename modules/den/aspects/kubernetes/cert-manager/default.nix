@@ -34,6 +34,7 @@ _: {
           kindFilter = [
             "Certificate"
             "ClusterIssuer"
+            "Issuer"
           ];
           extraOpts = [
             "--set"
