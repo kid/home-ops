@@ -17,5 +17,5 @@ spec:
   sync:
     kind: GitRepository
     path: manifests/prd/apps
-    ref: refs/heads/main
+    ref: refs/heads/flux-operator
     url: https://github.com/kid/home-ops.git

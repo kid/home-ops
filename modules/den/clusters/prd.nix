@@ -160,7 +160,8 @@ in
 
     nixidy = {
       repository = "https://github.com/kid/home-ops.git";
-      branch = "main";
+      # Deploy-from-branch while PR #579 is open; revert to "main" before merging.
+      branch = "flux-operator";
       rootPath = "manifests/prd";
     };
   };
