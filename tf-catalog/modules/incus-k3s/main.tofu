@@ -155,12 +155,15 @@ resource "incus_instance" "k3s" {
 }
 
 # A new id each time the instance is replaced: the install module's only
-# trigger, so a NixOS change never reinstalls a node.
+# trigger, so a NixOS change never reinstalls a node. A whole-resource
+# reference would also fire on any in-place update (e.g. limits.memory).
+# `architecture` keeps its state value on an update and is unknown only
+# when the instance is planned for (re)creation.
 resource "terraform_data" "install_id" {
   for_each = var.nodes
 
   lifecycle {
-    replace_triggered_by = [incus_instance.k3s[each.key]]
+    replace_triggered_by = [incus_instance.k3s[each.key].architecture]
   }
 }
 
