@@ -2,7 +2,7 @@
   "mcpServers": {
     "victoriametrics": {
       "type": "http",
-      "url": "https://mcp-metrics.kidibox.net/mcp",
+      "url": "https://metrics.kidibox.net/mcp",
       "oauth": {
         "clientId": "mcp",
         "callbackPort": 33418,
@@ -11,7 +11,7 @@
     },
     "victorialogs": {
       "type": "http",
-      "url": "https://mcp-logs.kidibox.net/mcp",
+      "url": "https://logs.kidibox.net/mcp",
       "oauth": {
         "clientId": "mcp",
         "callbackPort": 33418,

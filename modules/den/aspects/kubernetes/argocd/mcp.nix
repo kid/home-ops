@@ -21,14 +21,7 @@ _: {
     in
     {
       applications.argocd = {
-        imports = [
-          (cluster.methods.mcp.mkAuth {
-            ${name} = {
-              inherit hostname port;
-              sharedHost = true;
-            };
-          })
-        ];
+        imports = [ (cluster.methods.mcp.mkAuth { ${name} = { inherit hostname port; }; }) ];
 
         resources = {
           configMaps.argocd-cm.data."accounts.${account}" = "apiKey";

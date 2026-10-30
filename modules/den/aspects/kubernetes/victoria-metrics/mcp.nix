@@ -15,7 +15,7 @@ _: {
 
       servers = {
         mcp-victoriametrics = {
-          host = "mcp-metrics";
+          host = "metrics";
           # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victoriametrics
           tag = "1.20.2@sha256:bcbf84f945d6efb03fb8b2d2ccc3294420dccdc0b445752dce96f02619416dfe";
           env = {
@@ -30,7 +30,7 @@ _: {
           };
         };
         mcp-victorialogs = {
-          host = "mcp-logs";
+          host = "logs";
           # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victorialogs
           tag = "1.9.0@sha256:753bb4fbe402ca1a782842f44636830f9895736f11d7fe783b924f8a0daf083d";
           env = {

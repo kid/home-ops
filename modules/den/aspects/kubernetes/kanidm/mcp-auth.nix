@@ -1,10 +1,10 @@
 # MCP servers in streamable HTTP mode, behind an Envoy JWT check for tokens
 # Kanidm issued to the public `mcp` client (declared in victoria-metrics/mcp.nix).
 # Clients discover it from the RFC 9728 metadata each host serves without auth.
-# mkAuth takes { <Service name> = { hostname; port; sharedHost ? false; }; } and
-# returns an application module, for that application's `imports`. On a
-# sharedHost the server only gets the MCP endpoint; Envoy merges it with the
-# host's other routes, where the longer path wins.
+# mkAuth takes { <Service name> = { hostname; port; }; } and returns an
+# application module, for that application's `imports`. The server shares the
+# host of the app it serves: Envoy merges its /mcp and metadata routes with
+# the app's own, where the longer path wins.
 { config, lib, ... }:
 let
   inherit (config.den.clusters.prd.methods) kanidm;
@@ -51,11 +51,7 @@ let
       resources = {
         httpRoutes = perServer (
           name:
-          {
-            hostname,
-            port,
-            sharedHost ? false,
-          }:
+          { hostname, port }:
           {
             ${name}.spec = {
               inherit parentRefs;
@@ -66,7 +62,7 @@ let
                     {
                       path = {
                         type = "PathPrefix";
-                        value = if sharedHost then mcpPath else "/";
+                        value = mcpPath;
                       };
                     }
                   ];

@@ -5,7 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   hostnames:
-    - mcp-metrics.kidibox.net
+    - metrics.kidibox.net
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
