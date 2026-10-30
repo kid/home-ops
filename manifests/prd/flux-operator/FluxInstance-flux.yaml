@@ -1,0 +1,21 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: FluxInstance
+metadata:
+  name: flux
+  namespace: flux-system
+spec:
+  cluster:
+    networkPolicy: false
+    size: small
+    type: kubernetes
+  components:
+    - source-controller
+    - kustomize-controller
+  distribution:
+    registry: ghcr.io/fluxcd
+    version: 2.x
+  sync:
+    kind: GitRepository
+    path: manifests/prd/apps
+    ref: refs/heads/main
+    url: https://github.com/kid/home-ops.git

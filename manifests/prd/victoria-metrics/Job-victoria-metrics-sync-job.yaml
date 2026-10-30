@@ -2,8 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-delete-policy: before-hook-creation
+    kustomize.toolkit.fluxcd.io/force: Enabled
   labels:
     app.kubernetes.io/component: syncJob
     app.kubernetes.io/instance: victoria-metrics
@@ -14,6 +13,8 @@ spec:
   backoffLimit: 3
   template:
     metadata:
+      annotations:
+        checksum/config: 55518f52ad857473338250d3103ba9ad2912ff173b2c0752705db87dadf0f447
       labels:
         app.kubernetes.io/component: syncJob
         app.kubernetes.io/instance: victoria-metrics
@@ -54,4 +55,3 @@ spec:
         - configMap:
             name: victoria-metrics-sync-job-config
           name: config
-  ttlSecondsAfterFinished: 600

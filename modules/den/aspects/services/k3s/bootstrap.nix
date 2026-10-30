@@ -1,5 +1,5 @@
 # k3s bootstrap: oneshot systemd services applying manifests baked into the image via `self`.
-# Wave order: namespaces, CRDs, cilium, coredns, cert-manager, argocd.
+# Wave order: namespaces, CRDs, cilium, coredns, cert-manager, flux.
 # Cilium's operator registers its own CRDs at runtime — not shipped in the chart.
 { self, den, ... }:
 {
@@ -20,9 +20,9 @@
           };
         ciliumDir = manifestPath "cilium";
         corednsDir = manifestPath "coredns";
-        argocdDir = manifestPath "argocd";
+        fluxDir = manifestPath "flux-operator";
         certManagerDir = manifestPath "cert-manager";
-        bootstrapFile = manifestPath "bootstrap.yaml";
+        certManagerConfigDir = manifestPath "cert-manager-config";
         # Swept generically by waves 0-1 so a new app's Namespace/CRDs need no list entry here.
         allManifestsDir = builtins.path {
           path = self + "/manifests/${clusterName}";
@@ -60,7 +60,7 @@
                   find ${allManifestsDir} -name "Namespace-*.yaml" | sort
                 )
                 [[ ''${#files[@]} -gt 0 ]] && \
-                  kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${files[@]}"
+                  kubectl apply --server-side --force-conflicts --field-manager=kustomize-controller "''${files[@]}"
 
                 echo "Namespaces ready."
               '';
@@ -95,13 +95,11 @@
                   find ${allManifestsDir} -name "CustomResourceDefinition-*.yaml" | sort
                 )
                 [[ ''${#files[@]} -gt 0 ]] && \
-                  kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${files[@]}"
+                  kubectl apply --server-side --force-conflicts --field-manager=kustomize-controller "''${files[@]}"
 
-                echo "Waiting for ArgoCD CRDs to be established..."
+                echo "Waiting for the Flux Operator CRDs to be established..."
                 kubectl wait --for=condition=Established \
-                  crd/applications.argoproj.io \
-                  crd/applicationsets.argoproj.io \
-                  crd/appprojects.argoproj.io \
+                  crd/fluxinstances.fluxcd.controlplane.io \
                   --timeout=60s
 
                 echo "Waiting for cert-manager CRDs to be established..."
@@ -169,7 +167,7 @@
                       find ${ciliumDir} -name "*.yaml" ! -name "Cilium*.yaml" | sort
                     )
                     [[ ''${#core_files[@]} -gt 0 ]] && \
-                      kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${core_files[@]}"
+                      kubectl apply --server-side --force-conflicts --field-manager=kustomize-controller "''${core_files[@]}"
 
                     echo "Waiting for Cilium DaemonSet to be ready..."
                     kubectl rollout status -n kube-system daemonset/cilium --timeout=300s
@@ -194,7 +192,7 @@
                       find ${ciliumDir} -name "Cilium*.yaml" | sort
                     )
                     [[ ''${#cr_files[@]} -gt 0 ]] && \
-                      kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${cr_files[@]}"
+                      kubectl apply --server-side --force-conflicts --field-manager=kustomize-controller "''${cr_files[@]}"
 
                     echo "Cilium bootstrap complete."
                   ''
@@ -228,7 +226,7 @@
 
                 echo "Applying CoreDNS manifests..."
                 kubectl apply \
-                  --server-side --force-conflicts --field-manager=argocd-controller \
+                  --server-side --force-conflicts --field-manager=kustomize-controller \
                   -f ${corednsDir}
 
                 echo "Waiting for CoreDNS deployment to be ready..."
@@ -267,13 +265,9 @@
                 fi
 
                 echo "Applying cert-manager core manifests..."
-                declare -a core_files
-                while IFS= read -r f; do core_files+=("-f" "$f"); done < <(
-                  find ${certManagerDir} -name "*.yaml" \
-                    ! -name "ClusterIssuer-*.yaml" ! -name "Certificate-*.yaml" | sort
-                )
-                [[ ''${#core_files[@]} -gt 0 ]] && \
-                  kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${core_files[@]}"
+                kubectl apply \
+                  --server-side --force-conflicts --field-manager=kustomize-controller \
+                  -f ${certManagerDir}
 
                 echo "Waiting for cert-manager rollout..."
                 kubectl rollout status -n cert-manager deployment/cert-manager --timeout=120s
@@ -283,10 +277,10 @@
                 echo "Applying cluster CA issuer chain..."
                 declare -a issuer_files
                 while IFS= read -r f; do issuer_files+=("-f" "$f"); done < <(
-                  find ${certManagerDir} -name "ClusterIssuer-*.yaml" -o -name "Certificate-*.yaml" | sort
+                  find ${certManagerConfigDir} -name "ClusterIssuer-*.yaml" -o -name "Certificate-*.yaml" | sort
                 )
                 [[ ''${#issuer_files[@]} -gt 0 ]] && \
-                  kubectl apply --server-side --force-conflicts --field-manager=argocd-controller "''${issuer_files[@]}"
+                  kubectl apply --server-side --force-conflicts --field-manager=kustomize-controller "''${issuer_files[@]}"
 
                 echo "Waiting for the cluster CA to be signed..."
                 kubectl wait --for=condition=Ready certificate/cluster-ca -n cert-manager --timeout=60s
@@ -297,8 +291,8 @@
             wantedBy = [ "multi-user.target" ];
           };
 
-          k3s-bootstrap-argocd = {
-            description = "Bootstrap ArgoCD and hand off to GitOps";
+          k3s-bootstrap-flux = {
+            description = "Bootstrap the Flux Operator and hand off to GitOps";
             after = [
               "k3s.service"
               "k3s-bootstrap-cert-manager.service"
@@ -312,28 +306,26 @@
             serviceConfig = {
               Type = "oneshot";
               RemainAfterExit = true;
-              ExecStart = pkgs.writeShellScript "k3s-bootstrap-argocd" ''
+              ExecStart = pkgs.writeShellScript "k3s-bootstrap-flux" ''
                 set -e
 
-                if kubectl get statefulset -n argocd argocd-application-controller >/dev/null 2>&1; then
-                  echo "ArgoCD already installed, skipping bootstrap."
+                if kubectl get deployment -n flux-system flux-operator >/dev/null 2>&1; then
+                  echo "Flux Operator already installed, skipping bootstrap."
                   exit 0
                 fi
 
-                echo "Applying ArgoCD manifests..."
+                echo "Applying the Flux Operator and its FluxInstance..."
                 kubectl apply \
-                  --server-side --force-conflicts --field-manager=argocd-controller \
-                  -f ${argocdDir}
+                  --server-side --force-conflicts --field-manager=kustomize-controller \
+                  -f ${fluxDir}
 
-                echo "Waiting for argocd-application-controller rollout..."
-                kubectl rollout status -n argocd statefulset/argocd-application-controller --timeout=300s
+                echo "Waiting for the Flux Operator rollout..."
+                kubectl rollout status -n flux-system deployment/flux-operator --timeout=300s
 
-                echo "Applying bootstrap Application..."
-                kubectl apply \
-                  --server-side --force-conflicts --field-manager=argocd-controller \
-                  -f ${bootstrapFile}
+                echo "Waiting for the FluxInstance to install Flux and its root sync..."
+                kubectl wait --for=condition=Ready fluxinstance/flux -n flux-system --timeout=600s
 
-                echo "Bootstrap complete — ArgoCD is now managing all applications from git."
+                echo "Bootstrap complete — Flux is now managing all applications from git."
               '';
             };
             wantedBy = [ "multi-user.target" ];

@@ -106,7 +106,6 @@ in
 
       applications.kopiur = {
         namespace = "kopiur-system";
-        annotations."argocd.argoproj.io/sync-wave" = "-2";
 
         resources.ciliumNetworkPolicies =
           with cluster.methods.netpol;
@@ -179,9 +178,17 @@ in
             };
           };
         };
+      };
+
+      # Separate from the controller: its webhook must serve before the repository is applied.
+      applications.kopiur-config = {
+        namespace = "kopiur-system";
+        flux.dependsOn = [
+          "kopiur"
+          "external-secrets"
+        ];
 
         resources.externalSecrets.kopiur-r2 = {
-          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
           spec = {
             secretStoreRef = {
               name = "onepassword";

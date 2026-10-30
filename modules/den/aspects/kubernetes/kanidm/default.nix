@@ -54,13 +54,6 @@ in
         "app.kubernetes.io/name" = "kaniop";
         "app.kubernetes.io/component" = component;
       };
-      # After the operator's wave is Healthy: its webhook (failurePolicy Fail)
-      # must serve before persons and groups are created.
-      afterOperator."argocd.argoproj.io/sync-wave" = "1";
-      # kaniop creates the `idm` Service from the Kanidm resource (wave 1).
-      # ArgoCD waits for the route and its BackendTLSPolicy to be Healthy,
-      # which needs that Service, so they must sync after it.
-      afterKanidm."argocd.argoproj.io/sync-wave" = "2";
       mfaGroup = {
         kanidmRef.name = ref.name;
         members = [ "kid" ];
@@ -82,16 +75,18 @@ in
         })
       ];
 
-      applications.kanidm = {
+      applications.kaniop = {
         inherit namespace;
+        # Its webhook's certificate.
+        flux.dependsOn = [ "cert-manager" ];
 
         helm.releases.kaniop = {
           chart = charts.pando85.kaniop;
           values = {
-            # Both are Helm pre-install hooks. ArgoCD already applies the
-            # chart's crds/ on every sync, and the migration only concerns
-            # upgrades from before 0.19; it also stamps `now` into its
-            # manifest, which would break checks.manifests.
+            # Both are Helm pre-install hooks. The chart's crds/ are rendered
+            # with the rest, and the migration only concerns upgrades from
+            # before 0.19; it also stamps `now` into its manifest, which would
+            # break checks.manifests.
             crdApply.enabled = false;
             crdMigration.personAccountPlural.enabled = false;
 
@@ -129,6 +124,39 @@ in
           };
         };
 
+        resources = {
+          # With issuerRef set the chart creates no root CA Certificate, but
+          # still points the CA injection at one. The webhook cert's own
+          # Secret carries the cluster-ca as ca.crt.
+          validatingWebhookConfigurations.kaniop-webhook.metadata.annotations."cert-manager.io/inject-ca-from" =
+            lib.mkForce "${namespace}/kaniop-webhook-cert";
+
+          ciliumNetworkPolicies = with cluster.methods.netpol; {
+            kaniop-operator = mkPolicy (operatorLabels "operator") {
+              ingress = [ (scrapeIngress [ 8080 ]) ];
+              egress = [
+                apiserverEgress
+                (toPods kanidmLabels [ 8443 ])
+              ];
+            };
+            kaniop-webhook = mkPolicy (operatorLabels "webhook") {
+              ingress = [ (webhookIngress 8443) ];
+              egress = [ apiserverEgress ];
+            };
+          };
+        };
+      };
+
+      # Separate from the operator: its webhook must serve before these are
+      # applied. The volume restores from the kopiur repository.
+      applications.kanidm = {
+        inherit namespace;
+        flux.dependsOn = [
+          "kaniop"
+          "kopiur-config"
+          "cert-manager"
+        ];
+
         resources =
           cluster.methods.mkKopiurBackup {
             name = backupName;
@@ -136,34 +164,16 @@ in
             existingClaim = dataClaim;
           }
           // {
-            # With issuerRef set the chart creates no root CA Certificate, but
-            # still points the CA injection at one. The webhook cert's own
-            # Secret carries the cluster-ca as ca.crt.
-            validatingWebhookConfigurations.kaniop-webhook.metadata.annotations."cert-manager.io/inject-ca-from" =
-              lib.mkForce "${namespace}/kaniop-webhook-cert";
-
-            ciliumNetworkPolicies = with cluster.methods.netpol; {
-              kaniop-operator = mkPolicy (operatorLabels "operator") {
-                ingress = [ (scrapeIngress [ 8080 ]) ];
-                egress = [
-                  apiserverEgress
-                  (toPods kanidmLabels [ 8443 ])
-                ];
-              };
-              kaniop-webhook = mkPolicy (operatorLabels "webhook") {
-                ingress = [ (webhookIngress 8443) ];
-                egress = [ apiserverEgress ];
-              };
-              kanidm = mkPolicy kanidmLabels {
+            ciliumNetworkPolicies.kanidm =
+              with cluster.methods.netpol;
+              mkPolicy kanidmLabels {
                 ingress = [
                   (gatewayIngress 8443)
                   (fromPods (operatorLabels "operator") [ 8443 ])
                 ];
               };
-            };
 
             kanidms.${ref.name} = {
-              metadata.annotations = afterOperator;
               spec = {
                 inherit domain origin tlsSecretName;
                 image = "docker.io/kanidm/server:${serverTag}";
@@ -245,7 +255,6 @@ in
             };
 
             kanidmPersonAccounts.kid = {
-              metadata.annotations = afterOperator;
               spec = {
                 kanidmRef.name = ref.name;
                 personAttributes = {
@@ -256,14 +265,8 @@ in
             };
 
             kanidmGroups = {
-              admins = {
-                metadata.annotations = afterOperator;
-                spec = mfaGroup;
-              };
-              media = {
-                metadata.annotations = afterOperator;
-                spec = mfaGroup;
-              };
+              admins.spec = mfaGroup;
+              media.spec = mfaGroup;
             };
 
             certificates.${tlsSecretName}.spec = {
@@ -284,7 +287,6 @@ in
 
             # cluster-ca ConfigMap comes from trust-manager/default.nix's Bundle.
             backendTLSPolicies.${ref.name} = {
-              metadata.annotations = afterKanidm;
               spec = {
                 targetRefs = [
                   {
@@ -307,7 +309,6 @@ in
             };
 
             httpRoutes.${ref.name} = {
-              metadata.annotations = afterKanidm;
               spec = {
                 parentRefs = [
                   {

@@ -9,7 +9,6 @@ _: {
     {
       applications.coredns = {
         namespace = "kube-system";
-        syncPolicy.syncOptions.serverSideApply = true;
 
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           coredns = mkPolicy { k8s-app = "coredns"; } {
@@ -48,7 +47,11 @@ _: {
             };
             prometheus = {
               service.enabled = true;
-              monitor.enabled = true;
+              monitor = {
+                enabled = true;
+                # The chart leaves it unset.
+                namespace = "kube-system";
+              };
             };
           };
         };

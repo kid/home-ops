@@ -49,7 +49,8 @@ _: {
     {
       applications.cilium = {
         namespace = "kube-system";
-        syncPolicy.syncOptions.serverSideApply = true;
+        # Hubble's certificates.
+        flux.dependsOn = [ "cert-manager" ];
 
         resources.httpRoutes.hubble-ui.spec = {
           parentRefs = [

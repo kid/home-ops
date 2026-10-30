@@ -44,7 +44,6 @@ _: {
             helmfile
             kubevirt
             nodejs
-            argocd
             kubelogin-oidc
 
             nil

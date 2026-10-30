@@ -1,9 +1,6 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  annotations:
-    helm.sh/hook: pre-install, pre-upgrade
-    helm.sh/hook-weight: "-1"
   labels:
     app.kubernetes.io/component: topology-injector
     app.kubernetes.io/instance: envoy-gateway

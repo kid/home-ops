@@ -9,6 +9,8 @@ _: {
     in
     {
       applications.grafana-operator = {
+        flux.dependsOn = [ "kaniop" ];
+
         resources.grafanas.grafana.spec = {
           config = {
             # auth.basic stays enabled: the operator uses it to reconcile dashboards and datasources.
@@ -51,7 +53,6 @@ _: {
         };
 
         resources.kanidmOAuth2Clients.${clientId} = {
-          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
           spec = {
             kanidmRef = kanidm.ref;
             displayname = "Grafana";

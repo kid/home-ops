@@ -8,6 +8,7 @@ _: {
     {
       applications.cloudflare-tunnel-gateway = {
         namespace = "cloudflare-tunnel-system";
+        flux.dependsOn = [ "external-secrets" ];
 
         helm.releases.cloudflare-tunnel-gateway-controller = {
           chart = charts.lexfrei.cloudflare-tunnel-gateway-controller;

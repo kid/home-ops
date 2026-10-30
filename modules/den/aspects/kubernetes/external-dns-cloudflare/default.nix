@@ -4,6 +4,7 @@ _: {
     {
       applications.external-dns-cloudflare = {
         namespace = "external-dns";
+        flux.dependsOn = [ "external-secrets" ];
 
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           external-dns-cloudflare = mkPolicy { "app.kubernetes.io/instance" = "external-dns-cloudflare"; } {

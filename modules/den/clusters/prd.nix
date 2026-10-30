@@ -180,8 +180,7 @@ in
       cert-manager
       trust-manager
       coredns
-      argocd
-      argocd-oidc
+      flux
       apiserver
       snapshot-controller
       miroir

@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   annotations:
-    helm.sh/hook: pre-install, pre-upgrade
+    kustomize.toolkit.fluxcd.io/force: Enabled
   labels:
     app.kubernetes.io/instance: envoy-gateway
     app.kubernetes.io/name: gateway-helm
@@ -59,4 +59,3 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       serviceAccountName: envoy-gateway-gateway-helm-certgen
-  ttlSecondsAfterFinished: 30

@@ -7,7 +7,6 @@ _: {
     {
       applications.snapshot-controller = {
         namespace = "snapshot-controller";
-        annotations."argocd.argoproj.io/sync-wave" = "-3";
 
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           snapshot-controller = mkPolicy { "app.kubernetes.io/name" = "snapshot-controller"; } {

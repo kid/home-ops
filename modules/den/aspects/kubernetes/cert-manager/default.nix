@@ -82,13 +82,7 @@ _: {
               ];
               egress = [ apiserverEgress ];
             };
-            cert-manager-startupapicheck = mkPolicy (app "startupapicheck") {
-              egress = [ apiserverEgress ];
-            };
           };
-
-        # Before envoy-gateway, whose Gateway serves the wildcard cert below.
-        annotations."argocd.argoproj.io/sync-wave" = "-2";
 
         helm.releases.cert-manager = {
           chart = charts.jetstack.cert-manager;
@@ -110,10 +104,8 @@ _: {
               };
               limits.memory = "128Mi";
             };
-            startupapicheck.resources.requests = {
-              cpu = "10m";
-              memory = "64Mi";
-            };
+            # A post-install Helm hook that only checks the API is up.
+            startupapicheck.enabled = false;
             cainjector.resources = {
               requests = {
                 cpu = "10m";
@@ -123,6 +115,17 @@ _: {
             };
           };
         };
+      };
+
+      # Separate from the controller so a certificate that can't be issued
+      # only holds up this Kustomization, never the ones depending on
+      # cert-manager's webhook.
+      applications.cert-manager-config = {
+        namespace = "cert-manager";
+        flux.dependsOn = [
+          "cert-manager"
+          "external-secrets"
+        ];
 
         # Standard cert-manager self-signed-root bootstrap: a selfSigned
         # ClusterIssuer signs the cluster CA Certificate, then the cluster-ca
@@ -193,7 +196,6 @@ _: {
         };
 
         resources.externalSecrets.cloudflare-dns-api-token = {
-          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
           spec = {
             secretStoreRef = {
               name = "onepassword";

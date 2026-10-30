@@ -1,0 +1,17 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: external-dns-cloudflare
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: external-secrets
+  interval: 10m
+  path: ./manifests/prd/external-dns-cloudflare
+  prune: true
+  retryInterval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  timeout: 5m
+  wait: true
