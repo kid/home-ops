@@ -79,5 +79,12 @@
 
   fleet.user-access.by-host.node1.groups = [ "admin" ];
 
-  fleet.nh.targets.node1.hostname = config.den.devices.node1.address;
+  fleet.colmena.deployment.node1 = {
+    targetHost = config.den.devices.node1.address;
+    # Not a k3s node, so nothing is derived; it hosts the prd k3s VMs.
+    tags = [
+      "incus-host"
+      "env-prd"
+    ];
+  };
 }

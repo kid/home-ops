@@ -52,7 +52,6 @@ _: {
             ipmitool
           ]
           ++ [
-            config.packages.deploy
             config.packages.nixos-anywhere-install
             config.packages.provision-host-key
             config.packages.provision-k3s-token
@@ -65,6 +64,7 @@ _: {
             config.packages.write-inputs
 
             inputs'.nixhelm.packages.helmupdater
+            inputs'.colmena.packages.colmena
           ];
 
         inputsFrom = [

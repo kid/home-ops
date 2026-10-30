@@ -117,7 +117,7 @@ resource "incus_instance" "k3s" {
   }
 
   # The image and its cloud-init only matter at creation: nixos-anywhere
-  # replaces the system, and `deploy <host>` updates it after that.
+  # replaces the system, and `colmena apply --on <host>` updates it after that.
   lifecycle {
     ignore_changes = [image, config["cloud-init.user-data"]]
   }
