@@ -1,9 +1,9 @@
 # Media apps running outside the cluster (on the Media VLAN), published on the
-# internal "apps" Gateway only; internal external-dns points their hostnames at
-# it. No forward auth yet: they rely on their own login.
+# internal "apps" Gateway only; internal external-dns points their hostnames at it.
 { config, lib, ... }:
 let
-  media = config.den.environments.prd.networks.Media.methods.host;
+  inherit (config.den.environments.prd.networks) Media;
+  media = Media.methods.host;
   apps = {
     prowlarr = {
       address = media 110;
@@ -35,6 +35,19 @@ in
         protocol = "tcp";
         comment = "Allow access to ${name} from K3s for Envoy Gateway";
       }) apps;
+    }
+    # The apps reach each other by hostname, through the Gateway.
+    {
+      network = Media.name;
+      forward = [
+        {
+          action = "accept";
+          dst_address = cluster.networks.loadBalancer.cidr;
+          dst_port = 443;
+          protocol = "tcp";
+          comment = "Allow access to the cluster apps from Media";
+        }
+      ];
     }
   ];
 
