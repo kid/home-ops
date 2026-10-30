@@ -212,8 +212,20 @@ in
               "plex.kidibox.net" = {
                 address = "10.0.30.100";
               };
+              "prowlarr.kidibox.net" = {
+                address = "10.0.30.110";
+              };
+              "radarr.kidibox.net" = {
+                address = "10.0.30.120";
+              };
+              "sonarr.kidibox.net" = {
+                address = "10.0.30.130";
+              };
               "animarr.kidibox.net" = {
                 address = "10.0.30.140";
+              };
+              "sabnzbd.kidibox.net" = {
+                address = "10.0.30.150";
               };
               "doorbell.iot.home.kidibox.net" = {
                 address = "10.0.101.100";

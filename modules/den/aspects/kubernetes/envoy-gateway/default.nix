@@ -19,11 +19,10 @@ in
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
-          name = "envoy-gateway-extension-crds";
+          name = "envoy-gateway-client-traffic-policy";
           chart = charts.envoyproxy.gateway-helm;
           kindFilter = [
             "ClientTrafficPolicy"
-            "Backend"
             "SecurityPolicy"
           ];
         })
@@ -85,8 +84,6 @@ in
           chart = charts.envoyproxy.gateway-helm;
           values = {
             crds.enabled = true;
-            # Routes to endpoints outside the cluster, see media/default.nix.
-            config.envoyGateway.extensionApis.enableBackend = true;
             certgen.job.resources.requests = {
               cpu = "10m";
               memory = "64Mi";
