@@ -36,6 +36,7 @@ _: {
       charts,
       generators,
       cluster,
+      config,
       lib,
       k3s-nodes ? [ ],
       ...
@@ -207,20 +208,6 @@ _: {
               }
             ];
 
-            # A list replaces the chart's, so its endpoint is restated.
-            kubeApiServer.vmScrape.spec.endpoints = [
-              {
-                bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
-                port = "https";
-                scheme = "https";
-                tlsConfig = {
-                  caFile = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
-                  serverName = "kubernetes";
-                };
-                max_scrape_size = maxScrapeSize;
-              }
-            ];
-
             kube-state-metrics.resources = {
               requests = {
                 cpu = "10m";
@@ -365,6 +352,26 @@ _: {
               limits.memory = "128Mi";
             };
           };
+
+          # The chart's apiserver endpoints, plus max_scrape_size. Composes
+          # with the default transformer, which a release's own replaces.
+          transformer =
+            manifests:
+            map (
+              m:
+              if m.kind == "VMServiceScrape" && m.metadata.name == "victoria-metrics-kube-api-server" then
+                lib.updateManyAttrsByPath [
+                  {
+                    path = [
+                      "spec"
+                      "endpoints"
+                    ];
+                    update = map (e: e // { max_scrape_size = maxScrapeSize; });
+                  }
+                ] m
+              else
+                m
+            ) (config.nixidy.defaults.helm.transformer manifests);
         };
 
         resources.vmStaticScrapes.k3s-control-plane.spec.targetEndpoints = [
