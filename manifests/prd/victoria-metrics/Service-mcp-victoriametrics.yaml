@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mcp-victoriametrics
-  namespace: mcp
+  namespace: monitoring
 spec:
   ports:
     - name: http

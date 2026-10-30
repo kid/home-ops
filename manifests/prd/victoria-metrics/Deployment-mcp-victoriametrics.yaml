@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mcp-victorialogs
-  namespace: mcp
+  name: mcp-victoriametrics
+  namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: mcp-victorialogs
+      app.kubernetes.io/name: mcp-victoriametrics
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: mcp-victorialogs
+        app.kubernetes.io/name: mcp-victoriametrics
     spec:
       automountServiceAccountToken: false
       containers:
@@ -20,14 +20,16 @@ spec:
               value: :8080
             - name: MCP_SERVER_MODE
               value: http
-            - name: VL_INSTANCE_ENTRYPOINT
-              value: http://vlsingle-victoria-metrics.monitoring.svc:9428
-          image: ghcr.io/victoriametrics/mcp-victorialogs:1.9.0@sha256:753bb4fbe402ca1a782842f44636830f9895736f11d7fe783b924f8a0daf083d
+            - name: VM_INSTANCE_ENTRYPOINT
+              value: http://vmsingle-victoria-metrics.monitoring.svc:8428
+            - name: VM_INSTANCE_TYPE
+              value: single
+          image: ghcr.io/victoriametrics/mcp-victoriametrics:1.20.2@sha256:bcbf84f945d6efb03fb8b2d2ccc3294420dccdc0b445752dce96f02619416dfe
           livenessProbe:
             httpGet:
               path: /health/liveness
               port: http
-          name: mcp-victorialogs
+          name: mcp-victoriametrics
           ports:
             - containerPort: 8080
               name: http

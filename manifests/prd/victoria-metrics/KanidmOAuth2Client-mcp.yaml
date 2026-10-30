@@ -2,7 +2,7 @@ apiVersion: kaniop.rs/v1beta1
 kind: KanidmOAuth2Client
 metadata:
   name: mcp
-  namespace: mcp
+  namespace: monitoring
 spec:
   allowLocalhostRedirect: true
   displayname: MCP servers

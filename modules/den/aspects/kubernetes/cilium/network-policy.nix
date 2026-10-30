@@ -30,7 +30,7 @@ let
   };
 
   netpol = {
-    inherit tcp tcpUdp fromNamespace;
+    inherit tcp tcpUdp;
 
     mkPolicy = labels: rules: {
       spec = {
@@ -46,17 +46,6 @@ let
     };
     toPods = labels: ports: {
       toEndpoints = [ { matchLabels = labels; } ];
-      toPorts = tcp ports;
-    };
-    # Pods of another namespace; fromNamespace is the ingress side.
-    toNamespace = namespace: labels: ports: {
-      toEndpoints = [
-        {
-          matchLabels = labels // {
-            "k8s:io.kubernetes.pod.namespace" = namespace;
-          };
-        }
-      ];
       toPorts = tcp ports;
     };
 

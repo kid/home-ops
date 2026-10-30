@@ -2,7 +2,7 @@ apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: HTTPRouteFilter
 metadata:
   name: mcp-victoriametrics-metadata-mcp
-  namespace: mcp
+  namespace: monitoring
 spec:
   directResponse:
     body:

@@ -2,13 +2,12 @@ apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: mcp-victoriametrics
-  namespace: mcp
+  namespace: monitoring
 spec:
   egress:
     - toEndpoints:
         - matchLabels:
             app.kubernetes.io/name: vmsingle
-            k8s:io.kubernetes.pod.namespace: monitoring
       toPorts:
         - ports:
             - port: "8428"
