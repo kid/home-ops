@@ -6,7 +6,7 @@ metadata:
 spec:
   dependsOn:
     - name: kopiur
-    - name: external-secrets
+    - name: external-secrets-config
   interval: 10m
   path: ./manifests/prd/kopiur-config
   prune: true

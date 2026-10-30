@@ -190,8 +190,9 @@ let
                   default = [ ];
                   description = ''
                     Apps whose Kustomization must be Ready before this app's is
-                    applied: mostly the ones serving a failurePolicy Fail
-                    admission webhook for objects in this app. CRDs need no
+                    applied: the ones serving a failurePolicy Fail admission
+                    webhook for objects in this app, and external-secrets-config
+                    (the store) for an app with ExternalSecrets. CRDs need no
                     entry: the k3s bootstrap applies every app's CRDs first.
                   '';
                 };

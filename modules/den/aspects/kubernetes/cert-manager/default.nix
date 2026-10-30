@@ -124,7 +124,7 @@ _: {
         namespace = "cert-manager";
         flux.dependsOn = [
           "cert-manager"
-          "external-secrets"
+          "external-secrets-config"
         ];
 
         # Standard cert-manager self-signed-root bootstrap: a selfSigned

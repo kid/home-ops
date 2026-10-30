@@ -185,7 +185,7 @@ in
         namespace = "kopiur-system";
         flux.dependsOn = [
           "kopiur"
-          "external-secrets"
+          "external-secrets-config"
         ];
 
         resources.externalSecrets.kopiur-r2 = {

@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    - name: external-secrets
+    - name: external-secrets-config
   interval: 10m
   path: ./manifests/prd/external-dns-cloudflare
   prune: true

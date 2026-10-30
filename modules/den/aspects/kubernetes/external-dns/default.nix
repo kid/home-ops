@@ -27,7 +27,7 @@ in
     {
       applications.external-dns = {
         namespace = "external-dns";
-        flux.dependsOn = [ "external-secrets" ];
+        flux.dependsOn = [ "external-secrets-config" ];
 
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           external-dns-mikrotik = mkPolicy { "app.kubernetes.io/instance" = "external-dns"; } {
