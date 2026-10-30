@@ -19,7 +19,6 @@ spec:
     - fromEndpoints:
         - matchLabels:
             app.kubernetes.io/name: mcp-victorialogs
-            k8s:io.kubernetes.pod.namespace: mcp
       toPorts:
         - ports:
             - port: "9428"

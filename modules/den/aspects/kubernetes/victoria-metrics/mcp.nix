@@ -2,7 +2,7 @@
 # an Envoy JWT check for tokens Kanidm issued to the public `mcp` client. Clients
 # discover it from the RFC 9728 metadata each host serves without auth.
 _: {
-  den.aspects.kubernetes.mcp.k8s-manifests =
+  den.aspects.kubernetes.victoria-metrics-mcp.k8s-manifests =
     {
       cluster,
       lib,
@@ -10,7 +10,6 @@ _: {
     }:
     let
       inherit (cluster.methods) kanidm;
-      namespace = "mcp";
       clientId = "mcp";
       issuer = kanidm.issuer clientId;
       # Matches callbackPort in .mcp.json.
@@ -79,9 +78,7 @@ _: {
       perServer = f: lib.concatMapAttrs f servers;
     in
     {
-      applications.mcp = {
-        inherit namespace;
-
+      applications.victoria-metrics = {
         resources = {
           ciliumNetworkPolicies =
             with cluster.methods.netpol;
@@ -89,7 +86,7 @@ _: {
               name: server: {
                 ${name} = mkPolicy (labels name) {
                   ingress = [ (gatewayIngress port) ];
-                  egress = [ (toNamespace "monitoring" (labels server.backend.name) [ server.backend.port ]) ];
+                  egress = [ (toPods (labels server.backend.name) [ server.backend.port ]) ];
                 };
               }
             );

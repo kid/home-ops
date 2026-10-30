@@ -2,7 +2,7 @@ apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
 metadata:
   name: mcp
-  namespace: mcp
+  namespace: monitoring
 spec:
   jwt:
     providers:
