@@ -11,6 +11,7 @@ spec:
   honorLabels: true
   honorTimestamps: false
   interval: 30s
+  max_scrape_size: 64MiB
   metricRelabelConfigs:
     - action: labeldrop
       regex: (uid)

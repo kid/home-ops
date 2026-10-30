@@ -36,6 +36,7 @@ _: {
       charts,
       generators,
       cluster,
+      config,
       lib,
       k3s-nodes ? [ ],
       ...
@@ -52,6 +53,11 @@ _: {
       # keep their own families plus the process-level ones their dashboards use.
       processMetrics = "rest_client|process|go";
 
+      # That registry outgrows vmagent's default 16 MiB limit: its apiserver
+      # histograms gain series until k3s restarts. The limit applies to the
+      # raw body, before any metricRelabelConfigs.
+      maxScrapeSize = "64MiB";
+
       mkStaticScrapeEndpoint =
         {
           job,
@@ -64,6 +70,7 @@ _: {
           bearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token";
           scheme = "https";
           tlsConfig.insecureSkipVerify = true;
+          max_scrape_size = maxScrapeSize;
           metricRelabelConfigs = [
             {
               action = "keep";
@@ -173,6 +180,8 @@ _: {
               cpu = "10m";
               memory = "64Mi";
             };
+
+            kubelet.vmScrapes.kubelet.spec.max_scrape_size = maxScrapeSize;
 
             # The kubelet port of a k3s server serves the same whole-process
             # registry as the apiserver job; drop the other components'
@@ -343,6 +352,26 @@ _: {
               limits.memory = "128Mi";
             };
           };
+
+          # The chart's apiserver endpoints, plus max_scrape_size. Composes
+          # with the default transformer, which a release's own replaces.
+          transformer =
+            manifests:
+            map (
+              m:
+              if m.kind == "VMServiceScrape" && m.metadata.name == "victoria-metrics-kube-api-server" then
+                lib.updateManyAttrsByPath [
+                  {
+                    path = [
+                      "spec"
+                      "endpoints"
+                    ];
+                    update = map (e: e // { max_scrape_size = maxScrapeSize; });
+                  }
+                ] m
+              else
+                m
+            ) (config.nixidy.defaults.helm.transformer manifests);
         };
 
         resources.vmStaticScrapes.k3s-control-plane.spec.targetEndpoints = [
