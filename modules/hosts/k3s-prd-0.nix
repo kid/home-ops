@@ -28,8 +28,6 @@
 
     # nixos-anywhere puts the key from secrets/hosts/k3s-prd-0 in place.
     services.openssh.generateHostKeys = false;
-
-    system.stateVersion = "26.05";
   };
 
   den.aspects.k3s-prd-0.includes = [

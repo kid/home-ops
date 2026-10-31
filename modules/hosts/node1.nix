@@ -68,8 +68,6 @@
     # ZFS only. LVM would otherwise scan the Incus zvols and try to
     # activate the volume groups the guests created on them.
     services.lvm.enable = false;
-
-    system.stateVersion = "26.05";
   };
 
   den.aspects.node1.includes = [

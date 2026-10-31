@@ -22,8 +22,6 @@
 
       # Throwaway box, console-only: fixed known password for smoke-testing.
       users.users.root.initialPassword = "root";
-
-      system.stateVersion = "26.05";
     };
 
   den.aspects.test-vm.includes = [
