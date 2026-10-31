@@ -8,7 +8,7 @@ let
   clientId = "kube_login";
 in
 {
-  # Shared by the Kanidm client below, the k3s API server flags and modules/flake/docs.nix.
+  # Shared by the Kanidm client below, the k3s API server flags and modules/flake/kube-login.nix.
   den.clusters.prd.methods.kubeLogin = {
     inherit clientId;
     group = "admins";
