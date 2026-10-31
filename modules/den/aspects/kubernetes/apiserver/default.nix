@@ -77,6 +77,8 @@ in
             "http://localhost:8000"
             "http://localhost:18000"
           ];
+          # preferred_username is the short name (kube-apiserver's username claim, services/k3s/oidc.nix).
+          preferShortUsername = true;
           scopeMap = [
             {
               group = cluster.methods.kubeLogin.group;

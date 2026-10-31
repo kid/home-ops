@@ -11,6 +11,7 @@ spec:
     name: idm
     namespace: kanidm
   origin: http://localhost:8000
+  preferShortUsername: true
   public: true
   redirectUrl:
     - http://localhost:8000
