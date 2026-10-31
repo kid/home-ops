@@ -111,6 +111,13 @@ inputs = {
         dst_port    = 8729
         protocol    = "tcp"
       },
+      {
+        action      = "accept"
+        comment     = "Allow Alertmanager to Home Assistant webhooks"
+        dst_address = "10.0.10.101"
+        dst_port    = 8123
+        protocol    = "tcp"
+      },
     ]
     Management = [
       {

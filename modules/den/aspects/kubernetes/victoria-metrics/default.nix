@@ -1,4 +1,27 @@
-_: {
+{ config, ... }:
+let
+  haAddr = config.den.devices.homeassistant.address;
+  haWebhooksDir = "/etc/vm/secrets/alertmanager-homeassistant";
+in
+{
+  # Alertmanager → Home Assistant webhooks. See modules/den/quirks/firewall.nix.
+  den.aspects.kubernetes.victoria-metrics.firewall =
+    { cluster, ... }:
+    [
+      {
+        inherit (cluster) network;
+        forward = [
+          {
+            action = "accept";
+            dst_address = haAddr;
+            dst_port = 8123;
+            protocol = "tcp";
+            comment = "Allow Alertmanager to Home Assistant webhooks";
+          }
+        ];
+      }
+    ];
+
   # Host ports vmagent scrapes: node-exporter on every node, and the
   # control-plane components of the static scrapes below.
   den.aspects.kubernetes.victoria-metrics.firewall-ports = _: [
@@ -149,7 +172,15 @@ _: {
             };
             vmalert = mkPolicy (app "vmalert") { ingress = [ (gatewayIngress 8080) ]; };
             # Their config-reloader sidecars watch the config Secret.
-            vmalertmanager = mkPolicy (app "vmalertmanager") { egress = [ apiserverEgress ]; };
+            vmalertmanager = mkPolicy (app "vmalertmanager") {
+              egress = [
+                apiserverEgress
+                {
+                  toCIDR = [ "${haAddr}/32" ];
+                  toPorts = tcp [ 8123 ];
+                }
+              ];
+            };
             vmauth = mkPolicy (app "vmauth") { egress = [ apiserverEgress ]; };
           };
 
@@ -341,12 +372,76 @@ _: {
               limits.memory = "64Mi";
             };
 
-            alertmanager.spec.resources = {
-              requests = {
-                cpu = "10m";
-                memory = "64Mi";
+            alertmanager = {
+              spec = {
+                resources = {
+                  requests = {
+                    cpu = "10m";
+                    memory = "64Mi";
+                  };
+                  limits.memory = "128Mi";
+                };
+                # Mounted at /etc/vm/secrets/<name>/.
+                secrets = [ "alertmanager-homeassistant" ];
               };
-              limits.memory = "128Mi";
+
+              # Home Assistant automations turn the webhooks into phone
+              # notifications; Watchdog's heartbeat restarts an HA timer that
+              # alerts when it stops. A list replaces the chart's, so the
+              # default blackhole receiver is restated.
+              config = {
+                route = {
+                  receiver = "blackhole";
+                  group_by = [
+                    "alertname"
+                    "namespace"
+                  ];
+                  routes = [
+                    {
+                      matchers = [ ''alertname="Watchdog"'' ];
+                      receiver = "ha-watchdog";
+                      group_wait = "0s";
+                      group_interval = "1m";
+                      repeat_interval = "5m";
+                    }
+                    {
+                      matchers = [ ''severity=~"critical|warning"'' ];
+                      receiver = "homeassistant";
+                    }
+                  ];
+                };
+                inhibit_rules = [
+                  {
+                    source_matchers = [ ''severity="critical"'' ];
+                    target_matchers = [ ''severity="warning"'' ];
+                    equal = [
+                      "alertname"
+                      "namespace"
+                    ];
+                  }
+                ];
+                receivers = [
+                  { name = "blackhole"; }
+                  {
+                    name = "homeassistant";
+                    webhook_configs = [
+                      {
+                        url_file = "${haWebhooksDir}/alerts";
+                        send_resolved = true;
+                      }
+                    ];
+                  }
+                  {
+                    name = "ha-watchdog";
+                    webhook_configs = [
+                      {
+                        url_file = "${haWebhooksDir}/watchdog";
+                        send_resolved = false;
+                      }
+                    ];
+                  }
+                ];
+              };
             };
           };
 
@@ -419,6 +514,34 @@ _: {
               vlsingle = "logs";
               vmalert = "vmalert";
             };
+
+        # 1Password holds only the webhook IDs; HA's address stays in Nix.
+        resources.externalSecrets.alertmanager-homeassistant = {
+          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+          spec = {
+            secretStoreRef = {
+              name = "onepassword";
+              kind = "ClusterSecretStore";
+            };
+            target = {
+              name = "alertmanager-homeassistant";
+              template.data = {
+                alerts = "http://${haAddr}:8123/api/webhook/{{ .alerts }}";
+                watchdog = "http://${haAddr}:8123/api/webhook/{{ .watchdog }}";
+              };
+            };
+            data = [
+              {
+                secretKey = "alerts";
+                remoteRef.key = "alertmanager-homeassistant/alerts-webhook-id";
+              }
+              {
+                secretKey = "watchdog";
+                remoteRef.key = "alertmanager-homeassistant/watchdog-webhook-id";
+              }
+            ];
+          };
+        };
 
         resources.grafanaDatasources.victoria-metrics.spec = {
           instanceSelector.matchLabels.dashboards = "grafana";
