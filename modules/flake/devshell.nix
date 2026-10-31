@@ -53,6 +53,7 @@ _: {
           ++ [
             config.packages.nixos-anywhere-install
             config.packages.provision-host-key
+            config.packages.kube-login
             config.packages.provision-k3s-token
             config.packages.write-manifests
             config.packages.write-terragrunt
