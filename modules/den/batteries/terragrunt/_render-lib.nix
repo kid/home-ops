@@ -7,7 +7,7 @@
 #
 # `hcl.raw text` escapes the renderer for values that must stay a live HCL
 # expression rather than a value pre-computed by Nix — e.g.
-# `"${get_repo_root()}/secrets/prd/routeros.sops.yaml"`, which has to
+# `"${get_repo_root()}/secrets/cloudflare.sops.yaml"`, which has to
 # resolve against the *checkout* Terragrunt is run from, not the Nix store
 # path this flake evaluates in.
 #
