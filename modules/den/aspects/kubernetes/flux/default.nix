@@ -6,9 +6,9 @@
 # Kustomization per app. modules/den/aspects/services/k3s/bootstrap.nix
 # applies this app once on a new cluster; from then on Flux manages it too.
 #
-# The operator also serves the Flux web UI. Envoy Gateway's OIDC
-# (cluster.methods.mkOidcAuth) lets only Kanidm's admins reach it, so the UI
-# runs Anonymous: every request acts as the flux-web-admins group.
+# The operator also serves the Flux web UI, which logs in through Kanidm and
+# acts as the user's own name and groups. Its config, with the client secret
+# Flux substitutes in at apply time, lives in the flux-web app's Secret.
 _: {
   den.aspects.kubernetes.flux.k8s-manifests =
     {
@@ -20,8 +20,11 @@ _: {
     }:
     let
       webPort = 9080;
-      webGroup = "flux-web-admins";
       hostname = cluster.methods.mkAppHostname "flux";
+      origin = "https://${hostname}";
+      clientId = "flux-web";
+      configSecret = "flux-web-config";
+      inherit (cluster.methods) kanidm kubeLogin;
     in
     {
       nixidy.applicationImports = [
@@ -43,7 +46,11 @@ _: {
           {
             flux-operator = mkPolicy { "app.kubernetes.io/name" = "flux-operator"; } {
               ingress = [ (gatewayIngress webPort) ];
-              egress = [ apiserverEgress ];
+              egress = [
+                apiserverEgress
+                # Kanidm discovery, JWKS and token calls.
+                gatewayEgress
+              ];
             };
             source-controller = mkPolicy (controller "source-controller") {
               # Artifact downloads.
@@ -67,16 +74,8 @@ _: {
             web = {
               # The CiliumNetworkPolicy above replaces it.
               networkPolicy.create = false;
-              config.authentication = {
-                type = "Anonymous";
-                anonymous = {
-                  # Kubernetes rejects impersonating groups without a user.
-                  username = "flux-web";
-                  groups = [ webGroup ];
-                };
-              };
-              # No metrics-server here: collection only logs errors.
-              config.metrics.disabled = true;
+              # Watched, so the operator picks it up once the flux-web app creates it.
+              configSecretName = configSecret;
             };
             resources = {
               requests = {
@@ -114,32 +113,70 @@ _: {
         };
       };
 
+      # The UI's Kanidm client, separate so flux-web can wait for its credentials Secret.
+      applications.flux-web-client = {
+        namespace = "flux-system";
+        flux.dependsOn = [ "kaniop" ];
+
+        resources.kanidmOAuth2Clients.${clientId}.spec = {
+          kanidmRef = kanidm.ref;
+          displayname = "Flux";
+          inherit origin;
+          redirectUrl = [ "${origin}/oauth2/callback" ];
+          preferShortUsername = true;
+          # The group kubectl's OIDC login is bound to cluster-admin through
+          # (apiserver/default.nix). The UI impersonates it, so it is the
+          # UI's RBAC as well.
+          scopeMap = [
+            {
+              inherit (kubeLogin) group;
+              scopes = [
+                "openid"
+                "profile"
+                "email"
+                "groups_name"
+              ];
+            }
+          ];
+        };
+      };
+
       # Separate from flux-operator so the operator never waits on Kanidm.
       applications.flux-web = {
         namespace = "flux-system";
-        imports = [
-          (cluster.methods.mkOidcAuth {
-            name = "flux-web";
-            httpRouteName = "flux-web";
-            inherit hostname;
-            group = "admins";
-          })
-        ];
+        flux.dependsOn = [ "flux-web-client" ];
+        # kaniop's credentials Secret for the client above.
+        flux.substituteFrom = [ "${clientId}-kanidm-oauth2-credentials" ];
 
-        # The chart's role: read everything, and the UI's actions on Flux objects and workloads.
-        resources.clusterRoleBindings.${webGroup} = {
-          roleRef = {
-            apiGroup = "rbac.authorization.k8s.io";
-            kind = "ClusterRole";
-            name = "flux-web-admin";
+        resources.secrets.${configSecret}.stringData."config.yaml" = builtins.toJSON {
+          apiVersion = "web.fluxcd.controlplane.io/v1";
+          kind = "Config";
+          spec = {
+            baseURL = origin;
+            authentication = {
+              type = "OAuth2";
+              oauth2 = {
+                provider = "OIDC";
+                clientID = clientId;
+                clientSecret = "\${CLIENT_SECRET}";
+                issuerURL = kanidm.issuer clientId;
+                # groups_name puts plain group names in the groups claim.
+                scopes = [
+                  "openid"
+                  "profile"
+                  "email"
+                  "groups_name"
+                ];
+                autoLogin = true;
+                impersonation = {
+                  username = "claims.preferred_username";
+                  groups = "claims.groups";
+                };
+              };
+            };
+            # No metrics-server here: collection only logs errors.
+            metrics.disabled = true;
           };
-          subjects = [
-            {
-              apiGroup = "rbac.authorization.k8s.io";
-              kind = "Group";
-              name = webGroup;
-            }
-          ];
         };
 
         resources.httpRoutes.flux-web.spec = {

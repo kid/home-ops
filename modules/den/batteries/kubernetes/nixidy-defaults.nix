@@ -147,6 +147,12 @@ let
                   dependsOn = lib.mkIf (app.flux.dependsOn != [ ]) (
                     map (dep: { name = dep; }) (lib.unique app.flux.dependsOn)
                   );
+                  postBuild = lib.mkIf (app.flux.substituteFrom != [ ]) {
+                    substituteFrom = map (secret: {
+                      kind = "Secret";
+                      name = secret;
+                    }) app.flux.substituteFrom;
+                  };
                 };
               }
             );
@@ -194,6 +200,17 @@ let
                     webhook for objects in this app, and external-secrets-config
                     (the store) for an app with ExternalSecrets. CRDs need no
                     entry: the k3s bootstrap applies every app's CRDs first.
+                  '';
+                };
+                options.flux.substituteFrom = lib.mkOption {
+                  type = lib.types.listOf lib.types.str;
+                  default = [ ];
+                  description = ''
+                    Secrets in flux-system whose keys Flux substitutes for
+                    ''${KEY} in this app's manifests at apply time: values that
+                    only exist in-cluster and must end up inside another
+                    object. Every ''${...} in the app is substituted, so it
+                    must not carry any other.
                   '';
                 };
               }

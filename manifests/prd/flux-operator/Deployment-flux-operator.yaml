@@ -14,7 +14,6 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/web-config: 19d0d636d688baaeaf3a4ee00587159ead2173feb8ac0412a21a87b743f7bc4a
         prometheus.io/path: /metrics
         prometheus.io/port: "8080"
         prometheus.io/scrape: "true"
@@ -34,7 +33,7 @@ spec:
       containers:
         - args:
             - --log-level=info
-            - --web-config=/etc/flux-operator/web/config.yaml
+            - --web-config-secret-name=flux-web-config
           env:
             - name: RUNTIME_NAMESPACE
               valueFrom:
@@ -88,13 +87,7 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: temp
-            - mountPath: /etc/flux-operator/web
-              name: web-config
-              readOnly: true
       serviceAccountName: flux-operator
       volumes:
         - emptyDir: {}
           name: temp
-        - name: web-config
-          secret:
-            secretName: flux-operator-web-config

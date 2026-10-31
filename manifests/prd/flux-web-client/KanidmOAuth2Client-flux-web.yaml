@@ -4,12 +4,12 @@ metadata:
   name: flux-web
   namespace: flux-system
 spec:
-  disableConsentPrompt: true
-  displayname: flux-web
+  displayname: Flux
   kanidmRef:
     name: idm
     namespace: kanidm
   origin: https://flux.kidibox.net
+  preferShortUsername: true
   redirectUrl:
     - https://flux.kidibox.net/oauth2/callback
   scopeMap:
@@ -18,6 +18,4 @@ spec:
         - openid
         - profile
         - email
-  secretKeyAliases:
-    clientSecret:
-      - client-secret
+        - groups_name

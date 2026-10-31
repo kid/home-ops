@@ -5,9 +5,13 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    - name: kaniop
+    - name: flux-web-client
   interval: 10m
   path: ./manifests/prd/flux-web
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: flux-web-kanidm-oauth2-credentials
   prune: true
   retryInterval: 1m
   sourceRef:
