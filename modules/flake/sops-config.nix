@@ -16,15 +16,20 @@ let
   # Every registry user's sshKeys, not just kid's — a service account has
   # none, so this naturally stays human-only without singling out a user
   # by name.
-  humanKeys = lib.unique (lib.concatMap (u: u.sshKeys) (lib.attrValues config.den.users.registry));
+  humanKeys =
+    config.den.users.registry
+    |> lib.attrValues
+    |> lib.concatMap (u: u.sshKeys)
+    |> lib.unique;
 
   secretsDir = ../../secrets;
   hostPubKeyPath = host: secretsDir + "/hosts/${host}/ssh_host_ed25519_key.pub";
   hostAgePubKeyPath = host: secretsDir + "/hosts/${host}/ssh_host_ed25519_key.age-pub";
 
-  hostNames = lib.unique (
-    lib.concatMap (system: builtins.attrNames (config.den.hosts.${system} or { })) config.systems
-  );
+  hostNames =
+    config.systems
+    |> lib.concatMap (system: builtins.attrNames (config.den.hosts.${system} or { }))
+    |> lib.unique;
 
   # A host without a committed key yet (not provisioned via
   # provision-host-key) just doesn't get a rule — no error.
@@ -34,7 +39,7 @@ let
     path_regex = "secrets/hosts/${host}/.*";
     key_groups = [
       {
-        age = humanKeys ++ [ (lib.removeSuffix "\n" (builtins.readFile (hostPubKeyPath host))) ];
+        age = humanKeys ++ [ (builtins.readFile (hostPubKeyPath host) |> lib.removeSuffix "\n") ];
       }
     ];
   };
@@ -56,13 +61,13 @@ let
   # that.
   clusterMemberHostKeys =
     cluster:
-    map (host: lib.removeSuffix "\n" (builtins.readFile (hostAgePubKeyPath host))) (
-      builtins.filter (
-        host:
-        (allHosts.${host}.k3s.clusterName or null) == cluster
-        && builtins.pathExists (hostAgePubKeyPath host)
-      ) provisionedHosts
-    );
+    provisionedHosts
+    |> builtins.filter (
+      host:
+      (allHosts.${host}.k3s.clusterName or null) == cluster
+      && builtins.pathExists (hostAgePubKeyPath host)
+    )
+    |> map (host: builtins.readFile (hostAgePubKeyPath host) |> lib.removeSuffix "\n");
 
   clusterRule = cluster: {
     path_regex = "secrets/clusters/${cluster}/.*";

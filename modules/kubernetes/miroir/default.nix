@@ -91,8 +91,9 @@ _: {
           };
         };
 
-        resources.miroirNodes = lib.listToAttrs (
-          map (
+        resources.miroirNodes =
+          miroir-nodes
+          |> map (
             n:
             lib.nameValuePair n.hostname {
               spec.pools = [
@@ -103,8 +104,8 @@ _: {
                 }
               ];
             }
-          ) miroir-nodes
-        );
+          )
+          |> lib.listToAttrs;
 
         resources.volumeSnapshotClasses.miroir = {
           metadata.annotations."snapshot.storage.kubernetes.io/is-default-class" = "true";

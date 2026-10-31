@@ -23,7 +23,7 @@ let
 
   renderKey = k: if isBareIdent k then k else quoteString k;
 
-  indentStr = depth: lib.concatStrings (lib.replicate depth "  ");
+  indentStr = depth: lib.replicate depth "  " |> lib.concatStrings;
 
   render =
     depth: value:

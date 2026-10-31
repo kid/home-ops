@@ -47,22 +47,23 @@ let
   # empirically); skip anything without one.
   instantiateStacks =
     modules: specialArgs:
-    lib.listToAttrs (
-      map (
-        m:
-        let
-          evaluated = lib.evalModules {
-            modules = [
-              (builtins.head m.imports)
-              { _module.freeformType = lib.types.attrsOf lib.types.raw; }
-            ];
-            inherit specialArgs;
-          };
-          content = evaluated.config;
-        in
-        lib.nameValuePair content.stack (removeAttrs content [ "stack" ])
-      ) (builtins.filter (m: m ? key) modules)
-    );
+    modules
+    |> builtins.filter (m: m ? key)
+    |> map (
+      m:
+      let
+        evaluated = lib.evalModules {
+          modules = [
+            (builtins.head m.imports)
+            { _module.freeformType = lib.types.attrsOf lib.types.raw; }
+          ];
+          inherit specialArgs;
+        };
+        content = evaluated.config;
+      in
+      lib.nameValuePair content.stack (removeAttrs content [ "stack" ])
+    )
+    |> lib.listToAttrs;
 in
 {
   den.reservedKeys = [ "terragruntInputs" ];

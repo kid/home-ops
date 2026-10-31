@@ -33,11 +33,12 @@ let
         # trust-manager) don't both own the same object. Apps don't set
         # createNamespace themselves — this replaces nixidy's own per-app
         # handling of it.
-        namespacesToCreate = lib.unique (
-          lib.filter (ns: !(builtins.elem ns systemNamespaces)) (
-            map (app: app.namespace) (lib.attrValues config.applications)
-          )
-        );
+        namespacesToCreate =
+          config.applications
+          |> lib.attrValues
+          |> map (app: app.namespace)
+          |> lib.filter (ns: !(builtins.elem ns systemNamespaces))
+          |> lib.unique;
 
         helmLabels = [
           "app.kubernetes.io/managed-by"
@@ -100,7 +101,7 @@ let
           in
           if !(manifest ? metadata.annotations."helm.sh/hook") then
             manifest
-          else if !(lib.all (h: builtins.elem (lib.trim h) installHooks) (lib.splitString "," hook)) then
+          else if !(hook |> lib.splitString "," |> lib.all (h: builtins.elem (lib.trim h) installHooks)) then
             throw "${manifest.kind}/${manifest.metadata.name} is a Helm ${hook} hook: disable it in the chart's values"
           else if manifest.kind == "Job" then
             lib.recursiveUpdate (plain // { spec = removeAttrs plain.spec [ "ttlSecondsAfterFinished" ]; }) {
@@ -145,7 +146,11 @@ let
                   prune = true;
                   wait = true;
                   dependsOn = lib.mkIf (app.flux.dependsOn != [ ]) (
-                    map (dep: { name = dep; }) (lib.unique app.flux.dependsOn)
+                    app.flux.dependsOn
+                    |> lib.unique
+                    |> map (dep: {
+                      name = dep;
+                    })
                   );
                   postBuild = lib.mkIf (app.flux.substituteFrom != [ ]) {
                     substituteFrom = map (secret: {
@@ -216,7 +221,7 @@ let
               }
             )
           ];
-          defaults.helm.transformer = map (manifest: unhook (stripHelmLabels manifest));
+          defaults.helm.transformer = map (manifest: manifest |> stripHelmLabels |> unhook);
         };
       };
   };

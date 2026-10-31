@@ -25,13 +25,16 @@
     let
       merged = lib.foldl' lib.recursiveUpdate { } datasets;
 
-      mountedFileSystems = lib.mapAttrs' (
-        name: v:
-        lib.nameValuePair v.mountpoint {
-          device = name;
-          fsType = "zfs";
-        }
-      ) (lib.filterAttrs (_: v: v ? mountpoint) merged);
+      mountedFileSystems =
+        merged
+        |> lib.filterAttrs (_: v: v ? mountpoint)
+        |> lib.mapAttrs' (
+          name: v:
+          lib.nameValuePair v.mountpoint {
+            device = name;
+            fsType = "zfs";
+          }
+        );
     in
     {
       disko.zfs.settings.datasets = lib.mapAttrs (_: v: { properties = v.properties or { }; }) merged;

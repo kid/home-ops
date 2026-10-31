@@ -11,7 +11,7 @@
     (
       { host, user }:
       let
-        posixGroups = acl.labelled "posix" (acl.closure user.groups);
+        posixGroups = user.groups |> acl.closure |> acl.labelled "posix";
       in
       {
         name = "define-user/${user.userName}@${host.name}";

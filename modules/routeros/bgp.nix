@@ -75,11 +75,11 @@ in
 
         # Drop hosts with no real K3s-VLAN address (e.g. test-vm, a
         # throwaway QEMU smoke-test host — see k3s.nix's k3s-nodes quirk).
-        nodes = lib.listToAttrs (
-          map (n: lib.nameValuePair n.hostname { ip_address = n.address; }) (
-            lib.filter (n: n.address != null) k3s-nodes
-          )
-        );
+        nodes =
+          k3s-nodes
+          |> lib.filter (n: n.address != null)
+          |> map (n: lib.nameValuePair n.hostname { ip_address = n.address; })
+          |> lib.listToAttrs;
       in
       {
         stack = "bgp";

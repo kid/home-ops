@@ -29,11 +29,11 @@
           && (builtins.tryEval kernelPackages).success
           && !kernelPackages.drbd.meta.broken
         ) pkgs.linuxKernel.packages;
-        latestKernelPackages = lib.last (
-          lib.sort (a: b: lib.versionOlder a.kernel.version b.kernel.version) (
-            builtins.attrValues compatibleKernelPackages
-          )
-        );
+        latestKernelPackages =
+          compatibleKernelPackages
+          |> builtins.attrValues
+          |> lib.sort (a: b: lib.versionOlder a.kernel.version b.kernel.version)
+          |> lib.last;
       in
       {
         # Note this might jump back and forth as kernels are added or removed.

@@ -103,9 +103,11 @@ let
           };
         };
         storage_pool = "default";
-        ssh_authorized_keys = lib.unique (
-          lib.concatMap (u: u.sshKeys) (lib.attrValues config.den.users.registry)
-        );
+        ssh_authorized_keys =
+          config.den.users.registry
+          |> lib.attrValues
+          |> lib.concatMap (u: u.sshKeys)
+          |> lib.unique;
       };
     };
   };

@@ -32,13 +32,17 @@
       checks.manifests =
         pkgs.runCommandLocal "manifests-check" { nativeBuildInputs = [ pkgs.diffutils ]; }
           (
-            lib.concatStringsSep "\n" (
-              lib.mapAttrsToList (_: env: ''
-                if ! diff -rq --exclude='SopsSecret-*.yaml' "${self}/${targetDirFor env}" "${env.environmentPackage}"; then
-                  echo "${targetDirFor env} is stale — run: nix run .#write-manifests" >&2
-                  exit 1
-                fi
-              '') envs
+            (
+              envs
+              |> lib.mapAttrsToList (
+                _: env: ''
+                  if ! diff -rq --exclude='SopsSecret-*.yaml' "${self}/${targetDirFor env}" "${env.environmentPackage}"; then
+                    echo "${targetDirFor env} is stale — run: nix run .#write-manifests" >&2
+                    exit 1
+                  fi
+                ''
+              )
+              |> lib.concatStringsSep "\n"
             )
             + "\ntouch $out"
           );
@@ -57,30 +61,34 @@
             skip_secrets=1
           fi
         ''
-        + lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (name: env: ''
-            echo "==> Writing ${name} manifests to ${targetDirFor env}..."
-            mkdir -p "${targetDirFor env}"
-            if [[ "$skip_secrets" == 1 ]]; then
-              rsync -rlL --checksum --delete --exclude='SopsSecret-*.yaml' --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
-            else
-              rsync -rlL --checksum --delete --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
+        + (
+          envs
+          |> lib.mapAttrsToList (
+            name: env: ''
+              echo "==> Writing ${name} manifests to ${targetDirFor env}..."
+              mkdir -p "${targetDirFor env}"
+              if [[ "$skip_secrets" == 1 ]]; then
+                rsync -rlL --checksum --delete --exclude='SopsSecret-*.yaml' --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
+              else
+                rsync -rlL --checksum --delete --chmod=Du+w,Fu+w "${env.environmentPackage}/" "${targetDirFor env}/"
 
-              echo "==> Encrypting SopsSecret values for ${name}..."
-              while IFS= read -r -d "" f; do
-                namespace=$(yq -r '.metadata.namespace' "$f")
-                secretName=$(yq -r '.metadata.name' "$f")
-                valueFile="secrets/clusters/${name}/$namespace/$secretName.sops.json"
-                if [ -f "$valueFile" ]; then
-                  value=$(sops --decrypt --input-type json --output-type json "$valueFile")
-                  # shellcheck disable=SC2016 # $v is a jq variable, not a shell one
-                  yq -y --argjson v "$value" '.spec.secrets[0].stringData = $v' "$f" > "$f.tmp"
-                  mv "$f.tmp" "$f"
-                fi
-                sops --encrypt --input-type yaml --output-type yaml -i "$f"
-              done < <(find "${targetDirFor env}" -name 'SopsSecret-*.yaml' -print0)
-            fi
-          '') envs
+                echo "==> Encrypting SopsSecret values for ${name}..."
+                while IFS= read -r -d "" f; do
+                  namespace=$(yq -r '.metadata.namespace' "$f")
+                  secretName=$(yq -r '.metadata.name' "$f")
+                  valueFile="secrets/clusters/${name}/$namespace/$secretName.sops.json"
+                  if [ -f "$valueFile" ]; then
+                    value=$(sops --decrypt --input-type json --output-type json "$valueFile")
+                    # shellcheck disable=SC2016 # $v is a jq variable, not a shell one
+                    yq -y --argjson v "$value" '.spec.secrets[0].stringData = $v' "$f" > "$f.tmp"
+                    mv "$f.tmp" "$f"
+                  fi
+                  sops --encrypt --input-type yaml --output-type yaml -i "$f"
+                done < <(find "${targetDirFor env}" -name 'SopsSecret-*.yaml' -print0)
+              fi
+            ''
+          )
+          |> lib.concatStringsSep "\n"
         );
       };
 

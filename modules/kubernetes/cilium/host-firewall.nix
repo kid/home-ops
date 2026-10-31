@@ -37,21 +37,25 @@
 
       mkIngress =
         ports:
-        lib.mapAttrsToList (_: group: {
-          fromEntities = (builtins.head group).from;
-          toPorts = [
-            {
-              ports = map (
-                p:
-                {
-                  port = toString p.port;
-                  inherit (p) protocol;
-                }
-                // lib.optionalAttrs (p ? endPort) { inherit (p) endPort; }
-              ) group;
-            }
-          ];
-        }) (lib.groupBy (p: lib.concatStringsSep "," (lib.sort lib.lessThan p.from)) ports);
+        ports
+        |> lib.groupBy (p: p.from |> lib.sort lib.lessThan |> lib.concatStringsSep ",")
+        |> lib.mapAttrsToList (
+          _: group: {
+            fromEntities = (builtins.head group).from;
+            toPorts = [
+              {
+                ports = map (
+                  p:
+                  {
+                    port = toString p.port;
+                    inherit (p) protocol;
+                  }
+                  // lib.optionalAttrs (p ? endPort) { inherit (p) endPort; }
+                ) group;
+              }
+            ];
+          }
+        );
 
       # nodeSelector, not podSelector/endpointSelector — the shape Cilium's host firewall uses.
       # It matches the host endpoint's labels, not the Node object's: Cilium's
@@ -94,6 +98,7 @@
       ];
     in
     {
-      applications.cilium.yamls = map builtins.toJSON (lib.filter (p: p.spec.ingress != [ ]) policies);
+      applications.cilium.yamls =
+        policies |> lib.filter (p: p.spec.ingress != [ ]) |> map builtins.toJSON;
     };
 }

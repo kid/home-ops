@@ -39,7 +39,9 @@ in
   # environment -> routerosDevices: walk den.routerosDevices whose environment matches.
   den.policies.env-to-routeros-devices =
     { environment, ... }:
-    lib.concatMap (
+    den.routerosDevices
+    |> builtins.attrNames
+    |> lib.concatMap (
       routerosDeviceName:
       let
         routerosDeviceCfg = den.routerosDevices.${routerosDeviceName};
@@ -47,7 +49,7 @@ in
       lib.optionals (routerosDeviceCfg.environment == environment.name) [
         (resolve.to "routerosDevice" { routerosDevice = routerosDeviceCfg; })
       ]
-    ) (builtins.attrNames den.routerosDevices);
+    );
 
   # environment -> networks: walk den.networks whose environment matches.
   # A future entity kind (e.g. a k3s cluster) could contribute its own VLAN
@@ -55,7 +57,9 @@ in
   # that also does `resolve.to "network" {...}` — no edit needed here.
   den.policies.env-to-networks =
     { environment, ... }:
-    lib.concatMap (
+    den.networks
+    |> builtins.attrNames
+    |> lib.concatMap (
       networkName:
       let
         networkCfg = den.networks.${networkName};
@@ -63,12 +67,14 @@ in
       lib.optionals (networkCfg.environment == environment.name) [
         (resolve.to "network" { network = networkCfg; })
       ]
-    ) (builtins.attrNames den.networks);
+    );
 
   # environment -> clusters: walk den.clusters whose environment matches.
   den.policies.env-to-clusters =
     { environment, ... }:
-    lib.concatMap (
+    den.clusters
+    |> builtins.attrNames
+    |> lib.concatMap (
       clusterName:
       let
         clusterCfg = den.clusters.${clusterName};
@@ -76,7 +82,7 @@ in
       lib.optionals (clusterCfg.environment == environment.name) [
         (resolve.to "cluster" { cluster = clusterCfg; })
       ]
-    ) (builtins.attrNames den.clusters);
+    );
 
   # environment -> hosts: resolve and instantiate (nixosConfigurations) every
   # den.hosts entry of this environment. Replaces den's system-to-os-outputs,
@@ -84,13 +90,16 @@ in
   # skipped before their environment is read.
   den.policies.env-to-hosts =
     { environment, ... }:
-    lib.concatMap (
+    den.hosts
+    |> builtins.attrValues
+    |> lib.concatMap builtins.attrValues
+    |> lib.concatMap (
       host:
       lib.optionals (host.intoAttr != [ ] && host.environment == environment.name) [
         (resolve.to "host" { inherit host; })
         (den.lib.policy.instantiate host)
       ]
-    ) (lib.concatMap builtins.attrValues (builtins.attrValues den.hosts));
+    );
 
   den.schema.flake.includes = [ den.policies.to-fleet ];
   den.schema.fleet.includes = [ den.policies.fleet-to-envs ];

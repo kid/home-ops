@@ -38,12 +38,15 @@ let
   # one's peer and stays a standalone server.
   serversOf =
     clusterName:
-    lib.filter (
+    allHosts
+    |> builtins.attrNames
+    |> lib.sort lib.lessThan
+    |> lib.filter (
       name:
       (allHosts.${name}.k3s.clusterName or null) == clusterName
       && !(allHosts.${name}.k3s ? serverHost)
       && config.den.devices ? ${name}
-    ) (lib.sort lib.lessThan (builtins.attrNames allHosts));
+    );
 in
 {
   den.aspects.k3s-server = {

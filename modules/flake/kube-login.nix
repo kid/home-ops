@@ -24,9 +24,10 @@ let
   nodeAddress =
     name:
     let
-      members = builtins.filter (host: (allHosts.${host}.k3s.clusterName or null) == name) (
-        builtins.attrNames allHosts
-      );
+      members =
+        allHosts
+        |> builtins.attrNames
+        |> builtins.filter (host: (allHosts.${host}.k3s.clusterName or null) == name);
     in
     config.den.devices.${builtins.head members}.address;
 
@@ -45,7 +46,7 @@ let
         ;;
     '';
 
-  known = lib.concatStringsSep " " (builtins.attrNames clusters);
+  known = clusters |> builtins.attrNames |> lib.concatStringsSep " ";
 in
 {
   perSystem =
@@ -61,7 +62,7 @@ in
           cluster=''${1:?usage: kube-login <cluster> (known: ${known})}
 
           case "$cluster" in
-          ${lib.concatStrings (lib.mapAttrsToList caseArm clusters)}
+          ${clusters |> lib.mapAttrsToList caseArm |> lib.concatStrings}
           *)
             echo "kube-login: unknown cluster '$cluster' (known: ${known})" >&2
             exit 1
