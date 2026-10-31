@@ -69,7 +69,11 @@ _: {
               networkPolicy.create = false;
               config.authentication = {
                 type = "Anonymous";
-                anonymous.groups = [ webGroup ];
+                anonymous = {
+                  # Kubernetes rejects impersonating groups without a user.
+                  username = "flux-web";
+                  groups = [ webGroup ];
+                };
               };
               # No metrics-server here: collection only logs errors.
               config.metrics.disabled = true;
