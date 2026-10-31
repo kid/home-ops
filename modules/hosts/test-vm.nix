@@ -14,22 +14,14 @@
   den.aspects.test-vm.nixos =
     { lib, ... }:
     {
-      boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
-      networking.hostId = lib.mkDefault "deadbeef";
+      networking.hostId = "deadbeef";
       networking.hostName = "test-vm";
       networking.useDHCP = lib.mkDefault true;
 
-      users.mutableUsers = false;
       # Throwaway box, console-only: fixed known password for smoke-testing.
       users.users.root.initialPassword = "root";
-      security.sudo.enable = true;
-      security.sudo.wheelNeedsPassword = false;
-
-      services.openssh.enable = true;
-
-      system.stateVersion = "26.05";
     };
 
   den.aspects.test-vm.includes = [

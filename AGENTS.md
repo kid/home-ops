@@ -61,6 +61,13 @@ generic NixOS host aspects
 `services/k3s/`), alongside isolated, namespaced subtrees for Kubernetes
 workloads (`modules/kubernetes/`, `den.aspects.kubernetes.<app>`) and
 RouterOS stacks (`modules/routeros/`, `den.aspects.routeros.<x>`).
+`den.aspects.base` imports srvos's `server` profile (`github:nix-community/srvos`)
+and its `nix-experimental`, `systemd-boot` and `terminfo` mixins into every real
+host (not the integration-test fixtures): sshd, sudo, nix-daemon, networkd, boot
+loader, watchdog and ZFS defaults come from there, so check srvos before adding a
+generic NixOS setting, and override its defaults per host where they don't fit (node1's
+`hostId`, serial consoles and `zfs.autoSnapshot`). node1 also takes the
+`latest-zfs-kernel` mixin.
 
 - **Entities**: `environment`, `network`, `routerosDevice`, `cluster`, plus den's built-in `host`. Each is declared as a registry under `den.<kind>s` (schema in `modules/den/schema/*.nix`), instantiated in `modules/{environments,networks}.nix` or per-instance files under `modules/{routerosDevices,clusters,hosts}/`.
 - **Scope tree** (`modules/den/policies/fleet.nix`): `flake -> fleet -> environment -> {network, routerosDevice, cluster, host}`, walked via `den.lib.policy.resolve.to`. Hosts resolve (and instantiate into `nixosConfigurations`) under their `environment` (`env-to-hosts`, replacing den's `system-to-os-outputs`), so every `den.hosts` entry needs `environment`, test-only `intoAttr = [ ]` hosts excepted.

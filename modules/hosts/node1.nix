@@ -1,4 +1,9 @@
-{ den, config, ... }:
+{
+  den,
+  config,
+  inputs,
+  ...
+}:
 {
   den.hosts.x86_64-linux.node1 = {
     environment = "prd";
@@ -28,46 +33,42 @@
     };
   };
 
-  den.aspects.node1.nixos =
-    { lib, pkgs, ... }:
-    {
-      boot.loader.systemd-boot.enable = true;
-      boot.loader.efi.canTouchEfiVariables = true;
+  den.aspects.node1.nixos = {
+    imports = [ inputs.srvos.nixosModules.mixins-latest-zfs-kernel ];
 
-      # IPMI Serial-over-LAN (`ipmitool sol activate`). The last console=
-      # is the one systemd puts a serial getty on.
-      boot.kernelParams = [
-        "console=tty0"
-        "console=ttyS1,115200n8"
-      ];
+    boot.loader.efi.canTouchEfiVariables = true;
 
-      networking.hostId = lib.mkDefault "795500d2";
+    # IPMI Serial-over-LAN (`ipmitool sol activate`). The last console=
+    # is the one systemd puts a serial getty on.
+    srvos.boot.consoles = [
+      "tty0"
+      "ttyS1,115200n8"
+    ];
 
-      networking.hostName = "node1";
-      networking.useDHCP = false;
-      networking.useNetworkd = true;
+    # The pool's hostid; srvos's mkDefault would need a force import.
+    networking.hostId = "795500d2";
 
-      systemd.network.networks = {
-        "10-trunk" = {
-          matchConfig.Name = "enp36s0f1";
-          networkConfig.DHCP = "yes";
-          linkConfig.MTUBytes = den.networks.Storage.mtu;
-        };
+    networking.hostName = "node1";
+    networking.useDHCP = false;
+
+    systemd.network.networks = {
+      "10-trunk" = {
+        matchConfig.Name = "enp36s0f1";
+        networkConfig.DHCP = "yes";
+        linkConfig.MTUBytes = den.networks.Storage.mtu;
       };
-
-      time.timeZone = "UTC";
-      i18n.defaultLocale = "en_US.UTF-8";
-
-      users.mutableUsers = false;
-
-      # ZFS only. LVM would otherwise scan the Incus zvols and try to
-      # activate the volume groups the guests created on them.
-      services.lvm.enable = false;
-
-      system.stateVersion = "26.05";
-
-      environment.systemPackages = [ pkgs.htop ];
     };
+
+    i18n.defaultLocale = "en_US.UTF-8";
+
+    # srvos's default would also snapshot the Incus zvols holding the k3s
+    # VM disks and miroir's thin pools.
+    services.zfs.autoSnapshot.enable = false;
+
+    # ZFS only. LVM would otherwise scan the Incus zvols and try to
+    # activate the volume groups the guests created on them.
+    services.lvm.enable = false;
+  };
 
   den.aspects.node1.includes = [
     den.aspects.base
@@ -76,7 +77,6 @@
     den.aspects.impermanence.tmpfs
     den.aspects.incus
     den.aspects.power-saving
-    den.aspects.ssh
   ];
 
   fleet.colmena.deployment.node1 = {
