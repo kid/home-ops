@@ -21,6 +21,7 @@ in
 {
   den.routerosDevices.crs320 = {
     environment = "prd";
+    system-access-groups = [ "admins" ];
     hostname = "crs320";
     routerosEndpoint = "10.99.0.2";
     certificateAltNames = [
@@ -59,13 +60,12 @@ in
           routeros_endpoint = "10.99.0.2";
 
           # routeros_groups/routeros_users are contributed centrally by
-          # modules/den/aspects/routeros/base.nix, sourced from
-          # den.users.registry/den.groups — not hand-written per device
-          # anymore. Per-user passwords still come from 1Password: admin
-          # reuses op_item_routeros above, every other user needs an item
-          # titled "CRS320 - user - <username>" in vault op_vault.
-          # DO NOT apply with the still-TODO registry group/user data, it
-          # will destroy the users/groups/ssh keys currently on the router.
+          # modules/den/aspects/routeros/base.nix, derived from the
+          # access-control model (system-access-groups above, den.accessGroups,
+          # den.routerosGroups) — not hand-written per device. Per-user
+          # passwords come from 1Password: admin reuses op_item_routeros
+          # above, every other user needs an item titled
+          # "CRS320 - user - <username>" in vault op_vault.
 
           certificate_alt_names = [
             "DNS:crs320"

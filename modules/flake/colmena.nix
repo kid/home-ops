@@ -12,18 +12,19 @@
 let
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
-  # Tags every k3s node gets from den data; hosts add their own on top via
+  # Tags every node gets from den data; hosts add their own on top via
   # fleet.colmena.deployment.<name>.tags.
-  k3sTags =
+  derivedTags =
     name:
     let
-      k3s = allHosts.${name}.k3s or { };
+      host = allHosts.${name};
+      k3s = host.k3s or { };
     in
-    lib.optionals (k3s ? clusterName) [
+    [ "env-${host.environment}" ]
+    ++ lib.optionals (k3s ? clusterName) [
       "k3s"
       "k3s-${k3s.clusterName}"
       (if k3s ? serverHost then "k3s-agent" else "k3s-server")
-      "env-${config.den.clusters.${k3s.clusterName}.environment}"
     ];
 in
 {
@@ -55,7 +56,7 @@ in
       # Two modules, so derived and hand-written tags concatenate.
       imports = config.flake.nixosConfigurations.${name}._module.args.modules ++ [
         { inherit deployment; }
-        { deployment.tags = k3sTags name; }
+        { deployment.tags = derivedTags name; }
       ];
     }) config.fleet.colmena.deployment
   );

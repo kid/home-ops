@@ -1,6 +1,8 @@
 { den, config, ... }:
 {
   den.hosts.x86_64-linux.node1 = {
+    environment = "prd";
+    system-access-groups = [ "admins" ];
     settings.disko.zfs-disk-single.settings.device_id =
       "/dev/disk/by-id/nvme-Force_MP510_21368248000129171009";
   };
@@ -77,14 +79,9 @@
     den.aspects.ssh
   ];
 
-  fleet.user-access.by-host.node1.groups = [ "admin" ];
-
   fleet.colmena.deployment.node1 = {
     targetHost = config.den.devices.node1.address;
-    # Not a k3s node, so nothing is derived; it hosts the prd k3s VMs.
-    tags = [
-      "incus-host"
-      "env-prd"
-    ];
+    # Not a k3s node; it hosts the prd k3s VMs.
+    tags = [ "incus-host" ];
   };
 }

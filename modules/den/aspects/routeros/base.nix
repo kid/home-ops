@@ -6,14 +6,17 @@
 # den's aspect content functions can't see (only entity-kind scope bindings
 # like `routerosDevice` are — see modules/den/batteries/terragrunt/terragrunt-stacks.nix).
 #
-# routeros_users/routeros_groups are merged in here instead, sourced
-# directly from den.users.registry/den.groups (modules/den/schema/users.nix,
-# groups.nix) — plain registry reads, not resolve.to/quirks, since this is a
-# single producer/single consumer relationship the same way
-# den.environments/den.networks are already read directly elsewhere in this
-# repo (see the plan for why the NixOS side, which needs quirks/pipes, is
-# different).
-{ den, lib, ... }:
+# routeros_users/routeros_groups are merged in here instead, derived from
+# the access-control model (modules/den/policies/users.nix): every registry
+# user the device's gates (its environment's plus its own
+# system-access-groups) admit gets an account, in the one `routeros`-labelled
+# group of its closure; custom group policies come from den.routerosGroups.
+{
+  acl,
+  den,
+  lib,
+  ...
+}:
 {
   den.aspects.routeros.base = {
     "terragrunt-stacks" =
@@ -21,9 +24,21 @@
       let
         stack = routerosDevice.aspect.terragruntInputs.base;
 
-        registryUsers = lib.filterAttrs (
-          _: u: u.routerosDevices ? ${routerosDevice.name}
-        ) den.users.registry;
+        groupOf =
+          username: u:
+          let
+            groups = acl.labelled "routeros" (acl.closure u.groups);
+          in
+          if lib.length groups == 1 then
+            lib.head groups
+          else
+            throw "den.users.registry.${username}: admitted to RouterOS device ${routerosDevice.name}, so it needs exactly one routeros-labelled den.accessGroups group, has ${
+              if groups == [ ] then "none" else lib.concatStringsSep ", " groups
+            }";
+
+        registryUsers = lib.mapAttrs (username: u: u // { routerosGroup = groupOf username u; }) (
+          lib.filterAttrs (_: acl.admits (acl.gatesFor routerosDevice)) den.users.registry
+        );
 
         routeros_users = {
           # No password_item: op_item_routeros now names whichever fleet
@@ -33,26 +48,19 @@
         }
         // lib.mapAttrs (
           username: u:
-          let
-            devCfg = u.routerosDevices.${routerosDevice.name};
-            sshKeys = if devCfg.sshKeys == null then u.sshKeys else devCfg.sshKeys;
-          in
           {
-            inherit (devCfg) group;
+            group = u.routerosGroup;
             password_item = "${lib.toUpper routerosDevice.name} - user - ${username}";
           }
-          // lib.optionalAttrs (sshKeys != [ ]) { ssh_keys = sshKeys; }
+          // lib.optionalAttrs (u.sshKeys != [ ]) { ssh_keys = u.sshKeys; }
         ) registryUsers;
 
-        # den.groups is global/non-duplicated, but not every device needs
-        # every group materialized as a RouterOS resource (a device
-        # with no user in a group shouldn't get that group either) — only
-        # emit the groups actually referenced on this device.
-        referencedGroups = lib.unique (
-          lib.mapAttrsToList (_: u: u.routerosDevices.${routerosDevice.name}.group) registryUsers
-        );
+        # Only the custom groups some user on this device is in: built-in
+        # groups have no den.routerosGroups entry, and a device with no user
+        # in a group shouldn't get that group either.
+        referencedGroups = lib.unique (lib.mapAttrsToList (_: u: u.routerosGroup) registryUsers);
         routeros_groups = lib.mapAttrs (_: g: { inherit (g) policies; }) (
-          lib.filterAttrs (name: _: lib.elem name referencedGroups) den.groups
+          lib.filterAttrs (name: _: lib.elem name referencedGroups) den.routerosGroups
         );
       in
       {

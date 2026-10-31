@@ -120,6 +120,7 @@ in
 
   den.clusters.prd = {
     environment = "prd";
+    system-access-groups = [ "admins" ];
     network = "K3s";
     domain = "kidibox.net";
 

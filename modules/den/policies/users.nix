@@ -1,13 +1,12 @@
-# User access grants + resolution policy. Resolves den.users.registry
-# entries onto hosts whose granted access-policy groups
-# (fleet.user-access.by-host) intersect the user's own `groups`. Replaces
-# den's built-in host-to-users policy — host.users.<name> inline
-# declarations don't scale to a real fleet the way a standalone registry +
-# grants does.
-#
-# by-environment grants are not implemented — this repo's hosts don't carry
-# an `environment` field, and there's only one host today. Add
-# fleet.user-access.by-environment the same way once that's needed.
+# Access-control resolution (den's "Access Control & Environments" guide,
+# https://den.denful.dev/guides/acl-environments/). Three facts, each stated
+# once: the den.accessGroups graph, the groups each den.users.registry entry
+# is directly in, and the login gates (`system-access-groups`) of each
+# environment, host and cluster. A user resolves onto a host iff the closure
+# of its groups meets the host's gates plus its environment's; the cluster
+# Kanidm (modules/den/aspects/kubernetes/kanidm/default.nix) admits persons
+# the same way against the cluster's gates. Replaces den's built-in
+# host-to-users policy.
 {
   lib,
   den,
@@ -16,38 +15,52 @@
 }:
 let
   inherit (den.lib.policy) resolve;
+  inherit (config.den) accessGroups environments;
 
-  registry = config.den.users.registry;
-  accessByHost = config.fleet.user-access.by-host;
-
-  matchRegistryUsers =
-    grantedGroups:
-    lib.filter (name: builtins.any (g: lib.elem g grantedGroups) registry.${name}.groups) (
-      builtins.attrNames registry
-    );
-in
-{
-  options.fleet.user-access.by-host = lib.mkOption {
-    type = lib.types.attrsOf (
-      lib.types.submodule {
-        options.groups = lib.mkOption {
-          type = lib.types.listOf lib.types.str;
-          default = [ ];
-          description = "Access-policy groups granted onto this host";
-        };
+  # Every group a user is in: its direct groups, plus every group listing one
+  # of those in `members`, transitively.
+  closure =
+    direct:
+    map (g: g.key) (
+      builtins.genericClosure {
+        startSet = map (key: { inherit key; }) direct;
+        operator =
+          { key }:
+          lib.mapAttrsToList (name: _: { key = name; }) (
+            lib.filterAttrs (_: g: lib.elem key g.members) accessGroups
+          );
       }
     );
-    default = { };
-    description = "Grant user access-policy groups onto a specific host";
-  };
 
-  config.den.policies.host-users =
-    { host, ... }:
-    map (name: resolve.to "user" { user = registry.${name}; }) (
-      matchRegistryUsers (accessByHost.${host.name}.groups or [ ])
+  acl = {
+    inherit closure;
+    labelled = label: groups: lib.filter (g: lib.elem label accessGroups.${g}.labels) groups;
+    admits = gates: user: lib.any (g: lib.elem g gates) (closure user.groups);
+    # An environment's gates plus a host's or cluster's own.
+    gatesFor =
+      target: environments.${target.environment}.system-access-groups ++ target.system-access-groups;
+  };
+in
+{
+  config._module.args.acl = acl;
+
+  config.den.policies.acl-users =
+    { host, environment, ... }:
+    let
+      # den's host merge doesn't apply the option's enum check to list
+      # elements, so an undefined group is rejected here instead.
+      unknown = lib.subtractLists (builtins.attrNames accessGroups) host.system-access-groups;
+      gates =
+        if unknown == [ ] then
+          environment.system-access-groups ++ host.system-access-groups
+        else
+          throw "den.hosts.${host.system}.${host.name}.system-access-groups: undefined den.accessGroups ${lib.concatStringsSep ", " unknown}";
+    in
+    map (user: resolve.to "user" { inherit user; }) (
+      lib.filter (acl.admits gates) (builtins.attrValues config.den.users.registry)
     );
 
-  config.den.schema.host.includes = [ den.policies.host-users ];
+  config.den.schema.host.includes = [ den.policies.acl-users ];
   config.den.schema.host.excludes = [ den.policies.host-to-users ];
 
   # Content aspects need { host, user } context, which only exists at the

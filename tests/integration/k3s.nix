@@ -54,6 +54,7 @@ let
       den.hosts.x86_64-linux = lib.genAttrs names (name: {
         # Only a test node, not a nixosConfigurations output.
         intoAttr = [ ];
+        environment = "prd";
         k3s = {
           clusterName = "test";
         }

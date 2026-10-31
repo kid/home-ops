@@ -5,14 +5,13 @@
 # hash (`mkpasswd -m sha-512`) before this is ever applied to real hardware.
 {
   den.users.registry.kid = {
-    groups = [ "admin" ]; # access-policy group, matched by fleet.user-access.by-host
-    extraGroups = [ "wheel" ];
+    groups = [ "admins" ]; # den.accessGroups, matched against login gates (modules/den/policies/users.nix)
     sshKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb kid@fw13"
     ];
     hashedPassword = "$y$j9T$aTrKe3LPuhd9zCvCSs4KP1$/V7Blv9MLvM5JWQYjLQrTcc2TzrDpcjHdDdqlSP0Aq2";
-    routerosDevices.rb5009.group = "full"; # TODO: verify against the real router — unconfirmed placeholder
-    routerosDevices.crs320.group = "full"; # TODO: verify against the real router — unconfirmed placeholder
+    displayName = "Arnaud Rebts";
+    mail = [ "arnaud.rebts@gmail.com" ];
   };
 }

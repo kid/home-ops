@@ -48,6 +48,7 @@ in
 {
   den.routerosDevices.rb5009 = {
     environment = "prd";
+    system-access-groups = [ "admins" ];
     hostname = "rb5009";
     routerosEndpoint = "10.99.0.1";
     certificateAltNames = [
@@ -88,13 +89,12 @@ in
             routeros_endpoint = "10.99.0.1";
 
             # routeros_groups/routeros_users are contributed centrally by
-            # modules/den/aspects/routeros/base.nix, sourced from
-            # den.users.registry/den.groups — not hand-written per device
-            # anymore. Per-user passwords still come from 1Password: admin
-            # reuses op_item_routeros above, every other user needs an item
-            # titled "RB5009 - user - <username>" in vault op_vault.
-            # DO NOT apply with the still-TODO registry group/user data, it
-            # will destroy the users/groups/ssh keys currently on the router.
+            # modules/den/aspects/routeros/base.nix, derived from the
+            # access-control model (system-access-groups above, den.accessGroups,
+            # den.routerosGroups) — not hand-written per device. Per-user
+            # passwords come from 1Password: admin reuses op_item_routeros
+            # above, every other user needs an item titled
+            # "RB5009 - user - <username>" in vault op_vault.
 
             vlans = lib.mapAttrs (_: toVlanInput) networks;
 
