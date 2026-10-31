@@ -71,6 +71,8 @@ _: {
                 type = "Anonymous";
                 anonymous.groups = [ webGroup ];
               };
+              # No metrics-server here: collection only logs errors.
+              config.metrics.disabled = true;
             };
             resources = {
               requests = {

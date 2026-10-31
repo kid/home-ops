@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/web-config: a061137b5d650289de129914a46e856390cba51ca67b7452c8b67eae1682f476
+        checksum/web-config: 845b1597ead23888fcf75f1d04d4ef0407f6088786452d288748b3580ce1d6d8
         prometheus.io/path: /metrics
         prometheus.io/port: "8080"
         prometheus.io/scrape: "true"
