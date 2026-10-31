@@ -7,14 +7,14 @@
 # modules/flake/provision-host-key.nix), then injects it via --extra-files
 # so the host has its real, final identity from first boot. The payload
 # lands at persist/etc/ssh/, not etc/ssh/ — nix-community/impermanence
-# (modules/den/aspects/impermanence/persist-collector.nix) bind-mounts
+# (modules/nixos/impermanence/persist-collector.nix) bind-mounts
 # /etc/ssh/ssh_host_ed25519_key FROM /persist/etc/ssh/ssh_host_ed25519_key,
 # so that's the real storage location extra-files needs to land on;
 # /etc/ssh/... itself is just the bind-mount target, reset on every boot.
 #
 # Only the host's own SSH identity is a one-shot install-time concern —
 # everything else the host needs to decrypt (e.g. the 1Password service
-# account token, modules/den/aspects/services/k3s/external-secrets.nix) is
+# account token, modules/nixos/services/k3s/external-secrets.nix) is
 # sops-nix's job, declaratively decrypted from committed ciphertext on every
 # activation using this same host key, not injected once here.
 {

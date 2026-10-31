@@ -1,4 +1,4 @@
-# VM tests of the k3s den aspects (modules/den/aspects/services/k3s/). Each
+# VM tests of the k3s den aspects (modules/nixos/services/k3s/). Each
 # test evaluates this repo's module tree a second time with a fixture cluster
 # and fixture hosts added, and boots the hosts' real den-resolved NixOS
 # modules (host.mainModule), so the flags come from the aspects.

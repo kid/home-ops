@@ -38,7 +38,7 @@
             system-access-groups = lib.mkOption {
               type = lib.types.listOf (lib.types.enum (builtins.attrNames den.accessGroups));
               default = [ ];
-              description = "Login gates for this device, added to its environment's (modules/den/aspects/routeros/base.nix)";
+              description = "Login gates for this device, added to its environment's (modules/routeros/base.nix)";
             };
 
             hostname = lib.mkOption {

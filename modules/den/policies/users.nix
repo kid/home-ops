@@ -4,7 +4,7 @@
 # is directly in, and the login gates (`system-access-groups`) of each
 # environment, host and cluster. A user resolves onto a host iff the closure
 # of its groups meets the host's gates plus its environment's; the cluster
-# Kanidm (modules/den/aspects/kubernetes/kanidm/default.nix) admits persons
+# Kanidm (modules/kubernetes/kanidm/default.nix) admits persons
 # the same way against the cluster's gates. Replaces den's built-in
 # host-to-users policy.
 {

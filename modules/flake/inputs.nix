@@ -3,7 +3,7 @@
 # dendritic module system used to generate tf-stacks/prd/network's
 # terragrunt.hcl leaves from Nix (see modules/den/batteries/terragrunt/*.nix).
 # sops-nix lives here too, not next to its one current consumer
-# (modules/den/aspects/services/k3s/external-secrets.nix): it's generic
+# (modules/nixos/services/k3s/external-secrets.nix): it's generic
 # secrets-decryption plumbing any future NixOS aspect can pull in, not
 # something owned by that aspect specifically.
 _: {
