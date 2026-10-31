@@ -23,6 +23,9 @@ let
       ];
     in
     {
+      # kaniop's webhook admits the client.
+      flux.dependsOn = [ "kaniop" ];
+
       resources.kanidmOAuth2Clients.${name}.spec = {
         kanidmRef = kanidm.ref;
         displayname = name;

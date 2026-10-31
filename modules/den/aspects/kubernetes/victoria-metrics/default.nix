@@ -105,6 +105,8 @@ _: {
 
       applications.victoria-metrics = {
         namespace = "monitoring";
+        # The operator webhook's certificate.
+        flux.dependsOn = [ "cert-manager" ];
 
         resources.ciliumNetworkPolicies =
           with cluster.methods.netpol;
@@ -167,13 +169,8 @@ _: {
                 };
                 limits.memory = "256Mi";
               };
-              # Unset, the tag follows Helm's .Capabilities.KubeVersion: the
-              # Kubernetes version the nixpkgs helm was built against, so any
-              # nixpkgs bump would re-render it.
-              crds.cleanup.image = {
-                # renovate: datasource=docker depName=registry.k8s.io/kubectl
-                tag = "v1.37.0@sha256:5ed410ebac5dc976cc717098994dcdb29bbbd38f6bd65f582311f5be4ba719cf";
-              };
+              # A pre-delete Helm hook deleting every VM resource in the namespace.
+              crds.cleanup.enabled = false;
             };
 
             syncJob.resources.requests = {
@@ -391,6 +388,19 @@ _: {
             labels.job = "kube-etcd";
           }
         ];
+
+        # The sync job, a post-install/upgrade Helm hook rendered as a plain
+        # Job, creates the chart's dashboards and rules from this ConfigMap.
+        # Hashing it into the template makes Flux recreate the Job, and so
+        # rerun it, when the ConfigMap changes.
+        resources.jobs.victoria-metrics-sync-job.spec.template.metadata.annotations."checksum/config" =
+          let
+            configMap =
+              lib.findFirst (o: o.kind == "ConfigMap" && o.metadata.name == "victoria-metrics-sync-job-config")
+                (throw "victoria-metrics-sync-job-config not rendered")
+                config.applications.victoria-metrics.helm.releases.victoria-metrics.objects;
+          in
+          builtins.hashString "sha256" (builtins.toJSON configMap.data);
 
         # The chart names each route <component>-victoria-metrics.
         imports =

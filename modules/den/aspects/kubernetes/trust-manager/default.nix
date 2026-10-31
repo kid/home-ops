@@ -24,6 +24,7 @@ _: {
 
       applications.trust-manager = {
         namespace = "cert-manager";
+        flux.dependsOn = [ "cert-manager" ];
 
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           trust-manager = mkPolicy { "app.kubernetes.io/name" = "trust-manager"; } {
@@ -53,6 +54,12 @@ _: {
             };
           };
         };
+      };
+
+      # Separate from the controller: its webhook must serve before the Bundle is applied.
+      applications.trust-manager-config = {
+        namespace = "cert-manager";
+        flux.dependsOn = [ "trust-manager" ];
 
         resources.bundles.cluster-ca.spec = {
           sources = [

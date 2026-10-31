@@ -27,6 +27,7 @@ in
     {
       applications.external-dns = {
         namespace = "external-dns";
+        flux.dependsOn = [ "external-secrets-config" ];
 
         resources.ciliumNetworkPolicies = with cluster.methods.netpol; {
           external-dns-mikrotik = mkPolicy { "app.kubernetes.io/instance" = "external-dns"; } {
@@ -149,7 +150,6 @@ in
         };
 
         resources.externalSecrets.mikrotik-credentials = {
-          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
           spec = {
             secretStoreRef = {
               name = "onepassword";

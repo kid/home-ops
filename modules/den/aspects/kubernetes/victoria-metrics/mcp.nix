@@ -52,6 +52,8 @@ _: {
     in
     {
       applications.victoria-metrics = {
+        # kaniop's webhook admits the MCP client.
+        flux.dependsOn = [ "kaniop" ];
         imports = [
           (mcp.mkAuth (
             lib.mapAttrs (_: server: {

@@ -21,7 +21,6 @@ _: {
 
       applications.external-secrets = {
         namespace = "external-secrets";
-        annotations."argocd.argoproj.io/sync-wave" = "-3";
 
         resources.ciliumNetworkPolicies =
           with cluster.methods.netpol;
@@ -90,6 +89,12 @@ _: {
             };
           };
         };
+      };
+
+      # Separate from the controller: its webhook must serve before the store is applied.
+      applications.external-secrets-config = {
+        namespace = "external-secrets";
+        flux.dependsOn = [ "external-secrets" ];
 
         resources.clusterSecretStores.onepassword.spec.provider.onepasswordSDK = {
           vault = cluster.secrets.onepasswordVault;

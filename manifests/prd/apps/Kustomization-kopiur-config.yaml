@@ -1,0 +1,18 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kopiur-config
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: kopiur
+    - name: external-secrets-config
+  interval: 10m
+  path: ./manifests/prd/kopiur-config
+  prune: true
+  retryInterval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  timeout: 5m
+  wait: true

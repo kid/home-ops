@@ -48,6 +48,11 @@ in
 
       applications.envoy-gateway = {
         inherit namespace;
+        # The control plane's certificates, and the OIDC HMAC's Password generator.
+        flux.dependsOn = [
+          "cert-manager"
+          "external-secrets"
+        ];
 
         resources.ciliumNetworkPolicies =
           with cluster.methods.netpol;
@@ -64,6 +69,7 @@ in
               ];
               egress = [ apiserverEgress ];
             };
+
             envoy-proxy = mkPolicy proxy {
               ingress = [
                 # Envoy Gateway remaps privileged listener ports to 10000 + port.

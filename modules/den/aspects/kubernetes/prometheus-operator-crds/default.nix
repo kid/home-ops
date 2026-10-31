@@ -12,7 +12,6 @@ _: {
     {
       applications.prometheus-operator-crds = {
         namespace = "monitoring";
-        annotations."argocd.argoproj.io/sync-wave" = "-3";
 
         helm.releases.prometheus-operator-crds.chart = charts.prometheus-community.prometheus-operator-crds;
       };

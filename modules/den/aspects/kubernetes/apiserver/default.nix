@@ -40,6 +40,8 @@ in
       applications.apiserver = {
         # Where the kubernetes Service lives, so the backendRef needs no ReferenceGrant.
         namespace = "default";
+        # kaniop's webhook admits the kube-login client.
+        flux.dependsOn = [ "kaniop" ];
 
         resources.tlsRoutes.kube-api.spec = {
           parentRefs = [

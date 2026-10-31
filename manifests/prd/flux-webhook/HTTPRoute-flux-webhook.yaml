@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    home-ops.dev/public-dns: "true"
+  name: flux-webhook
+  namespace: flux-system
+spec:
+  hostnames:
+    - flux-webhook.kidibox.net
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: cloudflare-tunnel
+      namespace: cloudflare-tunnel-system
+      sectionName: http
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: webhook-receiver
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /hook/
