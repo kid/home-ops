@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: envoy-gateway
+  namespace: envoy-gateway-system
+spec:
+  dnsNames:
+    - envoy-gateway
+    - envoy-gateway.envoy-gateway-system
+    - envoy-gateway.envoy-gateway-system.svc
+    - envoy-gateway.envoy-gateway-system.svc.cluster.local
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: envoy-gateway-ca
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: envoy-gateway
