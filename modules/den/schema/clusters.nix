@@ -112,8 +112,8 @@
             # Single source of truth for BGP session timers, fed to both
             # the RouterOS side (terragrunt-infra-catalog's talos-bgp
             # module's bgp_hold_time/bgp_keepalive_time) and Cilium's own
-            # CiliumBGPPeerConfig.spec.timers — see modules/den/batteries/terragrunt/
-            # aspects/routeros/bgp.nix and modules/den/aspects/kubernetes/cilium/bgp.nix.
+            # CiliumBGPPeerConfig.spec.timers — see
+            # modules/routeros/bgp.nix and modules/kubernetes/cilium/bgp.nix.
             bgp.holdTimeSeconds = lib.mkOption {
               type = lib.types.int;
               default = 90;
@@ -129,24 +129,24 @@
             k3s.initServer = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
               default = null;
-              description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/den/aspects/services/k3s/k3s.nix)";
+              description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/nixos/services/k3s/k3s.nix)";
             };
 
             letsencrypt.staging = lib.mkOption {
               type = lib.types.bool;
               default = false;
-              description = "Use Let's Encrypt's staging ACME server instead of production (modules/den/aspects/kubernetes/cert-manager)";
+              description = "Use Let's Encrypt's staging ACME server instead of production (modules/kubernetes/cert-manager)";
             };
 
             secrets.onepasswordVault = lib.mkOption {
               type = lib.types.str;
-              description = "1Password vault name this cluster's ExternalSecrets read from (modules/den/aspects/kubernetes/external-secrets)";
+              description = "1Password vault name this cluster's ExternalSecrets read from (modules/kubernetes/external-secrets)";
             };
 
             cloudflare = {
               accountId = lib.mkOption {
                 type = lib.types.str;
-                description = "Cloudflare account ID holding this cluster's R2 bucket (modules/den/aspects/kubernetes/kopiur)";
+                description = "Cloudflare account ID holding this cluster's R2 bucket (modules/kubernetes/kopiur)";
               };
               zoneId = lib.mkOption {
                 type = lib.types.str;
@@ -154,7 +154,7 @@
               };
               tunnelId = lib.mkOption {
                 type = lib.types.str;
-                description = "Cloudflare Tunnel ID for this cluster's public ingress (modules/den/aspects/kubernetes/cloudflared) — hand-copied once from the cloudflared terragrunt stack's `tunnel_id` output after its bootstrap apply. Not sensitive on its own: it ends up published in public DNS CNAMEs anyway.";
+                description = "Cloudflare Tunnel ID for this cluster's public ingress (modules/kubernetes/cloudflared) — hand-copied once from the cloudflared terragrunt stack's `tunnel_id` output after its bootstrap apply. Not sensitive on its own: it ends up published in public DNS CNAMEs anyway.";
               };
             };
 

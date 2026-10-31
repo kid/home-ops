@@ -76,7 +76,7 @@ in
   # den's own built-in batteries (e.g. unfree-predicate-builder) read
   # user.classes unconditionally on every resolved user — we don't rely on
   # class-based content routing ourselves (aspects write directly to
-  # nixos.users.users.<name>, see modules/den/aspects/users/), but the
+  # nixos.users.users.<name>, see modules/nixos/users/), but the
   # option still needs a default so it exists at all.
   config.den.schema.user.classes = lib.mkDefault [ ];
 

@@ -1,6 +1,6 @@
 # kube-login <cluster> — adds a kubectl context for a den.clusters entry that logs in through
 # Kanidm with kubelogin (public client, PKCE), using the server name, issuer and client ID from
-# the cluster's methods.kubeLogin (modules/den/aspects/kubernetes/apiserver/default.nix). The
+# the cluster's methods.kubeLogin (modules/kubernetes/apiserver/default.nix). The
 # API server CA comes from the cluster's first node over SSH. A cluster without kubeLogin is
 # not offered.
 #

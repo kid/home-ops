@@ -1,7 +1,7 @@
 # Shared nixidy defaults, injected into every cluster's k8s-manifests scope.
 # Not a collector itself — modules/den/policies/cluster.nix's
 # cluster-to-nixidy policy assembles this aspect's content together with
-# each app aspect's (modules/den/aspects/kubernetes/*/default.nix) into the real
+# each app aspect's (modules/kubernetes/*/default.nix) into the real
 # nixidy environment.
 _:
 let
@@ -19,7 +19,7 @@ let
       let
         # The app holding every Namespace and every other app's Flux
         # Kustomization, applied by the FluxInstance's root sync
-        # (modules/den/aspects/kubernetes/flux/default.nix).
+        # (modules/kubernetes/flux/default.nix).
         appsName = config.nixidy.appOfApps.name;
         childApps = lib.filter (name: name != appsName) config.nixidy.publicApps;
         # kube-system/default are pre-existing, cluster-critical namespaces —

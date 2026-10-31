@@ -8,7 +8,7 @@ in
   # emitted by network/cluster/etc. aspects, see modules/den/quirks/
   # firewall.nix) onto every RouterOS device, exposed as the `firewall` list
   # arg to any terragrunt-stacks module that names it (currently only
-  # modules/den/aspects/routeros/firewall.nix, on rb5009).
+  # modules/routeros/firewall.nix, on rb5009).
   den.policies.routeros-device-collect-firewall = _: [
     (pipe.from "firewall" [
       # Predicate arg names double as the entity-kind filter (den's
@@ -25,9 +25,9 @@ in
   ];
 
   # Collects the `k3s-nodes` quirk (emitted per-host by
-  # modules/den/aspects/services/k3s/k3s.nix, {hostname; address;}) onto
+  # modules/nixos/services/k3s/k3s.nix, {hostname; address;}) onto
   # every RouterOS device, exposed as the `k3s-nodes` list arg to
-  # modules/den/aspects/routeros/bgp.nix (to build its per-node BGP
+  # modules/routeros/bgp.nix (to build its per-node BGP
   # connections). `host` is the entity kind — a bare `_: true` predicate
   # would match nothing, see routeros-device-collect-firewall above.
   den.policies.routeros-device-collect-k3s-nodes = _: [
@@ -36,7 +36,7 @@ in
 
   # Collects the `bgp` quirk (den.quirks.bgp — cluster-level BGP instance
   # parameters, see modules/den/quirks/bgp.nix) onto every RouterOS
-  # device, exposed as the `bgp` list arg to modules/den/aspects/routeros/
+  # device, exposed as the `bgp` list arg to modules/routeros/
   # ros-bgp.nix.
   den.policies.routeros-device-collect-bgp = _: [
     (pipe.from "bgp" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
@@ -49,9 +49,9 @@ in
   ];
 
   # Collects the `miroir-nodes` quirk (emitted per-host by
-  # modules/den/aspects/services/k3s/miroir.nix, {hostname; device;}) onto
+  # modules/nixos/services/k3s/miroir.nix, {hostname; device;}) onto
   # the cluster entity, exposed as the `miroir-nodes` list arg to
-  # modules/den/aspects/kubernetes/miroir/default.nix's k8s-manifests
+  # modules/kubernetes/miroir/default.nix's k8s-manifests
   # content. `host` is the entity kind — a bare `_: true` predicate would
   # match nothing, see routeros-device-collect-firewall above.
   den.policies.cluster-collect-miroir-nodes = _: [

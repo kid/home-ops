@@ -30,7 +30,7 @@ data "onepassword_vault" "home_ops_prd" {
 }
 
 # The routeros provider connects as whichever fleet user op_item_routeros
-# names for rb5009 (see modules/den/routerosDevices/rb5009.nix) — same
+# names for rb5009 (see modules/routerosDevices/rb5009.nix) — same
 # convention the ros-* Terragrunt stacks already use.
 data "onepassword_item" "routeros_admin" {
   vault = data.onepassword_vault.home_ops.uuid
