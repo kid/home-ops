@@ -183,6 +183,7 @@ in
       coredns
       flux
       flux-mcp
+      flux-webhook
       apiserver
       snapshot-controller
       miroir

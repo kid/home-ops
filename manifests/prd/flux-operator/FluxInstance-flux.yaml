@@ -11,6 +11,7 @@ spec:
   components:
     - source-controller
     - kustomize-controller
+    - notification-controller
   distribution:
     registry: ghcr.io/fluxcd
     version: 2.x

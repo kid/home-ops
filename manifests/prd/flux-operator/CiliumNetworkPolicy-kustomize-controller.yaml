@@ -18,6 +18,13 @@ spec:
         - ports:
             - port: "9090"
               protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app: notification-controller
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
   endpointSelector:
     matchLabels:
       app: kustomize-controller

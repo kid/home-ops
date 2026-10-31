@@ -58,13 +58,25 @@ _: {
               egress = [
                 apiserverEgress
                 (fqdnEgress [ "github.com" ] [ 443 ])
+                (toPods (controller "notification-controller") [ 9090 ])
               ];
             };
             kustomize-controller = mkPolicy (controller "kustomize-controller") {
               egress = [
                 apiserverEgress
                 (toPods (controller "source-controller") [ 9090 ])
+                (toPods (controller "notification-controller") [ 9090 ])
               ];
+            };
+            notification-controller = mkPolicy (controller "notification-controller") {
+              ingress = [
+                # Events from the other controllers.
+                (fromPods (controller "source-controller") [ 9090 ])
+                (fromPods (controller "kustomize-controller") [ 9090 ])
+                # GitHub's webhook, through the Cloudflare Tunnel proxy (webhook.nix).
+                (tunnelIngress 9292)
+              ];
+              egress = [ apiserverEgress ];
             };
           };
 
@@ -97,6 +109,7 @@ _: {
           components = [
             "source-controller"
             "kustomize-controller"
+            "notification-controller"
           ];
           cluster = {
             type = "kubernetes";
