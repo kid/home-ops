@@ -49,6 +49,12 @@ in
               description = "Supernet every network in this environment carves its /prefix out of";
             };
 
+            system-access-groups = lib.mkOption {
+              type = lib.types.listOf (lib.types.enum (builtins.attrNames rootConfig.den.accessGroups));
+              default = [ ];
+              description = "Login gates for every host and cluster Kanidm in this environment (modules/den/policies/users.nix)";
+            };
+
             networks = lib.mkOption {
               type = lib.types.attrsOf lib.types.raw;
               default =

@@ -1,6 +1,8 @@
 { den, config, ... }:
 {
   den.hosts.x86_64-linux.k3s-prd-0 = {
+    environment = "prd";
+    system-access-groups = [ "admins" ];
     k3s.clusterName = "prd";
   };
 
@@ -44,8 +46,6 @@
     den.aspects.k3s-miroir-node
     den.aspects.ssh
   ];
-
-  fleet.user-access.by-host.k3s-prd-0.groups = [ "admin" ];
 
   fleet.colmena.deployment.k3s-prd-0.targetHost = config.den.devices.k3s-prd-0.address;
 }

@@ -1,9 +1,14 @@
 # Kanidm (https://kanidm.com), run by the kaniop operator
 # (https://github.com/pando85/kaniop): the operator, the one `Kanidm`
-# instance, its persons/groups, TLS, routing and backups. Persons, groups and
-# OAuth2 clients may live in any namespace (the `*NamespaceSelector`s below);
-# other aspects point them at cluster.methods.kanidm.ref.
-{ config, ... }:
+# instance, its persons/groups, TLS, routing and backups. Every
+# den.accessGroups group labelled `oauth-grant` becomes a Kanidm group
+# (`mfa`-labelled ones require MFA), and every registry user the cluster's
+# login gates admit a person (den.users.registry.<user>.{displayName,mail});
+# see modules/den/policies/users.nix.
+# Persons, groups and OAuth2 clients may live in any namespace (the
+# `*NamespaceSelector`s below); other aspects point them at
+# cluster.methods.kanidm.ref.
+{ acl, config, ... }:
 let
   domain = config.den.clusters.prd.methods.mkAppHostname "idm";
   origin = "https://${domain}";
@@ -54,12 +59,11 @@ in
         "app.kubernetes.io/name" = "kaniop";
         "app.kubernetes.io/component" = component;
       };
-      mfaGroup = {
-        kanidmRef.name = ref.name;
-        members = [ "kid" ];
-        # Passkey, or password + TOTP.
-        accountPolicy.credentialTypeMinimum = "mfa";
-      };
+      # Registry users the cluster's gates (its environment's plus its own)
+      # admit, each with the closure of its groups.
+      persons = lib.mapAttrs (_: u: u // { allGroups = acl.closure u.groups; }) (
+        lib.filterAttrs (_: acl.admits (acl.gatesFor cluster)) config.den.users.registry
+      );
     in
     {
       nixidy.applicationImports = [
@@ -254,20 +258,28 @@ in
               };
             };
 
-            kanidmPersonAccounts.kid = {
+            kanidmPersonAccounts = lib.mapAttrs (_: u: {
               spec = {
                 kanidmRef.name = ref.name;
                 personAttributes = {
-                  displayname = "Arnaud Rebts";
-                  mail = [ "arnaud.rebts@gmail.com" ];
-                };
+                  displayname = u.displayName;
+                }
+                // lib.optionalAttrs (u.mail != [ ]) { inherit (u) mail; };
               };
-            };
+            }) persons;
 
-            kanidmGroups = {
-              admins.spec = mfaGroup;
-              media.spec = mfaGroup;
-            };
+            kanidmGroups =
+              lib.genAttrs (acl.labelled "oauth-grant" (builtins.attrNames config.den.accessGroups))
+                (group: {
+                  spec = {
+                    kanidmRef.name = ref.name;
+                    members = builtins.attrNames (lib.filterAttrs (_: u: lib.elem group u.allGroups) persons);
+                  }
+                  // lib.optionalAttrs (acl.labelled "mfa" [ group ] != [ ]) {
+                    # Passkey, or password + TOTP.
+                    accountPolicy.credentialTypeMinimum = "mfa";
+                  };
+                });
 
             certificates.${tlsSecretName}.spec = {
               secretName = tlsSecretName;

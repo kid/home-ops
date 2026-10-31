@@ -4,6 +4,7 @@
 { den, ... }:
 {
   den.hosts.x86_64-linux.test-vm = {
+    environment = "prd";
     k3s.clusterName = "prd";
     # Irrelevant under disko's testMode: vmWithDisko substitutes its own
     # qcow2 images regardless of the configured device.

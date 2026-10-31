@@ -35,6 +35,12 @@
               description = "Name of the den.networks entry this cluster's nodes attach to";
             };
 
+            system-access-groups = lib.mkOption {
+              type = lib.types.listOf (lib.types.enum (builtins.attrNames den.accessGroups));
+              default = [ ];
+              description = "Kanidm login gates for this cluster, added to its environment's";
+            };
+
             networks = lib.mkOption {
               type = lib.types.attrsOf (
                 lib.types.submodule {

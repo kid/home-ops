@@ -1,11 +1,10 @@
 # Fleet topology policies.
 #
 # Wires the scope tree: flake -> fleet -> environment -> {network,
-# routerosDevice, cluster}. Adapted from nix-config's modules/den/policies/
-# fleet.nix (itself the model nixopslab's environment.nix points at),
-# dropping the user-access/grant machinery — not needed for a fleet of
-# RouterOS devices — and walking den.routerosDevices/den.networks instead of
-# den.hosts.
+# routerosDevice, cluster, host}. Adapted from nix-config's modules/den/policies/
+# fleet.nix (itself the model nixopslab's environment.nix points at); hosts
+# follow den's "Access Control & Environments" guide, resolved under their
+# environment instead of den's default flake-system walk.
 {
   lib,
   den,
@@ -79,11 +78,27 @@ in
       ]
     ) (builtins.attrNames den.clusters);
 
+  # environment -> hosts: resolve and instantiate (nixosConfigurations) every
+  # den.hosts entry of this environment. Replaces den's system-to-os-outputs,
+  # so host scopes see `environment`. Test-only hosts (intoAttr = [ ]) are
+  # skipped before their environment is read.
+  den.policies.env-to-hosts =
+    { environment, ... }:
+    lib.concatMap (
+      host:
+      lib.optionals (host.intoAttr != [ ] && host.environment == environment.name) [
+        (resolve.to "host" { inherit host; })
+        (den.lib.policy.instantiate host)
+      ]
+    ) (lib.concatMap builtins.attrValues (builtins.attrValues den.hosts));
+
   den.schema.flake.includes = [ den.policies.to-fleet ];
   den.schema.fleet.includes = [ den.policies.fleet-to-envs ];
   den.schema.environment.includes = [
     den.policies.env-to-routeros-devices
     den.policies.env-to-networks
     den.policies.env-to-clusters
+    den.policies.env-to-hosts
   ];
+  den.schema.flake-system.excludes = [ den.policies.system-to-os-outputs ];
 }
