@@ -55,12 +55,16 @@ _: {
         # kaniop's webhook admits the MCP client.
         flux.dependsOn = [ "kaniop" ];
         imports = [
-          (mcp.mkAuth (
-            lib.mapAttrs (_: server: {
-              hostname = cluster.methods.mkAppHostname server.host;
-              inherit port;
-            }) servers
-          ))
+          (
+            servers
+            |> lib.mapAttrs (
+              _: server: {
+                hostname = cluster.methods.mkAppHostname server.host;
+                inherit port;
+              }
+            )
+            |> mcp.mkAuth
+          )
         ];
 
         resources = {

@@ -108,9 +108,8 @@ in
           # never renew them.
           transformer =
             manifests:
-            builtins.filter (m: !lib.hasPrefix "envoy-gateway-gateway-helm-certgen" m.metadata.name) (
-              config.nixidy.defaults.helm.transformer manifests
-            );
+            config.nixidy.defaults.helm.transformer manifests
+            |> builtins.filter (m: !lib.hasPrefix "envoy-gateway-gateway-helm-certgen" m.metadata.name);
         };
 
         # The control plane's mTLS: the controller serves xDS (and the topology

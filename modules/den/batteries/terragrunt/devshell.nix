@@ -47,7 +47,7 @@ let
     let
       upLevels = if fromStack == "base" then 1 else 2;
     in
-    (lib.concatStrings (lib.replicate upLevels "../")) + toRouterosDevice;
+    (lib.replicate upLevels "../" |> lib.concatStrings) + toRouterosDevice;
 
   renderLeaf =
     stack: leaf:
@@ -56,15 +56,15 @@ let
 
         dependencies {
           paths = ${
-            toValue (
-              map (
-                toRouterosDevice:
-                relPathToRouterosDeviceBase {
-                  fromStack = stack;
-                  inherit toRouterosDevice;
-                }
-              ) leaf.dependsOn
+            leaf.dependsOn
+            |> map (
+              toRouterosDevice:
+              relPathToRouterosDeviceBase {
+                fromStack = stack;
+                inherit toRouterosDevice;
+              }
             )
+            |> toValue
           }
         }
       '';

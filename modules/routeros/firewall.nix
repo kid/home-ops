@@ -28,11 +28,10 @@
           let
             names = lib.unique (builtins.attrNames manual ++ builtins.attrNames byNetwork);
           in
-          lib.filterAttrs (_: rules: rules != [ ]) (
-            lib.genAttrs names (
-              name: (lib.concatMap (f: f.${dir} or [ ]) (byNetwork.${name} or [ ])) ++ (manual.${name} or [ ])
-            )
-          );
+          lib.genAttrs names (
+            name: (lib.concatMap (f: f.${dir} or [ ]) (byNetwork.${name} or [ ])) ++ (manual.${name} or [ ])
+          )
+          |> lib.filterAttrs (_: rules: rules != [ ]);
       in
       {
         stack = "firewall";

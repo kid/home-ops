@@ -36,9 +36,10 @@
               if groups == [ ] then "none" else lib.concatStringsSep ", " groups
             }";
 
-        registryUsers = lib.mapAttrs (username: u: u // { routerosGroup = groupOf username u; }) (
-          lib.filterAttrs (_: acl.admits (acl.gatesFor routerosDevice)) den.users.registry
-        );
+        registryUsers =
+          den.users.registry
+          |> lib.filterAttrs (_: acl.admits (acl.gatesFor routerosDevice))
+          |> lib.mapAttrs (username: u: u // { routerosGroup = groupOf username u; });
 
         routeros_users = {
           # No password_item: op_item_routeros now names whichever fleet
@@ -58,10 +59,11 @@
         # Only the custom groups some user on this device is in: built-in
         # groups have no den.routerosGroups entry, and a device with no user
         # in a group shouldn't get that group either.
-        referencedGroups = lib.unique (lib.mapAttrsToList (_: u: u.routerosGroup) registryUsers);
-        routeros_groups = lib.mapAttrs (_: g: { inherit (g) policies; }) (
-          lib.filterAttrs (name: _: lib.elem name referencedGroups) den.routerosGroups
-        );
+        referencedGroups = registryUsers |> lib.mapAttrsToList (_: u: u.routerosGroup) |> lib.unique;
+        routeros_groups =
+          den.routerosGroups
+          |> lib.filterAttrs (name: _: lib.elem name referencedGroups)
+          |> lib.mapAttrs (_: g: { inherit (g) policies; });
       in
       {
         stack = "base";

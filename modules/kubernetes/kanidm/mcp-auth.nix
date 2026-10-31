@@ -81,27 +81,31 @@ let
             "${name}-metadata".spec = {
               inherit parentRefs;
               hostnames = [ hostname ];
-              rules = lib.mapAttrsToList (rule: document: {
-                name = rule;
-                matches = [
-                  {
-                    path = {
-                      type = "Exact";
-                      value = document.path;
-                    };
+              rules =
+                metadataDocuments hostname
+                |> lib.mapAttrsToList (
+                  rule: document: {
+                    name = rule;
+                    matches = [
+                      {
+                        path = {
+                          type = "Exact";
+                          value = document.path;
+                        };
+                      }
+                    ];
+                    filters = [
+                      {
+                        type = "ExtensionRef";
+                        extensionRef = {
+                          group = "gateway.envoyproxy.io";
+                          kind = "HTTPRouteFilter";
+                          name = metadataFilter name rule;
+                        };
+                      }
+                    ];
                   }
-                ];
-                filters = [
-                  {
-                    type = "ExtensionRef";
-                    extensionRef = {
-                      group = "gateway.envoyproxy.io";
-                      kind = "HTTPRouteFilter";
-                      name = metadataFilter name rule;
-                    };
-                  }
-                ];
-              }) (metadataDocuments hostname);
+                );
             };
           }
         );
@@ -109,7 +113,8 @@ let
         httpRouteFilters = perServer (
           name:
           { hostname, ... }:
-          lib.mapAttrs' (
+          metadataDocuments hostname
+          |> lib.mapAttrs' (
             rule: document:
             lib.nameValuePair (metadataFilter name rule) {
               spec.directResponse = {
@@ -126,7 +131,7 @@ let
                 };
               };
             }
-          ) (metadataDocuments hostname)
+          )
         );
 
         # Kanidm sets `aud` to the client name.

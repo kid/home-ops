@@ -21,21 +21,20 @@ let
   # of those in `members`, transitively.
   closure =
     direct:
-    map (g: g.key) (
-      builtins.genericClosure {
-        startSet = map (key: { inherit key; }) direct;
-        operator =
-          { key }:
-          lib.mapAttrsToList (name: _: { key = name; }) (
-            lib.filterAttrs (_: g: lib.elem key g.members) accessGroups
-          );
-      }
-    );
+    builtins.genericClosure {
+      startSet = map (key: { inherit key; }) direct;
+      operator =
+        { key }:
+        accessGroups
+        |> lib.filterAttrs (_: g: lib.elem key g.members)
+        |> lib.mapAttrsToList (name: _: { key = name; });
+    }
+    |> map (g: g.key);
 
   acl = {
     inherit closure;
     labelled = label: groups: lib.filter (g: lib.elem label accessGroups.${g}.labels) groups;
-    admits = gates: user: lib.any (g: lib.elem g gates) (closure user.groups);
+    admits = gates: user: user.groups |> closure |> lib.any (g: lib.elem g gates);
     # An environment's gates plus a host's or cluster's own.
     gatesFor =
       target: environments.${target.environment}.system-access-groups ++ target.system-access-groups;
@@ -56,9 +55,10 @@ in
         else
           throw "den.hosts.${host.system}.${host.name}.system-access-groups: undefined den.accessGroups ${lib.concatStringsSep ", " unknown}";
     in
-    map (user: resolve.to "user" { inherit user; }) (
-      lib.filter (acl.admits gates) (builtins.attrValues config.den.users.registry)
-    );
+    config.den.users.registry
+    |> builtins.attrValues
+    |> lib.filter (acl.admits gates)
+    |> map (user: resolve.to "user" { inherit user; });
 
   config.den.schema.host.includes = [ den.policies.acl-users ];
   config.den.schema.host.excludes = [ den.policies.host-to-users ];

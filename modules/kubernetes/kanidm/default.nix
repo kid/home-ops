@@ -61,9 +61,10 @@ in
       };
       # Registry users the cluster's gates (its environment's plus its own)
       # admit, each with the closure of its groups.
-      persons = lib.mapAttrs (_: u: u // { allGroups = acl.closure u.groups; }) (
-        lib.filterAttrs (_: acl.admits (acl.gatesFor cluster)) config.den.users.registry
-      );
+      persons =
+        config.den.users.registry
+        |> lib.filterAttrs (_: acl.admits (acl.gatesFor cluster))
+        |> lib.mapAttrs (_: u: u // { allGroups = acl.closure u.groups; });
     in
     {
       nixidy.applicationImports = [
@@ -269,11 +270,11 @@ in
             }) persons;
 
             kanidmGroups =
-              lib.genAttrs (acl.labelled "oauth-grant" (builtins.attrNames config.den.accessGroups))
+              lib.genAttrs (config.den.accessGroups |> builtins.attrNames |> acl.labelled "oauth-grant")
                 (group: {
                   spec = {
                     kanidmRef.name = ref.name;
-                    members = builtins.attrNames (lib.filterAttrs (_: u: lib.elem group u.allGroups) persons);
+                    members = persons |> lib.filterAttrs (_: u: lib.elem group u.allGroups) |> builtins.attrNames;
                   }
                   // lib.optionalAttrs (acl.labelled "mfa" [ group ] != [ ]) {
                     # Passkey, or password + TOTP.

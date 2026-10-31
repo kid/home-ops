@@ -39,14 +39,15 @@ _: {
 
       # Encoded as JSON (valid inline YAML) rather than hand-templated
       # multi-line YAML, so this isn't hardcoded to one peer.
-      peersJson = builtins.toJSON (
-        map (p: {
+      peersJson =
+        peers
+        |> map (p: {
           inherit (p) name;
           peerASN = p.asn;
           peerAddress = p.ip;
           peerConfigRef.name = "l3-bgp-peer-config";
-        }) peers
-      );
+        })
+        |> builtins.toJSON;
     in
     {
       applications.cilium.yamls = [

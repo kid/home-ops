@@ -5,7 +5,8 @@
 # an ordinary Nix file, imported directly, not a dendritic module.
 { lib }:
 {
-  allVlanIds = networks: lib.sort (a: b: a < b) (lib.mapAttrsToList (_: net: net.vlanId) networks);
+  allVlanIds =
+    networks: networks |> lib.mapAttrsToList (_: net: net.vlanId) |> lib.sort (a: b: a < b);
 
   # Matches terragrunt-infra-catalog's ros-base module `vlans` variable
   # object shape (name, vlan_id, mtu?, interface_lists?).
@@ -39,17 +40,17 @@
   # (terragrunt-infra-catalog's ros-dhcp-server/main.tofu).
   staticLeasesByNetwork =
     devices:
-    lib.mapAttrs (_: map (i: removeAttrs i [ "network" ])) (
-      lib.groupBy (i: i.network) (
-        lib.concatMap (
-          d:
-          map (i: {
-            inherit (d) name;
-            inherit (i) network mac address;
-          }) d.interfaces
-        ) (builtins.attrValues devices)
-      )
-    );
+    devices
+    |> builtins.attrValues
+    |> lib.concatMap (
+      d:
+      map (i: {
+        inherit (d) name;
+        inherit (i) network mac address;
+      }) d.interfaces
+    )
+    |> lib.groupBy (i: i.network)
+    |> lib.mapAttrs (_: map (i: removeAttrs i [ "network" ]));
 
   # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
   # network leaf via root.hcl's `base_inputs`, not just ros/base's own

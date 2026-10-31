@@ -119,9 +119,9 @@ let
         ];
       };
     in
-    lib.mapAttrs (_: host: host.mainModule) (
-      lib.getAttrs (args.servers ++ (args.agents or [ ])) eval.config.den.hosts.x86_64-linux
-    );
+    eval.config.den.hosts.x86_64-linux
+    |> lib.getAttrs (args.servers ++ (args.agents or [ ]))
+    |> lib.mapAttrs (_: host: host.mainModule);
 
   helpers = ''
     def etcd_members(server, count):

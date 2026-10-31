@@ -10,7 +10,7 @@ let
   ipToInt =
     ip:
     let
-      parts = map lib.toInt (lib.splitString "." ip);
+      parts = ip |> lib.splitString "." |> map lib.toInt;
     in
     (builtins.elemAt parts 0) * 16777216
     + (builtins.elemAt parts 1) * 65536
@@ -35,8 +35,8 @@ let
       parts = lib.splitString "/" cidr;
     in
     {
-      base = ipToInt (builtins.elemAt parts 0);
-      prefixLength = lib.toInt (builtins.elemAt parts 1);
+      base = builtins.elemAt parts 0 |> ipToInt;
+      prefixLength = builtins.elemAt parts 1 |> lib.toInt;
     };
 
   # cidrsubnet(prefix, newbits, netnum): carve a /(prefixLength+newbits)

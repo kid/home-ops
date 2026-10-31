@@ -33,7 +33,9 @@
   # verbatim — no unwrapping to plain data here.
   den.policies.cluster-to-nixidy =
     { cluster, ... }:
-    map (
+    config.systems
+    |> lib.unique
+    |> map (
       system:
       den.lib.policy.instantiate {
         name = "${cluster.name}-nixidy";
@@ -53,7 +55,7 @@
             }
           );
       }
-    ) (lib.unique config.systems);
+    );
 
   den.schema.cluster.includes = [
     den.policies.cluster-to-nixidy

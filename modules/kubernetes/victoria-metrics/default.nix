@@ -43,9 +43,8 @@ _: {
     }:
     let
       # Control-plane ports only exist on servers.
-      k3sNodeAddresses = map (n: n.address) (
-        lib.filter (n: n.address != null && n.role == "server") k3s-nodes
-      );
+      k3sNodeAddresses =
+        k3s-nodes |> lib.filter (n: n.address != null && n.role == "server") |> map (n: n.address);
 
       # k3s runs every control-plane component in one process, and each of
       # their ports serves that process's whole metric registry (~80k series,
@@ -354,7 +353,8 @@ _: {
           # with the default transformer, which a release's own replaces.
           transformer =
             manifests:
-            map (
+            config.nixidy.defaults.helm.transformer manifests
+            |> map (
               m:
               if m.kind == "VMServiceScrape" && m.metadata.name == "victoria-metrics-kube-api-server" then
                 lib.updateManyAttrsByPath [
@@ -368,7 +368,7 @@ _: {
                 ] m
               else
                 m
-            ) (config.nixidy.defaults.helm.transformer manifests);
+            );
         };
 
         resources.vmStaticScrapes.k3s-control-plane.spec.targetEndpoints = [
@@ -400,7 +400,7 @@ _: {
                 (throw "victoria-metrics-sync-job-config not rendered")
                 config.applications.victoria-metrics.helm.releases.victoria-metrics.objects;
           in
-          builtins.hashString "sha256" (builtins.toJSON configMap.data);
+          configMap.data |> builtins.toJSON |> builtins.hashString "sha256";
 
         # The chart names each route <component>-victoria-metrics.
         imports =

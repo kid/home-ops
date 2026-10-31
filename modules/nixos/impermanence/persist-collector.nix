@@ -15,8 +15,8 @@
       }:
       let
         mergePersist = entries: {
-          directories = lib.unique (lib.concatMap (e: e.directories or [ ]) entries);
-          files = lib.unique (lib.concatMap (e: e.files or [ ]) entries);
+          directories = entries |> lib.concatMap (e: e.directories or [ ]) |> lib.unique;
+          files = entries |> lib.concatMap (e: e.files or [ ]) |> lib.unique;
         };
       in
       {
