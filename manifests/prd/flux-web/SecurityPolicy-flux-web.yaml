@@ -1,0 +1,24 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: flux-web
+  namespace: flux-system
+spec:
+  oidc:
+    clientID: flux-web
+    clientSecret:
+      name: flux-web-kanidm-oauth2-credentials
+    logoutPath: /oauth2/logout
+    provider:
+      authorizationEndpoint: https://idm.kidibox.net/ui/oauth2
+      issuer: https://idm.kidibox.net/oauth2/openid/flux-web
+      tokenEndpoint: https://idm.kidibox.net/oauth2/token
+    redirectURL: https://flux.kidibox.net/oauth2/callback
+    scopes:
+      - openid
+      - profile
+      - email
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: flux-web

@@ -14,6 +14,7 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/web-config: a061137b5d650289de129914a46e856390cba51ca67b7452c8b67eae1682f476
         prometheus.io/path: /metrics
         prometheus.io/port: "8080"
         prometheus.io/scrape: "true"
@@ -33,6 +34,7 @@ spec:
       containers:
         - args:
             - --log-level=info
+            - --web-config=/etc/flux-operator/web/config.yaml
           env:
             - name: RUNTIME_NAMESPACE
               valueFrom:
@@ -41,7 +43,7 @@ spec:
             - name: REPORTING_INTERVAL
               value: 5m
             - name: WEB_SERVER_PORT
-              value: "0"
+              value: "9080"
           image: ghcr.io/controlplaneio-fluxcd/flux-operator:v0.62.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -58,6 +60,9 @@ spec:
             - containerPort: 8081
               name: http
               protocol: TCP
+            - containerPort: 9080
+              name: http-web
+              protocol: TCP
           readinessProbe:
             httpGet:
               path: /readyz
@@ -67,7 +72,7 @@ spec:
           resources:
             limits:
               cpu: 2000m
-              memory: 256Mi
+              memory: 512Mi
             requests:
               cpu: 10m
               memory: 64Mi
@@ -83,7 +88,13 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: temp
+            - mountPath: /etc/flux-operator/web
+              name: web-config
+              readOnly: true
       serviceAccountName: flux-operator
       volumes:
         - emptyDir: {}
           name: temp
+        - name: web-config
+          secret:
+            secretName: flux-operator-web-config

@@ -12,6 +12,10 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: http-metrics
+    - name: http-web
+      port: 9080
+      protocol: TCP
+      targetPort: http-web
   selector:
     app.kubernetes.io/instance: flux-operator
     app.kubernetes.io/name: flux-operator

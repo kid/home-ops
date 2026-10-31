@@ -5,6 +5,10 @@
 # manifests/<cluster>/apps, where nixidy-defaults.nix renders one Flux
 # Kustomization per app. modules/den/aspects/services/k3s/bootstrap.nix
 # applies this app once on a new cluster; from then on Flux manages it too.
+#
+# The operator also serves the Flux web UI. Envoy Gateway's OIDC
+# (cluster.methods.mkOidcAuth) lets only Kanidm's admins reach it, so the UI
+# runs Anonymous: every request acts as the flux-web-admins group.
 _: {
   den.aspects.kubernetes.flux.k8s-manifests =
     {
@@ -14,6 +18,11 @@ _: {
       config,
       ...
     }:
+    let
+      webPort = 9080;
+      webGroup = "flux-web-admins";
+      hostname = cluster.methods.mkAppHostname "flux";
+    in
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -33,6 +42,7 @@ _: {
           in
           {
             flux-operator = mkPolicy { "app.kubernetes.io/name" = "flux-operator"; } {
+              ingress = [ (gatewayIngress webPort) ];
               egress = [ apiserverEgress ];
             };
             source-controller = mkPolicy (controller "source-controller") {
@@ -54,15 +64,21 @@ _: {
         helm.releases.flux-operator = {
           chart = charts.controlplaneio-fluxcd.flux-operator;
           values = {
-            # Its OIDC login needs the client secret inside a config file, which
-            # nothing here can render from kaniop's credentials Secret yet.
-            web.enabled = false;
+            web = {
+              # The CiliumNetworkPolicy above replaces it.
+              networkPolicy.create = false;
+              config.authentication = {
+                type = "Anonymous";
+                anonymous.groups = [ webGroup ];
+              };
+            };
             resources = {
               requests = {
                 cpu = "10m";
                 memory = "64Mi";
               };
-              limits.memory = "256Mi";
+              # Peaked at 172Mi without the web UI.
+              limits.memory = "512Mi";
             };
           };
         };
@@ -89,6 +105,69 @@ _: {
             ref = "refs/heads/${branch}";
             path = "${rootPath}/${config.nixidy.appOfApps.name}";
           };
+        };
+      };
+
+      # Separate from flux-operator so the operator never waits on Kanidm.
+      applications.flux-web = {
+        namespace = "flux-system";
+        imports = [
+          (cluster.methods.mkOidcAuth {
+            name = "flux-web";
+            httpRouteName = "flux-web";
+            inherit hostname;
+            group = "admins";
+          })
+        ];
+
+        # The chart's role: read everything, and the UI's actions on Flux objects and workloads.
+        resources.clusterRoleBindings.${webGroup} = {
+          roleRef = {
+            apiGroup = "rbac.authorization.k8s.io";
+            kind = "ClusterRole";
+            name = "flux-web-admin";
+          };
+          subjects = [
+            {
+              apiGroup = "rbac.authorization.k8s.io";
+              kind = "Group";
+              name = webGroup;
+            }
+          ];
+        };
+
+        resources.httpRoutes.flux-web.spec = {
+          parentRefs = [
+            {
+              group = "gateway.networking.k8s.io";
+              kind = "Gateway";
+              name = "apps";
+              namespace = "envoy-gateway-system";
+              sectionName = "https";
+            }
+          ];
+          hostnames = [ hostname ];
+          rules = [
+            {
+              matches = [
+                {
+                  path = {
+                    type = "PathPrefix";
+                    value = "/";
+                  };
+                }
+              ];
+              backendRefs = [
+                {
+                  group = "";
+                  kind = "Service";
+                  name = "flux-operator";
+                  port = webPort;
+                  weight = 1;
+                }
+              ];
+            }
+          ];
         };
       };
     };

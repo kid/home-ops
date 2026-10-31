@@ -182,6 +182,7 @@ in
       trust-manager
       coredns
       flux
+      flux-mcp
       apiserver
       snapshot-controller
       miroir

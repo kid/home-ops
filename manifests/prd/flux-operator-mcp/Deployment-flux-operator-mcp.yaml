@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: flux-operator-mcp
+    app.kubernetes.io/name: flux-operator-mcp
+  name: flux-operator-mcp
+  namespace: flux-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: flux-operator-mcp
+      app.kubernetes.io/name: flux-operator-mcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: flux-operator-mcp
+        app.kubernetes.io/name: flux-operator-mcp
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+      containers:
+        - args:
+            - serve
+            - --transport=http
+            - --port=9090
+            - --read-only=true
+          env:
+            - name: RUNTIME_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: ghcr.io/controlplaneio-fluxcd/flux-operator-mcp:v0.62.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            tcpSocket:
+              port: http
+          name: manager
+          ports:
+            - containerPort: 9090
+              name: http
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: http
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /tmp
+              name: temp
+      serviceAccountName: flux-operator-mcp
+      volumes:
+        - emptyDir: {}
+          name: temp

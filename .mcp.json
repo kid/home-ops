@@ -17,6 +17,15 @@
         "callbackPort": 33418,
         "scope": "openid profile email"
       }
+    },
+    "flux": {
+      "type": "http",
+      "url": "https://flux.kidibox.net/mcp",
+      "oauth": {
+        "clientId": "mcp",
+        "callbackPort": 33418,
+        "scope": "openid profile email"
+      }
     }
   }
 }

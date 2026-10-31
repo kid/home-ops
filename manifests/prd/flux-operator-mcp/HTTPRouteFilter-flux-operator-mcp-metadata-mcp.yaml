@@ -1,0 +1,12 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: HTTPRouteFilter
+metadata:
+  name: flux-operator-mcp-metadata-mcp
+  namespace: flux-system
+spec:
+  directResponse:
+    body:
+      inline: '{"authorization_servers":["https://idm.kidibox.net/oauth2/openid/mcp"],"bearer_methods_supported":["header"],"resource":"https://flux.kidibox.net/mcp","scopes_supported":["openid","profile","email"]}'
+      type: Inline
+    contentType: application/json
+    statusCode: 200
