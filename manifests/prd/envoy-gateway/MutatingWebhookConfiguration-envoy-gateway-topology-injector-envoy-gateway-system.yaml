@@ -1,6 +1,8 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: envoy-gateway-system/envoy-gateway
   labels:
     app.kubernetes.io/component: topology-injector
     app.kubernetes.io/instance: envoy-gateway

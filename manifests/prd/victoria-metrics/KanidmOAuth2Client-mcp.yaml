@@ -13,6 +13,7 @@ spec:
   public: true
   redirectUrl:
     - http://localhost:33418/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: admins
       scopes:

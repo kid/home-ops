@@ -14,6 +14,7 @@ _: {
           kindFilter = [
             "ClusterSecretStore"
             "ExternalSecret"
+            "Password"
           ];
         })
       ];

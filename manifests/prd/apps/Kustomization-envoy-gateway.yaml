@@ -4,6 +4,9 @@ metadata:
   name: envoy-gateway
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: cert-manager
+    - name: external-secrets
   interval: 10m
   path: ./manifests/prd/envoy-gateway
   prune: true
