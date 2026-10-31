@@ -13,7 +13,6 @@
         inputs.disko.nixosModules.disko
       ];
 
-      boot.loader.systemd-boot.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
       virtualisation.incus.agent.enable = true;

@@ -26,8 +26,6 @@
     # Both NICs: the Storage DHCP server sends no gateway.
     networking.useDHCP = true;
 
-    users.mutableUsers = false;
-
     # nixos-anywhere puts the key from secrets/hosts/k3s-prd-0 in place.
     services.openssh.generateHostKeys = false;
 
@@ -44,7 +42,6 @@
     den.aspects.k3s-bootstrap
     den.aspects.k3s-external-secrets
     den.aspects.k3s-miroir-node
-    den.aspects.ssh
   ];
 
   fleet.colmena.deployment.k3s-prd-0.targetHost = config.den.devices.k3s-prd-0.address;
