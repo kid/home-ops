@@ -1,6 +1,9 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
+  labels:
+    app.kubernetes.io/instance: victoria-metrics
+    app.kubernetes.io/name: victoria-metrics-operator
   name: victoria-metrics-victoria-metrics-operator-root-ca
   namespace: monitoring
 spec:
