@@ -656,6 +656,7 @@
         "nixos-images": "nixos-images_2",
         "nixpkgs": "nixpkgs_3",
         "sops-nix": "sops-nix",
+        "srvos": "srvos",
         "treefmt-nix": "treefmt-nix_2"
       }
     },
@@ -676,6 +677,26 @@
       "original": {
         "owner": "Mic92",
         "repo": "sops-nix",
+        "type": "github"
+      }
+    },
+    "srvos": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793241018,
+        "narHash": "sha256-gu/ctomCxRP0x4fSxjkC1AMFPjUBekRIe8pT/Jpb8yo=",
+        "owner": "nix-community",
+        "repo": "srvos",
+        "rev": "824ecec2a0a5a504a5f73d8e7a259c8d09d117b6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "srvos",
         "type": "github"
       }
     },

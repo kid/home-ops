@@ -5,8 +5,8 @@
 # DRBD9 (>= 9.3.1) is needed on every node before miroir can replicate. The
 # default kernel's drbd build can be marked broken in nixpkgs (driver.nix,
 # e.g. for 6.18), so this picks the newest kernel where it is not.
-# Deliberately not `lib.mkDefault`: nothing else in this repo sets
-# boot.kernelPackages.
+# Deliberately not `lib.mkDefault`: nothing else sets boot.kernelPackages on
+# a k3s node (only node1, through srvos's latest-zfs-kernel mixin).
 {
   den.aspects.k3s-miroir-node = {
     miroir-nodes =
