@@ -212,9 +212,6 @@ in
               "plex.kidibox.net" = {
                 address = "10.0.30.100";
               };
-              "prowlarr.kidibox.net" = {
-                address = "10.0.30.110";
-              };
               "radarr.kidibox.net" = {
                 address = "10.0.30.120";
               };
