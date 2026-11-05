@@ -111,6 +111,34 @@ inputs = {
         dst_port    = 8729
         protocol    = "tcp"
       },
+      {
+        action      = "accept"
+        comment     = "Allow prowlarr in K3s to reach animarr on pve1"
+        dst_address = "10.0.30.140"
+        dst_port    = 443
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow prowlarr in K3s to reach radarr on pve1"
+        dst_address = "10.0.30.120"
+        dst_port    = 443
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow prowlarr in K3s to reach sabnzbd on pve1"
+        dst_address = "10.0.30.150"
+        dst_port    = 443
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow prowlarr in K3s to reach sonarr on pve1"
+        dst_address = "10.0.30.130"
+        dst_port    = 443
+        protocol    = "tcp"
+      },
     ]
     Management = [
       {
@@ -124,6 +152,13 @@ inputs = {
         action             = "accept"
         comment            = "Allow WAN"
         out_interface_list = "WAN"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow the *arr apps on pve1 to reach prowlarr in K3s"
+        dst_address = "10.0.42.0/24"
+        dst_port    = 443
+        protocol    = "tcp"
       },
       {
         action      = "accept"
