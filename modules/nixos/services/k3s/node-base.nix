@@ -25,6 +25,9 @@
         "net.core.bpf_jit_harden" = 0;
       };
 
+      # mount.nfs for the kubelet's NFS volumes.
+      boot.supportedFilesystems = [ "nfs" ];
+
       environment.systemPackages = [
         pkgs.iptables
         pkgs.nftables
