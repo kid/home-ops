@@ -87,7 +87,7 @@ let
             nixos_attr = "k3s-${cluster.name}-0";
             cpu = 4;
             memory = "16GiB";
-            disk_size = "64GiB";
+            disk_size = "128GiB";
             mac = macOf "k3s-${cluster.name}-0" "K3s";
             inherit (config.den.devices."k3s-${cluster.name}-0") address;
             extra_nics.storage.mac = macOf "k3s-${cluster.name}-0" "Storage";
@@ -96,7 +96,7 @@ let
             nixos_attr = "k3s-${cluster.name}-1";
             cpu = 4;
             memory = "16GiB";
-            disk_size = "64GiB";
+            disk_size = "128GiB";
             mac = macOf "k3s-${cluster.name}-1" "K3s";
             inherit (config.den.devices."k3s-${cluster.name}-1") address;
             extra_nics.storage.mac = macOf "k3s-${cluster.name}-1" "Storage";
