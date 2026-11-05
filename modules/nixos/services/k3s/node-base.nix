@@ -1,5 +1,6 @@
-# Kernel and tooling every k3s node needs, server or agent, and the MTU of
-# its Storage VLAN NIC (if its den.devices entry has one).
+# Kernel and tooling every k3s node needs, server or agent, the k3s
+# release, and the MTU of its Storage VLAN NIC (if its den.devices entry has
+# one).
 { config, lib, ... }:
 {
   den.aspects.k3s-node-base.nixos =
@@ -10,6 +11,9 @@
           (config.den.devices.${host.name} or { interfaces = [ ]; }).interfaces;
     in
     {
+      # 1.37 enables HPAScaleToZero, which cluster.methods.mkNfsScaler needs.
+      services.k3s.package = pkgs.k3s_1_37;
+
       boot.kernelModules = [
         "br_netfilter"
         "overlay"

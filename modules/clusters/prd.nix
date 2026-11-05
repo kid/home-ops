@@ -195,6 +195,8 @@ in
       kanidm
       prometheus-operator-crds
       victoria-metrics
+      blackbox-exporter
+      prometheus-adapter
       victoria-metrics-mcp
       grafana-operator
       grafana-oidc
