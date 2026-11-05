@@ -1,0 +1,19 @@
+apiVersion: v1
+data:
+  config.yaml: |
+    externalRules:
+    - metricsQuery: min(<<.Series>>{<<.LabelMatchers>>})
+      name:
+        as: nfs_server_up
+      resources:
+        namespaced: false
+      seriesQuery: probe_success{job="nfs"}
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/instance: prometheus-adapter
+    app.kubernetes.io/name: prometheus-adapter
+    app.kubernetes.io/part-of: prometheus-adapter
+  name: prometheus-adapter
+  namespace: monitoring
