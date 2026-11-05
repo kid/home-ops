@@ -4,9 +4,9 @@
 let
   # The nodes reach truenas on the Storage VLAN, not through the router.
   nfsAddr =
-    (lib.findFirst (
-      i: i.network == "Storage"
-    ) (throw "truenas has no Storage interface") config.den.devices.truenas.interfaces).address;
+    config.den.devices.truenas.interfaces
+    |> lib.findFirst (i: i.network == "Storage") (throw "truenas has no Storage interface")
+    |> (i: i.address);
 in
 {
   den.aspects.kubernetes.blackbox-exporter.k8s-manifests =
