@@ -22,9 +22,14 @@ spec:
               value: External
             - name: PROWLARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: PROWLARR__SERVER__ALLOWEDHOSTS
+              value: prowlarr.kidibox.net
           image: ghcr.io/home-operations/prowlarr:3.0.0.5737@sha256:0954599432e16ccd86129f1eb8eb0247fd0d1591aab400f73e2010a1cda37be8
           livenessProbe:
             httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
               path: /ping
               port: http
           name: prowlarr
@@ -33,6 +38,9 @@ spec:
               name: http
           readinessProbe:
             httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
               path: /ping
               port: http
           resources:
@@ -50,6 +58,9 @@ spec:
           startupProbe:
             failureThreshold: 60
             httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
               path: /ping
               port: http
           volumeMounts:

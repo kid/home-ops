@@ -54,6 +54,21 @@ in
 
   den.aspects.kubernetes.media.prowlarr.k8s-manifests =
     { cluster, ... }:
+    let
+      hostname = cluster.methods.mkAppHostname name;
+      # Host filtering always admits localhost, but not the pod IP the
+      # kubelet would send.
+      ping = {
+        path = "/ping";
+        port = "http";
+        httpHeaders = [
+          {
+            name = "Host";
+            value = "localhost";
+          }
+        ];
+      };
+    in
     {
       applications.prowlarr = {
         namespace = "media";
@@ -101,22 +116,17 @@ in
                       # No login of its own; Kanidm in front of it comes later.
                       PROWLARR__AUTH__METHOD = "External";
                       PROWLARR__AUTH__REQUIRED = "DisabledForLocalAddresses";
+                      # Only requests through the apps Gateway.
+                      PROWLARR__SERVER__ALLOWEDHOSTS = hostname;
                     };
                     ports.http.containerPort = port;
                     # Database migrations run before /ping answers.
-                    startupProbe.httpGet = {
-                      path = "/ping";
-                      port = "http";
+                    startupProbe = {
+                      httpGet = ping;
+                      failureThreshold = 60;
                     };
-                    startupProbe.failureThreshold = 60;
-                    livenessProbe.httpGet = {
-                      path = "/ping";
-                      port = "http";
-                    };
-                    readinessProbe.httpGet = {
-                      path = "/ping";
-                      port = "http";
-                    };
+                    livenessProbe.httpGet = ping;
+                    readinessProbe.httpGet = ping;
                     securityContext = {
                       allowPrivilegeEscalation = false;
                       readOnlyRootFilesystem = true;
@@ -160,7 +170,7 @@ in
                   sectionName = "https";
                 }
               ];
-              hostnames = [ (cluster.methods.mkAppHostname name) ];
+              hostnames = [ hostname ];
               rules = [ { backendRefs = [ { inherit name port; } ]; } ];
             };
           };
