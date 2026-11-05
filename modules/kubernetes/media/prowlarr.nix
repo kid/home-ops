@@ -1,6 +1,5 @@
 # Prowlarr, the indexer manager the *arr apps search through, moved from
-# pve1's CT 110. Its config is imported once into the kopiur-backed volume,
-# with replicas at 0 until then so it never starts on an empty one.
+# pve1's CT 110, whose config was imported once into the kopiur-backed volume.
 { config, lib, ... }:
 let
   name = "prowlarr";
@@ -81,8 +80,7 @@ in
               };
 
             deployments.${name}.spec = {
-              # Raised once the config is imported from pve1.
-              replicas = 0;
+              replicas = 1;
               strategy.type = "Recreate";
               selector.matchLabels = labels;
               template = {

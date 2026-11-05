@@ -28,9 +28,6 @@ inputs = {
     "plex.kidibox.net" = {
       address = "10.0.30.100"
     }
-    "prowlarr.kidibox.net" = {
-      address = "10.0.30.110"
-    }
     "pve1.kidibox.net" = {
       address = "10.0.10.11"
     }
