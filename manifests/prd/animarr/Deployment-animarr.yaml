@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: animarr
+  namespace: media
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: animarr
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: animarr
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: SONARR__AUTH__METHOD
+              value: External
+            - name: SONARR__AUTH__REQUIRED
+              value: DisabledForLocalAddresses
+            - name: SONARR__SERVER__ALLOWEDHOSTS
+              value: animarr.kidibox.net
+          image: ghcr.io/home-operations/sonarr:4.0.20.3012@sha256:1f19eb5e0f421418c1a956bbe01310a0141423afe28bd9a4b1dcb8629ff2bce2
+          livenessProbe:
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /ping
+              port: http
+          name: animarr
+          ports:
+            - containerPort: 8989
+              name: http
+          readinessProbe:
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /ping
+              port: http
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /ping
+              port: http
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /tank/library/animes
+              name: library
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/lib/sabnzbd/Downloads
+              name: downloads
+      securityContext:
+        fsGroup: 100350
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 100350
+        runAsNonRoot: true
+        runAsUser: 100350
+        seccompProfile:
+          type: RuntimeDefault
+        supplementalGroups:
+          - 100330
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: animarr
+        - name: downloads
+          nfs:
+            path: /mnt/tank/downloads/sabnzbd
+            server: 10.0.20.126
+        - name: library
+          nfs:
+            path: /mnt/tank/library/animes
+            server: 10.0.20.126
+        - emptyDir: {}
+          name: tmp
