@@ -9,6 +9,8 @@
       applications.sabnzbd = cluster.methods.mkMediaApp {
         name = "sabnzbd";
         servarr = false;
+        # The image writes it into sabnzbd.ini at start.
+        apiKeyEnv = "SABNZBD__API_KEY";
         # renovate: datasource=docker depName=ghcr.io/home-operations/sabnzbd
         tag = "5.1.3@sha256:c89b0322721c3eba47221e5f916505e7e742684651f73c5215717340b6b5402f";
         port = 8080;

@@ -6,6 +6,7 @@ metadata:
 spec:
   dependsOn:
     - name: kopiur-config
+    - name: external-secrets-config
   interval: 10m
   path: ./manifests/prd/radarr
   prune: true

@@ -17,6 +17,11 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: RADARR__AUTH__APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: radarr-api-key
             - name: RADARR__AUTH__METHOD
               value: External
             - name: RADARR__AUTH__REQUIRED

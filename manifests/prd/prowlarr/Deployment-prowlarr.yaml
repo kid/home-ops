@@ -18,6 +18,11 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: PROWLARR__AUTH__APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: prowlarr-api-key
             - name: PROWLARR__AUTH__METHOD
               value: External
             - name: PROWLARR__AUTH__REQUIRED

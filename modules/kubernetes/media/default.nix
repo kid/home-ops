@@ -43,6 +43,10 @@ let
       backupIgnore ? [ ],
       # The HTTPRoute's request timeout; Envoy's own default is 15s.
       requestTimeout ? null,
+      # The env var the app reads its API key from; null for none. The key is
+      # generated once into the <name>-api-key Secret, which the other apps
+      # read too.
+      apiKeyEnv ? if servarr then "${lib.toUpper app}__AUTH__APIKEY" else null,
     }:
     let
       labels."app.kubernetes.io/name" = name;
@@ -63,11 +67,16 @@ let
           }
         ];
       };
+      apiKeySecret = "${name}-api-key";
     in
     {
       inherit namespace;
-      # The kopiur webhook admits the backup objects.
-      flux.dependsOn = [ "kopiur-config" ];
+      flux.dependsOn = [
+        # The kopiur webhook admits the backup objects.
+        "kopiur-config"
+      ]
+      # The API key's Password generator and ExternalSecret.
+      ++ lib.optional (apiKeyEnv != null) "external-secrets-config";
 
       resources =
         methods.mkKopiurBackup {
@@ -86,6 +95,30 @@ let
           ++ backupIgnore;
         }
         // lib.optionalAttrs (replicas == null) (methods.mkNfsScaler { inherit name; })
+        // lib.optionalAttrs (apiKeyEnv != null) {
+          # Generated once: the other apps keep it in their own settings.
+          passwords.${apiKeySecret}.spec = {
+            length = 32;
+            digits = 10;
+            symbols = 0;
+            noUpper = true;
+            allowRepeat = true;
+            secretKeys = [ "api-key" ];
+          };
+          externalSecrets.${apiKeySecret}.spec = {
+            refreshPolicy = "CreatedOnce";
+            target.name = apiKeySecret;
+            dataFrom = [
+              {
+                sourceRef.generatorRef = {
+                  apiVersion = "generators.external-secrets.io/v1alpha1";
+                  kind = "Password";
+                  name = apiKeySecret;
+                };
+              }
+            ];
+          };
+        }
         // {
           ciliumNetworkPolicies.${name} =
             with methods.netpol;
@@ -121,21 +154,28 @@ let
                 // lib.optionalAttrs (supplementalGroups != [ ]) { inherit supplementalGroups; };
                 containers.${name} = {
                   image = "ghcr.io/home-operations/${app}:${tag}";
-                  env = lib.mapAttrs (_: value: { inherit value; }) (
-                    lib.optionalAttrs servarr {
-                      # No login of its own; Kanidm in front of it comes later.
-                      "${envPrefix}__AUTH__METHOD" = "External";
-                      "${envPrefix}__AUTH__REQUIRED" = "DisabledForLocalAddresses";
-                      # Only requests through the apps Gateway or the Service.
-                      "${envPrefix}__SERVER__ALLOWEDHOSTS" = "${hostname},${serviceHostname}";
-                      # Logs go to stdout; the log database behind System ->
-                      # Events only duplicates them.
-                      "${envPrefix}__LOG__DBENABLED" = "false";
-                      # Over whatever level the imported config.xml carries.
-                      "${envPrefix}__LOG__LEVEL" = "info";
-                    }
-                    // env
-                  );
+                  env =
+                    lib.mapAttrs (_: value: { inherit value; }) (
+                      lib.optionalAttrs servarr {
+                        # No login of its own; Kanidm in front of it comes later.
+                        "${envPrefix}__AUTH__METHOD" = "External";
+                        "${envPrefix}__AUTH__REQUIRED" = "DisabledForLocalAddresses";
+                        # Only requests through the apps Gateway or the Service.
+                        "${envPrefix}__SERVER__ALLOWEDHOSTS" = "${hostname},${serviceHostname}";
+                        # Logs go to stdout; the log database behind System ->
+                        # Events only duplicates them.
+                        "${envPrefix}__LOG__DBENABLED" = "false";
+                        # Over whatever level the imported config.xml carries.
+                        "${envPrefix}__LOG__LEVEL" = "info";
+                      }
+                      // env
+                    )
+                    // lib.optionalAttrs (apiKeyEnv != null) {
+                      ${apiKeyEnv}.valueFrom.secretKeyRef = {
+                        name = apiKeySecret;
+                        key = "api-key";
+                      };
+                    };
                   ports.http.containerPort = port;
                   # Database migrations run before the app answers.
                   startupProbe = {
