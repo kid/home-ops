@@ -113,6 +113,9 @@ in
             "--disable=coredns"
             "--disable=local-storage"
             "--disable=metrics-server"
+            # Flux installs the Gateway API CRDs (modules/kubernetes/envoy-gateway/gateway-api-crds.nix).
+            # k3s's own chart would take them over with --force-conflicts.
+            "--disable=gateway-api-crd"
             "--cluster-cidr=${podCIDR}"
             "--service-cidr=${serviceCIDR}"
             # Bare path, NOT unix://…: k3s forwards this to the kubelet's
