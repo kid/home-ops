@@ -1,6 +1,6 @@
-# SABnzbd, the Usenet downloader the *arr apps send grabs to, moving from
-# pve1's CT 150. Renders at 0 replicas until its config is imported into the
-# kopiur-backed volume.
+# SABnzbd, the Usenet downloader the *arr apps send grabs to, moved from
+# pve1's CT 150, whose config was imported once into the kopiur-backed
+# volume.
 _: {
   den.aspects.kubernetes.media.sabnzbd.k8s-manifests =
     { cluster, ... }:
@@ -32,8 +32,6 @@ _: {
         ];
         # Its 1G article cache, plus par2 repair and unpacking.
         memoryLimit = "3Gi";
-        # Raised once the config is imported from pve1.
-        replicas = 0;
       };
     };
 }
