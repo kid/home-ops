@@ -213,11 +213,6 @@ inputs = {
     ]
     Media = [
       {
-        address = "10.0.30.11"
-        mac     = "bc:24:11:bf:d2:cb"
-        name    = "cloudflared1"
-      },
-      {
         address = "10.0.30.126"
         mac     = "bc:24:11:9f:50:bf"
         name    = "truenas"
