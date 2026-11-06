@@ -1,5 +1,5 @@
-# Plex, moving from pve1's CT 100. Renders at 0 replicas until its config is
-# imported into the kopiur-backed volume.
+# Plex, moved from pve1's CT 100, whose config was imported once into the
+# kopiur-backed volume.
 { config, lib, ... }:
 let
   # Where the image keeps Plex's data, under /config.
@@ -65,8 +65,6 @@ in
           "Plug-in Support/Databases/*.db-20*"
           "Plug-in Support/Databases/com.plexapp.dlna.db*"
         ];
-        # Raised once the config is imported from pve1.
-        replicas = 0;
       };
     };
 }

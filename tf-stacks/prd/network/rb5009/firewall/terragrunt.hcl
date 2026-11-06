@@ -111,13 +111,6 @@ inputs = {
         dst_port    = 8729
         protocol    = "tcp"
       },
-      {
-        action      = "accept"
-        comment     = "Allow K3s to reach plex on pve1"
-        dst_address = "10.0.30.100"
-        dst_port    = 443
-        protocol    = "tcp"
-      },
     ]
     Management = [
       {

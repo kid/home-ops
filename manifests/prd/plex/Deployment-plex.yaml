@@ -4,7 +4,6 @@ metadata:
   name: plex
   namespace: media
 spec:
-  replicas: 0
   selector:
     matchLabels:
       app.kubernetes.io/name: plex
