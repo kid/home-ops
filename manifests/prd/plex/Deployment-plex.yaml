@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex
+  namespace: media
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: plex
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: plex
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PLEX_ADVERTISE_URL
+              value: https://plex.kidibox.net:443
+            - name: PLEX_PREFERENCE_1
+              value: LanNetworksBandwidth=172.40.0.0/16,10.0.0.0/9
+            - name: PLEX_PREFERENCE_2
+              value: TranscoderTempDirectory=/tmp
+            - name: PLEX_PREFERENCE_3
+              value: DlnaEnabled=0
+            - name: PLEX_PREFERENCE_4
+              value: ButlerTaskBackupDatabase=0
+          image: ghcr.io/home-operations/plex:1.43.5.11079@sha256:06ef0fc23e9af9bbaf284c3f27972f94e703d13d6f745edeb6818fcbebf6c673
+          livenessProbe:
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /identity
+              port: http
+          name: plex
+          ports:
+            - containerPort: 32400
+              name: http
+          readinessProbe:
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /identity
+              port: http
+          resources:
+            limits:
+              memory: 4Gi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /identity
+              port: http
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /config/logs
+              name: logs
+            - mountPath: /tank/library
+              name: library
+              readOnly: true
+            - mountPath: /tmp
+              name: tmp
+      securityContext:
+        fsGroup: 100490
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 100490
+        runAsNonRoot: true
+        runAsUser: 100490
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: plex
+        - name: library
+          nfs:
+            path: /mnt/tank/library
+            readOnly: true
+            server: 10.0.20.126
+        - emptyDir: {}
+          name: logs
+        - emptyDir: {}
+          name: tmp
