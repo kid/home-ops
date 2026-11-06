@@ -85,7 +85,6 @@ let
                   80
                   443
                 ])
-                gatewayEgress
                 { toEndpoints = [ { } ]; }
               ];
             };
