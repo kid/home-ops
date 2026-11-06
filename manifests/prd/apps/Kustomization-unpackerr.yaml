@@ -1,0 +1,19 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: unpackerr
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: radarr
+    - name: sonarr
+    - name: animarr
+  interval: 10m
+  path: ./manifests/prd/unpackerr
+  prune: true
+  retryInterval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  timeout: 5m
+  wait: true
