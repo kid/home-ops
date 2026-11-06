@@ -1,0 +1,38 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: sabnzbd
+  namespace: media
+spec:
+  credentialProjection:
+    enabled: true
+  files:
+    ignoreRules:
+      - /lost+found
+      - /MediaCover
+      - /Definitions
+      - /Backups
+      - /Sentry
+      - /UpdateLogs
+      - /logs
+      - /logs.db*
+  identity:
+    hostname: sabnzbd
+    username: sabnzbd
+  mover:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 100330
+      runAsUser: 100330
+  repository:
+    kind: ClusterRepository
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: sabnzbd

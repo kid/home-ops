@@ -1,4 +1,4 @@
-# The shape every *arr app here shares: one Deployment on a kopiur-backed
+# The shape every media app here shares: one Deployment on a kopiur-backed
 # config volume, its Service and HTTPRoute on the apps Gateway, NFS mounts
 # from truenas, and its Cilium policy. Returns the nixidy application, for
 # `applications.<name>`.
@@ -15,8 +15,13 @@ let
   mkMediaApp =
     {
       name,
-      # The servarr app the image runs: animarr is a second sonarr.
+      # The image's app: animarr is a second sonarr.
       app ? name,
+      # The *arr family (Sonarr, Radarr, Prowlarr), configured through the
+      # same env and probed on /ping.
+      servarr ? true,
+      env ? { },
+      probePath ? "/ping",
       tag,
       port,
       # Also the kopiur mover's uid, and the owner of what it writes over NFS.
@@ -27,6 +32,12 @@ let
       storage ? "1Gi",
       # null leaves it to the HPA from mkNfsScaler.
       replicas ? null,
+      # Out to the world (indexers, metadata, Usenet servers).
+      egressPorts ? [
+        80
+        443
+      ],
+      memoryLimit ? "1Gi",
     }:
     let
       labels."app.kubernetes.io/name" = name;
@@ -37,8 +48,8 @@ let
       envPrefix = lib.toUpper app;
       # Host filtering always admits localhost, but not the pod IP the
       # kubelet would send.
-      ping = {
-        path = "/ping";
+      probe = {
+        path = probePath;
         port = "http";
         httpHeaders = [
           {
@@ -81,10 +92,7 @@ let
               # Indexers, metadata and the apps still on pve1 (world); the
               # other media apps, by Service name.
               egress = [
-                (worldEgress [
-                  80
-                  443
-                ])
+                (worldEgress egressPorts)
                 { toEndpoints = [ { } ]; }
               ];
             };
@@ -107,26 +115,29 @@ let
                 // lib.optionalAttrs (supplementalGroups != [ ]) { inherit supplementalGroups; };
                 containers.${name} = {
                   image = "ghcr.io/home-operations/${app}:${tag}";
-                  env = lib.mapAttrs (_: value: { inherit value; }) {
-                    # No login of its own; Kanidm in front of it comes later.
-                    "${envPrefix}__AUTH__METHOD" = "External";
-                    "${envPrefix}__AUTH__REQUIRED" = "DisabledForLocalAddresses";
-                    # Only requests through the apps Gateway or the Service.
-                    "${envPrefix}__SERVER__ALLOWEDHOSTS" = "${hostname},${serviceHostname}";
-                    # Logs go to stdout; the log database behind System ->
-                    # Events only duplicates them.
-                    "${envPrefix}__LOG__DBENABLED" = "false";
-                    # Over whatever level the imported config.xml carries.
-                    "${envPrefix}__LOG__LEVEL" = "info";
-                  };
+                  env = lib.mapAttrs (_: value: { inherit value; }) (
+                    lib.optionalAttrs servarr {
+                      # No login of its own; Kanidm in front of it comes later.
+                      "${envPrefix}__AUTH__METHOD" = "External";
+                      "${envPrefix}__AUTH__REQUIRED" = "DisabledForLocalAddresses";
+                      # Only requests through the apps Gateway or the Service.
+                      "${envPrefix}__SERVER__ALLOWEDHOSTS" = "${hostname},${serviceHostname}";
+                      # Logs go to stdout; the log database behind System ->
+                      # Events only duplicates them.
+                      "${envPrefix}__LOG__DBENABLED" = "false";
+                      # Over whatever level the imported config.xml carries.
+                      "${envPrefix}__LOG__LEVEL" = "info";
+                    }
+                    // env
+                  );
                   ports.http.containerPort = port;
-                  # Database migrations run before /ping answers.
+                  # Database migrations run before the app answers.
                   startupProbe = {
-                    httpGet = ping;
+                    httpGet = probe;
                     failureThreshold = 60;
                   };
-                  livenessProbe.httpGet = ping;
-                  readinessProbe.httpGet = ping;
+                  livenessProbe.httpGet = probe;
+                  readinessProbe.httpGet = probe;
                   securityContext = {
                     allowPrivilegeEscalation = false;
                     readOnlyRootFilesystem = true;
@@ -137,7 +148,7 @@ let
                       cpu = "50m";
                       memory = "256Mi";
                     };
-                    limits.memory = "1Gi";
+                    limits.memory = memoryLimit;
                   };
                   volumeMounts = {
                     "/config".name = "config";
