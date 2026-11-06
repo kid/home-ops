@@ -1,0 +1,16 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: sabnzbd
+  namespace: media
+spec:
+  credentialProjection:
+    enabled: true
+  policy:
+    onMissingSnapshot: Continue
+  source:
+    fromPolicy:
+      name: sabnzbd
+      offset: 0
+  target:
+    populator: {}
