@@ -132,12 +132,6 @@ inputs = {
         comment            = "Allow WAN"
         out_interface_list = "WAN"
       },
-      {
-        action      = "accept"
-        comment     = "Allow cloudflared access to HomeAssistant"
-        dst_address = "10.0.10.101"
-        src_address = "10.0.30.11"
-      },
     ]
     Servers = [
       {
