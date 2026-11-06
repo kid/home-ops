@@ -212,9 +212,6 @@ in
               "plex.kidibox.net" = {
                 address = "10.0.30.100";
               };
-              "sabnzbd.kidibox.net" = {
-                address = "10.0.30.150";
-              };
               "doorbell.iot.home.kidibox.net" = {
                 address = "10.0.101.100";
               };

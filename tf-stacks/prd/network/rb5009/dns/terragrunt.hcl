@@ -28,9 +28,6 @@ inputs = {
     "pve1.kidibox.net" = {
       address = "10.0.10.11"
     }
-    "sabnzbd.kidibox.net" = {
-      address = "10.0.30.150"
-    }
   }
   dns_upstream_servers = [
     "9.9.9.9",

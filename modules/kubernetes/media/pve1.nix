@@ -1,12 +1,9 @@
-# The apps still on pve1, behind their own Caddy on 443, that the cluster's
-# media apps call: the Sonarr instances and Radarr send grabs to sabnzbd and
-# notify Plex, and Prowlarr checks sabnzbd. Drop each app as it moves into
-# the cluster, and this aspect with the last one.
+# Plex, still on pve1 behind its own Caddy on 443, which the Sonarr instances
+# and Radarr notify. Goes with it when it moves into the cluster.
 { lib, ... }:
 let
   pve1Apps = {
     plex = "10.0.30.100";
-    sabnzbd = "10.0.30.150";
   };
 in
 {
