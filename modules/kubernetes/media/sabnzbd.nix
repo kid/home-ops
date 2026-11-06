@@ -1,7 +1,8 @@
 # SABnzbd, the Usenet downloader the *arr apps send grabs to, moved from
 # pve1's CT 150, whose config was imported once into the kopiur-backed
 # volume.
-_: {
+{ config, ... }:
+{
   den.aspects.kubernetes.media.sabnzbd.k8s-manifests =
     { cluster, ... }:
     {
@@ -15,10 +16,14 @@ _: {
         env = {
           # After the pod's own hostname.
           SABNZBD__HOST_WHITELIST_ENTRIES = "sabnzbd.kidibox.net, sabnzbd.media.svc.cluster.local";
-          # Every client reaches it from the pod network (Envoy, the other
-          # apps, the kubelet's probes through cilium_host), which is outside
-          # the private ranges SABnzbd counts as local by default.
-          SABNZBD__LOCAL_RANGES_ENTRIES = cluster.networks.pods.cidr;
+          # Replaces SABnzbd's default (any private address) wholesale, and
+          # it checks X-Forwarded-For against it too: the pod network for the
+          # connection itself (Envoy, the other apps, the kubelet's probes
+          # through cilium_host; outside 172.16.0.0/12), and the home
+          # networks for the browsers Envoy forwards.
+          SABNZBD__LOCAL_RANGES_ENTRIES = "${cluster.networks.pods.cidr}, ${
+            config.den.environments.${cluster.environment}.cidrBase
+          }";
         };
         probePath = "/api?mode=version";
         # The CT's uid 330 behind the unprivileged-CT offset: what owns the
