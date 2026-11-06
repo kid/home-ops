@@ -18,9 +18,10 @@
     };
     # Chart derivations no longer come from nixhelm's own index — kept only
     # for its helmupdater CLI (modules/flake/devshell.nix), used to add/bump
-    # entries under ../../charts.
+    # entries under ../../charts. Not pinned by rev: nothing rendered depends
+    # on it, so it moves with the weekly flake.lock maintenance PR.
     nixhelm = {
-      url = "github:farcaller/nixhelm/767835ca2d7a794e5a92ad081cc1d8b5c87d7196";
+      url = "github:farcaller/nixhelm";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
