@@ -247,14 +247,6 @@ in
                   comment = "Allow access to all vlans"; # Because HomeAssistant lives here at the moment
                 }
               ];
-              "${networks.Media.name}" = [
-                {
-                  action = "accept";
-                  dst_address = "10.0.10.101";
-                  src_address = "10.0.30.11";
-                  comment = "Allow cloudflared access to HomeAssistant";
-                }
-              ];
               "${networks.Trusted.name}" = [
                 {
                   action = "accept";
