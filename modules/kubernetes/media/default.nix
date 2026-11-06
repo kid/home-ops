@@ -27,7 +27,8 @@ let
       # Also the kopiur mover's uid, and the owner of what it writes over NFS.
       uid,
       supplementalGroups ? [ ],
-      # <volume> = { path = <export on truenas>; mountPath = <in the pod>; }
+      # <volume> = { path = <export on truenas>; mountPath = <in the pod>;
+      # readOnly ? false; }
       nfs ? { },
       storage ? "1Gi",
       # null leaves it to the HPA from mkNfsScaler.
@@ -38,6 +39,10 @@ let
         443
       ],
       memoryLimit ? "1Gi",
+      # More paths the app rebuilds, kept out of the snapshots.
+      backupIgnore ? [ ],
+      # The HTTPRoute's request timeout; Envoy's own default is 15s.
+      requestTimeout ? null,
     }:
     let
       labels."app.kubernetes.io/name" = name;
@@ -77,7 +82,8 @@ let
             "/UpdateLogs"
             "/logs"
             "/logs.db*"
-          ];
+          ]
+          ++ backupIgnore;
         }
         // lib.optionalAttrs (replicas == null) (methods.mkNfsScaler { inherit name; })
         // {
@@ -157,7 +163,12 @@ let
                     "/config/logs".name = "logs";
                     "/tmp".name = "tmp";
                   }
-                  // lib.mapAttrs' (volume: v: lib.nameValuePair v.mountPath { name = volume; }) nfs;
+                  // lib.mapAttrs' (
+                    volume: v:
+                    lib.nameValuePair v.mountPath (
+                      { name = volume; } // lib.optionalAttrs (v.readOnly or false) { readOnly = true; }
+                    )
+                  ) nfs;
                 };
                 volumes = {
                   config.persistentVolumeClaim.claimName = name;
@@ -168,7 +179,8 @@ let
                   nfs = {
                     server = nfsServer;
                     inherit (v) path;
-                  };
+                  }
+                  // lib.optionalAttrs (v.readOnly or false) { readOnly = true; };
                 }) nfs;
               };
             };
@@ -193,7 +205,14 @@ let
               }
             ];
             hostnames = [ hostname ];
-            rules = [ { backendRefs = [ { inherit name port; } ]; } ];
+            rules = [
+              (
+                {
+                  backendRefs = [ { inherit name port; } ];
+                }
+                // lib.optionalAttrs (requestTimeout != null) { timeouts.request = requestTimeout; }
+              )
+            ];
           };
         };
     };

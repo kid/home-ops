@@ -1,0 +1,49 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: plex
+  namespace: media
+spec:
+  credentialProjection:
+    enabled: true
+  files:
+    ignoreRules:
+      - /lost+found
+      - /MediaCover
+      - /Definitions
+      - /Backups
+      - /Sentry
+      - /UpdateLogs
+      - /logs
+      - /logs.db*
+      - /Library/Application Support/Plex Media Server/Metadata
+      - /Library/Application Support/Plex Media Server/Media
+      - /Library/Application Support/Plex Media Server/Cache
+      - /Library/Application Support/Plex Media Server/Codecs
+      - /Library/Application Support/Plex Media Server/Drivers
+      - /Library/Application Support/Plex Media Server/Logs
+      - /Library/Application Support/Plex Media Server/Crash Reports
+      - /Library/Application Support/Plex Media Server/Updates
+      - /Library/Application Support/Plex Media Server/Plug-in Support/Caches
+      - /Library/Application Support/Plex Media Server/Plug-in Support/Databases/*.db-20*
+      - /Library/Application Support/Plex Media Server/Plug-in Support/Databases/com.plexapp.dlna.db*
+  identity:
+    hostname: plex
+    username: plex
+  mover:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 100490
+      runAsUser: 100490
+  repository:
+    kind: ClusterRepository
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: plex
