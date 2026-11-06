@@ -51,7 +51,20 @@ let
       flux.dependsOn = [ "kopiur-config" ];
 
       resources =
-        methods.mkKopiurBackup { inherit name uid storage; }
+        methods.mkKopiurBackup {
+          inherit name uid storage;
+          # Cover art and indexer definitions are re-downloaded, the rest is
+          # the app's own logs and zip backups.
+          ignore = [
+            "/MediaCover"
+            "/Definitions"
+            "/Backups"
+            "/Sentry"
+            "/UpdateLogs"
+            "/logs"
+            "/logs.db*"
+          ];
+        }
         // lib.optionalAttrs (replicas == null) (methods.mkNfsScaler { inherit name; })
         // {
           ciliumNetworkPolicies.${name} =
@@ -93,6 +106,11 @@ let
                     "${envPrefix}__AUTH__REQUIRED" = "DisabledForLocalAddresses";
                     # Only requests through the apps Gateway.
                     "${envPrefix}__SERVER__ALLOWEDHOSTS" = hostname;
+                    # Logs go to stdout; the log database behind System ->
+                    # Events only duplicates them.
+                    "${envPrefix}__LOG__DBENABLED" = "false";
+                    # Over whatever level the imported config.xml carries.
+                    "${envPrefix}__LOG__LEVEL" = "info";
                   };
                   ports.http.containerPort = port;
                   # Database migrations run before /ping answers.
@@ -116,12 +134,16 @@ let
                   };
                   volumeMounts = {
                     "/config".name = "config";
+                    # The log files have no off switch; keep them off the
+                    # volume.
+                    "/config/logs".name = "logs";
                     "/tmp".name = "tmp";
                   }
                   // lib.mapAttrs' (volume: v: lib.nameValuePair v.mountPath { name = volume; }) nfs;
                 };
                 volumes = {
                   config.persistentVolumeClaim.claimName = name;
+                  logs.emptyDir = { };
                   tmp.emptyDir = { };
                 }
                 // lib.mapAttrs (_: v: {

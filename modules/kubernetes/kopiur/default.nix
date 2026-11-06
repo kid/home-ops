@@ -7,13 +7,15 @@ let
   # world-readable (https://kopiur.home-operations.com/permissions/).
   # existingClaim backs up a PVC something else creates (e.g. a StatefulSet
   # volumeClaimTemplate) instead: no PVC here, and that claim must carry the
-  # dataSourceRef to Restore `name` itself.
+  # dataSourceRef to Restore `name` itself. ignore lists paths the app can
+  # rebuild (caches, logs), kept out of the snapshots.
   mkKopiurBackup =
     {
       name,
       uid ? 1000,
       storage ? "1Gi",
       existingClaim ? null,
+      ignore ? [ ],
     }:
     lib.optionalAttrs (existingClaim == null) {
       persistentVolumeClaims.${name}.spec = {
@@ -53,6 +55,11 @@ let
           keepDaily = 14;
           keepWeekly = 4;
         };
+      }
+      // lib.optionalAttrs (ignore != [ ]) {
+        # Replaces kopiur's default rules wholesale; /lost+found is the only
+        # one an ext4 volume has.
+        files.ignoreRules = [ "/lost+found" ] ++ ignore;
       };
       snapshotSchedules.${name}.spec = {
         policyRef.name = name;

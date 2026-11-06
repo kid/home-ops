@@ -21,6 +21,10 @@ spec:
               value: External
             - name: SONARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: SONARR__LOG__DBENABLED
+              value: "false"
+            - name: SONARR__LOG__LEVEL
+              value: info
             - name: SONARR__SERVER__ALLOWEDHOSTS
               value: animarr.kidibox.net
           image: ghcr.io/home-operations/sonarr:4.0.20.3012@sha256:1f19eb5e0f421418c1a956bbe01310a0141423afe28bd9a4b1dcb8629ff2bce2
@@ -65,6 +69,8 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: config
+            - mountPath: /config/logs
+              name: logs
             - mountPath: /tank/library/animes
               name: library
             - mountPath: /tmp
@@ -93,5 +99,7 @@ spec:
           nfs:
             path: /mnt/tank/library/animes
             server: 10.0.20.126
+        - emptyDir: {}
+          name: logs
         - emptyDir: {}
           name: tmp

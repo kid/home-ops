@@ -21,6 +21,10 @@ spec:
               value: External
             - name: RADARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: RADARR__LOG__DBENABLED
+              value: "false"
+            - name: RADARR__LOG__LEVEL
+              value: info
             - name: RADARR__SERVER__ALLOWEDHOSTS
               value: radarr.kidibox.net
           image: ghcr.io/home-operations/radarr:6.4.4.10685@sha256:1902ad2c08e9bac276ff9a1429af2eaa2f3c635a51f138f1b3eb734995171537
@@ -65,6 +69,8 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: config
+            - mountPath: /config/logs
+              name: logs
             - mountPath: /tank/library/movies
               name: library
             - mountPath: /tmp
@@ -93,5 +99,7 @@ spec:
           nfs:
             path: /mnt/tank/library/movies
             server: 10.0.20.126
+        - emptyDir: {}
+          name: logs
         - emptyDir: {}
           name: tmp
