@@ -6,6 +6,16 @@ metadata:
 spec:
   credentialProjection:
     enabled: true
+  files:
+    ignoreRules:
+      - /lost+found
+      - /MediaCover
+      - /Definitions
+      - /Backups
+      - /Sentry
+      - /UpdateLogs
+      - /logs
+      - /logs.db*
   identity:
     hostname: animarr
     username: animarr

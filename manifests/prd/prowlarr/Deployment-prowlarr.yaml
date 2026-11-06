@@ -22,6 +22,10 @@ spec:
               value: External
             - name: PROWLARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: PROWLARR__LOG__DBENABLED
+              value: "false"
+            - name: PROWLARR__LOG__LEVEL
+              value: info
             - name: PROWLARR__SERVER__ALLOWEDHOSTS
               value: prowlarr.kidibox.net
           image: ghcr.io/home-operations/prowlarr:3.0.0.5737@sha256:0954599432e16ccd86129f1eb8eb0247fd0d1591aab400f73e2010a1cda37be8
@@ -66,6 +70,8 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: config
+            - mountPath: /config/logs
+              name: logs
             - mountPath: /tmp
               name: tmp
       securityContext:
@@ -80,5 +86,7 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: prowlarr
+        - emptyDir: {}
+          name: logs
         - emptyDir: {}
           name: tmp
