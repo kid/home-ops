@@ -39,7 +39,8 @@ in
         flux.dependsOn = [ "kaniop" ];
 
         resources.services.kube-api = {
-          metadata.annotations."external-dns.alpha.kubernetes.io/hostname" = hostname;
+          # external-dns 0.23 dropped the legacy external-dns.alpha.kubernetes.io/ prefix.
+          metadata.annotations."external-dns.kubernetes.io/hostname" = hostname;
           spec = {
             type = "LoadBalancer";
             ports = [
