@@ -1,9 +1,8 @@
 # builtins.toJSON (valid YAML) avoids hand-indented YAML silently nesting `ingress`/`toPorts` wrong.
-{ config, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
     {
-      cluster,
       firewall-ports ? [ ],
       ...
     }:
@@ -20,7 +19,7 @@
           port = 6443;
           protocol = "TCP";
           description = "kube-apiserver";
-          from = [ "cluster" ];
+          from = [ "world" ];
           controlPlane = true;
         }
         {
@@ -61,40 +60,21 @@
       # It matches the host endpoint's labels, not the Node object's: Cilium's
       # default label filter drops kubernetes.io/* there (a kubernetes.io/os
       # selector matches no node) but keeps node-role.kubernetes.io/*.
-      mkPolicy = name: nodeSelector: ports: extraIngress: {
+      mkPolicy = name: nodeSelector: ports: {
         apiVersion = "cilium.io/v2";
         kind = "CiliumClusterwideNetworkPolicy";
         metadata.name = name;
         spec = {
           inherit nodeSelector;
-          ingress = mkIngress ports ++ extraIngress;
+          ingress = mkIngress ports;
         };
       };
 
-      # A node joins over the API port while Cilium still counts it as
-      # `world`: it is only `cluster` once registered. The whole node VLAN,
-      # so a new node needs no policy change first.
-      nodeJoinIngress = [
-        {
-          fromCIDR = [ config.den.environments.${cluster.environment}.networks.${cluster.network}.cidr ];
-          toPorts = [
-            {
-              ports = [
-                {
-                  port = "6443";
-                  protocol = "TCP";
-                }
-              ];
-            }
-          ];
-        }
-      ];
-
       policies = [
-        (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports) [ ])
+        (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports))
         (mkPolicy "node-host-firewall-control-plane" {
           matchLabels."node-role.kubernetes.io/control-plane" = "true";
-        } (lib.filter isControlPlane ports) nodeJoinIngress)
+        } (lib.filter isControlPlane ports))
       ];
     in
     {
