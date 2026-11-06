@@ -30,7 +30,10 @@ let
     }:
     let
       labels."app.kubernetes.io/name" = name;
+      namespace = "media";
       hostname = methods.mkAppHostname name;
+      # What the media apps call each other by.
+      serviceHostname = "${name}.${namespace}.svc.cluster.local";
       envPrefix = lib.toUpper app;
       # Host filtering always admits localhost, but not the pod IP the
       # kubelet would send.
@@ -46,7 +49,7 @@ let
       };
     in
     {
-      namespace = "media";
+      inherit namespace;
       # The kopiur webhook admits the backup objects.
       flux.dependsOn = [ "kopiur-config" ];
 
@@ -70,15 +73,20 @@ let
           ciliumNetworkPolicies.${name} =
             with methods.netpol;
             mkPolicy labels {
-              ingress = [ (gatewayIngress port) ];
-              # Indexers, metadata and the apps still on pve1; the apps in
-              # the cluster through their Gateway hostnames.
+              ingress = [
+                (gatewayIngress port)
+                # The other media apps, by Service name.
+                (fromPods { } [ port ])
+              ];
+              # Indexers, metadata and the apps still on pve1 (world); the
+              # other media apps, by Service name.
               egress = [
                 (worldEgress [
                   80
                   443
                 ])
                 gatewayEgress
+                { toEndpoints = [ { } ]; }
               ];
             };
 
@@ -104,8 +112,8 @@ let
                     # No login of its own; Kanidm in front of it comes later.
                     "${envPrefix}__AUTH__METHOD" = "External";
                     "${envPrefix}__AUTH__REQUIRED" = "DisabledForLocalAddresses";
-                    # Only requests through the apps Gateway.
-                    "${envPrefix}__SERVER__ALLOWEDHOSTS" = hostname;
+                    # Only requests through the apps Gateway or the Service.
+                    "${envPrefix}__SERVER__ALLOWEDHOSTS" = "${hostname},${serviceHostname}";
                     # Logs go to stdout; the log database behind System ->
                     # Events only duplicates them.
                     "${envPrefix}__LOG__DBENABLED" = "false";

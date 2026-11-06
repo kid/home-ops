@@ -21,6 +21,8 @@ spec:
         - ports:
             - port: "10443"
               protocol: TCP
+    - toEndpoints:
+        - {}
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: animarr
@@ -29,6 +31,12 @@ spec:
         - matchLabels:
             app.kubernetes.io/name: envoy
             k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "8989"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels: {}
       toPorts:
         - ports:
             - port: "8989"
