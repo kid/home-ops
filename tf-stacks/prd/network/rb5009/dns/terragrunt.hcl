@@ -19,9 +19,6 @@ inputs = {
     "doorbell.iot.home.kidibox.net" = {
       address = "10.0.101.100"
     }
-    "ha.kidibox.net" = {
-      address = "10.0.10.101"
-    }
     "pve1.kidibox.net" = {
       address = "10.0.10.11"
     }
