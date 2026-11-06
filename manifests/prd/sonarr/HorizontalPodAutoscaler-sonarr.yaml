@@ -1,0 +1,23 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sonarr
+  namespace: media
+spec:
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 0
+  maxReplicas: 1
+  metrics:
+    - external:
+        metric:
+          name: nfs_server_up
+        target:
+          averageValue: 1000m
+          type: AverageValue
+      type: External
+  minReplicas: 0
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sonarr

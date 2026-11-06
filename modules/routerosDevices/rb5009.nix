@@ -215,12 +215,6 @@ in
               "radarr.kidibox.net" = {
                 address = "10.0.30.120";
               };
-              "sonarr.kidibox.net" = {
-                address = "10.0.30.130";
-              };
-              "animarr.kidibox.net" = {
-                address = "10.0.30.140";
-              };
               "sabnzbd.kidibox.net" = {
                 address = "10.0.30.150";
               };

@@ -1,5 +1,5 @@
-# animarr, the Sonarr instance for anime, moving from pve1's CT 140. Renders
-# at 0 replicas until its config is imported into the kopiur-backed volume.
+# animarr, the Sonarr instance for anime, moved from pve1's CT 140, whose
+# config was imported once into the kopiur-backed volume.
 _: {
   den.aspects.kubernetes.media.animarr.k8s-manifests =
     { cluster, ... }:
@@ -26,8 +26,6 @@ _: {
             mountPath = "/var/lib/sabnzbd/Downloads";
           };
         };
-        # Raised once the config is imported from pve1.
-        replicas = 0;
       };
     };
 }

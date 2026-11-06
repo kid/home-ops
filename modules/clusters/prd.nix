@@ -205,6 +205,7 @@ in
       media.prowlarr
       media.animarr
       media.sonarr
+      media.pve1
     ])
     ++ [ incusTerragruntAspect ];
 

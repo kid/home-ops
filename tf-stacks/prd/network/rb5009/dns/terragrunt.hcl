@@ -16,9 +16,6 @@ dependencies {
 inputs = {
   bridge_name = "bridge1"
   dns_static_records = {
-    "animarr.kidibox.net" = {
-      address = "10.0.30.140"
-    }
     "doorbell.iot.home.kidibox.net" = {
       address = "10.0.101.100"
     }
@@ -36,9 +33,6 @@ inputs = {
     }
     "sabnzbd.kidibox.net" = {
       address = "10.0.30.150"
-    }
-    "sonarr.kidibox.net" = {
-      address = "10.0.30.130"
     }
   }
   dns_upstream_servers = [
