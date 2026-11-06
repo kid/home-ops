@@ -11,9 +11,15 @@ _: {
         # renovate: datasource=docker depName=ghcr.io/home-operations/sabnzbd
         tag = "5.1.3@sha256:c89b0322721c3eba47221e5f916505e7e742684651f73c5215717340b6b5402f";
         port = 8080;
-        # The image writes these into sabnzbd.ini at start, after the pod's
-        # own hostname.
-        env.SABNZBD__HOST_WHITELIST_ENTRIES = "sabnzbd.kidibox.net, sabnzbd.media.svc.cluster.local";
+        # The image writes these into sabnzbd.ini at start.
+        env = {
+          # After the pod's own hostname.
+          SABNZBD__HOST_WHITELIST_ENTRIES = "sabnzbd.kidibox.net, sabnzbd.media.svc.cluster.local";
+          # Every client reaches it from the pod network (Envoy, the other
+          # apps, the kubelet's probes through cilium_host), which is outside
+          # the private ranges SABnzbd counts as local by default.
+          SABNZBD__LOCAL_RANGES_ENTRIES = cluster.networks.pods.cidr;
+        };
         probePath = "/api?mode=version";
         # The CT's uid 330 behind the unprivileged-CT offset: what owns the
         # downloads on truenas.

@@ -19,6 +19,8 @@ spec:
         - env:
             - name: SABNZBD__HOST_WHITELIST_ENTRIES
               value: sabnzbd.kidibox.net, sabnzbd.media.svc.cluster.local
+            - name: SABNZBD__LOCAL_RANGES_ENTRIES
+              value: 172.40.0.0/16
           image: ghcr.io/home-operations/sabnzbd:5.1.3@sha256:c89b0322721c3eba47221e5f916505e7e742684651f73c5215717340b6b5402f
           livenessProbe:
             httpGet:
