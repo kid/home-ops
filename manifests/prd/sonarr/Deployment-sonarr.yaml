@@ -17,6 +17,11 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: SONARR__AUTH__APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: sonarr-api-key
             - name: SONARR__AUTH__METHOD
               value: External
             - name: SONARR__AUTH__REQUIRED

@@ -17,6 +17,11 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: SABNZBD__API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: sabnzbd-api-key
             - name: SABNZBD__HOST_WHITELIST_ENTRIES
               value: sabnzbd.kidibox.net, sabnzbd.media.svc.cluster.local
             - name: SABNZBD__LOCAL_RANGES_ENTRIES
