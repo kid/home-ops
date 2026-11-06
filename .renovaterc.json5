@@ -36,8 +36,8 @@
       datasourceTemplate: "docker",
       depNameTemplate: "{{{registry}}}/{{{chart}}}",
     },
-    // Flake inputs on the manifest/chart path (nixidy, nix-kube-generators,
-    // nixhelm) are pinned by rev in the module that declares them, so each
+    // Flake inputs on the manifest path (nixidy, nix-kube-generators) are
+    // pinned by rev in the module that declares them, so each
     // gets its own PR. The nix manager would edit the generated flake.nix
     // instead, which flake-file then reports as drift.
     {
@@ -56,10 +56,17 @@
       enabled: true,
     },
     {
-      // Provider lock refreshes get their own PR, apart from flake.lock.
+      // Provider lock refreshes get their own PR, apart from flake.lock. The
+      // scopes tell the two "lock file maintenance" PR titles apart.
       matchManagers: ["terraform", "terragrunt"],
       matchUpdateTypes: ["lockFileMaintenance"],
       groupName: "terraform providers",
+      semanticCommitScope: "terraform",
+    },
+    {
+      matchManagers: ["nix"],
+      matchUpdateTypes: ["lockFileMaintenance"],
+      semanticCommitScope: "nix",
     },
     {
       // The chart and the CRD source pin (cilium/network-policy.nix) share a
@@ -85,11 +92,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-    },
-    {
-      matchManagers: ["nix"],
-      matchDepNames: ["nixhelm"],
-      enabled: true,
     },
     {
       // Moves every input not pinned by rev (nixpkgs, the other flake
