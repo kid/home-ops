@@ -28,9 +28,6 @@ inputs = {
     "pve1.kidibox.net" = {
       address = "10.0.10.11"
     }
-    "radarr.kidibox.net" = {
-      address = "10.0.30.120"
-    }
     "sabnzbd.kidibox.net" = {
       address = "10.0.30.150"
     }
