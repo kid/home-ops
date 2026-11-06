@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unpackerr
+  namespace: media
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unpackerr
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unpackerr
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: UN_DIR_MODE
+              value: "0775"
+            - name: UN_FILE_MODE
+              value: "0664"
+            - name: UN_RADARR_0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: radarr-api-key
+            - name: UN_RADARR_0_NAME
+              value: radarr
+            - name: UN_RADARR_0_PATHS_0
+              value: /var/lib/sabnzbd/Downloads
+            - name: UN_RADARR_0_PROTOCOLS
+              value: usenet,UsenetDownloadProtocol
+            - name: UN_RADARR_0_URL
+              value: http://radarr.media.svc.cluster.local:7878
+            - name: UN_SONARR_0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: sonarr-api-key
+            - name: UN_SONARR_0_NAME
+              value: sonarr
+            - name: UN_SONARR_0_PATHS_0
+              value: /var/lib/sabnzbd/Downloads
+            - name: UN_SONARR_0_PROTOCOLS
+              value: usenet,UsenetDownloadProtocol
+            - name: UN_SONARR_0_URL
+              value: http://sonarr.media.svc.cluster.local:8989
+            - name: UN_SONARR_1_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: animarr-api-key
+            - name: UN_SONARR_1_NAME
+              value: animarr
+            - name: UN_SONARR_1_PATHS_0
+              value: /var/lib/sabnzbd/Downloads
+            - name: UN_SONARR_1_PROTOCOLS
+              value: usenet,UsenetDownloadProtocol
+            - name: UN_SONARR_1_URL
+              value: http://animarr.media.svc.cluster.local:8989
+          image: ghcr.io/unpackerr/unpackerr:v1.0.1@sha256:22b4693fbeaae4bd927905d63b59b8f67b4a1446682d965ac876c61a48976658
+          name: unpackerr
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/lib/sabnzbd/Downloads
+              name: downloads
+      securityContext:
+        runAsGroup: 100330
+        runAsNonRoot: true
+        runAsUser: 100330
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: downloads
+          nfs:
+            path: /mnt/tank/downloads/sabnzbd
+            server: 10.0.20.126
+        - emptyDir: {}
+          name: tmp

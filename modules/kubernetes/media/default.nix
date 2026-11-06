@@ -259,4 +259,5 @@ let
 in
 {
   den.clusters.prd.methods.mkMediaApp = mkMediaApp;
+  den.clusters.prd.methods.mediaNfsServer = nfsServer;
 }

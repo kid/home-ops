@@ -208,6 +208,7 @@ in
       media.radarr
       media.sabnzbd
       media.plex
+      media.unpackerr
     ])
     ++ [ incusTerragruntAspect ];
 
