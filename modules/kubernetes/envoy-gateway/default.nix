@@ -75,10 +75,7 @@ in
                 # Envoy Gateway remaps privileged listener ports to 10000 + port.
                 {
                   fromEntities = [ "world" ];
-                  toPorts = tcp [
-                    10443
-                    6443
-                  ];
+                  toPorts = tcp [ 10443 ];
                 }
                 # In-cluster clients of an app's hostname: the Gateway already
                 # takes any LAN client, and each pod still needs netpol.gatewayEgress.
