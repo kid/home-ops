@@ -48,7 +48,7 @@
     import-tree.url = "github:vic/import-tree";
     nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";
     nixhelm = {
-      url = "github:farcaller/nixhelm/767835ca2d7a794e5a92ad081cc1d8b5c87d7196";
+      url = "github:farcaller/nixhelm/4e35d9d535a932c51af0c72edbbc569662d9baad";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixidy = {
