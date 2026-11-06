@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: media
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: radarr
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: radarr
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: RADARR__AUTH__METHOD
+              value: External
+            - name: RADARR__AUTH__REQUIRED
+              value: DisabledForLocalAddresses
+            - name: RADARR__SERVER__ALLOWEDHOSTS
+              value: radarr.kidibox.net
+          image: ghcr.io/home-operations/radarr:6.4.4.10685@sha256:1902ad2c08e9bac276ff9a1429af2eaa2f3c635a51f138f1b3eb734995171537
+          livenessProbe:
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /ping
+              port: http
+          name: radarr
+          ports:
+            - containerPort: 7878
+              name: http
+          readinessProbe:
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /ping
+              port: http
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              httpHeaders:
+                - name: Host
+                  value: localhost
+              path: /ping
+              port: http
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /tank/library/movies
+              name: library
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/lib/sabnzbd/Downloads
+              name: downloads
+      securityContext:
+        fsGroup: 100352
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 100352
+        runAsNonRoot: true
+        runAsUser: 100352
+        seccompProfile:
+          type: RuntimeDefault
+        supplementalGroups:
+          - 100330
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: radarr
+        - name: downloads
+          nfs:
+            path: /mnt/tank/downloads/sabnzbd
+            server: 10.0.20.126
+        - name: library
+          nfs:
+            path: /mnt/tank/library/movies
+            server: 10.0.20.126
+        - emptyDir: {}
+          name: tmp

@@ -1,0 +1,28 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: radarr
+  namespace: media
+spec:
+  credentialProjection:
+    enabled: true
+  identity:
+    hostname: radarr
+    username: radarr
+  mover:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 100352
+      runAsUser: 100352
+  repository:
+    kind: ClusterRepository
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: radarr
