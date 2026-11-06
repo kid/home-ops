@@ -19,7 +19,12 @@
           port = 6443;
           protocol = "TCP";
           description = "kube-apiserver";
-          from = [ "world" ];
+          # world: LAN clients via the kube-api LoadBalancer IP. It doesn't cover cluster
+          # (nodes, pods).
+          from = [
+            "cluster"
+            "world"
+          ];
           controlPlane = true;
         }
         {

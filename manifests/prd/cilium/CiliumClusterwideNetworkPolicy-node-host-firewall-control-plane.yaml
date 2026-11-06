@@ -15,6 +15,7 @@ spec:
             - port: "2381"
               protocol: TCP
     - fromEntities:
+        - cluster
         - world
       toPorts:
         - ports:
