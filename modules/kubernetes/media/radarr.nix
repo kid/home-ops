@@ -1,5 +1,5 @@
-# Radarr, moving from pve1's CT 120. Renders at 0 replicas until its config
-# is imported into the kopiur-backed volume.
+# Radarr, moved from pve1's CT 120, whose config was imported once into the
+# kopiur-backed volume.
 _: {
   den.aspects.kubernetes.media.radarr.k8s-manifests =
     { cluster, ... }:
@@ -27,8 +27,6 @@ _: {
         };
         # Room for its database and cover art.
         storage = "15Gi";
-        # Raised once the config is imported from pve1.
-        replicas = 0;
       };
     };
 }
