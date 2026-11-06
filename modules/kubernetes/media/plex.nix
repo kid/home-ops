@@ -34,6 +34,11 @@ in
           PLEX_PREFERENCE_3 = "DlnaEnabled=0";
           # kopiur backs the databases up.
           PLEX_PREFERENCE_4 = "ButlerTaskBackupDatabase=0";
+          # The CT served its own certificate for plex.kidibox.net, from a file
+          # the pod doesn't have; Envoy terminates TLS for that name now.
+          PLEX_PREFERENCE_5 = "customCertificatePath=";
+          PLEX_PREFERENCE_6 = "customCertificateKey=";
+          PLEX_PREFERENCE_7 = "customCertificateDomain=";
         };
         # The CT's uid 490 behind the unprivileged-CT offset, which owns its
         # imported files.
