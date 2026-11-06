@@ -1,0 +1,16 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: animarr
+  namespace: media
+spec:
+  credentialProjection:
+    enabled: true
+  policy:
+    onMissingSnapshot: Continue
+  source:
+    fromPolicy:
+      name: animarr
+      offset: 0
+  target:
+    populator: {}

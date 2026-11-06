@@ -203,6 +203,8 @@ in
       cloudflared
       external-dns-cloudflare
       media.prowlarr
+      media.animarr
+      media.sonarr
     ])
     ++ [ incusTerragruntAspect ];
 
