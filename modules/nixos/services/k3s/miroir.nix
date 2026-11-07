@@ -46,8 +46,14 @@
           "dm_snapshot"
           "dm_thin_pool"
           "drbd"
+          "drbd_transport_tcp"
         ];
         boot.extraModulePackages = [ config.boot.kernelPackages.drbd ];
+        # The kernel side otherwise calls out to /sbin/drbdadm on the host,
+        # which doesn't exist here: drbd-utils only ship in the agent image.
+        boot.extraModprobeConfig = ''
+          options drbd usermode_helper=disabled
+        '';
 
         # miroir-agent bind-mounts the host's /lib/modules for its own
         # modprobe — NixOS leaves that path empty, so without this it fails
