@@ -47,3 +47,5 @@ spec:
   sources:
     - pvc:
         name: plex
+  staging:
+    storageClassName: miroir

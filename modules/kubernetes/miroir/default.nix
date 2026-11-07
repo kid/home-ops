@@ -126,13 +126,18 @@ _: {
 
         # A second class, not a change to the default one: StorageClass
         # parameters are immutable, and a volume cannot gain a replication
-        # layer in place.
+        # layer in place. Two storage nodes leave no third one for a quorum
+        # tie-breaker, and miroir's default `freeze` policy would stop I/O on
+        # both legs whenever either node reboots: the surviving leg keeps
+        # writing instead. ReadWriteOncePod on every claim keeps a second
+        # writer from starting on the other node while the old pod exists.
         resources.storageClasses.miroir-replicated = {
           provisioner = "miroir.home-operations.com";
           volumeBindingMode = "WaitForFirstConsumer";
           allowVolumeExpansion = true;
           parameters = {
             "miroir.home-operations.com/replicas" = "2";
+            "miroir.home-operations.com/quorum" = "last-man-standing";
             "csi.storage.k8s.io/fstype" = "ext4";
           };
         };

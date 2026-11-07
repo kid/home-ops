@@ -224,8 +224,8 @@ in
                 ];
 
                 storage.volumeClaimTemplate.spec = {
-                  storageClassName = "miroir";
-                  accessModes = [ "ReadWriteOnce" ];
+                  storageClassName = "miroir-replicated";
+                  accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "1Gi";
                   dataSourceRef = {
                     apiGroup = "kopiur.home-operations.com";

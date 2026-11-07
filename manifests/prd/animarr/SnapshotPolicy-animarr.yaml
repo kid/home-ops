@@ -36,3 +36,5 @@ spec:
   sources:
     - pvc:
         name: animarr
+  staging:
+    storageClassName: miroir
