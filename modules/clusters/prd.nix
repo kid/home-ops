@@ -204,6 +204,7 @@ in
       external-dns-cloudflare
       home-assistant.home-assistant
       home-assistant.mosquitto
+      home-assistant.zigbee2mqtt
       media.prowlarr
       media.animarr
       media.sonarr

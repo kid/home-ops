@@ -113,6 +113,13 @@ inputs = {
         dst_port    = 8123
         protocol    = "tcp"
       },
+      {
+        action      = "accept"
+        comment     = "Allow Zigbee2MQTT on K3s to reach the UZG-01 coordinator"
+        dst_address = "10.0.50.40"
+        dst_port    = 6638
+        protocol    = "tcp"
+      },
     ]
     Management = [
       {

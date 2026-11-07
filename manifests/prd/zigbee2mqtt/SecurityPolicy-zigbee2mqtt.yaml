@@ -1,0 +1,24 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: zigbee2mqtt
+  namespace: home-assistant
+spec:
+  oidc:
+    clientID: zigbee2mqtt
+    clientSecret:
+      name: zigbee2mqtt-kanidm-oauth2-credentials
+    logoutPath: /oauth2/logout
+    provider:
+      authorizationEndpoint: https://idm.kidibox.net/ui/oauth2
+      issuer: https://idm.kidibox.net/oauth2/openid/zigbee2mqtt
+      tokenEndpoint: https://idm.kidibox.net/oauth2/token
+    redirectURL: https://zigbee2mqtt.kidibox.net/oauth2/callback
+    scopes:
+      - openid
+      - profile
+      - email
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: zigbee2mqtt

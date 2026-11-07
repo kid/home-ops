@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zigbee2mqtt
+  namespace: home-assistant
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zigbee2mqtt
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zigbee2mqtt
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_OUTPUT
+              value: '["console"]'
+            - name: ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED
+              value: "true"
+            - name: ZIGBEE2MQTT_CONFIG_FRONTEND_PORT
+              value: "8080"
+            - name: ZIGBEE2MQTT_CONFIG_FRONTEND_URL
+              value: https://zigbee2mqtt.kidibox.net
+            - name: ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED
+              value: "true"
+            - name: ZIGBEE2MQTT_CONFIG_MQTT_CA
+              value: /etc/cluster-ca/ca.crt
+            - name: ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: mosquitto-zigbee2mqtt
+            - name: ZIGBEE2MQTT_CONFIG_MQTT_SERVER
+              value: mqtts://mosquitto.home-assistant.svc:8883
+            - name: ZIGBEE2MQTT_CONFIG_MQTT_USER
+              value: zigbee2mqtt
+            - name: ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER
+              value: zstack
+            - name: ZIGBEE2MQTT_CONFIG_SERIAL_PORT
+              value: tcp://10.0.50.40:6638
+          image: ghcr.io/koenkk/zigbee2mqtt:2.14.3@sha256:fb4a6b0f6868ad1cd6a9996479802b2420e599c3463b62bbff8c8cd9a908f43a
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          name: zigbee2mqtt
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 20m
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /
+              port: http
+          volumeMounts:
+            - mountPath: /app/data
+              name: data
+            - mountPath: /etc/cluster-ca
+              name: cluster-ca
+            - mountPath: /tmp
+              name: tmp
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - configMap:
+            name: cluster-ca
+          name: cluster-ca
+        - name: data
+          persistentVolumeClaim:
+            claimName: zigbee2mqtt
+        - emptyDir: {}
+          name: tmp
