@@ -169,6 +169,8 @@ in
                 ];
                 egress = [
                   (toPods { "app.kubernetes.io/name" = "mosquitto"; } [ 8883 ])
+                  # In-cluster apps by their hostname: Plex at plex.kidibox.net.
+                  gatewayEgress
                   # Its devices, on whatever ports their integrations use.
                   { toCIDR = deviceNetworks; }
                   # Cloud integrations, PyPI for custom integrations'

@@ -12,6 +12,14 @@ spec:
         - ports:
             - port: "8883"
               protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: envoy
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "10443"
+              protocol: TCP
     - toCIDR:
         - 10.0.50.0/24
         - 10.0.51.0/24
