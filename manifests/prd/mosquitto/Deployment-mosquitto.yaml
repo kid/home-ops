@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto
+  namespace: home-assistant
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mosquitto
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mosquitto
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image: docker.io/library/eclipse-mosquitto:2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98
+          livenessProbe:
+            tcpSocket:
+              port: mqtts
+          name: mosquitto
+          ports:
+            - containerPort: 8883
+              name: mqtts
+          readinessProbe:
+            tcpSocket:
+              port: mqtts
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 16Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /mosquitto/auth
+              name: auth
+            - mountPath: /mosquitto/config
+              name: config
+            - mountPath: /mosquitto/tls
+              name: tls
+        - command:
+            - sh
+            - -c
+            - while sleep 86400; do kill -HUP $(pidof mosquitto); done
+          image: docker.io/library/eclipse-mosquitto:2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98
+          name: reloader
+          resources:
+            limits:
+              memory: 16Mi
+            requests:
+              cpu: 1m
+              memory: 4Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      initContainers:
+        - command:
+            - sh
+            - -euc
+            - |
+              umask 077
+              : > /mosquitto/auth/passwords
+              for client in home-assistant zigbee2mqtt; do
+                mosquitto_passwd -b /mosquitto/auth/passwords "$client" "$(cat /mosquitto/clients/$client/password)"
+              done
+          image: docker.io/library/eclipse-mosquitto:2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98
+          name: passwords
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /mosquitto/auth
+              name: auth
+            - mountPath: /mosquitto/clients/home-assistant
+              name: mosquitto-home-assistant
+            - mountPath: /mosquitto/clients/zigbee2mqtt
+              name: mosquitto-zigbee2mqtt
+            - mountPath: /tmp
+              name: tmp
+      securityContext:
+        fsGroup: 1883
+        runAsGroup: 1883
+        runAsNonRoot: true
+        runAsUser: 1883
+        seccompProfile:
+          type: RuntimeDefault
+      shareProcessNamespace: true
+      volumes:
+        - emptyDir: {}
+          name: auth
+        - configMap:
+            name: mosquitto
+          name: config
+        - name: mosquitto-home-assistant
+          secret:
+            secretName: mosquitto-home-assistant
+        - name: mosquitto-zigbee2mqtt
+          secret:
+            secretName: mosquitto-zigbee2mqtt
+        - name: tls
+          secret:
+            secretName: mosquitto-tls
+        - emptyDir: {}
+          name: tmp

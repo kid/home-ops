@@ -202,7 +202,8 @@ in
       grafana-oidc
       cloudflared
       external-dns-cloudflare
-      home-assistant
+      home-assistant.home-assistant
+      home-assistant.mosquitto
       media.prowlarr
       media.animarr
       media.sonarr

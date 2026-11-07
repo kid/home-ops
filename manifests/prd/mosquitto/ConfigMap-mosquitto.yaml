@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  mosquitto.conf: |
+    allow_anonymous false
+    password_file /mosquitto/auth/passwords
+    persistence false
+    log_dest stdout
+
+    listener 8883
+    certfile /mosquitto/tls/tls.crt
+    keyfile /mosquitto/tls/tls.key
+kind: ConfigMap
+metadata:
+  name: mosquitto
+  namespace: home-assistant
