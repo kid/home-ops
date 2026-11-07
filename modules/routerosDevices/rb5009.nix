@@ -1,13 +1,8 @@
 # rb5009's Terragrunt stack inputs (base/capsman/dns/firewall/qos).
 #
-# Two intentional quirks, not bugs to fix:
-#   - qos has no `dependencies` block, unlike its capsman/dns/firewall
-#     siblings (all of which depend on this device's own base stack).
-#   - the original firewall leaf's `vlans_forward_rules` HCL object literal
-#     defines the "Media" key twice; HCL's object-constructor semantics keep
-#     only the *last* occurrence (first is fully dead). Nix attrsets can't
-#     even represent a literal duplicate key, so this file only encodes the
-#     winning (second) value — same observable result, not a fix.
+# One intentional quirk, not a bug to fix: qos has no `dependencies` block,
+# unlike its capsman/dns/firewall siblings (all of which depend on this
+# device's own base stack).
 {
   lib,
   den,

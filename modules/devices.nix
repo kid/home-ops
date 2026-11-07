@@ -58,14 +58,9 @@
       ];
     };
 
-    # Media
+    # Storage
     truenas = {
       interfaces = [
-        {
-          network = "Media";
-          hostNum = 126;
-          mac = "bc:24:11:9f:50:bf";
-        }
         {
           network = "Storage";
           hostNum = 126;

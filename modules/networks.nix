@@ -38,13 +38,6 @@ in
       mtu = 9000;
     };
 
-    Media = {
-      environment = "prd";
-      vlanId = 30;
-      domain = "media.${tld}";
-      internetAccess = true;
-    };
-
     IotLocal = {
       environment = "prd";
       vlanId = 50;

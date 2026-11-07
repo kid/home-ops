@@ -81,17 +81,6 @@ inputs = {
         "10.99.0.1",
       ]
     }
-    Media = {
-      cidr = "10.0.30.0/24"
-      dns_servers = [
-        "10.0.30.1",
-      ]
-      domain  = "media.home.kidibox.net"
-      gateway = "10.0.30.1"
-      ntp_servers = [
-        "10.0.30.1",
-      ]
-    }
     Servers = {
       cidr = "10.0.10.0/24"
       dns_servers = [
@@ -215,13 +204,6 @@ inputs = {
         name    = "pikvm"
       },
     ]
-    Media = [
-      {
-        address = "10.0.30.126"
-        mac     = "bc:24:11:9f:50:bf"
-        name    = "truenas"
-      },
-    ]
     Servers = [
       {
         address = "10.0.10.101"
@@ -284,7 +266,6 @@ inputs = {
       tagged = [
         10,
         20,
-        30,
         40,
         50,
         51,
@@ -302,7 +283,6 @@ inputs = {
       tagged = [
         10,
         20,
-        30,
         40,
         50,
         51,
@@ -316,7 +296,6 @@ inputs = {
       tagged = [
         10,
         20,
-        30,
         40,
         50,
         51,
@@ -348,7 +327,6 @@ inputs = {
       tagged = [
         10,
         20,
-        30,
         40,
         50,
         51,
@@ -365,7 +343,6 @@ inputs = {
     IotLocal    = "10.0.50.1/24"
     K3s         = "10.0.40.1/24"
     Management  = "10.99.0.1/16"
-    Media       = "10.0.30.1/24"
     Servers     = "10.0.10.1/24"
     Storage     = "10.0.20.1/24"
     Trusted     = "10.0.100.1/24"
@@ -414,10 +391,6 @@ inputs = {
       ]
       name    = "Management"
       vlan_id = 99
-    }
-    Media = {
-      name    = "Media"
-      vlan_id = 30
     }
     Servers = {
       name    = "Servers"

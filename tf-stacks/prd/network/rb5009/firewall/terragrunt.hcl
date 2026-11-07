@@ -49,11 +49,6 @@ inputs = {
       name    = "Management"
       vlan_id = 99
     }
-    Media = {
-      address = "10.0.30.1"
-      name    = "Media"
-      vlan_id = 30
-    }
     Servers = {
       address = "10.0.10.1"
       name    = "Servers"
@@ -120,13 +115,6 @@ inputs = {
       },
     ]
     Management = [
-      {
-        action             = "accept"
-        comment            = "Allow WAN"
-        out_interface_list = "WAN"
-      },
-    ]
-    Media = [
       {
         action             = "accept"
         comment            = "Allow WAN"
