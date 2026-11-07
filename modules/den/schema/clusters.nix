@@ -132,6 +132,25 @@
               description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/nixos/services/k3s/k3s.nix)";
             };
 
+            egressGateways = lib.mkOption {
+              type = lib.types.attrsOf (
+                lib.types.submodule {
+                  options = {
+                    node = lib.mkOption {
+                      type = lib.types.str;
+                      description = "The k3s node (den.hosts name) whose primary NIC carries the address";
+                    };
+                    address = lib.mkOption {
+                      type = lib.types.str;
+                      description = "Egress IP on the cluster's network, outside its DHCP pool";
+                    };
+                  };
+                }
+              );
+              default = { };
+              description = "Dedicated egress IPs, keyed by the app that leaves through them: added as a /32 on the node (modules/nixos/services/k3s/egress-gateway.nix) and used as the app's CiliumEgressGatewayPolicy egressIP, so RouterOS rules can match that app alone";
+            };
+
             letsencrypt.staging = lib.mkOption {
               type = lib.types.bool;
               default = false;

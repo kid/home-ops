@@ -21,6 +21,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        cilium.io/cilium-configmap-checksum: b524d8f7531f564567ccbbd7d4ba9ea7b2a9c70dc3baf1f1be8c55ccb4be330d
       labels:
         app.kubernetes.io/name: cilium-operator
         app.kubernetes.io/part-of: cilium

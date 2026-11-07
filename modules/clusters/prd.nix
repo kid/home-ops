@@ -161,6 +161,12 @@ in
       ];
     };
 
+    # Outside the K3s DHCP pool (10.0.40.200-254).
+    egressGateways.home-assistant = {
+      node = "k3s-prd-0";
+      address = config.den.environments.prd.networks.K3s.methods.host 20;
+    };
+
     nixidy = {
       repository = "https://github.com/kid/home-ops.git";
       branch = "main";

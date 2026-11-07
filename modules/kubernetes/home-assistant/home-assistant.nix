@@ -25,13 +25,14 @@ let
   tag = "2026.8.2@sha256:84f5b1b26e1597a3d5a19a7b6e2ed085ec8e3fffcbe46049acf62f9e25ea400e";
   # Where its integrations' devices live (ESPHome, Overkiz, HEOS, the charger's
   # Modbus, TVs, cameras, the vacuums' local APIs).
+  deviceNetworkNames = [
+    "IotLocal"
+    "IotInternet"
+    "Trusted"
+    "Guest"
+  ];
   deviceNetworks =
-    [
-      "IotLocal"
-      "IotInternet"
-      "Trusted"
-      "Guest"
-    ]
+    deviceNetworkNames
     # The environment's resolved networks carry the computed cidr.
     |> map (n: config.den.environments.${config.den.networks.${n}.environment}.networks.${n}.cidr);
 
@@ -56,18 +57,26 @@ in
   # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
   den.aspects.kubernetes.home-assistant.home-assistant.firewall =
     { cluster, ... }:
-    lib.optional (!inCluster) {
-      inherit (cluster) network;
-      forward = [
-        {
-          action = "accept";
-          dst_address = vmAddress;
-          dst_port = port;
-          protocol = "tcp";
-          comment = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel";
-        }
-      ];
-    };
+    [
+      {
+        inherit (cluster) network;
+        forward =
+          lib.optional (!inCluster) {
+            action = "accept";
+            dst_address = vmAddress;
+            dst_port = port;
+            protocol = "tcp";
+            comment = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel";
+          }
+          # Only HA's own egress IP (its CiliumEgressGatewayPolicy below).
+          ++ map (n: {
+            action = "accept";
+            src_address = cluster.egressGateways.${name}.address;
+            out_interface = n;
+            comment = "Allow HomeAssistant on K3s to reach its devices on ${n}";
+          }) deviceNetworkNames;
+      }
+    ];
 
   den.aspects.kubernetes.home-assistant.home-assistant.k8s-manifests =
     { cluster, ... }:
@@ -99,8 +108,12 @@ in
 
       applications.home-assistant = {
         inherit namespace;
-        # The kopiur webhook admits the backup objects.
-        flux.dependsOn = [ "kopiur-config" ];
+        flux.dependsOn = [
+          # The kopiur webhook admits the backup objects.
+          "kopiur-config"
+          # Its operator registers the CiliumEgressGatewayPolicy CRD.
+          "cilium"
+        ];
 
         resources =
           cluster.methods.mkKopiurBackup {
@@ -180,6 +193,27 @@ in
                     443
                   ])
                 ];
+              };
+
+            # Its device traffic leaves from its own IP, which the RouterOS
+            # rules in this file's firewall quirk admit.
+            ciliumEgressGatewayPolicies.${name}.spec =
+              let
+                gateway = cluster.egressGateways.${name};
+              in
+              {
+                selectors = [
+                  {
+                    podSelector.matchLabels = labels // {
+                      "io.kubernetes.pod.namespace" = namespace;
+                    };
+                  }
+                ];
+                destinationCIDRs = deviceNetworks;
+                egressGateway = {
+                  nodeSelector.matchLabels."kubernetes.io/hostname" = gateway.node;
+                  egressIP = gateway.address;
+                };
               };
 
             deployments.${name}.spec = {

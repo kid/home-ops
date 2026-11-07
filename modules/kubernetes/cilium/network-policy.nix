@@ -108,10 +108,12 @@ in
           crdFiles = [
             "pkg/k8s/apis/cilium.io/client/crds/v2/ciliumnetworkpolicies.yaml"
             "pkg/k8s/apis/cilium.io/client/crds/v2/ciliumclusterwidenetworkpolicies.yaml"
+            "pkg/k8s/apis/cilium.io/client/crds/v2/ciliumegressgatewaypolicies.yaml"
           ];
           kindFilter = [
             "CiliumNetworkPolicy"
             "CiliumClusterwideNetworkPolicy"
+            "CiliumEgressGatewayPolicy"
           ];
         })
       ];

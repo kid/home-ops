@@ -114,6 +114,30 @@ inputs = {
         protocol    = "tcp"
       },
       {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s to reach its devices on IotLocal"
+        out_interface = "IotLocal"
+        src_address   = "10.0.40.20"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s to reach its devices on IotInternet"
+        out_interface = "IotInternet"
+        src_address   = "10.0.40.20"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s to reach its devices on Trusted"
+        out_interface = "Trusted"
+        src_address   = "10.0.40.20"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s to reach its devices on Guest"
+        out_interface = "Guest"
+        src_address   = "10.0.40.20"
+      },
+      {
         action      = "accept"
         comment     = "Allow Zigbee2MQTT on K3s to reach the UZG-01 coordinator"
         dst_address = "10.0.50.40"
