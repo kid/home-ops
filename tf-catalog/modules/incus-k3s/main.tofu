@@ -104,6 +104,11 @@ resource "incus_instance" "k3s" {
     "cloud-init.user-data" = local.cloud_init_user_data
     # The installed system boots an unsigned systemd-boot.
     "security.secureboot" = "false"
+    # Incus force-stops a VM 30s after asking it to shut down when node1
+    # stops; the guest's kubelet takes up to its 120s grace period to stop
+    # its pods (modules/nixos/services/k3s/node-base.nix), then systemd stops
+    # the rest.
+    "boot.host_shutdown_timeout" = "180"
   }
 
   device {
