@@ -36,9 +36,6 @@ in
       vlanId = 20;
       domain = "storage.${tld}";
       mtu = 9000;
-      dhcpAdvertiseGateway = false;
-      dhcpDnsServers = [ ];
-      dhcpNtpServers = [ ];
     };
 
     Media = {

@@ -29,7 +29,6 @@
 
   den.aspects.k3s-prd-1.nixos = {
     networking.hostName = "k3s-prd-1";
-    # Both NICs: the Storage DHCP server sends no gateway.
     networking.useDHCP = true;
 
     # nixos-anywhere puts the key from secrets/hosts/k3s-prd-1 in place.

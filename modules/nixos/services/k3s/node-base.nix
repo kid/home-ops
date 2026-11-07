@@ -1,5 +1,5 @@
 # Kernel and tooling every k3s node needs, server or agent, the k3s
-# release, graceful node shutdown, and the MTU of its Storage VLAN NIC (if its
+# release, graceful node shutdown, and its Storage VLAN NIC (if its
 # den.devices entry has one).
 { config, lib, ... }:
 {
@@ -54,6 +54,14 @@
         "10-storage" = {
           matchConfig.MACAddress = storage.mac;
           linkConfig.MTUBytes = config.den.networks.Storage.mtu;
+        };
+      };
+      # Storage is for NFS only: keep the default route on the K3s NIC.
+      systemd.network.networks = lib.mkIf (storage != null) {
+        "10-storage" = {
+          matchConfig.MACAddress = storage.mac;
+          networkConfig.DHCP = "ipv4";
+          dhcpV4Config.UseGateway = false;
         };
       };
     };
