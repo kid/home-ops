@@ -10,7 +10,7 @@ let
 in
 {
   # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
-  den.aspects.kubernetes.home-assistant.firewall = { cluster, ... }: [
+  den.aspects.kubernetes.home-assistant.home-assistant.firewall = { cluster, ... }: [
     {
       inherit (cluster) network;
       forward = [
@@ -25,7 +25,7 @@ in
     }
   ];
 
-  den.aspects.kubernetes.home-assistant.k8s-manifests =
+  den.aspects.kubernetes.home-assistant.home-assistant.k8s-manifests =
     { cluster, ... }:
     {
       applications.cloudflare-tunnel-gateway.resources.ciliumNetworkPolicies.cloudflare-tunnel-home-assistant =
