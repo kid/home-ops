@@ -26,3 +26,5 @@ spec:
   sources:
     - pvc:
         name: kanidm-data-idm-default-0
+  staging:
+    storageClassName: miroir

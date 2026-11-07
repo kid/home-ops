@@ -272,7 +272,11 @@ _: {
               spec = {
                 retentionPeriod = "30d";
                 # 15 days of data filled 5Gi and put the storage in read-only mode.
-                storage.resources.requests.storage = "10Gi";
+                storage = {
+                  storageClassName = "miroir-replicated";
+                  accessModes = [ "ReadWriteOncePod" ];
+                  resources.requests.storage = "10Gi";
+                };
                 resources = {
                   requests = {
                     cpu = "100m";
@@ -302,7 +306,11 @@ _: {
               enabled = true;
               spec = {
                 retentionPeriod = "30d";
-                storage.resources.requests.storage = "5Gi";
+                storage = {
+                  storageClassName = "miroir-replicated";
+                  accessModes = [ "ReadWriteOncePod" ];
+                  resources.requests.storage = "5Gi";
+                };
                 resources = {
                   requests = {
                     cpu = "10m";

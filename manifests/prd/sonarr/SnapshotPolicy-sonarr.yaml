@@ -36,3 +36,5 @@ spec:
   sources:
     - pvc:
         name: sonarr
+  staging:
+    storageClassName: miroir

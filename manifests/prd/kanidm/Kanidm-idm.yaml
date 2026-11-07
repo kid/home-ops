@@ -49,7 +49,7 @@ spec:
     volumeClaimTemplate:
       spec:
         accessModes:
-          - ReadWriteOnce
+          - ReadWriteOncePod
         dataSourceRef:
           apiGroup: kopiur.home-operations.com
           kind: Restore
@@ -57,5 +57,5 @@ spec:
         resources:
           requests:
             storage: 1Gi
-        storageClassName: miroir
+        storageClassName: miroir-replicated
   tlsSecretName: idm-tls

@@ -19,8 +19,8 @@ let
     }:
     lib.optionalAttrs (existingClaim == null) {
       persistentVolumeClaims.${name}.spec = {
-        storageClassName = "miroir";
-        accessModes = [ "ReadWriteOnce" ];
+        storageClassName = "miroir-replicated";
+        accessModes = [ "ReadWriteOncePod" ];
         resources.requests.storage = storage;
         dataSourceRef = {
           apiGroup = "kopiur.home-operations.com";
@@ -36,6 +36,9 @@ let
           name = "r2";
         };
         credentialProjection.enabled = true;
+        # The staged copy is read once and dropped: one copy-on-write leg of
+        # the snapshot, without a DRBD layer.
+        staging.storageClassName = "miroir";
         mover = {
           securityContext = {
             runAsUser = uid;
