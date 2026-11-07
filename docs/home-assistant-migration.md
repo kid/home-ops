@@ -163,7 +163,7 @@ Not yet verified. Test first on a throwaway HA container with a copy of the data
 - [ ] Before HA starts, add to its `configuration.yaml`: `http: { use_x_forwarded_for: true, trusted_proxies: [172.40.0.0/16] }` (the pod CIDR: the tunnel proxy and Envoy).
 - [ ] Flip `inCluster = true` in `home-assistant.nix` and the Z2M Deployment's `replicas = 1`; merge; apply the rb5009 firewall stack.
 - [ ] Repoint HA's MQTT config entry to `mosquitto.home-assistant.svc:8883`: user `home-assistant`, password from the `mosquitto-home-assistant` Secret, TLS with the `cluster-ca` CA uploaded as a custom certificate.
-- [ ] Repoint the Plex integration to `https://plex.kidibox.net:443` (Plex's advertised URL, through the apps Gateway; verify SSL on). It is already broken on the VM: its plex.direct URL still points at the old CT, `10.0.30.100`. The VM reaches `plex.kidibox.net` (`/identity` returns 200), so this can be done before the cutover. In the cluster, HA reaches it through `netpol.gatewayEgress`.
+- [ ] After the cutover: repoint the Plex integration to `https://plex.kidibox.net:443` (Plex's advertised URL, through the apps Gateway; verify SSL on; HA's policy has `netpol.gatewayEgress` for it). It is already broken on the VM, whose entry still points at the old CT, `10.0.30.100`. Re-adding it from the VM on 2026-11-07 failed with "server not found", although the VM reaches `https://plex.kidibox.net/identity` (200). Not investigated yet.
 - [ ] Update the companion apps' internal URL.
 - Known limits in the cluster: no mDNS/SSDP discovery of new devices (existing entries use IPs or DNS names); go2rtc WebRTC needs UDP 8555 on a LoadBalancer IP (MSE/HLS work through the Gateway).
 - [ ] Delete `den.devices.homeassistant` and the old firewall rule.
