@@ -59,15 +59,6 @@
     };
 
     # Media
-    cloudflared1 = {
-      interfaces = [
-        {
-          network = "Media";
-          hostNum = 11;
-          mac = "bc:24:11:bf:d2:cb";
-        }
-      ];
-    };
     truenas = {
       interfaces = [
         {
