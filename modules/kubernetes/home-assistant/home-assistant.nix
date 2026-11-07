@@ -54,6 +54,17 @@ let
   ];
 in
 {
+  # Its egress IPs, one per node: see den.clusters.<name>.egressGateways.
+  # Outside the K3s DHCP pool (10.0.40.200-254).
+  den.clusters.prd.egressGateways.${name} =
+    let
+      inherit (config.den.environments.prd.networks.K3s.methods) host;
+    in
+    {
+      k3s-prd-0 = host 20;
+      k3s-prd-1 = host 21;
+    };
+
   # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
   den.aspects.kubernetes.home-assistant.home-assistant.firewall =
     { cluster, ... }:
