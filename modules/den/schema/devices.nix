@@ -60,6 +60,13 @@ in
                         description = "MAC address";
                       };
 
+                      mtu = lib.mkOption {
+                        type = lib.types.nullOr lib.types.ints.positive;
+                        default = rootConfig.den.networks.${config.network}.mtu;
+                        defaultText = "<network's mtu>";
+                        description = "Interface MTU, e.g. a trunk carrying a jumbo-frame VLAN";
+                      };
+
                       address = lib.mkOption {
                         type = lib.types.str;
                         default =

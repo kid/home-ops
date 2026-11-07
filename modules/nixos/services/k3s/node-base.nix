@@ -1,13 +1,9 @@
 # Kernel and tooling every k3s node needs, server or agent, the k3s
-# release, graceful node shutdown, and its NICs from its den.devices entry.
-{ config, lib, ... }:
-{
+# release and graceful node shutdown.
+_: {
   den.aspects.k3s-node-base.nixos =
-    { host, pkgs, ... }:
+    { pkgs, ... }:
     let
-      inherit ((config.den.devices.${host.name} or { interfaces = [ ]; })) interfaces;
-      unitName = iface: "10-${lib.toLower iface.network}";
-      mtuOf = iface: config.den.networks.${iface.network}.mtu;
       # Seconds; the Incus host's own timeout for the VMs must exceed it.
       shutdownGracePeriod = 120;
     in
@@ -48,33 +44,5 @@
         pkgs.iptables
         pkgs.nftables
       ];
-
-      systemd.network = lib.mkIf (interfaces != [ ]) {
-        # Only where the network sets an MTU: a matching .link file replaces
-        # 99-default.link, and with it the predictable interface name.
-        links =
-          interfaces
-          |> lib.filter (iface: mtuOf iface != null)
-          |> map (
-            iface:
-            lib.nameValuePair (unitName iface) {
-              matchConfig.MACAddress = iface.mac;
-              linkConfig.MTUBytes = mtuOf iface;
-            }
-          )
-          |> lib.listToAttrs;
-        # Only the first (primary) interface installs the default route.
-        networks =
-          interfaces
-          |> lib.imap0 (
-            i: iface:
-            lib.nameValuePair (unitName iface) {
-              matchConfig.MACAddress = iface.mac;
-              networkConfig.DHCP = "yes";
-              dhcpV4Config.UseGateway = i == 0;
-            }
-          )
-          |> lib.listToAttrs;
-      };
     };
 }
