@@ -4,6 +4,9 @@ _:
 let
   # Runs an app only while the NFS server answers. The scaled workload must
   # not render spec.replicas, or every Flux reconcile resets what the HPA set.
+  # The HPA only scales up from a zero it set itself (its ScaledToZero
+  # condition): `kubectl scale --replicas=0` pauses the app until it is
+  # scaled back to 1 by hand, and so does recreating the HPA while at zero.
   mkNfsScaler =
     {
       name,
