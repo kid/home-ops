@@ -17,16 +17,10 @@ spec:
       automountServiceAccountToken: false
       containers:
         - image: docker.io/library/eclipse-mosquitto:2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98
-          livenessProbe:
-            tcpSocket:
-              port: mqtts
           name: mosquitto
           ports:
             - containerPort: 8883
               name: mqtts
-          readinessProbe:
-            tcpSocket:
-              port: mqtts
           resources:
             limits:
               memory: 128Mi
