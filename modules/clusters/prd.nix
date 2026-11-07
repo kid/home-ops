@@ -85,7 +85,7 @@ let
           # 40G root LV (den.aspects.incus-vm), the rest for miroir.
           "k3s-${cluster.name}-0" = {
             nixos_attr = "k3s-${cluster.name}-0";
-            cpu = 4;
+            cpu = 8;
             memory = "16GiB";
             disk_size = "128GiB";
             mac = macOf "k3s-${cluster.name}-0" "K3s";
@@ -94,7 +94,7 @@ let
           };
           "k3s-${cluster.name}-1" = {
             nixos_attr = "k3s-${cluster.name}-1";
-            cpu = 4;
+            cpu = 8;
             memory = "16GiB";
             disk_size = "128GiB";
             mac = macOf "k3s-${cluster.name}-1" "K3s";
