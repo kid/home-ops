@@ -68,13 +68,16 @@ in
             protocol = "tcp";
             comment = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel";
           }
-          # Only HA's own egress IP (its CiliumEgressGatewayPolicy below).
-          ++ map (n: {
-            action = "accept";
-            src_address = cluster.egressGateways.${name}.address;
-            out_interface = n;
-            comment = "Allow HomeAssistant on K3s to reach its devices on ${n}";
-          }) deviceNetworkNames;
+          # Only HA's own egress IPs (its CiliumEgressGatewayPolicies below).
+          ++ lib.concatMap (
+            n:
+            lib.mapAttrsToList (node: address: {
+              action = "accept";
+              src_address = address;
+              out_interface = n;
+              comment = "Allow HomeAssistant on K3s (${node}) to reach its devices on ${n}";
+            }) cluster.egressGateways.${name}
+          ) deviceNetworkNames;
       }
     ];
 
@@ -195,26 +198,31 @@ in
                 ];
               };
 
-            # Its device traffic leaves from its own IP, which the RouterOS
-            # rules in this file's firewall quirk admit.
-            ciliumEgressGatewayPolicies.${name}.spec =
+            # Its device traffic leaves from its own IP on the node it runs on,
+            # which the RouterOS rules in this file's firewall quirk admit.
+            ciliumEgressGatewayPolicies = lib.mapAttrs' (
+              node: address:
               let
-                gateway = cluster.egressGateways.${name};
+                onNode.matchLabels."kubernetes.io/hostname" = node;
               in
-              {
-                selectors = [
-                  {
-                    podSelector.matchLabels = labels // {
-                      "io.kubernetes.pod.namespace" = namespace;
-                    };
-                  }
-                ];
-                destinationCIDRs = deviceNetworks;
-                egressGateway = {
-                  nodeSelector.matchLabels."kubernetes.io/hostname" = gateway.node;
-                  egressIP = gateway.address;
+              lib.nameValuePair "${name}-${node}" {
+                spec = {
+                  selectors = [
+                    {
+                      podSelector.matchLabels = labels // {
+                        "io.kubernetes.pod.namespace" = namespace;
+                      };
+                      nodeSelector = onNode;
+                    }
+                  ];
+                  destinationCIDRs = deviceNetworks;
+                  egressGateway = {
+                    nodeSelector = onNode;
+                    egressIP = address;
+                  };
                 };
-              };
+              }
+            ) cluster.egressGateways.${name};
 
             deployments.${name}.spec = {
               # 1 only once the VM's /config is imported and the VM is stopped.

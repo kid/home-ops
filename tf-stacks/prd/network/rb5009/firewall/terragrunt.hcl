@@ -115,27 +115,51 @@ inputs = {
       },
       {
         action        = "accept"
-        comment       = "Allow HomeAssistant on K3s to reach its devices on IotLocal"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on IotLocal"
         out_interface = "IotLocal"
         src_address   = "10.0.40.20"
       },
       {
         action        = "accept"
-        comment       = "Allow HomeAssistant on K3s to reach its devices on IotInternet"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on IotLocal"
+        out_interface = "IotLocal"
+        src_address   = "10.0.40.21"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on IotInternet"
         out_interface = "IotInternet"
         src_address   = "10.0.40.20"
       },
       {
         action        = "accept"
-        comment       = "Allow HomeAssistant on K3s to reach its devices on Trusted"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on IotInternet"
+        out_interface = "IotInternet"
+        src_address   = "10.0.40.21"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on Trusted"
         out_interface = "Trusted"
         src_address   = "10.0.40.20"
       },
       {
         action        = "accept"
-        comment       = "Allow HomeAssistant on K3s to reach its devices on Guest"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on Trusted"
+        out_interface = "Trusted"
+        src_address   = "10.0.40.21"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on Guest"
         out_interface = "Guest"
         src_address   = "10.0.40.20"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on Guest"
+        out_interface = "Guest"
+        src_address   = "10.0.40.21"
       },
       {
         action      = "accept"

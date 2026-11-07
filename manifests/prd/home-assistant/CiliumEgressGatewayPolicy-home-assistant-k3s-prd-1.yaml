@@ -1,7 +1,7 @@
 apiVersion: cilium.io/v2
 kind: CiliumEgressGatewayPolicy
 metadata:
-  name: home-assistant
+  name: home-assistant-k3s-prd-1
 spec:
   destinationCIDRs:
     - 10.0.50.0/24
@@ -9,12 +9,15 @@ spec:
     - 10.0.100.0/24
     - 10.0.101.0/24
   egressGateway:
-    egressIP: 10.0.40.20
+    egressIP: 10.0.40.21
     nodeSelector:
       matchLabels:
-        kubernetes.io/hostname: k3s-prd-0
+        kubernetes.io/hostname: k3s-prd-1
   selectors:
-    - podSelector:
+    - nodeSelector:
+        matchLabels:
+          kubernetes.io/hostname: k3s-prd-1
+      podSelector:
         matchLabels:
           app.kubernetes.io/name: home-assistant
           io.kubernetes.pod.namespace: home-assistant
