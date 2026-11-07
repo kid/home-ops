@@ -1,14 +1,13 @@
 # Kernel and tooling every k3s node needs, server or agent, the k3s
-# release, graceful node shutdown, and its Storage VLAN NIC (if its
-# den.devices entry has one).
+# release, graceful node shutdown, and its NICs from its den.devices entry.
 { config, lib, ... }:
 {
   den.aspects.k3s-node-base.nixos =
     { host, pkgs, ... }:
     let
-      storage =
-        lib.findFirst (i: i.network == "Storage") null
-          (config.den.devices.${host.name} or { interfaces = [ ]; }).interfaces;
+      inherit ((config.den.devices.${host.name} or { interfaces = [ ]; })) interfaces;
+      unitName = iface: "10-${lib.toLower iface.network}";
+      mtuOf = iface: config.den.networks.${iface.network}.mtu;
       # Seconds; the Incus host's own timeout for the VMs must exceed it.
       shutdownGracePeriod = 120;
     in
@@ -50,19 +49,32 @@
         pkgs.nftables
       ];
 
-      systemd.network.links = lib.mkIf (storage != null) {
-        "10-storage" = {
-          matchConfig.MACAddress = storage.mac;
-          linkConfig.MTUBytes = config.den.networks.Storage.mtu;
-        };
-      };
-      # Storage is for NFS only: keep the default route on the K3s NIC.
-      systemd.network.networks = lib.mkIf (storage != null) {
-        "10-storage" = {
-          matchConfig.MACAddress = storage.mac;
-          networkConfig.DHCP = "ipv4";
-          dhcpV4Config.UseGateway = false;
-        };
+      systemd.network = lib.mkIf (interfaces != [ ]) {
+        # Only where the network sets an MTU: a matching .link file replaces
+        # 99-default.link, and with it the predictable interface name.
+        links =
+          interfaces
+          |> lib.filter (iface: mtuOf iface != null)
+          |> map (
+            iface:
+            lib.nameValuePair (unitName iface) {
+              matchConfig.MACAddress = iface.mac;
+              linkConfig.MTUBytes = mtuOf iface;
+            }
+          )
+          |> lib.listToAttrs;
+        # Only the first (primary) interface installs the default route.
+        networks =
+          interfaces
+          |> lib.imap0 (
+            i: iface:
+            lib.nameValuePair (unitName iface) {
+              matchConfig.MACAddress = iface.mac;
+              networkConfig.DHCP = "yes";
+              dhcpV4Config.UseGateway = i == 0;
+            }
+          )
+          |> lib.listToAttrs;
       };
     };
 }
