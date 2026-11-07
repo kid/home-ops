@@ -19,6 +19,8 @@
           network = "Servers";
           hostNum = 10;
           mac = "d0:50:99:fe:51:b5";
+          # The trunk also carries the Storage VLAN to the k3s VMs.
+          inherit (den.networks.Storage) mtu;
         }
       ];
     };
@@ -50,14 +52,6 @@
 
     networking.hostName = "node1";
     networking.useDHCP = false;
-
-    systemd.network.networks = {
-      "10-trunk" = {
-        matchConfig.Name = "enp36s0f1";
-        networkConfig.DHCP = "yes";
-        linkConfig.MTUBytes = den.networks.Storage.mtu;
-      };
-    };
 
     i18n.defaultLocale = "en_US.UTF-8";
 
