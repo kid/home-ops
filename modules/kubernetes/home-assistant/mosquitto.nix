@@ -151,8 +151,9 @@ in
                   ${name} = {
                     inherit image securityContext;
                     ports.mqtts.containerPort = port;
-                    livenessProbe.tcpSocket.port = "mqtts";
-                    readinessProbe.tcpSocket.port = "mqtts";
+                    # No TCP probes: each one is a connection that never starts
+                    # TLS, which Mosquitto logs as an error. A crash exits the
+                    # container anyway.
                     resources = {
                       requests = {
                         cpu = "10m";
