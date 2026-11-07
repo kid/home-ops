@@ -141,10 +141,13 @@ Not yet verified. Test first on a throwaway HA container with a copy of the data
 - [x] Place the ESP32 on IotLocal: rb5009 `ether6`, `den.devices.sma-inverter` = `10.0.50.41` (`sma-inverter.iot-local.home.kidibox.net`, rb5009 static DNS), Ethernet MAC `68:fe:71:a7:bb:e7` (confirmed). Flashed over the network on 2026-11-07; it set the inverter clock from SNTP.
 - [x] Add it to HA (ESPHome integration, host `sma-inverter.iot-local.home.kidibox.net`).
 - [x] Solar cutover, 2026-11-07 ~12:25 (rehearsed first on a throwaway HA 2026.8.2 with a DB copy): SBFspot MQTT device deleted, ESP32 `Energy daily` renamed to `sensor.sma_energy_daily`. The 12:25 short-term row continues the statistic: 13952.125 + (1.430 − 0.982) = 13952.573. The ESP32's pre-rename statistic `sensor.sma_inverter_energy_daily` (metadata 192) is orphaned; delete it under Developer tools → Statistics.
-- [ ] Delete `mammotion`, `switch.pve` and `shell_command.turn_off_pve`.
+- [x] Remove the node1 wake-on-LAN `switch.pve` and `shell_command.turn_off_pve` from `configuration.yaml`; delete `shell_commands.yaml` and `/config/ssh_keys/` (its only user). Core config check passed; restarted 2026-11-07 12:51.
+- [ ] In the UI: HACS → Mammotion → Remove; Settings → Entities → delete the orphaned `switch.pve`. (The SSH add-on's token gets 401 from the Core API, so these can't be scripted from there.)
 - [x] Archive the SBFspot database: `~/home-assistant-archive/sbfspot-2026-11-07.sql.gz` on the workstation (sha256 `86172ca7…4b64f7f`, row counts match the live tables: DayData 176834, MonthData 1253, SpotData 192372, EventData 1460). SBFspot and MariaDB are stopped with boot `manual`.
-- [ ] Archive InfluxDB (HA backup that includes the add-on).
-- [ ] Remove SBFspot, MariaDB and the UB500 dongle.
+- [x] Archive InfluxDB: full backup `pre-k3s-migration-2026-11-07` (slug `828b4e1f`, 1.03 GB, unencrypted, all add-ons) copied to `~/home-assistant-archive/ha-full-pre-k3s-migration-2026-11-07.tar` (sha256 `89794970…46780758e`, matches the VM copy).
+- [x] Uninstall SBFspot and MariaDB (2026-11-07).
+- [ ] Unplug the UB500 dongle and remove its USB passthrough from the VM on pve1.
+- [ ] Drop InfluxDB: delete HA's `influxdb` config entry, then uninstall the add-on.
 
 ### Repo
 - [ ] `modules/kubernetes/mosquitto/`: Deployment, small kopiur PVC, passwords from 1Password via ExternalSecret, ClusterIP Service.
