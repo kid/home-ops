@@ -18,6 +18,8 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_CONSOLE_JSON
+              value: "true"
             - name: ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_OUTPUT
               value: '["console"]'
             - name: ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED

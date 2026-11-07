@@ -115,8 +115,9 @@ in
                         # The device links Home Assistant shows.
                         ZIGBEE2MQTT_CONFIG_FRONTEND_URL = "https://${hostname}";
                         ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED = "true";
-                        # stdout only: no log files on the volume.
+                        # stdout only, as JSON: no log files on the volume.
                         ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_OUTPUT = ''["console"]'';
+                        ZIGBEE2MQTT_CONFIG_ADVANCED_LOG_CONSOLE_JSON = "true";
                       }
                       // {
                         ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD.valueFrom.secretKeyRef = {
