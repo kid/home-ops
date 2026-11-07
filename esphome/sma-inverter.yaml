@@ -1,0 +1,130 @@
+---
+# Olimex ESP32-POE(-ISO) reading the SMA SB 5000TL-21 over Bluetooth Classic,
+# replacing the HAOS-SBFspot add-on. The inverter accepts one Bluetooth
+# connection at a time: stop SBFspot while this is connected.
+# "Energy daily" (energy_production_day) takes over sensor.sma_energy_daily's
+# long-term statistics: kWh, total_increasing, reset by the inverter each night.
+esphome:
+  name: sma-inverter
+  friendly_name: SMA inverter
+
+esp32:
+  board: esp32-poe
+  framework:
+    type: esp-idf
+    advanced:
+      # ESPHome excludes the IDF bt component unless a BLE component asks for it.
+      include_builtin_idf_components: [bt]
+    sdkconfig_options:
+      CONFIG_BT_ENABLED: "y"
+      CONFIG_BT_BLUEDROID_ENABLED: "y"
+      CONFIG_BT_CLASSIC_ENABLED: "y"
+      CONFIG_BT_SPP_ENABLED: "y"
+      CONFIG_BTDM_CTRL_MODE_BR_EDR_ONLY: "y"
+      CONFIG_BT_BLE_ENABLED: "n"
+
+external_components:
+  # Fork of keerekeerweere/esphome_smabluetooth bb0658df with fix/energy-records:
+  # EToday was never read, and energy sensors published 0 before the first read.
+  - source:
+      type: git
+      url: https://github.com/kid/esphome_smabluetooth
+      ref: 70404ff2ed99df2675ddb8a9eff41f73a0d1a232
+    components: [smabluetooth_solar]
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk:
+    mode: CLK_OUT
+    pin: GPIO17
+  phy_addr: 0
+  power_pin: GPIO12
+  # rb5009 static record (modules/routerosDevices/rb5009.nix); mDNS doesn't cross VLANs.
+  use_address: sma-inverter.iot-local.home.kidibox.net
+
+api:
+  encryption:
+    key: !secret sma_inverter_api_key
+  # Rebooting when HA is unreachable would only drop the inverter connection.
+  reboot_timeout: 0s
+
+logger:
+  level: INFO
+
+ota:
+  # Inherits the api encryption key.
+  - platform: esphome
+    encryption: {}
+
+# The component writes this clock to the inverter (at most every 12 h) and
+# derives its night mode from it.
+time:
+  - platform: sntp
+    timezone: Europe/Brussels
+    servers:
+      - 10.0.50.1 # rb5009 on IotLocal
+
+sensor:
+  - platform: smabluetooth_solar
+    id: sma_inverter
+    update_interval: 10s
+    sma_inverter_bluetooth_mac: "00:80:25:A5:F0:6B"
+    sma_inverter_password: !secret sma_inverter_password
+    sma_inverter_delay_values: 800ms
+    inverter_status:
+      name: Status
+    grid_relay:
+      name: Grid relay
+    phase_a:
+      voltage:
+        name: Grid voltage
+      current:
+        name: Grid current
+      active_power:
+        name: AC power
+    pv1:
+      voltage:
+        name: Array 1 voltage
+      current:
+        name: Array 1 current
+      active_power:
+        name: Array 1 power
+    pv2:
+      voltage:
+        name: Array 2 voltage
+      current:
+        name: Array 2 current
+      active_power:
+        name: Array 2 power
+    frequency:
+      name: Grid frequency
+    energy_production_day:
+      name: Energy daily
+    total_energy_production:
+      name: Energy lifetime
+    today_generation_time:
+      name: Generation time today
+    total_generation_time:
+      name: Generation time lifetime
+    inverter_module_temp:
+      name: Temperature
+    sma_inverter_bluetooth_signal_strength:
+      name: Bluetooth signal
+    serial_number:
+      name: Serial number
+    software_version:
+      name: Firmware
+    device_type:
+      name: Model
+
+button:
+  - platform: template
+    name: Sync inverter clock
+    entity_category: config
+    on_press:
+      - lambda: "id(sma_inverter).trigger_time_sync();"
+  - platform: restart
+    name: Restart
+    entity_category: diagnostic
