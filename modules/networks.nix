@@ -36,16 +36,6 @@ in
       vlanId = 20;
       domain = "storage.${tld}";
       mtu = 9000;
-      dhcpAdvertiseGateway = false;
-      dhcpDnsServers = [ ];
-      dhcpNtpServers = [ ];
-    };
-
-    Media = {
-      environment = "prd";
-      vlanId = 30;
-      domain = "media.${tld}";
-      internetAccess = true;
     };
 
     IotLocal = {
