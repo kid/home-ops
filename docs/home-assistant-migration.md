@@ -151,22 +151,21 @@ Not yet verified. Test first on a throwaway HA container with a copy of the data
 
 ### Repo
 - [x] Mosquitto (`modules/kubernetes/home-assistant/mosquitto.nix`, #648, #649): TLS-only on 8883 with a `cluster-ca` certificate, a daily SIGHUP reloader, generated passwords in `mosquitto-home-assistant` and `mosquitto-zigbee2mqtt`, no persistence. Live; an in-cluster pub/sub test passed.
-- [ ] Zigbee2MQTT (`modules/kubernetes/home-assistant/zigbee2mqtt.nix`): kopiur PVC, `ZIGBEE2MQTT_CONFIG_*` overrides for MQTT (TLS), the serial port and the frontend, egress to Mosquitto, `10.0.50.40:6638` and HTTPS (OTA), frontend at `zigbee2mqtt.kidibox.net` behind Kanidm (`admins`), rb5009 forward rule K3s → UZG-01:6638. Deployed with `replicas = 0` until the cutover.
-- [ ] Home Assistant (`modules/kubernetes/home-assistant/home-assistant.nix`, today only the Service/EndpointSlice fronting the VM):
-  - Deployment with a Renovate digest pin.
-  - `mkKopiurBackup` with uid 65534.
-  - An internal route alongside the public HTTPRoute.
-  - Egress policy.
-- [ ] Add the new apps to `den.aspects.prd.includes`, then run `write-manifests` and `nix flake check --print-build-logs`.
+- [x] Zigbee2MQTT (`modules/kubernetes/home-assistant/zigbee2mqtt.nix`, #650): kopiur PVC, `ZIGBEE2MQTT_CONFIG_*` overrides for MQTT (TLS), the serial port and the frontend, JSON console logs, egress to Mosquitto, `10.0.50.40:6638` and HTTPS (OTA), frontend at `zigbee2mqtt.kidibox.net` behind Kanidm (`admins`), rb5009 forward rule K3s → UZG-01:6638. Deployed with `replicas = 0` until the cutover.
+- [x] Home Assistant (`modules/kubernetes/home-assistant/home-assistant.nix`): `ghcr.io/home-operations/home-assistant:2026.8.2` (the VM's version), uid 65534, read-only root filesystem, kopiur PVC (5Gi; `.venv`, `deps`, `.cache`, `backups`, `tts` and logs left out of the snapshots). Egress to Mosquitto, the device VLANs (IotLocal, IotInternet, Trusted, Guest; any port) and world 80/443; ingress from the tunnel proxy and the apps Gateway. One switch, `inCluster`: while `false` the Service, EndpointSlice, tunnel egress and firewall rule keep pointing at the VM and the Deployment stays at 0; `true` gives the Service its selector, drops the EndpointSlice and the VM's firewall rule, moves the tunnel's egress to the pod, adds the LAN route `home-assistant-internal` on the apps Gateway, and sets `replicas = 1`.
 - [ ] Cilium egress gateway plus the firewall quirk rule for HA's egress IP. Remove rb5009's Servers "Allow access to all vlans" rule. Run `write-terragrunt`; the user reviews and applies by hand.
 
 ### Cutover
 - [ ] Take a full HA backup plus a `sqlite3 .backup` of `home-assistant_v2.db`, stored off-cluster.
 - [ ] HA and Zigbee2MQTT move together: the VM's HA can't reach the in-cluster Mosquitto (ClusterIP), and the in-cluster HA can't reach the add-on's.
 - [ ] Stop the Z2M add-on and set it to manual boot before the cluster Z2M starts: two Zigbee2MQTT instances must never drive the coordinator at once.
-- [ ] Import `/config` (excluding `zigbee2mqtt/` and `deps/`) into the HA PVC, and `zigbee2mqtt/` (`configuration.yaml`, `database.db`, `coordinator_backup.json`, `state.json`; not `log/`) into the Z2M PVC, owned by uid 1000. Then set the Z2M Deployment's `replicas = 1`.
+- [ ] Import `/config` (excluding `zigbee2mqtt/`, `deps/` and `.venv`) into the HA PVC, owned by uid 65534, and `zigbee2mqtt/` (`configuration.yaml`, `database.db`, `coordinator_backup.json`, `state.json`; not `log/`) into the Z2M PVC, owned by uid 1000.
+- [ ] Before HA starts, add to its `configuration.yaml`: `http: { use_x_forwarded_for: true, trusted_proxies: [172.40.0.0/16] }` (the pod CIDR: the tunnel proxy and Envoy).
+- [ ] Flip `inCluster = true` in `home-assistant.nix` and the Z2M Deployment's `replicas = 1`; merge; apply the rb5009 firewall stack.
 - [ ] Repoint HA's MQTT config entry to `mosquitto.home-assistant.svc:8883`: user `home-assistant`, password from the `mosquitto-home-assistant` Secret, TLS with the `cluster-ca` CA uploaded as a custom certificate.
+- [ ] Repoint the Plex integration: its plex.direct URL points at `10.0.30.100`; Plex now runs in the `media` namespace.
 - [ ] Update the companion apps' internal URL.
+- Known limits in the cluster: no mDNS/SSDP discovery of new devices (existing entries use IPs or DNS names); go2rtc WebRTC needs UDP 8555 on a LoadBalancer IP (MSE/HLS work through the Gateway).
 - [ ] Delete `den.devices.homeassistant` and the old firewall rule.
 
 ## Notes

@@ -1,0 +1,47 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: home-assistant
+  namespace: home-assistant
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: mosquitto
+      toPorts:
+        - ports:
+            - port: "8883"
+              protocol: TCP
+    - toCIDR:
+        - 10.0.50.0/24
+        - 10.0.51.0/24
+        - 10.0.100.0/24
+        - 10.0.101.0/24
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+            - port: "443"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: home-assistant
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: cloudflare-tunnel-gateway-controller-proxy
+            k8s:io.kubernetes.pod.namespace: cloudflare-tunnel-system
+      toPorts:
+        - ports:
+            - port: "8123"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: envoy
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "8123"
+              protocol: TCP
