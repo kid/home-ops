@@ -16,11 +16,14 @@ dependencies {
 inputs = {
   bridge_name = "bridge1"
   dns_static_records = {
-    "doorbell.iot.home.kidibox.net" = {
-      address = "10.0.101.100"
+    "doorbell.iot-local.home.kidibox.net" = {
+      address = "10.0.50.10"
     }
     "pve1.kidibox.net" = {
       address = "10.0.10.11"
+    }
+    "sma-inverter.iot-local.home.kidibox.net" = {
+      address = "10.0.50.41"
     }
   }
   dns_upstream_servers = [

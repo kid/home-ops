@@ -1,0 +1,208 @@
+---
+# ZigStar UZG-01 (CC2652P7): Zigbee serial over TCP + Bluetooth proxy.
+# Based on mercenaruss/zigstar_gateways files/ESP-HOME/zigstar-uzg-01/uzg01-mixed.yaml,
+# with the stream_server external component replaced by native uart_tcp (ESPHome 2026.10+).
+substitutions:
+  device_name: uzg-01
+  friendly_name: UZG-01
+
+esphome:
+  name: "${device_name}"
+  friendly_name: "${friendly_name}"
+  project:
+    name: ZigStar.UZG01-Mixed
+    version: "1.0"
+  on_boot:
+    priority: 600
+    then:
+      - switch.turn_on: zRST_gpio
+      - delay: 15ms
+      - switch.turn_off: zRST_gpio
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_FREERTOS_UNICORE: y
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "10"
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO17_OUT
+  phy_addr: 0
+  power_pin: GPIO05
+
+api:
+  encryption:
+    key: !secret uzg01_api_key
+  # Never reboot when HA is unreachable: that would drop the Zigbee socket too.
+  reboot_timeout: 0s
+
+logger:
+  level: INFO
+
+ota:
+  - platform: esphome
+    password: !secret uzg01_ota_password
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret uzg01_web_password
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 330ms
+    active: true
+
+bluetooth_proxy:
+  active: true
+
+sensor:
+  - platform: uptime
+    id: uptime_s
+    update_interval: 60s
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+button:
+  - platform: safe_mode
+    name: 3.3.Safe Mode Reboot
+    entity_category: diagnostic
+  - platform: template
+    name: "3.2.Zigbee - Restart"
+    icon: mdi:restart
+    id: zRST
+    on_press:
+      - switch.turn_on: zRST_gpio
+      - delay: 15ms
+      - switch.turn_off: zRST_gpio
+  - platform: restart
+    name: "3.1.ESP32 - Restart"
+  - platform: template
+    name: "2.1.Zigbee - Flash Mode"
+    icon: mdi:cellphone-arrow-down
+    on_press:
+      - script.execute: fw_update_mode
+
+binary_sensor:
+  - platform: gpio
+    name: "4.1.Physical button status"
+    icon: mdi:toggle-switch
+    id: gpio35btn1
+    pin:
+      number: GPIO35
+      mode:
+        input: true
+      inverted: true
+    on_press:
+      then:
+        - switch.toggle: modeSwitchTemplate
+  - platform: uart_tcp
+    uart_tcp_id: zb_tcp
+    connected:
+      name: "4.2.Z2M/ZHA Connected"
+
+switch:
+  - platform: gpio
+    pin: 16
+    id: zRST_gpio
+    inverted: true
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    pin: 32
+    name: "Zigbee Flash Mode internal"
+    icon: mdi:toggle-switch
+    id: zBSL
+    inverted: true
+    restore_mode: ALWAYS_OFF
+    internal: true
+
+  - platform: template
+    name: "1.0.UZG-01 MODE SWITCH (LAN|OFF| / USB|ON|)"
+    id: modeSwitchTemplate
+    turn_on_action:
+      - switch.turn_on: gpio12LED1
+      - switch.turn_on: gpio4Select
+      - switch.template.publish:
+          id: modeSwitchTemplate
+          state: ON
+    turn_off_action:
+      - switch.turn_off: gpio12LED1
+      - switch.turn_off: gpio4Select
+      - switch.template.publish:
+          id: modeSwitchTemplate
+          state: OFF
+
+  - platform: gpio
+    name: "DEVICE MODE SWITCH (LAN|OFF| / USB|ON|)"
+    restore_mode: ALWAYS_OFF
+    icon: mdi:toggle-switch
+    internal: true
+    id: gpio4Select
+    pin:
+      number: GPIO33
+
+  - platform: gpio
+    name: "2.3.Mode LED (RED)"
+    restore_mode: ALWAYS_OFF
+    icon: mdi:toggle-switch
+    id: gpio12LED1
+    pin:
+      number: GPIO12
+
+  - platform: gpio
+    name: "2.2.Power LED (BLUE)"
+    restore_mode: ALWAYS_ON
+    icon: mdi:toggle-switch
+    id: gpio14LED2
+    pin:
+      number: GPIO14
+
+script:
+  - id: fw_update_mode
+    then:
+      - switch.turn_on: zBSL
+      - delay: 1s
+      - switch.turn_on: zRST_gpio
+      - delay: 1s
+      - switch.turn_off: zRST_gpio
+      - logger.log: "Delaying 4 seconds for TI chip to be ready"
+      - delay: 4s
+      - switch.turn_off: zBSL
+      - logger.log: "Update with cc2538-bsl tool now: cc2538-bsl.py -p socket://<ip>:6638 -evw firmware.hex"
+
+uart:
+  id: uart_bus
+  rx_pin: GPIO36
+  tx_pin: GPIO04
+  baud_rate: 115200
+
+uart_tcp:
+  - id: zb_tcp
+    uart_id: uart_bus
+    role: server
+    port: 6638
+    allowed_ips:
+      - 10.0.10.101 # HA VM (Zigbee2MQTT)
+      - 10.0.40.0/24 # K3s nodes: Cilium masquerades pod egress to the node IP
+
+mdns:
+  services:
+    - service: "_uzg-01"
+      protocol: "_tcp"
+      port: 6638
+      txt:
+        version: "1.0"
+        name: UZG-01
+        radio_type: znp
+        baud_rate: "115200"
+        data_flow_control: software
