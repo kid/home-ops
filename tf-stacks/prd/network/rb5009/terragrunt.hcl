@@ -160,6 +160,11 @@ inputs = {
         name    = "litters camera"
       },
       {
+        address = "10.0.50.41"
+        mac     = "68:fe:71:a7:bb:e7"
+        name    = "sma-inverter"
+      },
+      {
         address = "10.0.50.40"
         mac     = "78:21:84:6d:37:63"
         name    = "uzg-01"
@@ -306,6 +311,10 @@ inputs = {
     }
     ether5 = {
       comment  = "uzg-01"
+      untagged = 50
+    }
+    ether6 = {
+      comment  = "sma-inverter"
       untagged = 50
     }
     ether7 = {

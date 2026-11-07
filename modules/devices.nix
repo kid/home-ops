@@ -117,6 +117,16 @@
         }
       ];
     };
+    sma-inverter = {
+      interfaces = [
+        {
+          network = "IotLocal";
+          hostNum = 41;
+          # Ethernet MAC = ESP32 base MAC (68:fe:71:a7:bb:e4) + 3.
+          mac = "68:fe:71:a7:bb:e7";
+        }
+      ];
+    };
     "litters camera" = {
       interfaces = [
         {

@@ -118,6 +118,10 @@ in
                 comment = "uzg-01";
                 untagged = networks.IotLocal.vlanId;
               };
+              ether6 = {
+                comment = "sma-inverter";
+                untagged = networks.IotLocal.vlanId;
+              };
               ether7 = {
                 comment = "oob";
                 bridge_port = false;
@@ -201,8 +205,11 @@ in
               "pve1.kidibox.net" = {
                 address = "10.0.10.11";
               };
-              "doorbell.iot.home.kidibox.net" = {
-                address = "10.0.101.100";
+              "doorbell.${networks.IotLocal.domain}" = {
+                inherit (config.den.devices.doorbell) address;
+              };
+              "sma-inverter.${networks.IotLocal.domain}" = {
+                inherit (config.den.devices.sma-inverter) address;
               };
             };
           };
