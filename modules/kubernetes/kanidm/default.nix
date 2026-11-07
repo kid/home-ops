@@ -88,12 +88,9 @@ in
         helm.releases.kaniop = {
           chart = charts.pando85.kaniop;
           values = {
-            # Both are Helm pre-install hooks. The chart's crds/ are rendered
-            # with the rest, and the migration only concerns upgrades from
-            # before 0.19; it also stamps `now` into its manifest, which would
-            # break checks.manifests.
+            # A Helm pre-install hook; the chart's crds/ are rendered with the
+            # rest.
             crdApply.enabled = false;
-            crdMigration.personAccountPlural.enabled = false;
 
             metrics = {
               enabled = true;
