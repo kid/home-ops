@@ -1,0 +1,39 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: home-assistant
+  namespace: home-assistant
+spec:
+  credentialProjection:
+    enabled: true
+  files:
+    ignoreRules:
+      - /lost+found
+      - /.venv
+      - /deps
+      - /.cache
+      - /backups
+      - /tts
+      - /home-assistant.log*
+  identity:
+    hostname: home-assistant
+    username: home-assistant
+  mover:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 65534
+      runAsUser: 65534
+  repository:
+    kind: ClusterRepository
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: home-assistant
+  staging:
+    storageClassName: miroir
