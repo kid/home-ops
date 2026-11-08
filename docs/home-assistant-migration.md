@@ -150,9 +150,9 @@ Not yet verified. Test first on a throwaway HA container with a copy of the data
 - [x] Drop InfluxDB: `influxdb` config entry deleted, add-on uninstalled.
 
 ### Repo
-- [ ] `modules/kubernetes/mosquitto/`: Deployment, small kopiur PVC, passwords from 1Password via ExternalSecret, ClusterIP Service.
-- [ ] `modules/kubernetes/zigbee2mqtt/`: kopiur PVC, egress to `10.0.50.40:6638` and Mosquitto, frontend behind `mkOidcAuth`.
-- [ ] Rewrite `modules/kubernetes/home-assistant/default.nix`:
+- [x] Mosquitto (`modules/kubernetes/home-assistant/mosquitto.nix`, #648, #649): TLS-only on 8883 with a `cluster-ca` certificate, a daily SIGHUP reloader, generated passwords in `mosquitto-home-assistant` and `mosquitto-zigbee2mqtt`, no persistence. Live; an in-cluster pub/sub test passed.
+- [ ] Zigbee2MQTT (`modules/kubernetes/home-assistant/zigbee2mqtt.nix`): kopiur PVC, `ZIGBEE2MQTT_CONFIG_*` overrides for MQTT (TLS), the serial port and the frontend, egress to Mosquitto, `10.0.50.40:6638` and HTTPS (OTA), frontend at `zigbee2mqtt.kidibox.net` behind Kanidm (`admins`), rb5009 forward rule K3s → UZG-01:6638. Deployed with `replicas = 0` until the cutover.
+- [ ] Home Assistant (`modules/kubernetes/home-assistant/home-assistant.nix`, today only the Service/EndpointSlice fronting the VM):
   - Deployment with a Renovate digest pin.
   - `mkKopiurBackup` with uid 65534.
   - An internal route alongside the public HTTPRoute.
@@ -162,9 +162,10 @@ Not yet verified. Test first on a throwaway HA container with a copy of the data
 
 ### Cutover
 - [ ] Take a full HA backup plus a `sqlite3 .backup` of `home-assistant_v2.db`, stored off-cluster.
-- [ ] Stop Z2M on the VM before the cluster Z2M starts.
-- [ ] Import `/config` (excluding `zigbee2mqtt/` and `deps/`) into the HA PVC, and `zigbee2mqtt/` into the Z2M PVC.
-- [ ] Repoint HA's MQTT config entry to the in-cluster Service. Delete the `influxdb` config entry.
+- [ ] HA and Zigbee2MQTT move together: the VM's HA can't reach the in-cluster Mosquitto (ClusterIP), and the in-cluster HA can't reach the add-on's.
+- [ ] Stop the Z2M add-on and set it to manual boot before the cluster Z2M starts: two Zigbee2MQTT instances must never drive the coordinator at once.
+- [ ] Import `/config` (excluding `zigbee2mqtt/` and `deps/`) into the HA PVC, and `zigbee2mqtt/` (`configuration.yaml`, `database.db`, `coordinator_backup.json`, `state.json`; not `log/`) into the Z2M PVC, owned by uid 1000. Then set the Z2M Deployment's `replicas = 1`.
+- [ ] Repoint HA's MQTT config entry to `mosquitto.home-assistant.svc:8883`: user `home-assistant`, password from the `mosquitto-home-assistant` Secret, TLS with the `cluster-ca` CA uploaded as a custom certificate.
 - [ ] Update the companion apps' internal URL.
 - [ ] Delete `den.devices.homeassistant` and the old firewall rule.
 
