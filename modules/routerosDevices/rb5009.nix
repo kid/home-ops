@@ -99,8 +99,9 @@ in
                 tagged = allVlanIds;
               };
               ether1 = {
-                comment = "pve1";
-                tagged = allVlanIds;
+                comment = "node0";
+                untagged = networks.Servers.vlanId;
+                tagged = [ networks.Storage.vlanId ];
               };
               ether2 = {
                 comment = "switch";
@@ -202,9 +203,6 @@ in
           // commonInputs
           // {
             dns_static_records = {
-              "pve1.kidibox.net" = {
-                address = "10.0.10.11";
-              };
               "doorbell.${networks.IotLocal.domain}" = {
                 inherit (config.den.devices.doorbell) address;
               };

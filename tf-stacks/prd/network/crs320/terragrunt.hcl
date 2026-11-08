@@ -53,7 +53,7 @@ inputs = {
       untagged = 99
     }
     ether16 = {
-      comment  = "pve1-ipmi"
+      comment  = "node0-kvm"
       untagged = 99
     }
     ether17 = {
@@ -115,7 +115,7 @@ inputs = {
       untagged = 10
     }
     sfp-sfpplus4 = {
-      comment = "pve1"
+      comment = "spare"
       tagged = [
         10,
         20,

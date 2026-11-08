@@ -199,12 +199,12 @@ inputs = {
         name    = "crs320"
       },
       {
-        address = "10.99.10.10"
+        address = "10.99.10.11"
         mac     = "d0:50:99:f7:ee:15"
         name    = "node1-ipmi"
       },
       {
-        address = "10.99.10.11"
+        address = "10.99.10.10"
         mac     = "dc:a6:32:06:69:9a"
         name    = "pikvm"
       },
@@ -212,13 +212,13 @@ inputs = {
     Servers = [
       {
         address = "10.0.10.10"
-        mac     = "d0:50:99:fe:51:b5"
-        name    = "node1"
+        mac     = "74:56:3c:69:1e:30"
+        name    = "node0"
       },
       {
         address = "10.0.10.11"
-        mac     = "be:4f:11:f4:ba:61"
-        name    = "pve1"
+        mac     = "d0:50:99:fe:51:b5"
+        name    = "node1"
       },
     ]
     Storage = [
@@ -233,9 +233,9 @@ inputs = {
         name    = "k3s-prd-1"
       },
       {
-        address = "10.0.20.126"
-        mac     = "bc:24:11:64:8c:c1"
-        name    = "truenas"
+        address = "10.0.20.10"
+        mac     = "74:56:3c:69:1e:30"
+        name    = "node0"
       },
     ]
     Trusted = [
@@ -262,17 +262,11 @@ inputs = {
   ]
   ethernet_interfaces = {
     ether1 = {
-      comment = "pve1"
+      comment = "node0"
       tagged = [
-        10,
         20,
-        40,
-        50,
-        51,
-        99,
-        100,
-        101,
       ]
+      untagged = 10
     }
     ether2 = {
       comment  = "switch"

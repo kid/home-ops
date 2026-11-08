@@ -92,7 +92,7 @@ in
               ];
             };
             "sfp-sfpplus4" = {
-              comment = "pve1";
+              comment = "spare";
               tagged = allVlanIds;
             };
             ether1 = {
@@ -131,7 +131,7 @@ in
               untagged = networks.Management.vlanId;
             };
             ether16 = {
-              comment = "pve1-ipmi";
+              comment = "node0-kvm";
               untagged = networks.Management.vlanId;
             };
             ether17 = {

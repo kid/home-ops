@@ -6,7 +6,7 @@ metadata:
 spec:
   egress:
     - toCIDR:
-        - 10.0.20.126/32
+        - 10.0.20.10/32
       toPorts:
         - ports:
             - port: "2049"

@@ -2,10 +2,10 @@
 # built by cluster.methods.mkNfsScaler.
 { config, lib, ... }:
 let
-  # The nodes reach truenas on the Storage VLAN, not through the router.
+  # The nodes reach node0 on the Storage VLAN, not through the router.
   nfsAddr =
-    config.den.devices.truenas.interfaces
-    |> lib.findFirst (i: i.network == "Storage") (throw "truenas has no Storage interface")
+    config.den.devices.node0.interfaces
+    |> lib.findFirst (i: i.network == "Storage") (throw "node0 has no Storage interface")
     |> (i: i.address);
 in
 {

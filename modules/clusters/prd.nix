@@ -40,9 +40,8 @@ let
   # by any single Kubernetes app, so it lives here rather than under
   # modules/kubernetes/ — a small local aspect object appended to includes
   # below, the same shape as nixidy-defaults.nix's nixidyDefaultsAspect.
-  # VLANs, MACs and addresses come from den.networks/den.devices; node1's
-  # Incus remote address, the physical NIC name and the VM sizing have no
-  # Nix source and stay literal.
+  # VLANs, MACs and addresses come from den.networks/den.devices; the
+  # physical NIC name and the VM sizing have no Nix source and stay literal.
   incusTerragruntAspect = {
     name = "prd/incus";
     "terragrunt-stacks" = { cluster, ... }: {
@@ -58,7 +57,7 @@ let
 
             remote {
               name    = "node1"
-              address = "https://10.0.10.10:8443"
+              address = "https://${config.den.devices.node1.address}:8443"
             }
 
             remote {

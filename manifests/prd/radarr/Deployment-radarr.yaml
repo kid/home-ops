@@ -98,12 +98,12 @@ spec:
             claimName: radarr
         - name: downloads
           nfs:
-            path: /mnt/tank/downloads/sabnzbd
-            server: 10.0.20.126
+            path: /tank/downloads/sabnzbd
+            server: 10.0.20.10
         - name: library
           nfs:
-            path: /mnt/tank/library/movies
-            server: 10.0.20.126
+            path: /tank/library/movies
+            server: 10.0.20.10
         - emptyDir: {}
           name: logs
         - emptyDir: {}

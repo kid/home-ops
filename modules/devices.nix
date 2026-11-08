@@ -32,30 +32,8 @@
       interfaces = [
         {
           network = "Management";
-          hostNum = (den.networks.Servers.vlanId * 256) + 11;
+          hostNum = (den.networks.Servers.vlanId * 256) + 10;
           mac = "dc:a6:32:06:69:9a";
-        }
-      ];
-    };
-
-    # Servers
-    pve1 = {
-      interfaces = [
-        {
-          network = "Servers";
-          hostNum = 11;
-          mac = "be:4f:11:f4:ba:61";
-        }
-      ];
-    };
-
-    # Storage
-    truenas = {
-      interfaces = [
-        {
-          network = "Storage";
-          hostNum = 126;
-          mac = "bc:24:11:64:8c:c1";
         }
       ];
     };

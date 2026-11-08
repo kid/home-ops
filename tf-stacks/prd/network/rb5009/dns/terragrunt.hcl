@@ -31,10 +31,13 @@ inputs = {
     "k3s-prd-1.storage.home.kidibox.net" = {
       address = "10.0.20.41"
     }
-    "node1.srv.home.kidibox.net" = {
+    "node0.srv.home.kidibox.net" = {
       address = "10.0.10.10"
     }
-    "pve1.kidibox.net" = {
+    "node0.storage.home.kidibox.net" = {
+      address = "10.0.20.10"
+    }
+    "node1.srv.home.kidibox.net" = {
       address = "10.0.10.11"
     }
     "sma-inverter.iot-local.home.kidibox.net" = {
