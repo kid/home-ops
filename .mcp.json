@@ -26,6 +26,13 @@
         "callbackPort": 33418,
         "scope": "openid profile email"
       }
+    },
+    "home-assistant": {
+      "type": "http",
+      "url": "https://ha.kidibox.net/api/mcp",
+      "headers": {
+        "Authorization": "!t=$(op read 'op://home-ops/Home Assistant - mcp/token') && [ -n \"$t\" ] && printf 'Bearer %s' \"$t\""
+      }
     }
   }
 }
