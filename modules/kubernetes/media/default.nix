@@ -1,15 +1,15 @@
 # The shape every media app here shares: one Deployment on a kopiur-backed
 # config volume, its Service and HTTPRoute on the apps Gateway, NFS mounts
-# from truenas, and its Cilium policy. Returns the nixidy application, for
+# from node0's tank pool, and its Cilium policy. Returns the nixidy application, for
 # `applications.<name>`.
 { config, lib, ... }:
 let
   inherit (config.den.clusters.prd) methods;
 
-  # The nodes reach truenas on the Storage VLAN, not through the router.
+  # The nodes reach node0 on the Storage VLAN, not through the router.
   nfsServer =
-    config.den.devices.truenas.interfaces
-    |> lib.findFirst (i: i.network == "Storage") (throw "truenas has no Storage interface")
+    config.den.devices.node0.interfaces
+    |> lib.findFirst (i: i.network == "Storage") (throw "node0 has no Storage interface")
     |> (i: i.address);
 
   mkMediaApp =
@@ -27,7 +27,7 @@ let
       # Also the kopiur mover's uid, and the owner of what it writes over NFS.
       uid,
       supplementalGroups ? [ ],
-      # <volume> = { path = <export on truenas>; mountPath = <in the pod>;
+      # <volume> = { path = <export on node0>; mountPath = <in the pod>;
       # readOnly ? false; }
       nfs ? { },
       storage ? "1Gi",
@@ -128,8 +128,8 @@ let
                 # The other media apps, by Service name.
                 (fromPods { } [ port ])
               ];
-              # Indexers, metadata and the apps still on pve1 (world); the
-              # other media apps, by Service name.
+              # Indexers and metadata (world); the other media apps, by
+              # Service name.
               egress = [
                 (worldEgress egressPorts)
                 { toEndpoints = [ { } ]; }

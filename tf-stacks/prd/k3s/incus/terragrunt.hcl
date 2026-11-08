@@ -15,7 +15,7 @@ provider "incus" {
 
   remote {
     name    = "node1"
-    address = "https://10.0.10.10:8443"
+    address = "https://10.0.10.11:8443"
   }
 
   remote {

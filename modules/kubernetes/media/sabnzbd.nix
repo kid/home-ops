@@ -29,12 +29,12 @@
         };
         probePath = "/api?mode=version";
         # The CT's uid 330 behind the unprivileged-CT offset: what owns the
-        # downloads on truenas.
+        # downloads on tank.
         uid = 100330;
         # The CT's own mount path, which sabnzbd.ini and the *arr apps'
         # completed-download paths refer to.
         nfs.downloads = {
-          path = "/mnt/tank/downloads/sabnzbd";
+          path = "/tank/downloads/sabnzbd";
           mountPath = "/var/lib/sabnzbd/Downloads";
         };
         # NNTP over TLS to the Usenet servers.

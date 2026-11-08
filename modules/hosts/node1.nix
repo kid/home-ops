@@ -17,7 +17,7 @@
       interfaces = [
         {
           network = "Servers";
-          hostNum = 10;
+          hostNum = 11;
           mac = "d0:50:99:fe:51:b5";
           # The trunk also carries the Storage VLAN to the k3s VMs.
           inherit (den.networks.Storage) mtu;
@@ -28,7 +28,7 @@
       interfaces = [
         {
           network = "Management";
-          hostNum = (den.networks.Servers.vlanId * 256) + 10;
+          hostNum = (den.networks.Servers.vlanId * 256) + 11;
           mac = "d0:50:99:f7:ee:15";
         }
       ];

@@ -34,6 +34,18 @@ creation_rules:
       AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb 
       kid@fw13
     - ssh-ed25519 
+      AAAAC3NzaC1lZDI1NTE5AAAAIGcdsS1ydjLN8FhJGd7m4O1X1rZzH2XyNI/NNc69aS+B 
+      root@node0
+  path_regex: secrets/hosts/node0/.*
+- key_groups:
+  - age:
+    - ssh-ed25519 
+      AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo 
+      kid@vulkan
+    - ssh-ed25519 
+      AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb 
+      kid@fw13
+    - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAILkFKxaxcAS/tQuS8Gfk8xaHSLDAm1VCPHo8M7umUdVJ 
       root@node1
   path_regex: secrets/hosts/node1/.*

@@ -10,6 +10,6 @@ spec:
   targets:
     staticConfig:
       targets:
-        - 10.0.20.126:2049
+        - 10.0.20.10:2049
   vmProberSpec:
     url: blackbox-exporter.monitoring.svc:9115

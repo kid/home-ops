@@ -46,7 +46,7 @@ in
         # The CT's own mount path, which the library's paths in its database
         # refer to. Plex only reads it.
         nfs.library = {
-          path = "/mnt/tank/library";
+          path = "/tank/library";
           mountPath = "/tank/library";
           readOnly = true;
         };

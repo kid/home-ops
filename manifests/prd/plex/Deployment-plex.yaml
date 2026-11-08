@@ -96,9 +96,9 @@ spec:
             claimName: plex
         - name: library
           nfs:
-            path: /mnt/tank/library
+            path: /tank/library
             readOnly: true
-            server: 10.0.20.126
+            server: 10.0.20.10
         - emptyDir: {}
           name: logs
         - emptyDir: {}

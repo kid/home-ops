@@ -106,7 +106,7 @@ in
                 volumes = {
                   downloads.nfs = {
                     server = cluster.methods.mediaNfsServer;
-                    path = "/mnt/tank/downloads/sabnzbd";
+                    path = "/tank/downloads/sabnzbd";
                   };
                   tmp.emptyDir = { };
                 };
