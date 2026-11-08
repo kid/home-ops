@@ -31,7 +31,7 @@
       "type": "http",
       "url": "https://ha.kidibox.net/api/mcp",
       "headers": {
-        "Authorization": "Bearer ${HA_MCP_TOKEN}"
+        "Authorization": "!op read 'op://home-ops/Home Assistant - mcp/token' | sed 's/^/Bearer /'"
       }
     }
   }
