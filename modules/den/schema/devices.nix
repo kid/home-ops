@@ -73,12 +73,6 @@ in
                         description = "Reaches the host as an 802.1Q VLAN on its first interface's NIC (set mac to that NIC's MAC), not on a NIC of its own";
                       };
 
-                      incusBridge = lib.mkOption {
-                        type = lib.types.nullOr lib.types.str;
-                        default = null;
-                        description = "Incus network that carries this tagged interface's VLAN and the host's address on it (tf-catalog/modules/incus-k3s host_addresses): the host's networkd leaves the VLAN alone";
-                      };
-
                       address = lib.mkOption {
                         type = lib.types.str;
                         default =
@@ -95,6 +89,13 @@ in
                 )
               );
               description = "Network attachments (VLAN/host-number/MAC)";
+            };
+
+            vmBridges = lib.mkOption {
+              type = lib.types.attrsOf lib.types.str;
+              default = { };
+              example.k3s-prd = "K3s";
+              description = "Bridges for VMs (bridge name -> den.networks name), each holding that VLAN on the host's first NIC. The host's own tagged interface on such a network moves onto its bridge (modules/nixos/base/network.nix).";
             };
 
             # Resolved directly here (not left to every consumer to redo
