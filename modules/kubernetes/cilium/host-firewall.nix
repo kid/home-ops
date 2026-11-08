@@ -92,6 +92,9 @@
       # etcd between servers. A joining server has no Cilium identity until its
       # own Cilium runs, which needs its etcd member first: until then it is
       # world, matched by address. CIDR rules don't match remote-node, hence both.
+      # On every node, not only control-plane ones: an agent turning server keeps
+      # its Cilium, which loses the API (127.0.0.1:6443 is now its own, down
+      # until etcd joins) before it can see the control-plane label.
       etcdIngress = lib.optionals (servers != [ ]) [
         {
           fromEntities = [ "remote-node" ];
@@ -104,10 +107,12 @@
       ];
 
       policies = [
-        (mkPolicy "node-host-firewall" { } (mkIngress (lib.filter (p: !isControlPlane p) ports)))
+        (mkPolicy "node-host-firewall" { } (
+          mkIngress (lib.filter (p: !isControlPlane p) ports) ++ etcdIngress
+        ))
         (mkPolicy "node-host-firewall-control-plane" {
           matchLabels."node-role.kubernetes.io/control-plane" = "true";
-        } (mkIngress (lib.filter isControlPlane ports) ++ etcdIngress))
+        } (mkIngress (lib.filter isControlPlane ports)))
       ];
     in
     {
