@@ -39,9 +39,6 @@ inputs = {
       vlan_id = 40
     }
     storage = {
-      host_addresses = {
-        node0 = "10.0.20.10/24"
-      }
       mtu     = 9000
       name    = "storage-prd"
       vlan_id = 20
@@ -92,9 +89,7 @@ inputs = {
     }
   }
   remotes = {
-    node0 = {
-      parent = "enp2s0"
-    }
+    node0 = {}
     node1 = {
       parent = "enp36s0f1"
     }

@@ -20,7 +20,7 @@ in
       network = "Servers";
       hostNum = 10;
       mac = "74:56:3c:69:1e:30";
-      # The trunk also carries the Storage VLAN.
+      # The trunk also carries the Storage and K3s VLANs.
       inherit (den.networks.Storage) mtu;
     }
     {
@@ -28,10 +28,15 @@ in
       hostNum = 10;
       mac = "74:56:3c:69:1e:30";
       tagged = true;
-      # The k3s VMs' storage bridge holds VLAN 20 and this address.
-      incusBridge = "storage-prd";
     }
   ];
+
+  # The k3s VMs' bridges, named like node1's Incus networks: a VM moving here
+  # attaches to the same bridge names. The Storage address sits on storage-prd.
+  den.devices.node0.vmBridges = {
+    k3s-prd = "K3s";
+    storage-prd = "Storage";
+  };
 
   den.aspects.node0.nixos =
     { pkgs, ... }:

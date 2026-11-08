@@ -25,23 +25,21 @@ variable "nodes" {
 }
 
 variable "remotes" {
-  description = "Incus hosts that can run nodes, keyed by provider remote name. Every network is created on each of them."
+  description = "Incus hosts that can run nodes, keyed by provider remote name."
   type = map(object({
-    # The NIC carrying the VLANs.
-    parent = string
+    # The NIC carrying the VLANs: Incus creates every network there. null:
+    # the host's own networkd has bridges of the networks' names (den.devices
+    # vmBridges), which nodes attach to as bridged NICs.
+    parent = optional(string)
   }))
 }
 
 variable "networks" {
-  description = "Incus bridges to create, each tagging one VLAN on its remote's parent NIC. Every node's first NIC is on the `k3s` one; extra_nics use the other keys."
+  description = "VLAN bridges, created on remotes with a parent NIC. Every node's first NIC is on the `k3s` one; extra_nics use the other keys."
   type = map(object({
     name    = string
     vlan_id = number
     mtu     = optional(number)
-    # The host's own address on this bridge (CIDR), keyed by remote, for a
-    # host that has none on the VLAN otherwise: one VLAN ID per NIC, so the
-    # bridge's VLAN interface is the only one the host can have.
-    host_addresses = optional(map(string), {})
   }))
 }
 
@@ -78,12 +76,23 @@ locals {
   remote_networks = merge([
     for remote_name, remote in var.remotes : {
       for key, network in var.networks : "${remote_name}/${key}" => merge(network, {
-        remote       = remote_name
-        parent       = remote.parent
-        host_address = lookup(network.host_addresses, remote_name, null)
+        remote = remote_name
+        parent = remote.parent
       })
-    }
+    } if remote.parent != null
   ]...)
+
+  # A node's NIC on a network: the Incus network, or the host's bridge of
+  # the same name. incus_instance depends on incus_network for the former.
+  nic = {
+    for name, node in var.nodes : name => {
+      for key, network in var.networks : key => (
+        var.remotes[node.remote].parent != null
+        ? tomap({ network = network.name })
+        : tomap({ nictype = "bridged", parent = network.name })
+      )
+    }
+  }
 }
 
 moved {
@@ -114,15 +123,7 @@ resource "incus_network" "this" {
       "ipv4.address"               = "none"
       "ipv6.address"               = "none"
     },
-    each.value.mtu != null ? { "bridge.mtu" = tostring(each.value.mtu) } : {},
-    # A plain address: no DHCP, DNS, NAT or Incus firewall rules.
-    each.value.host_address != null ? {
-      "ipv4.address"  = each.value.host_address
-      "ipv4.dhcp"     = "false"
-      "ipv4.nat"      = "false"
-      "ipv4.firewall" = "false"
-      "dns.mode"      = "none"
-    } : {}
+    each.value.mtu != null ? { "bridge.mtu" = tostring(each.value.mtu) } : {}
   )
 
   # Resources created before var.remotes have no remote in state (the
@@ -159,6 +160,8 @@ resource "incus_instance" "k3s" {
   image  = incus_image.base[each.value.remote].fingerprint
   type   = "virtual-machine"
 
+  depends_on = [incus_network.this]
+
   config = {
     "limits.cpu"           = each.value.cpu
     "limits.memory"        = each.value.memory
@@ -194,7 +197,7 @@ resource "incus_instance" "k3s" {
     name = "eth0"
     type = "nic"
     properties = merge(
-      { network = incus_network.this["${each.value.remote}/k3s"].name },
+      local.nic[each.key]["k3s"],
       each.value.mac != null ? { hwaddr = each.value.mac } : {}
     )
   }
@@ -206,7 +209,7 @@ resource "incus_instance" "k3s" {
       name = device.key
       type = "nic"
       properties = merge(
-        { network = incus_network.this["${each.value.remote}/${device.key}"].name },
+        local.nic[each.key][device.key],
         device.value.mac != null ? { hwaddr = device.value.mac } : {}
       )
     }

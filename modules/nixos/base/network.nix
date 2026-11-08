@@ -5,20 +5,43 @@
 # addresses stay as reservations, for installers and the VM bootstrap image.
 # The MTU goes in the .network file, not a .link one: a matching .link
 # replaces 99-default.link and with it the predictable interface name.
+#
+# vmBridges (bridge -> network) each get a `vlan<id>` VLAN on the first NIC
+# as their only port, for VMs to attach to (tf-catalog/modules/incus-k3s);
+# a tagged interface on a bridged network puts its address on the bridge.
 { config, den, ... }:
 {
   den.aspects.host-network.nixos =
     { host, lib, ... }:
     let
-      inherit (config.den.devices.${host.name} or { interfaces = [ ]; }) interfaces;
+      device =
+        config.den.devices.${host.name} or {
+          interfaces = [ ];
+          vmBridges = { };
+        };
+      inherit (device) interfaces;
+      bridges =
+        device.vmBridges
+        |> lib.mapAttrsToList (
+          name: network: {
+            inherit name network;
+            vlan = "vlan${toString config.den.networks.${network}.vlanId}";
+            iface = lib.findFirst (i: i.tagged && i.network == network) null interfaces;
+          }
+        );
+      bridgedNetworks = map (b: b.network) bridges;
       physical = lib.filter (i: !i.tagged) interfaces;
-      # Incus owns the VLAN and address of an interface with incusBridge.
-      tagged = lib.filter (i: i.tagged && i.incusBridge == null) interfaces;
+      tagged = lib.filter (i: i.tagged && !lib.elem i.network bridgedNetworks) interfaces;
       vlanName = i: lib.toLower i.network;
       netOf =
         i: config.den.environments.${config.den.networks.${i.network}.environment}.networks.${i.network};
       addressOf = i: "${i.address}/${toString (netOf i).prefix}";
       mtuOf = i: lib.optionalAttrs (i.mtu != null) { MTUBytes = i.mtu; };
+      networkMtu =
+        network:
+        lib.optionalAttrs (config.den.networks.${network}.mtu != null) {
+          MTUBytes = config.den.networks.${network}.mtu;
+        };
     in
     {
       assertions = [
@@ -29,18 +52,39 @@
       ];
 
       systemd.network.netdevs = lib.mkIf (interfaces != [ ]) (
-        tagged
-        |> map (
-          iface:
-          lib.nameValuePair "20-${vlanName iface}" {
-            netdevConfig = {
-              Kind = "vlan";
-              Name = vlanName iface;
-            };
-            vlanConfig.Id = config.den.networks.${iface.network}.vlanId;
-          }
+        (
+          tagged
+          |> map (
+            iface:
+            lib.nameValuePair "20-${vlanName iface}" {
+              netdevConfig = {
+                Kind = "vlan";
+                Name = vlanName iface;
+              };
+              vlanConfig.Id = config.den.networks.${iface.network}.vlanId;
+            }
+          )
+          |> lib.listToAttrs
         )
-        |> lib.listToAttrs
+        // (
+          bridges
+          |> lib.concatMap (b: [
+            (lib.nameValuePair "20-${b.vlan}" {
+              netdevConfig = {
+                Kind = "vlan";
+                Name = b.vlan;
+              };
+              vlanConfig.Id = config.den.networks.${b.network}.vlanId;
+            })
+            (lib.nameValuePair "30-${b.name}" {
+              netdevConfig = {
+                Kind = "bridge";
+                Name = b.name;
+              };
+            })
+          ])
+          |> lib.listToAttrs
+        )
       );
 
       systemd.network.networks = lib.mkIf (interfaces != [ ]) (
@@ -62,7 +106,7 @@
               gateway = router;
               dns = router;
               ntp = router;
-              vlan = lib.optionals (i == 0) (map vlanName tagged);
+              vlan = lib.optionals (i == 0) (map vlanName tagged ++ map (b: b.vlan) bridges);
               linkConfig = mtuOf iface;
             }
           )
@@ -78,6 +122,41 @@
               linkConfig = mtuOf iface;
             }
           )
+          |> lib.listToAttrs
+        )
+        // (
+          bridges
+          |> lib.concatMap (b: [
+            (lib.nameValuePair "20-${b.vlan}" {
+              matchConfig.Name = b.vlan;
+              networkConfig = {
+                Bridge = b.name;
+                LinkLocalAddressing = "no";
+              };
+              linkConfig = networkMtu b.network;
+            })
+            (lib.nameValuePair "30-${b.name}" (
+              {
+                matchConfig.Name = b.name;
+                networkConfig = {
+                  LinkLocalAddressing = "no";
+                  ConfigureWithoutCarrier = true;
+                };
+                linkConfig = networkMtu b.network;
+              }
+              // (
+                if b.iface != null then
+                  { address = [ (addressOf b.iface) ]; }
+                else
+                  # Nothing on the host to wait for.
+                  {
+                    linkConfig = networkMtu b.network // {
+                      RequiredForOnline = "no";
+                    };
+                  }
+              )
+            ))
+          ])
           |> lib.listToAttrs
         )
       );

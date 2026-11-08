@@ -32,9 +32,9 @@ let
   # below, so the two can't drift apart.
   lbCidr = "10.0.42.0/24";
 
-  interfaceOf =
-    host: network: lib.findFirst (i: i.network == network) null config.den.devices.${host}.interfaces;
-  macOf = host: network: (interfaceOf host network).mac;
+  macOf =
+    host: network:
+    (lib.findFirst (i: i.network == network) null config.den.devices.${host}.interfaces).mac;
 
   # Provisions the Incus VLANs + k3s VMs node0 and node1 run this cluster on.
   # Not owned by any single Kubernetes app, so it lives here rather than under
@@ -42,8 +42,8 @@ let
   # below, the same shape as nixidy-defaults.nix's nixidyDefaultsAspect.
   # VLANs, MACs and addresses come from den.networks/den.devices; the
   # physical NIC names and the VM sizing have no Nix source and stay literal.
-  # node0's Storage address sits on the storage bridge (its den.devices
-  # interface sets incusBridge): its single NIC can't have a second VLAN 20.
+  # node0's bridges are its own (den.devices vmBridges, no parent here): its
+  # single NIC can't have a second VLAN 20 next to its Storage address.
   incusTerragruntAspect = {
     name = "prd/incus";
     "terragrunt-stacks" = { cluster, ... }: {
@@ -77,7 +77,7 @@ let
       };
       inputs = {
         remotes = {
-          node0.parent = "enp2s0";
+          node0 = { };
           node1.parent = "enp36s0f1";
         };
         networks.k3s = {
@@ -88,7 +88,6 @@ let
           name = "storage-${cluster.name}";
           vlan_id = config.den.networks.Storage.vlanId;
           inherit (config.den.networks.Storage) mtu;
-          host_addresses.node0 = "${(interfaceOf "node0" "Storage").address}/${toString config.den.environments.prd.networks.Storage.prefix}";
         };
         nodes = {
           # 40G root LV (den.aspects.incus-vm), the rest for miroir.
