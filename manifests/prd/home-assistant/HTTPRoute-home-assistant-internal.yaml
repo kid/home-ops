@@ -1,0 +1,21 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: home-assistant-internal
+  namespace: home-assistant
+spec:
+  hostnames:
+    - ha.kidibox.net
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: apps
+      namespace: envoy-gateway-system
+      sectionName: https
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: home-assistant
+          port: 8123
+          weight: 1
