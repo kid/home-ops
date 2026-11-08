@@ -38,7 +38,7 @@ in
       # The image's own kanidm user. The kopiur mover reads the volume as this same uid.
       appId = 389;
       # renovate: datasource=docker depName=docker.io/kanidm/server
-      serverTag = "1.11.2@sha256:e45f00bd354c1fc1c06a4be484b4e87b094c431e78280f1d19e911815e63efb5";
+      serverTag = "1.12.0@sha256:71b6ff5a9c9c32b632894d8acef5a2afc77941b35a0aa95dcee959fe688d5ce9";
       tlsSecretName = "${ref.name}-tls";
       serviceHostname = "${ref.name}.${namespace}.svc.cluster.local";
       # kaniop names the StatefulSet <Kanidm>-<replica group> and its
