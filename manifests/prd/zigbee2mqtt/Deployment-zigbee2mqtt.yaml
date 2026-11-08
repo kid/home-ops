@@ -4,7 +4,6 @@ metadata:
   name: zigbee2mqtt
   namespace: home-assistant
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: zigbee2mqtt
