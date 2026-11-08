@@ -7,12 +7,18 @@
 # e.g. for 6.18), so this picks the newest kernel where it is not.
 # Deliberately not `lib.mkDefault`: nothing else sets boot.kernelPackages on
 # a k3s node (only node1, through srvos's latest-zfs-kernel mixin).
+{ config, lib, ... }:
 {
   den.aspects.k3s-miroir-node = {
     miroir-nodes =
       { host, ... }:
       {
         hostname = host.name;
+        # DRBD replicates over the Storage VLAN (MiroirNode spec.address), off the K3s VLAN.
+        address =
+          (config.den.devices.${host.name} or { interfaces = [ ]; }).interfaces
+          |> lib.findFirst (i: i.network == "Storage") null
+          |> (i: if i == null then null else i.address);
       };
 
     nixos =

@@ -3,6 +3,7 @@ kind: MiroirNode
 metadata:
   name: k3s-prd-0
 spec:
+  address: 10.0.20.40
   pools:
     - lvmthin: {}
       name: default

@@ -1,8 +1,8 @@
 # The cluster's egress IPs (den.clusters.<name>.egressGateways) that this node
 # carries, added to its primary NIC's .network (modules/nixos/base/network.nix)
-# next to the DHCP lease. /32: a second address in the VLAN's /24 that came
-# up before the lease would become the subnet's primary address and with it
-# the node's source address; a /32 adds no subnet route.
+# next to the node's static address. /32: a second address in the VLAN's /24
+# that came up before the node's own would become the subnet's primary
+# address and with it the node's source address; a /32 adds no subnet route.
 #
 # Every node needs one per app: the app's pods leave from the node they run
 # on, and on a node without one they would leave with its own IP, which the

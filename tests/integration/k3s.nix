@@ -30,12 +30,14 @@ let
           --input-type binary --output-type binary token > $out/k3s-token.sops
       '';
 
-  # servers/agents: fixture host names, also the test node names.
+  # servers/agents: fixture host names, also the test node names. hostBase:
+  # their K3s host numbers are hostBase + 1, + 2, ... in that order.
   fixture =
     {
       servers,
       agents ? [ ],
       initServer ? null,
+      hostBase ? 200,
     }:
     { den, config, ... }:
     let
@@ -65,7 +67,7 @@ let
         interfaces = [
           {
             network = "K3s";
-            hostNum = 200 + index name;
+            hostNum = hostBase + index name;
             mac = "52:54:00:99:00:0${toString (index name)}";
           }
         ];
@@ -206,6 +208,67 @@ in
               assert "--server https://10.0.40.202:6443" in k3s_args(s1)
               etcd_members(s1, 2)
               etcd_members(s2, 2)
+        '';
+    };
+
+  # A single-server (embedded etcd) cluster and an agent change K3s
+  # addresses (.201/.202 → .241/.242), as prd's nodes do: etcd keeps its
+  # old peer URL until a --cluster-reset, which keeps the data.
+  k3s-renumber =
+    let
+      before = hostModules {
+        servers = [ "s1" ];
+        agents = [ "a1" ];
+      };
+      after = hostModules {
+        servers = [ "s1" ];
+        agents = [ "a1" ];
+        hostBase = 240;
+      };
+    in
+    pkgs.testers.runNixOSTest {
+      name = "k3s-renumber";
+      nodes = {
+        inherit (before) s1 a1;
+        # Never booted, only switched to.
+        s1new = after.s1;
+        a1new = after.a1;
+      };
+      testScript =
+        { nodes, ... }:
+        helpers
+        + ''
+          s1.start()
+          a1.start()
+          etcd_members(s1, 1)
+          s1.wait_until_succeeds("k3s kubectl get node a1", timeout=420)
+          s1.succeed("k3s kubectl create configmap renumber-probe --from-literal=kept=yes")
+
+          with subtest("the server's new node-ip makes etcd refuse to start"):
+              # The switch waits on k3s's start job, which never finishes
+              # (on prd: `colmena apply … boot` and a reboot instead).
+              s1.execute("timeout 120 ${nodes.s1new.system.build.toplevel}/bin/switch-to-configuration test >&2")
+              s1.execute("ip addr del 10.0.40.201/24 dev eth1")
+              s1.succeed("ip -4 addr show eth1 | grep -q 10.0.40.241")
+              assert "--node-ip=10.0.40.241" in k3s_args(s1)
+              s1.wait_until_succeeds("journalctl -u k3s | grep -q 'not a member of the etcd cluster'", timeout=300)
+
+          with subtest("--cluster-reset with the unit's own command line recovers it"):
+              s1.succeed("systemctl stop k3s")
+              argv = s1.succeed("systemctl show -p ExecStart --value k3s").split("argv[]=")[1].split(" ;")[0]
+              _, out = s1.execute(argv + " --cluster-reset 2>&1")
+              assert "Managed etcd cluster membership has been reset" in out, out
+              s1.succeed("systemctl start k3s")
+              s1.wait_until_succeeds("k3s kubectl get node s1", timeout=300)
+              s1.wait_until_succeeds("test \"$(k3s kubectl get node s1 -o jsonpath='{.status.addresses[?(@.type==\"InternalIP\")].address}')\" = 10.0.40.241", timeout=300)
+              assert s1.succeed("k3s kubectl get configmap renumber-probe -o jsonpath='{.data.kept}'").strip() == "yes"
+              etcd_members(s1, 1)
+
+          with subtest("the agent rejoins at the server's new address"):
+              a1.execute("${nodes.a1new.system.build.toplevel}/bin/switch-to-configuration test >&2")
+              a1.execute("ip addr del 10.0.40.202/24 dev eth1")
+              assert "--server https://10.0.40.241:6443" in k3s_args(a1)
+              s1.wait_until_succeeds("test \"$(k3s kubectl get node a1 -o jsonpath='{.status.addresses[?(@.type==\"InternalIP\")].address}')\" = 10.0.40.242", timeout=420)
         '';
     };
 }

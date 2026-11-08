@@ -2,7 +2,7 @@ addressType: IPv4
 apiVersion: discovery.k8s.io/v1
 endpoints:
   - addresses:
-      - 10.0.40.10
+      - 10.0.40.40
     conditions:
       ready: true
 kind: EndpointSlice

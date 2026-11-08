@@ -36,6 +36,9 @@ _: {
       miroir-nodes ? [ ],
       ...
     }:
+    let
+      storageAddresses = miroir-nodes |> lib.filter (n: n.address != null) |> map (n: n.address);
+    in
     {
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
@@ -96,16 +99,48 @@ _: {
           |> map (
             n:
             lib.nameValuePair n.hostname {
-              spec.pools = [
-                {
-                  name = "default";
-                  # The VG exists: the agent makes its thin pool there.
-                  lvmthin = { };
-                }
-              ];
+              spec = {
+                pools = [
+                  {
+                    name = "default";
+                    # The VG exists: the agent makes its thin pool there.
+                    lvmthin = { };
+                  }
+                ];
+              }
+              // lib.optionalAttrs (n.address != null) { inherit (n) address; };
             }
           )
           |> lib.listToAttrs;
+
+        # Untyped (as in cilium/host-firewall.nix), so the empty nodeSelector survives.
+        yamls = lib.optionals (storageAddresses != [ ]) [
+          (builtins.toJSON {
+            apiVersion = "cilium.io/v2";
+            kind = "CiliumClusterwideNetworkPolicy";
+            metadata.name = "miroir-drbd-storage";
+            spec = {
+              description = "DRBD replication between the miroir nodes' Storage VLAN addresses (MiroirNode spec.address); Cilium knows only their InternalIPs, so these sources are world.";
+              nodeSelector = { };
+              ingress = [
+                {
+                  fromCIDR = map (a: "${a}/32") storageAddresses;
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = "7000";
+                          endPort = 7999;
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
+          })
+        ];
 
         resources.volumeSnapshotClasses.miroir = {
           metadata.annotations."snapshot.storage.kubernetes.io/is-default-class" = "true";
