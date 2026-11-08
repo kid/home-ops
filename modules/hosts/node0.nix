@@ -28,6 +28,8 @@ in
       hostNum = 10;
       mac = "74:56:3c:69:1e:30";
       tagged = true;
+      # The k3s VMs' storage bridge holds VLAN 20 and this address.
+      incusBridge = "storage-prd";
     }
   ];
 
@@ -52,6 +54,13 @@ in
       # tank had no snapshot tasks under TrueNAS; srvos's default would
       # snapshot every tank dataset.
       services.zfs.autoSnapshot.enable = false;
+
+      # ZFS only. LVM would otherwise scan the Incus zvols and try to
+      # activate the volume groups the k3s VMs created on them.
+      services.lvm.enable = false;
+
+      # The ARC would otherwise grow to nearly all RAM, which the k3s VMs need.
+      boot.extraModprobeConfig = "options zfs zfs_arc_max=${toString (4 * 1024 * 1024 * 1024)}";
 
       services.udev.extraRules = ''
         # Spin the tank disks down after 30 minutes idle. On these Exos drives
@@ -89,7 +98,7 @@ in
       };
       # NFSv4 only; the kubelet negotiates 4.2.
       services.nfs.settings.nfsd.vers3 = false;
-      networking.firewall.interfaces.storage.allowedTCPPorts = [ 2049 ];
+      networking.firewall.interfaces.storage-prd.allowedTCPPorts = [ 2049 ];
     };
 
   # nfsd's client records (nfsdcld): without them, after a reboot the

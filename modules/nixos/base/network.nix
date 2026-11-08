@@ -12,7 +12,8 @@
     let
       inherit (config.den.devices.${host.name} or { interfaces = [ ]; }) interfaces;
       physical = lib.filter (i: !i.tagged) interfaces;
-      tagged = lib.filter (i: i.tagged) interfaces;
+      # Incus owns the VLAN and address of an interface with incusBridge.
+      tagged = lib.filter (i: i.tagged && i.incusBridge == null) interfaces;
       vlanName = i: lib.toLower i.network;
       netOf =
         i: config.den.environments.${config.den.networks.${i.network}.environment}.networks.${i.network};

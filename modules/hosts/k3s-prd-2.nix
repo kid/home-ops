@@ -1,4 +1,4 @@
-# k3s server (etcd member) for the prd cluster: an Incus VM on node1,
+# k3s server (etcd member) for the prd cluster: an Incus VM on node0,
 # installed with nixos-anywhere by the tf-stacks/prd/k3s/incus stack, then
 # updated with `colmena apply --on k3s-prd-2`.
 { den, config, ... }:

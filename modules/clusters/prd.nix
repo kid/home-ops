@@ -32,16 +32,18 @@ let
   # below, so the two can't drift apart.
   lbCidr = "10.0.42.0/24";
 
-  macOf =
-    host: network:
-    (lib.findFirst (i: i.network == network) null config.den.devices.${host}.interfaces).mac;
+  interfaceOf =
+    host: network: lib.findFirst (i: i.network == network) null config.den.devices.${host}.interfaces;
+  macOf = host: network: (interfaceOf host network).mac;
 
-  # Provisions the Incus VLAN + k3s VM node1 runs this cluster on. Not owned
-  # by any single Kubernetes app, so it lives here rather than under
+  # Provisions the Incus VLANs + k3s VMs node0 and node1 run this cluster on.
+  # Not owned by any single Kubernetes app, so it lives here rather than under
   # modules/kubernetes/ — a small local aspect object appended to includes
   # below, the same shape as nixidy-defaults.nix's nixidyDefaultsAspect.
   # VLANs, MACs and addresses come from den.networks/den.devices; the
-  # physical NIC name and the VM sizing have no Nix source and stay literal.
+  # physical NIC names and the VM sizing have no Nix source and stay literal.
+  # node0's Storage address sits on the storage bridge (its den.devices
+  # interface sets incusBridge): its single NIC can't have a second VLAN 20.
   incusTerragruntAspect = {
     name = "prd/incus";
     "terragrunt-stacks" = { cluster, ... }: {
@@ -54,6 +56,11 @@ let
         contents = ''
           provider "incus" {
             default_remote = "node1"
+
+            remote {
+              name    = "node0"
+              address = "https://${config.den.devices.node0.address}:8443"
+            }
 
             remote {
               name    = "node1"
@@ -69,20 +76,24 @@ let
         '';
       };
       inputs = {
+        remotes = {
+          node0.parent = "enp2s0";
+          node1.parent = "enp36s0f1";
+        };
         networks.k3s = {
           name = "k3s-${cluster.name}";
-          parent = "enp36s0f1";
           vlan_id = config.den.networks.K3s.vlanId;
         };
         networks.storage = {
           name = "storage-${cluster.name}";
-          parent = "enp36s0f1";
           vlan_id = config.den.networks.Storage.vlanId;
           inherit (config.den.networks.Storage) mtu;
+          host_addresses.node0 = "${(interfaceOf "node0" "Storage").address}/${toString config.den.environments.prd.networks.Storage.prefix}";
         };
         nodes = {
           # 40G root LV (den.aspects.incus-vm), the rest for miroir.
           "k3s-${cluster.name}-0" = {
+            remote = "node1";
             nixos_attr = "k3s-${cluster.name}-0";
             cpu = 8;
             memory = "8GiB";
@@ -92,6 +103,7 @@ let
             extra_nics.storage.mac = macOf "k3s-${cluster.name}-0" "Storage";
           };
           "k3s-${cluster.name}-1" = {
+            remote = "node1";
             nixos_attr = "k3s-${cluster.name}-1";
             cpu = 8;
             memory = "8GiB";
@@ -101,6 +113,7 @@ let
             extra_nics.storage.mac = macOf "k3s-${cluster.name}-1" "Storage";
           };
           "k3s-${cluster.name}-2" = {
+            remote = "node0";
             nixos_attr = "k3s-${cluster.name}-2";
             cpu = 8;
             memory = "8GiB";

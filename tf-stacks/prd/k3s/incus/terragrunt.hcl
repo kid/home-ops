@@ -14,6 +14,11 @@ provider "incus" {
   default_remote = "node1"
 
   remote {
+    name    = "node0"
+    address = "https://10.0.10.10:8443"
+  }
+
+  remote {
     name    = "node1"
     address = "https://10.0.10.11:8443"
   }
@@ -31,13 +36,14 @@ inputs = {
   networks = {
     k3s = {
       name    = "k3s-prd"
-      parent  = "enp36s0f1"
       vlan_id = 40
     }
     storage = {
+      host_addresses = {
+        node0 = "10.0.20.10/24"
+      }
       mtu     = 9000
       name    = "storage-prd"
-      parent  = "enp36s0f1"
       vlan_id = 20
     }
   }
@@ -54,6 +60,7 @@ inputs = {
       mac        = "52:54:00:40:00:01"
       memory     = "8GiB"
       nixos_attr = "k3s-prd-0"
+      remote     = "node1"
     }
     k3s-prd-1 = {
       address   = "10.0.40.41"
@@ -67,6 +74,7 @@ inputs = {
       mac        = "52:54:00:40:00:02"
       memory     = "8GiB"
       nixos_attr = "k3s-prd-1"
+      remote     = "node1"
     }
     k3s-prd-2 = {
       address   = "10.0.40.42"
@@ -80,6 +88,15 @@ inputs = {
       mac        = "52:54:00:40:00:03"
       memory     = "8GiB"
       nixos_attr = "k3s-prd-2"
+      remote     = "node0"
+    }
+  }
+  remotes = {
+    node0 = {
+      parent = "enp2s0"
+    }
+    node1 = {
+      parent = "enp36s0f1"
     }
   }
   ssh_authorized_keys = [
