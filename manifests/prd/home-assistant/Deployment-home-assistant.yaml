@@ -57,6 +57,7 @@ spec:
         runAsUser: 65534
         seccompProfile:
           type: RuntimeDefault
+      terminationGracePeriodSeconds: 120
       volumes:
         - name: config
           persistentVolumeClaim:
