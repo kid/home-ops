@@ -30,9 +30,8 @@
     "home-assistant": {
       "type": "http",
       "url": "https://ha.kidibox.net/api/mcp",
-      "oauth": {
-        "clientId": "http://localhost:33418/",
-        "callbackPort": 33418
+      "headers": {
+        "Authorization": "Bearer ${HA_MCP_TOKEN}"
       }
     }
   }
