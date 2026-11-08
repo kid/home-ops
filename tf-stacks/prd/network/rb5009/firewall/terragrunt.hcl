@@ -175,11 +175,6 @@ inputs = {
         comment            = "Allow WAN"
         out_interface_list = "WAN"
       },
-      {
-        action             = "accept"
-        comment            = "Allow access to all vlans"
-        out_interface_list = "all"
-      },
     ]
     Trusted = [
       {
