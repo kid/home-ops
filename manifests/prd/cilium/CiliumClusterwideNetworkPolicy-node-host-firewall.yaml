@@ -38,4 +38,20 @@ spec:
         - ports:
             - port: "22"
               protocol: TCP
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - endPort: 2380
+              port: "2379"
+              protocol: TCP
+    - fromCIDR:
+        - 10.0.40.40/32
+        - 10.0.40.41/32
+        - 10.0.40.42/32
+      toPorts:
+        - ports:
+            - endPort: 2380
+              port: "2379"
+              protocol: TCP
   nodeSelector: {}
