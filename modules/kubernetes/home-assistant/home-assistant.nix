@@ -264,6 +264,9 @@ in
                 metadata = { inherit labels; };
                 spec = {
                   automountServiceAccountToken = false;
+                  # HA's shutdown stops its integrations, then the recorder
+                  # commits and closes the database: 30s cut it short.
+                  terminationGracePeriodSeconds = 120;
                   securityContext = {
                     runAsNonRoot = true;
                     runAsUser = uid;
