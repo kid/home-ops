@@ -26,6 +26,14 @@
         "callbackPort": 33418,
         "scope": "openid profile email"
       }
+    },
+    "home-assistant": {
+      "type": "http",
+      "url": "https://ha.kidibox.net/api/mcp",
+      "oauth": {
+        "clientId": "http://localhost:33418/",
+        "callbackPort": 33418
+      }
     }
   }
 }
