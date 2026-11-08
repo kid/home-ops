@@ -67,6 +67,12 @@ in
                         description = "Interface MTU, e.g. a trunk carrying a jumbo-frame VLAN";
                       };
 
+                      tagged = lib.mkOption {
+                        type = lib.types.bool;
+                        default = false;
+                        description = "Reaches the host as an 802.1Q VLAN on its first interface's NIC (set mac to that NIC's MAC), not on a NIC of its own";
+                      };
+
                       address = lib.mkOption {
                         type = lib.types.str;
                         default =

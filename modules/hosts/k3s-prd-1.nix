@@ -16,12 +16,12 @@
     interfaces = [
       {
         network = "K3s";
-        hostNum = 11;
+        hostNum = 41;
         mac = "52:54:00:40:00:02";
       }
       {
         network = "Storage";
-        hostNum = 11;
+        hostNum = 41;
         mac = "52:54:00:20:00:02";
       }
     ];
@@ -29,7 +29,7 @@
 
   den.aspects.k3s-prd-1.nixos = {
     networking.hostName = "k3s-prd-1";
-    networking.useDHCP = true;
+    networking.useDHCP = false;
 
     # nixos-anywhere puts the key from secrets/hosts/k3s-prd-1 in place.
     services.openssh.generateHostKeys = false;

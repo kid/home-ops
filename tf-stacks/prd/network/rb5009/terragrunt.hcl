@@ -172,12 +172,12 @@ inputs = {
     ]
     K3s = [
       {
-        address = "10.0.40.10"
+        address = "10.0.40.40"
         mac     = "52:54:00:40:00:01"
         name    = "k3s-prd-0"
       },
       {
-        address = "10.0.40.11"
+        address = "10.0.40.41"
         mac     = "52:54:00:40:00:02"
         name    = "k3s-prd-1"
       },
@@ -223,12 +223,12 @@ inputs = {
     ]
     Storage = [
       {
-        address = "10.0.20.10"
+        address = "10.0.20.40"
         mac     = "52:54:00:20:00:01"
         name    = "k3s-prd-0"
       },
       {
-        address = "10.0.20.11"
+        address = "10.0.20.41"
         mac     = "52:54:00:20:00:02"
         name    = "k3s-prd-1"
       },

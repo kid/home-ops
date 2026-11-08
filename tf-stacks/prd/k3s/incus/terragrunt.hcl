@@ -43,7 +43,7 @@ inputs = {
   }
   nodes = {
     k3s-prd-0 = {
-      address   = "10.0.40.10"
+      address   = "10.0.40.40"
       cpu       = 8
       disk_size = "128GiB"
       extra_nics = {
@@ -56,7 +56,7 @@ inputs = {
       nixos_attr = "k3s-prd-0"
     }
     k3s-prd-1 = {
-      address   = "10.0.40.11"
+      address   = "10.0.40.41"
       cpu       = 8
       disk_size = "128GiB"
       extra_nics = {

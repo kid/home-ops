@@ -211,7 +211,20 @@ in
               "sma-inverter.${networks.IotLocal.domain}" = {
                 inherit (config.den.devices.sma-inverter) address;
               };
-            };
+            }
+            # <host>.<network domain> for every interface of every NixOS host.
+            // (
+              config.den.devices
+              |> lib.filterAttrs (name: _: config.den.hosts.x86_64-linux ? ${name})
+              |> lib.mapAttrsToList (
+                name: d:
+                map (
+                  i: lib.nameValuePair "${name}.${networks.${i.network}.domain}" { inherit (i) address; }
+                ) d.interfaces
+              )
+              |> lib.concatLists
+              |> lib.listToAttrs
+            );
           };
       };
 

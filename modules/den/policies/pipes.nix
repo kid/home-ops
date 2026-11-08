@@ -49,7 +49,7 @@ in
   ];
 
   # Collects the `miroir-nodes` quirk (emitted per-host by
-  # modules/nixos/services/k3s/miroir.nix, {hostname; device;}) onto
+  # modules/nixos/services/k3s/miroir.nix, {hostname; address;}) onto
   # the cluster entity, exposed as the `miroir-nodes` list arg to
   # modules/kubernetes/miroir/default.nix's k8s-manifests
   # content. `host` is the entity kind — a bare `_: true` predicate would
