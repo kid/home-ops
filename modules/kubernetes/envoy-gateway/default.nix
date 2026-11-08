@@ -75,13 +75,13 @@ in
                 # Envoy Gateway remaps privileged listener ports to 10000 + port.
                 {
                   fromEntities = [ "world" ];
-                  toPorts = tcp [ 10443 ];
+                  toPorts = tcpUdp [ 10443 ];
                 }
                 # In-cluster clients of an app's hostname: the Gateway already
                 # takes any LAN client, and each pod still needs netpol.gatewayEgress.
                 {
                   fromEntities = [ "cluster" ];
-                  toPorts = tcp [ 10443 ];
+                  toPorts = tcpUdp [ 10443 ];
                 }
               ];
               egress = [ clusterEgress ];
@@ -189,6 +189,11 @@ in
             }
           ];
           clientIPDetection.xForwardedFor.numTrustedHops = 1;
+          # QUIC on UDP 443 next to TCP. Cloudflare's HTTPS DNS record for a
+          # tunnelled hostname advertises h3, and the LAN resolver returns that
+          # record next to its own A record for the Gateway: without HTTP/3
+          # here, a client that tries QUIC first waits for it to time out.
+          http3 = { };
         };
 
         resources.gateways.apps.spec = {

@@ -7,6 +7,7 @@ spec:
   clientIPDetection:
     xForwardedFor:
       numTrustedHops: 1
+  http3: {}
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway

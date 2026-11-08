@@ -16,10 +16,14 @@ spec:
       toPorts:
         - ports:
             - port: "10443"
+              protocol: UDP
+            - port: "10443"
               protocol: TCP
     - fromEntities:
         - cluster
       toPorts:
         - ports:
+            - port: "10443"
+              protocol: UDP
             - port: "10443"
               protocol: TCP
