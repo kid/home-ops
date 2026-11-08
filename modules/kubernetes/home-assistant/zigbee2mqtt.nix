@@ -15,7 +15,7 @@
 #   drops every device, and two must never drive the coordinator at once.
 { config, lib, ... }:
 let
-  stage = "import";
+  stage = "live";
 
   name = "zigbee2mqtt";
   namespace = "home-assistant";

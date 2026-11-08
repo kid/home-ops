@@ -5,8 +5,10 @@ metadata:
   namespace: cloudflare-tunnel-system
 spec:
   egress:
-    - toCIDR:
-        - 10.0.10.101/32
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: home-assistant
+            k8s:io.kubernetes.pod.namespace: home-assistant
       toPorts:
         - ports:
             - port: "8123"
