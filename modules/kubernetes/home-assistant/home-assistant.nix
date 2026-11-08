@@ -200,6 +200,21 @@ in
                 ingress = [
                   (tunnelIngress port)
                   (gatewayIngress port)
+                  # Destination unreachable from rb5009 for an offline device:
+                  # dropped, the connection hangs until it times out instead.
+                  {
+                    fromEntities = [ "world" ];
+                    icmps = [
+                      {
+                        fields = [
+                          {
+                            type = "DestinationUnreachable";
+                            family = "IPv4";
+                          }
+                        ];
+                      }
+                    ];
+                  }
                 ];
                 egress = [
                   (toPods { "app.kubernetes.io/name" = "mosquitto"; } [ 8883 ])
@@ -207,12 +222,11 @@ in
                   gatewayEgress
                   # Its devices, on whatever ports their integrations use.
                   { toCIDR = deviceNetworks; }
-                  # Cloud integrations, PyPI for custom integrations'
-                  # requirements, HACS (GitHub).
-                  (worldEgress [
-                    80
-                    443
-                  ])
+                  # Cloud integrations on whatever ports they use (dreame's
+                  # cloud on 13267, Roborock's MQTT on 8883, ...), PyPI for
+                  # custom integrations' requirements, HACS (GitHub). A blocked
+                  # one hangs HA's startup, and with it the recorder.
+                  { toEntities = [ "world" ]; }
                 ];
               };
 
