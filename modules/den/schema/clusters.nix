@@ -132,6 +132,16 @@
               description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/nixos/services/k3s/k3s.nix)";
             };
 
+            egressGateways = lib.mkOption {
+              type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
+              default = { };
+              example.home-assistant = {
+                k3s-prd-0 = "10.0.40.20";
+                k3s-prd-1 = "10.0.40.21";
+              };
+              description = "Dedicated egress IPs on the cluster's network (outside its DHCP pool), keyed by the app that leaves through them, then by k3s node (den.hosts name). Each is added as a /32 on its node (modules/nixos/services/k3s/egress-gateway.nix, which also asserts every node has one) and used by a CiliumEgressGatewayPolicy for the app's pods on that node, so its traffic leaves from the node it runs on and RouterOS rules can match that app alone. Open-source Cilium has no gateway failover, hence one per node.";
+            };
+
             letsencrypt.staging = lib.mkOption {
               type = lib.types.bool;
               default = false;

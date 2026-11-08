@@ -30,13 +30,14 @@ let
   tag = "2026.8.2@sha256:84f5b1b26e1597a3d5a19a7b6e2ed085ec8e3fffcbe46049acf62f9e25ea400e";
   # Where its integrations' devices live (ESPHome, Overkiz, HEOS, the charger's
   # Modbus, TVs, cameras, the vacuums' local APIs).
+  deviceNetworkNames = [
+    "IotLocal"
+    "IotInternet"
+    "Trusted"
+    "Guest"
+  ];
   deviceNetworks =
-    [
-      "IotLocal"
-      "IotInternet"
-      "Trusted"
-      "Guest"
-    ]
+    deviceNetworkNames
     # The environment's resolved networks carry the computed cidr.
     |> map (n: config.den.environments.${config.den.networks.${n}.environment}.networks.${n}.cidr);
 
@@ -58,21 +59,43 @@ let
   ];
 in
 {
+  # Its egress IPs, one per node: see den.clusters.<name>.egressGateways.
+  # Outside the K3s DHCP pool (10.0.40.200-254).
+  den.clusters.prd.egressGateways.${name} =
+    let
+      inherit (config.den.environments.prd.networks.K3s.methods) host;
+    in
+    {
+      k3s-prd-0 = host 20;
+      k3s-prd-1 = host 21;
+    };
+
   # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
   den.aspects.kubernetes.home-assistant.home-assistant.firewall =
     { cluster, ... }:
-    lib.optional (!inCluster) {
-      inherit (cluster) network;
-      forward = [
-        {
-          action = "accept";
-          dst_address = vmAddress;
-          dst_port = port;
-          protocol = "tcp";
-          comment = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel";
-        }
-      ];
-    };
+    [
+      {
+        inherit (cluster) network;
+        forward =
+          lib.optional (!inCluster) {
+            action = "accept";
+            dst_address = vmAddress;
+            dst_port = port;
+            protocol = "tcp";
+            comment = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel";
+          }
+          # Only HA's own egress IPs (its CiliumEgressGatewayPolicies below).
+          ++ lib.concatMap (
+            n:
+            lib.mapAttrsToList (node: address: {
+              action = "accept";
+              src_address = address;
+              out_interface = n;
+              comment = "Allow HomeAssistant on K3s (${node}) to reach its devices on ${n}";
+            }) cluster.egressGateways.${name}
+          ) deviceNetworkNames;
+      }
+    ];
 
   den.aspects.kubernetes.home-assistant.home-assistant.k8s-manifests =
     { cluster, ... }:
@@ -104,8 +127,12 @@ in
 
       applications.home-assistant = {
         inherit namespace;
-        # The kopiur webhook admits the backup objects.
-        flux.dependsOn = [ "kopiur-config" ];
+        flux.dependsOn = [
+          # The kopiur webhook admits the backup objects.
+          "kopiur-config"
+          # Its operator registers the CiliumEgressGatewayPolicy CRD.
+          "cilium"
+        ];
 
         resources =
           lib.optionalAttrs (stage != "vm") (
@@ -188,6 +215,32 @@ in
                   ])
                 ];
               };
+
+            # Its device traffic leaves from its own IP on the node it runs on,
+            # which the RouterOS rules in this file's firewall quirk admit.
+            ciliumEgressGatewayPolicies = lib.mapAttrs' (
+              node: address:
+              let
+                onNode.matchLabels."kubernetes.io/hostname" = node;
+              in
+              lib.nameValuePair "${name}-${node}" {
+                spec = {
+                  selectors = [
+                    {
+                      podSelector.matchLabels = labels // {
+                        "io.kubernetes.pod.namespace" = namespace;
+                      };
+                      nodeSelector = onNode;
+                    }
+                  ];
+                  destinationCIDRs = deviceNetworks;
+                  egressGateway = {
+                    nodeSelector = onNode;
+                    egressIP = address;
+                  };
+                };
+              }
+            ) cluster.egressGateways.${name};
 
             deployments.${name}.spec = {
               replicas = if inCluster then 1 else 0;

@@ -124,6 +124,9 @@ _: {
             };
 
             bpf.masquerade = true;
+            # Apps whose traffic to the home VLANs must leave from one fixed IP
+            # (den.clusters.<name>.egressGateways), for RouterOS rules.
+            egressGateway.enabled = true;
 
             hostFirewall.enabled = true;
 
@@ -152,6 +155,9 @@ _: {
 
             operator = {
               replicas = 1;
+              # It registers the CRDs of enabled features (egressGateway's
+              # CiliumEgressGatewayPolicy) at start: restart it on config changes.
+              rollOutPods = true;
               prometheus.serviceMonitor.enabled = true;
               resources = {
                 requests = {
