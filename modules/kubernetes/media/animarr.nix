@@ -8,7 +8,7 @@ _: {
         name = "animarr";
         app = "sonarr";
         # renovate: datasource=docker depName=ghcr.io/home-operations/sonarr
-        tag = "4.0.20.3012@sha256:1f19eb5e0f421418c1a956bbe01310a0141423afe28bd9a4b1dcb8629ff2bce2";
+        tag = "5.0.0.2941@sha256:93b0923dd12afd43247739e19dac59d74c52a15ea12e036b7ced264cffb42574";
         port = 8989;
         # The CT's uid 350 behind the unprivileged-CT offset: what owns its
         # files on tank. 100330 is sabnzbd's, which owns the downloads.
