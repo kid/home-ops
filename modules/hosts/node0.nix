@@ -52,6 +52,13 @@ in
     # rollback.
     boot.zfs.extraPools = [ "tank" ];
 
+    # disko-zfs manages only zroot; it would list every tank dataset as one
+    # to destroy (it never runs destroys, but a later version might).
+    disko.zfs.settings.ignoredDatasets = [
+      "tank"
+      "tank/*"
+    ];
+
     services.nfs.server = {
       enable = true;
       exports =
