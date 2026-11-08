@@ -7,6 +7,9 @@
     // nixidy-generated, regenerated from modules/kubernetes/**/*.nix via `nix run .#write-manifests`
     'manifests/**',
   ],
+  // A jump over several majors becomes one PR per major, so each step's
+  // breaking changes land (and get reviewed) on their own.
+  separateMultipleMajor: true,
   flux: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
