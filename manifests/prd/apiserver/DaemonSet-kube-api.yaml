@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-api
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kube-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kube-api
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - command:
+            - sleep
+            - infinity
+          image: docker.io/curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
+          name: kube-api
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - 'curl -fsk --max-time 2 -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://127.0.0.1:6443/readyz'
+            failureThreshold: 2
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            limits:
+              memory: 32Mi
+            requests:
+              cpu: 5m
+              memory: 8Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      hostNetwork: true
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+      priorityClassName: system-node-critical
+      securityContext:
+        runAsGroup: 101
+        runAsNonRoot: true
+        runAsUser: 100
+        seccompProfile:
+          type: RuntimeDefault
+      tolerations:
+        - operator: Exists
