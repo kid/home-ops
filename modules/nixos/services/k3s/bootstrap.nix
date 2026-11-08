@@ -35,6 +35,17 @@
             sleep 5
           done
         '';
+        # The Flux Operator is the last wave: once it exists, Flux applies
+        # every manifest from git, and the image's baked copy may be older (it
+        # only changes on a colmena deploy). Re-applying its Namespaces and CRDs
+        # on every boot or deploy would roll Flux's newer CRDs back until its
+        # next reconcile. The later waves already skip on their own resource.
+        skipOnceFluxRuns = ''
+          if kubectl get deployment -n flux-system flux-operator >/dev/null 2>&1; then
+            echo "Flux Operator running: Flux manages this cluster, skipping bootstrap."
+            exit 0
+          fi
+        '';
       in
       {
         systemd.services = {
@@ -53,6 +64,7 @@
               ExecStart = pkgs.writeShellScript "k3s-bootstrap-namespaces" ''
                 set -e
                 ${waitForApi}
+                ${skipOnceFluxRuns}
 
                 echo "Applying all Namespace resources..."
                 declare -a files
@@ -88,6 +100,7 @@
               RemainAfterExit = true;
               ExecStart = pkgs.writeShellScript "k3s-bootstrap-crds" ''
                 set -e
+                ${skipOnceFluxRuns}
 
                 echo "Applying all CRDs..."
                 declare -a files
