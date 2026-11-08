@@ -13,7 +13,7 @@
 # http.use_x_forwarded_for with the pod CIDR in http.trusted_proxies.
 { config, lib, ... }:
 let
-  stage = "vm";
+  stage = "import";
   inCluster = stage == "live";
 
   name = "home-assistant";

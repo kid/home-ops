@@ -1,0 +1,16 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: zigbee2mqtt
+  namespace: home-assistant
+spec:
+  credentialProjection:
+    enabled: true
+  policy:
+    onMissingSnapshot: Continue
+  source:
+    fromPolicy:
+      name: zigbee2mqtt
+      offset: 0
+  target:
+    populator: {}
