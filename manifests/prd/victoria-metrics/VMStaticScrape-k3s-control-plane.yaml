@@ -17,6 +17,8 @@ spec:
       scheme: https
       targets:
         - 10.0.40.40:10259
+        - 10.0.40.41:10259
+        - 10.0.40.42:10259
       tlsConfig:
         insecureSkipVerify: true
     - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
@@ -31,9 +33,13 @@ spec:
       scheme: https
       targets:
         - 10.0.40.40:10257
+        - 10.0.40.41:10257
+        - 10.0.40.42:10257
       tlsConfig:
         insecureSkipVerify: true
     - labels:
         job: kube-etcd
       targets:
         - 10.0.40.40:2381
+        - 10.0.40.41:2381
+        - 10.0.40.42:2381

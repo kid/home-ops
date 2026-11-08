@@ -5,6 +5,14 @@ endpoints:
       - 10.0.40.40
     conditions:
       ready: true
+  - addresses:
+      - 10.0.40.41
+    conditions:
+      ready: true
+  - addresses:
+      - 10.0.40.42
+    conditions:
+      ready: true
 kind: EndpointSlice
 metadata:
   labels:

@@ -52,7 +52,7 @@ inputs = {
         }
       }
       mac        = "52:54:00:40:00:01"
-      memory     = "16GiB"
+      memory     = "8GiB"
       nixos_attr = "k3s-prd-0"
     }
     k3s-prd-1 = {
@@ -65,8 +65,21 @@ inputs = {
         }
       }
       mac        = "52:54:00:40:00:02"
-      memory     = "16GiB"
+      memory     = "8GiB"
       nixos_attr = "k3s-prd-1"
+    }
+    k3s-prd-2 = {
+      address   = "10.0.40.42"
+      cpu       = 8
+      disk_size = "128GiB"
+      extra_nics = {
+        storage = {
+          mac = "52:54:00:20:00:03"
+        }
+      }
+      mac        = "52:54:00:40:00:03"
+      memory     = "8GiB"
+      nixos_attr = "k3s-prd-2"
     }
   }
   ssh_authorized_keys = [

@@ -120,6 +120,12 @@ inputs = {
       },
       {
         action        = "accept"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-2) to reach its devices on IotLocal"
+        out_interface = "IotLocal"
+        src_address   = "10.0.40.22"
+      },
+      {
+        action        = "accept"
         comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on IotInternet"
         out_interface = "IotInternet"
         src_address   = "10.0.40.20"
@@ -129,6 +135,12 @@ inputs = {
         comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on IotInternet"
         out_interface = "IotInternet"
         src_address   = "10.0.40.21"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-2) to reach its devices on IotInternet"
+        out_interface = "IotInternet"
+        src_address   = "10.0.40.22"
       },
       {
         action        = "accept"
@@ -144,6 +156,12 @@ inputs = {
       },
       {
         action        = "accept"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-2) to reach its devices on Trusted"
+        out_interface = "Trusted"
+        src_address   = "10.0.40.22"
+      },
+      {
+        action        = "accept"
         comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on Guest"
         out_interface = "Guest"
         src_address   = "10.0.40.20"
@@ -153,6 +171,12 @@ inputs = {
         comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on Guest"
         out_interface = "Guest"
         src_address   = "10.0.40.21"
+      },
+      {
+        action        = "accept"
+        comment       = "Allow HomeAssistant on K3s (k3s-prd-2) to reach its devices on Guest"
+        out_interface = "Guest"
+        src_address   = "10.0.40.22"
       },
       {
         action      = "accept"
