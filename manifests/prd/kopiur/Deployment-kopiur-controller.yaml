@@ -39,7 +39,7 @@ spec:
             - name: KOPIUR_LEASE_NAME
               value: kopiur
             - name: KOPIUR_MOVER_IMAGE
-              value: ghcr.io/home-operations/kopiur-mover@sha256:75e3799508dd428f6d30b4424b29e5c0f6c100f7fb799e63bd4c08b30bda0937
+              value: ghcr.io/home-operations/kopiur-mover@sha256:8a727876168de3e5ac96aca08e89f557330b22d889a16254ba711f0ea023a6f0
             - name: KOPIUR_MOVER_PULL_POLICY
               value: IfNotPresent
             - name: KOPIUR_MOVER_SERVICE_ACCOUNT
@@ -70,7 +70,7 @@ spec:
               value: kopiur-validating
             - name: KOPIUR_WEBHOOK_MUTATING_CONFIG
               value: kopiur-mutating
-          image: ghcr.io/home-operations/kopiur-controller@sha256:d23699e9a4567748b649f313646e9f4775e5986c802713d8a1ffda1bc17f6643
+          image: ghcr.io/home-operations/kopiur-controller@sha256:8d34368ecf62608c1e86ff07525976bb3385465f1f4308c829b68ea40e8d34e3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
