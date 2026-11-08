@@ -152,7 +152,7 @@ _: {
             redirectUrl = [ "http://localhost:${toString mcp.callbackPort}/callback" ];
             # Kanidm's 16h default ends a login after a night without a client
             # refresh. Logins still end when the browser session they hang off
-            # does: 24h, idm_all_accounts' auth-expiry.
+            # does: 7 days, idm_all_accounts' auth-expiry (kanidm/default.nix).
             refreshTokenExpiry = 7 * 24 * 3600;
             scopeMap = [
               {
