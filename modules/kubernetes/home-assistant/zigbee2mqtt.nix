@@ -1,13 +1,22 @@
 # Zigbee2MQTT, replacing HAOS's add-on: drives the UZG-01's coordinator over
 # TCP and publishes to Mosquitto over TLS. Its data (configuration.yaml with
 # the network key, database.db, coordinator_backup.json, state.json) is
-# imported once into the kopiur-backed volume at the cutover; until then it
-# stays scaled to zero, because a Zigbee2MQTT whose network settings don't
-# match the coordinator's re-forms the network and drops every device. The
-# env vars override what the imported configuration.yaml says about MQTT, the
-# serial port and the frontend.
+# imported once into the kopiur-backed volume at the cutover. The env vars
+# override what the imported configuration.yaml says about MQTT, the serial
+# port and the frontend.
+#
+# `stage` walks the cutover:
+# - "vm": the add-on still runs; no volume (a WaitForFirstConsumer claim with
+#   no pod stays Pending, which keeps the Flux Kustomization unready).
+# - "import": the volume and its backups exist, still scaled to zero: the
+#   add-on is stopped and its data copied in by a one-off pod.
+# - "live": scaled to one. Never before the import: a Zigbee2MQTT whose
+#   network settings don't match the coordinator's re-forms the network and
+#   drops every device, and two must never drive the coordinator at once.
 { config, lib, ... }:
 let
+  stage = "vm";
+
   name = "zigbee2mqtt";
   namespace = "home-assistant";
   labels."app.kubernetes.io/name" = name;
@@ -64,9 +73,11 @@ in
         ];
 
         resources =
-          cluster.methods.mkKopiurBackup {
-            inherit name uid;
-          }
+          lib.optionalAttrs (stage != "vm") (
+            cluster.methods.mkKopiurBackup {
+              inherit name uid;
+            }
+          )
           // {
             ciliumNetworkPolicies.${name} =
               with cluster.methods.netpol;
@@ -84,9 +95,7 @@ in
               };
 
             deployments.${name}.spec = {
-              # 1 only once the add-on's data is imported and the add-on is
-              # stopped: see this file's header.
-              replicas = 0;
+              replicas = if stage == "live" then 1 else 0;
               strategy.type = "Recreate";
               selector.matchLabels = labels;
               template = {
