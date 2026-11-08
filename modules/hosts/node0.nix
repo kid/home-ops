@@ -70,6 +70,10 @@ in
     networking.firewall.interfaces.storage.allowedTCPPorts = [ 2049 ];
   };
 
+  # nfsd's client records (nfsdcld): without them, after a reboot the
+  # NFSv4 clients can't reclaim their open state and locks in the grace period.
+  den.aspects.node0.persist.directories = [ "/var/lib/nfs" ];
+
   den.aspects.node0.includes = [
     den.aspects.base
     den.aspects.disko.zfs-disk-single
