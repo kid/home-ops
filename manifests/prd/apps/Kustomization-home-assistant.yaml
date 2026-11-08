@@ -4,6 +4,8 @@ metadata:
   name: home-assistant
   namespace: flux-system
 spec:
+  dependsOn:
+    - name: kopiur-config
   interval: 10m
   path: ./manifests/prd/home-assistant
   prune: true
