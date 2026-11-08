@@ -1,15 +1,20 @@
-# Home Assistant. Until the cutover (inCluster = false) it still runs on the
-# HAOS VM on the Servers VLAN: the Service has no selector and an EndpointSlice
-# lists the VM, and the Deployment is scaled to zero. At the cutover its
-# /config is imported once into the kopiur-backed volume and inCluster flips
-# the Service, the tunnel's egress and the Deployment over to the pod.
+# Home Assistant, moving from the HAOS VM on the Servers VLAN. `stage` walks
+# the cutover:
+# - "vm": the VM serves HA; the Service has no selector and an EndpointSlice
+#   lists the VM. No volume (a WaitForFirstConsumer claim with no pod stays
+#   Pending, which keeps the Flux Kustomization unready); scaled to zero.
+# - "import": the volume and its backups exist, still scaled to zero: the VM
+#   is stopped and its /config copied in by a one-off pod.
+# - "live": the Service, the tunnel's egress and the Deployment move to the
+#   pod.
 #
 # HA has its own login. The Cloudflare tunnel proxy and the apps Gateway reach
 # it from the pod network, so its configuration.yaml needs
 # http.use_x_forwarded_for with the pod CIDR in http.trusted_proxies.
 { config, lib, ... }:
 let
-  inCluster = false;
+  stage = "vm";
+  inCluster = stage == "live";
 
   name = "home-assistant";
   namespace = "home-assistant";
@@ -103,20 +108,22 @@ in
         flux.dependsOn = [ "kopiur-config" ];
 
         resources =
-          cluster.methods.mkKopiurBackup {
-            inherit name uid;
-            storage = "5Gi";
-            ignore = [
-              # Rebuilt by the image's entrypoint on every start.
-              "/.venv"
-              "/deps"
-              "/.cache"
-              # HA's own backups; the snapshots are the backup here.
-              "/backups"
-              "/tts"
-              "/home-assistant.log*"
-            ];
-          }
+          lib.optionalAttrs (stage != "vm") (
+            cluster.methods.mkKopiurBackup {
+              inherit name uid;
+              storage = "5Gi";
+              ignore = [
+                # Rebuilt by the image's entrypoint on every start.
+                "/.venv"
+                "/deps"
+                "/.cache"
+                # HA's own backups; the snapshots are the backup here.
+                "/backups"
+                "/tts"
+                "/home-assistant.log*"
+              ];
+            }
+          )
           // {
             services.${name}.spec = {
               ports = [ servicePort ];
@@ -183,7 +190,6 @@ in
               };
 
             deployments.${name}.spec = {
-              # 1 only once the VM's /config is imported and the VM is stopped.
               replicas = if inCluster then 1 else 0;
               strategy.type = "Recreate";
               selector.matchLabels = labels;
