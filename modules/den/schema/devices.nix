@@ -73,6 +73,12 @@ in
                         description = "Reaches the host as an 802.1Q VLAN on its first interface's NIC (set mac to that NIC's MAC), not on a NIC of its own";
                       };
 
+                      incusBridge = lib.mkOption {
+                        type = lib.types.nullOr lib.types.str;
+                        default = null;
+                        description = "Incus network that carries this tagged interface's VLAN and the host's address on it (tf-catalog/modules/incus-k3s host_addresses): the host's networkd leaves the VLAN alone";
+                      };
+
                       address = lib.mkOption {
                         type = lib.types.str;
                         default =

@@ -275,6 +275,7 @@ inputs = {
       comment = "node0"
       tagged = [
         20,
+        40,
       ]
       untagged = 10
     }

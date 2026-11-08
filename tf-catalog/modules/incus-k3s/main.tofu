@@ -10,6 +10,8 @@ terraform {
 variable "nodes" {
   description = "k3s cluster compute nodes to run as Incus VMs, keyed by den.hosts entity name."
   type = map(object({
+    # The Incus remote (a var.remotes key) the VM runs on.
+    remote     = string
     nixos_attr = string
     cpu        = number
     memory     = string
@@ -22,13 +24,24 @@ variable "nodes" {
   }))
 }
 
+variable "remotes" {
+  description = "Incus hosts that can run nodes, keyed by provider remote name. Every network is created on each of them."
+  type = map(object({
+    # The NIC carrying the VLANs.
+    parent = string
+  }))
+}
+
 variable "networks" {
-  description = "Incus bridges to create, each tagging one VLAN on a parent NIC. Every node's first NIC is on the `k3s` one; extra_nics use the other keys."
+  description = "Incus bridges to create, each tagging one VLAN on its remote's parent NIC. Every node's first NIC is on the `k3s` one; extra_nics use the other keys."
   type = map(object({
     name    = string
-    parent  = string
     vlan_id = number
     mtu     = optional(number)
+    # The host's own address on this bridge (CIDR), keyed by remote, for a
+    # host that has none on the VLAN otherwise: one VLAN ID per NIC, so the
+    # bridge's VLAN interface is the only one the host can have.
+    host_addresses = optional(map(string), {})
   }))
 }
 
@@ -61,13 +74,39 @@ locals {
 
   # A GC root in the working directory, outside the repo.
   kexec_installer = "${abspath(path.root)}/.kexec-installer"
+
+  remote_networks = merge([
+    for remote_name, remote in var.remotes : {
+      for key, network in var.networks : "${remote_name}/${key}" => merge(network, {
+        remote       = remote_name
+        parent       = remote.parent
+        host_address = lookup(network.host_addresses, remote_name, null)
+      })
+    }
+  ]...)
+}
+
+moved {
+  from = incus_network.this["k3s"]
+  to   = incus_network.this["node1/k3s"]
+}
+
+moved {
+  from = incus_network.this["storage"]
+  to   = incus_network.this["node1/storage"]
+}
+
+moved {
+  from = incus_image.base
+  to   = incus_image.base["node1"]
 }
 
 resource "incus_network" "this" {
-  for_each = var.networks
+  for_each = local.remote_networks
 
-  name = each.value.name
-  type = "bridge"
+  remote = each.value.remote
+  name   = each.value.name
+  type   = "bridge"
 
   config = merge(
     {
@@ -75,8 +114,22 @@ resource "incus_network" "this" {
       "ipv4.address"               = "none"
       "ipv6.address"               = "none"
     },
-    each.value.mtu != null ? { "bridge.mtu" = tostring(each.value.mtu) } : {}
+    each.value.mtu != null ? { "bridge.mtu" = tostring(each.value.mtu) } : {},
+    # A plain address: no DHCP, DNS, NAT or Incus firewall rules.
+    each.value.host_address != null ? {
+      "ipv4.address"  = each.value.host_address
+      "ipv4.dhcp"     = "false"
+      "ipv4.nat"      = "false"
+      "ipv4.firewall" = "false"
+      "dns.mode"      = "none"
+    } : {}
   )
+
+  # Resources created before var.remotes have no remote in state (the
+  # provider's default_remote); setting one would replace them.
+  lifecycle {
+    ignore_changes = [remote]
+  }
 }
 
 data "external" "repo_root" {
@@ -84,19 +137,27 @@ data "external" "repo_root" {
 }
 
 resource "incus_image" "base" {
+  for_each = var.remotes
+
+  remote = each.key
   source_image = {
     remote = "images"
     name   = var.base_image
     type   = "virtual-machine"
+  }
+
+  lifecycle {
+    ignore_changes = [remote]
   }
 }
 
 resource "incus_instance" "k3s" {
   for_each = var.nodes
 
-  name  = each.key
-  image = incus_image.base.fingerprint
-  type  = "virtual-machine"
+  remote = each.value.remote
+  name   = each.key
+  image  = incus_image.base[each.value.remote].fingerprint
+  type   = "virtual-machine"
 
   config = {
     "limits.cpu"           = each.value.cpu
@@ -104,7 +165,7 @@ resource "incus_instance" "k3s" {
     "cloud-init.user-data" = local.cloud_init_user_data
     # The installed system boots an unsigned systemd-boot.
     "security.secureboot" = "false"
-    # Incus force-stops a VM 30s after asking it to shut down when node1
+    # Incus force-stops a VM 30s after asking it to shut down when its host
     # stops; the guest's kubelet takes up to its 180s grace period to stop
     # its pods (modules/nixos/services/k3s/node-base.nix), then systemd stops
     # the rest.
@@ -123,15 +184,17 @@ resource "incus_instance" "k3s" {
 
   # The image and its cloud-init only matter at creation: nixos-anywhere
   # replaces the system, and `colmena apply --on <host>` updates it after that.
+  # A remote change never recreates a node: move it with `incus move`, then
+  # re-import it from its new remote (`tofu state rm`, `tofu import`).
   lifecycle {
-    ignore_changes = [image, config["cloud-init.user-data"]]
+    ignore_changes = [image, remote, config["cloud-init.user-data"]]
   }
 
   device {
     name = "eth0"
     type = "nic"
     properties = merge(
-      { network = incus_network.this["k3s"].name },
+      { network = incus_network.this["${each.value.remote}/k3s"].name },
       each.value.mac != null ? { hwaddr = each.value.mac } : {}
     )
   }
@@ -143,7 +206,7 @@ resource "incus_instance" "k3s" {
       name = device.key
       type = "nic"
       properties = merge(
-        { network = incus_network.this[device.key].name },
+        { network = incus_network.this["${each.value.remote}/${device.key}"].name },
         device.value.mac != null ? { hwaddr = device.value.mac } : {}
       )
     }
