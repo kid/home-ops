@@ -39,6 +39,9 @@ in
           PLEX_PREFERENCE_5 = "customCertificatePath=";
           PLEX_PREFERENCE_6 = "customCertificateKey=";
           PLEX_PREFERENCE_7 = "customCertificateDomain=";
+          # No periodic full scan, which wakes tank's disks: sonarr, animarr
+          # and radarr ask Plex to scan each folder they import into.
+          PLEX_PREFERENCE_8 = "ScheduledLibraryUpdatesEnabled=0";
         };
         # The CT's uid 490 behind the unprivileged-CT offset, which owns its
         # imported files.
