@@ -1,29 +1,17 @@
 # Zigbee2MQTT, replacing HAOS's add-on: drives the UZG-01's coordinator over
 # TCP and publishes to Mosquitto over TLS. Its data (configuration.yaml with
-# the network key, database.db, coordinator_backup.json, state.json) is
-# imported once into the kopiur-backed volume at the cutover. The env vars
-# override what the imported configuration.yaml says about MQTT, the serial
-# port and the frontend.
-#
-# `stage` walks the cutover:
-# - "vm": the add-on still runs; no volume (a WaitForFirstConsumer claim with
-#   no pod stays Pending, which keeps the Flux Kustomization unready).
-# - "import": the volume and its backups exist, still scaled to zero: the
-#   add-on is stopped and its data copied in by a one-off pod.
-# - "live": scaled to one. Never before the import: a Zigbee2MQTT whose
-#   network settings don't match the coordinator's re-forms the network and
-#   drops every device, and two must never drive the coordinator at once.
+# the network key, database.db, coordinator_backup.json, state.json) was
+# imported once into the kopiur-backed volume. The env vars override what the
+# imported configuration.yaml says about MQTT, the serial port and the
+# frontend. Never run two: a second Zigbee2MQTT driving the coordinator, or one
+# whose network settings don't match it, drops every device.
 { config, lib, ... }:
 let
-  stage = "live";
-
   name = "zigbee2mqtt";
   namespace = "home-assistant";
   labels."app.kubernetes.io/name" = name;
   port = 8080;
   uid = 1000;
-  # Same version as the add-on it replaces, so the imported database isn't
-  # migrated at the cutover.
   # renovate: datasource=docker depName=ghcr.io/koenkk/zigbee2mqtt
   tag = "2.14.3@sha256:fb4a6b0f6868ad1cd6a9996479802b2420e599c3463b62bbff8c8cd9a908f43a";
   coordinator = config.den.devices.uzg-01.address;
@@ -73,11 +61,9 @@ in
         ];
 
         resources =
-          lib.optionalAttrs (stage != "vm") (
-            cluster.methods.mkKopiurBackup {
-              inherit name uid;
-            }
-          )
+          cluster.methods.mkKopiurBackup {
+            inherit name uid;
+          }
           // {
             ciliumNetworkPolicies.${name} =
               with cluster.methods.netpol;
@@ -95,7 +81,6 @@ in
               };
 
             deployments.${name}.spec = {
-              replicas = if stage == "live" then 1 else 0;
               strategy.type = "Recreate";
               selector.matchLabels = labels;
               template = {

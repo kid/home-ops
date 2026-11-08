@@ -211,11 +211,6 @@ inputs = {
     ]
     Servers = [
       {
-        address = "10.0.10.101"
-        mac     = "52:54:00:93:9b:8f"
-        name    = "homeassistant"
-      },
-      {
         address = "10.0.10.10"
         mac     = "d0:50:99:fe:51:b5"
         name    = "node1"

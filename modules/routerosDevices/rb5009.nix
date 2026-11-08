@@ -239,13 +239,6 @@ in
             };
 
             vlans_forward_rules = {
-              "${networks.Servers.name}" = [
-                {
-                  action = "accept";
-                  out_interface_list = "all";
-                  comment = "Allow access to all vlans"; # Because HomeAssistant lives here at the moment
-                }
-              ];
               "${networks.Trusted.name}" = [
                 {
                   action = "accept";

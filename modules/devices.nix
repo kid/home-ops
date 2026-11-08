@@ -48,15 +48,6 @@
         }
       ];
     };
-    homeassistant = {
-      interfaces = [
-        {
-          network = "Servers";
-          hostNum = 101;
-          mac = "52:54:00:93:9b:8f";
-        }
-      ];
-    };
 
     # Storage
     truenas = {

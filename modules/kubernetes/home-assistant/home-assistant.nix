@@ -1,31 +1,18 @@
-# Home Assistant, moving from the HAOS VM on the Servers VLAN. `stage` walks
-# the cutover:
-# - "vm": the VM serves HA; the Service has no selector and an EndpointSlice
-#   lists the VM. No volume (a WaitForFirstConsumer claim with no pod stays
-#   Pending, which keeps the Flux Kustomization unready); scaled to zero.
-# - "import": the volume and its backups exist, still scaled to zero: the VM
-#   is stopped and its /config copied in by a one-off pod.
-# - "live": the Service, the tunnel's egress and the Deployment move to the
-#   pod.
+# Home Assistant, moved from the HAOS VM on the Servers VLAN: its /config was
+# imported once into the kopiur-backed volume.
 #
 # HA has its own login. The Cloudflare tunnel proxy and the apps Gateway reach
-# it from the pod network, so its configuration.yaml needs
-# http.use_x_forwarded_for with the pod CIDR in http.trusted_proxies.
+# it from the pod network, so its trusted proxies are the pod CIDR. HA 2026.8
+# keeps those in .storage/http, not configuration.yaml.
 { config, lib, ... }:
 let
-  stage = "live";
-  inCluster = stage == "live";
-
   name = "home-assistant";
   namespace = "home-assistant";
   labels."app.kubernetes.io/name" = name;
   port = 8123;
   hostname = "ha.kidibox.net";
-  vmAddress = config.den.devices.homeassistant.address;
   # The image's nobody user; the imported /config is chowned to it.
   uid = 65534;
-  # Same version as the VM, so the imported database isn't migrated at the
-  # cutover.
   # renovate: datasource=docker depName=ghcr.io/home-operations/home-assistant
   tag = "2026.8.2@sha256:84f5b1b26e1597a3d5a19a7b6e2ed085ec8e3fffcbe46049acf62f9e25ea400e";
   # Where its integrations' devices live (ESPHome, Overkiz, HEOS, the charger's
@@ -77,15 +64,8 @@ in
       {
         inherit (cluster) network;
         forward =
-          lib.optional (!inCluster) {
-            action = "accept";
-            dst_address = vmAddress;
-            dst_port = port;
-            protocol = "tcp";
-            comment = "Allow access to HomeAssistant from K3s for the Cloudflare tunnel";
-          }
           # Only HA's own egress IPs (its CiliumEgressGatewayPolicies below).
-          ++ lib.concatMap (
+          lib.concatMap (
             n:
             lib.mapAttrsToList (node: address: {
               action = "accept";
@@ -104,24 +84,16 @@ in
         with cluster.methods.netpol;
         mkPolicy { "app.kubernetes.io/name" = "cloudflare-tunnel-gateway-controller-proxy"; } {
           egress = [
-            (
-              if inCluster then
+            {
+              toEndpoints = [
                 {
-                  toEndpoints = [
-                    {
-                      matchLabels = labels // {
-                        "k8s:io.kubernetes.pod.namespace" = namespace;
-                      };
-                    }
-                  ];
-                  toPorts = tcp [ port ];
+                  matchLabels = labels // {
+                    "k8s:io.kubernetes.pod.namespace" = namespace;
+                  };
                 }
-              else
-                {
-                  toCIDR = [ "${vmAddress}/32" ];
-                  toPorts = tcp [ port ];
-                }
-            )
+              ];
+              toPorts = tcp [ port ];
+            }
           ];
         };
 
@@ -135,27 +107,25 @@ in
         ];
 
         resources =
-          lib.optionalAttrs (stage != "vm") (
-            cluster.methods.mkKopiurBackup {
-              inherit name uid;
-              storage = "5Gi";
-              ignore = [
-                # Rebuilt by the image's entrypoint on every start.
-                "/.venv"
-                "/deps"
-                "/.cache"
-                # HA's own backups; the snapshots are the backup here.
-                "/backups"
-                "/tts"
-                "/home-assistant.log*"
-              ];
-            }
-          )
+          cluster.methods.mkKopiurBackup {
+            inherit name uid;
+            storage = "5Gi";
+            ignore = [
+              # Rebuilt by the image's entrypoint on every start.
+              "/.venv"
+              "/deps"
+              "/.cache"
+              # HA's own backups; the snapshots are the backup here.
+              "/backups"
+              "/tts"
+              "/home-assistant.log*"
+            ];
+          }
           // {
             services.${name}.spec = {
+              selector = labels;
               ports = [ servicePort ];
-            }
-            // lib.optionalAttrs inCluster { selector = labels; };
+            };
 
             httpRoutes = {
               # The public route, through the Cloudflare tunnel.
@@ -175,8 +145,6 @@ in
                   rules = [ { inherit backendRefs; } ];
                 };
               };
-            }
-            // lib.optionalAttrs inCluster {
               # The LAN's own route: the internal external-dns points
               # ${hostname} at the apps Gateway (it skips the public route).
               "${name}-internal".spec = {
@@ -257,7 +225,6 @@ in
             ) cluster.egressGateways.${name};
 
             deployments.${name}.spec = {
-              replicas = if inCluster then 1 else 0;
               strategy.type = "Recreate";
               selector.matchLabels = labels;
               template = {
@@ -315,23 +282,6 @@ in
                   };
                 };
               };
-            };
-          }
-          // lib.optionalAttrs (!inCluster) {
-            # The Service has no selector: list the VM by hand.
-            endpointSlices.${name} = {
-              metadata.labels = {
-                "kubernetes.io/service-name" = name;
-                "endpointslice.kubernetes.io/managed-by" = "home-ops";
-              };
-              addressType = "IPv4";
-              ports = [ servicePort ];
-              endpoints = [
-                {
-                  addresses = [ vmAddress ];
-                  conditions.ready = true;
-                }
-              ];
             };
           };
       };

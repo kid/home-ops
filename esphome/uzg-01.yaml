@@ -192,7 +192,6 @@ uart_tcp:
     role: server
     port: 6638
     allowed_ips:
-      - 10.0.10.101 # HA VM (Zigbee2MQTT)
       - 10.0.40.0/24 # K3s nodes: Cilium masquerades pod egress to the node IP
 
 mdns:
