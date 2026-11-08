@@ -1,15 +1,12 @@
-# k3s worker for the prd cluster: an Incus VM on node1, installed with
-# nixos-anywhere by the tf-stacks/prd/k3s/incus stack, then updated with
-# `colmena apply --on k3s-prd-1`.
+# k3s server (etcd member) for the prd cluster: an Incus VM on node1,
+# installed with nixos-anywhere by the tf-stacks/prd/k3s/incus stack, then
+# updated with `colmena apply --on k3s-prd-1`.
 { den, config, ... }:
 {
   den.hosts.x86_64-linux.k3s-prd-1 = {
     environment = "prd";
     system-access-groups = [ "admins" ];
-    k3s = {
-      clusterName = "prd";
-      serverHost = "k3s-prd-0";
-    };
+    k3s.clusterName = "prd";
   };
 
   den.devices.k3s-prd-1 = {
@@ -38,8 +35,10 @@
   den.aspects.k3s-prd-1.includes = [
     den.aspects.base
     den.aspects.incus-vm
-    den.aspects.k3s-agent
+    den.aspects.k3s-server
+    den.aspects.k3s-token
     den.aspects.k3s-cilium
+    den.aspects.k3s-oidc
     den.aspects.k3s-miroir-node
   ];
 

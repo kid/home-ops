@@ -33,6 +33,8 @@ spec:
               value: customCertificateKey=
             - name: PLEX_PREFERENCE_7
               value: customCertificateDomain=
+            - name: PLEX_PREFERENCE_8
+              value: ScheduledLibraryUpdatesEnabled=0
           image: ghcr.io/home-operations/plex:1.43.5.11079@sha256:06ef0fc23e9af9bbaf284c3f27972f94e703d13d6f745edeb6818fcbebf6c673
           livenessProbe:
             httpGet:

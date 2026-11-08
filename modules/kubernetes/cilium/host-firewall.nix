@@ -4,6 +4,7 @@
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
     {
       firewall-ports ? [ ],
+      k3s-nodes ? [ ],
       ...
     }:
     let
@@ -65,21 +66,48 @@
       # It matches the host endpoint's labels, not the Node object's: Cilium's
       # default label filter drops kubernetes.io/* there (a kubernetes.io/os
       # selector matches no node) but keeps node-role.kubernetes.io/*.
-      mkPolicy = name: nodeSelector: ports: {
+      mkPolicy = name: nodeSelector: ingress: {
         apiVersion = "cilium.io/v2";
         kind = "CiliumClusterwideNetworkPolicy";
         metadata.name = name;
-        spec = {
-          inherit nodeSelector;
-          ingress = mkIngress ports;
-        };
+        spec = { inherit nodeSelector ingress; };
       };
 
+      servers =
+        k3s-nodes
+        |> lib.filter (n: n.address != null && n.role == "server")
+        |> map (n: n.address)
+        |> lib.sort lib.lessThan;
+      etcdPorts = [
+        {
+          ports = [
+            {
+              port = "2379";
+              endPort = 2380;
+              protocol = "TCP";
+            }
+          ];
+        }
+      ];
+      # etcd between servers. A joining server has no Cilium identity until its
+      # own Cilium runs, which needs its etcd member first: until then it is
+      # world, matched by address. CIDR rules don't match remote-node, hence both.
+      etcdIngress = lib.optionals (servers != [ ]) [
+        {
+          fromEntities = [ "remote-node" ];
+          toPorts = etcdPorts;
+        }
+        {
+          fromCIDR = map (a: "${a}/32") servers;
+          toPorts = etcdPorts;
+        }
+      ];
+
       policies = [
-        (mkPolicy "node-host-firewall" { } (lib.filter (p: !isControlPlane p) ports))
+        (mkPolicy "node-host-firewall" { } (mkIngress (lib.filter (p: !isControlPlane p) ports)))
         (mkPolicy "node-host-firewall-control-plane" {
           matchLabels."node-role.kubernetes.io/control-plane" = "true";
-        } (lib.filter isControlPlane ports))
+        } (mkIngress (lib.filter isControlPlane ports) ++ etcdIngress))
       ];
     in
     {

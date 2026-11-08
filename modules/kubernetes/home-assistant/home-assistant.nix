@@ -55,6 +55,7 @@ in
     {
       k3s-prd-0 = host 20;
       k3s-prd-1 = host 21;
+      k3s-prd-2 = host 22;
     };
 
   # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
