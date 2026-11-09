@@ -267,17 +267,29 @@ in
             }) persons;
 
             kanidmGroups =
-              lib.genAttrs (config.den.accessGroups |> builtins.attrNames |> acl.labelled "oauth-grant")
-                (group: {
-                  spec = {
-                    kanidmRef.name = ref.name;
-                    members = persons |> lib.filterAttrs (_: u: lib.elem group u.allGroups) |> builtins.attrNames;
-                  }
-                  // lib.optionalAttrs (acl.labelled "mfa" [ group ] != [ ]) {
-                    # Passkey, or password + TOTP.
-                    accountPolicy.credentialTypeMinimum = "mfa";
-                  };
-                });
+              lib.genAttrs (config.den.accessGroups |> builtins.attrNames |> acl.labelled "oauth-grant") (group: {
+                spec = {
+                  kanidmRef.name = ref.name;
+                  members = persons |> lib.filterAttrs (_: u: lib.elem group u.allGroups) |> builtins.attrNames;
+                }
+                // lib.optionalAttrs (acl.labelled "mfa" [ group ] != [ ]) {
+                  # Passkey, or password + TOTP.
+                  accountPolicy.credentialTypeMinimum = "mfa";
+                };
+              })
+              // {
+                # Every account's policy, built in. Its 24h auth-expiry default
+                # also ended every OAuth2 login issued from that browser session,
+                # so MCP clients needed a new login every day
+                # (victoria-metrics/mcp.nix). Kanidm takes the smallest
+                # auth-expiry across an account's groups, so this is the only
+                # place to raise it.
+                idm-all-accounts.spec = {
+                  kanidmRef.name = ref.name;
+                  kanidmName = "idm_all_accounts";
+                  accountPolicy.authSessionExpiry = 7 * 24 * 3600;
+                };
+              };
 
             certificates.${tlsSecretName}.spec = {
               secretName = tlsSecretName;

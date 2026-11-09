@@ -1,0 +1,11 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  name: idm-all-accounts
+  namespace: kanidm
+spec:
+  accountPolicy:
+    authSessionExpiry: 604800
+  kanidmName: idm_all_accounts
+  kanidmRef:
+    name: idm
