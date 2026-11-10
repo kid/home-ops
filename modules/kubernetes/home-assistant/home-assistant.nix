@@ -14,7 +14,7 @@ let
   # The image's nobody user; the imported /config is chowned to it.
   uid = 65534;
   # renovate: datasource=docker depName=ghcr.io/home-operations/home-assistant
-  tag = "2026.8.2@sha256:84f5b1b26e1597a3d5a19a7b6e2ed085ec8e3fffcbe46049acf62f9e25ea400e";
+  tag = "2026.11.1@sha256:c129b1e4190273254d93d413fe2a083233c9202d84cb08f84dddb01861df432e";
   # Where its integrations' devices live (ESPHome, Overkiz, HEOS, the charger's
   # Modbus, TVs, cameras, the vacuums' local APIs).
   deviceNetworkNames = [
