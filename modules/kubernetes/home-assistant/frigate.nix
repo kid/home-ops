@@ -154,6 +154,12 @@ in
     { cluster, pkgs, ... }:
     let
       hostname = cluster.methods.mkAppHostname name;
+      # Block-style YAML, as the upstream chart's is: Frigate's go2rtc config
+      # writer keeps the source's style, and in flow style (JSON) go2rtc
+      # misparses the unquoted stream URLs it writes back.
+      configYaml = builtins.readFile (
+        (pkgs.formats.yaml { }).generate "frigate-config.yml" frigateConfig
+      );
     in
     {
       applications.frigate = {
@@ -207,12 +213,7 @@ in
                 );
             };
 
-            # Block-style YAML, as the upstream chart's is: Frigate's go2rtc
-            # config writer keeps the source's style, and in flow style (JSON)
-            # go2rtc misparses the unquoted stream URLs it writes back.
-            configMaps.${name}.data."config.yml" = builtins.readFile (
-              (pkgs.formats.yaml { }).generate "frigate-config.yml" frigateConfig
-            );
+            configMaps.${name}.data."config.yml" = configYaml;
 
             ciliumNetworkPolicies.${name} =
               with cluster.methods.netpol;
@@ -239,7 +240,9 @@ in
               template = {
                 metadata = {
                   inherit labels;
-                  annotations."checksum/config" = frigateConfig |> builtins.toJSON |> builtins.hashString "sha256";
+                  # The rendered file, not just the config: a change of format
+                  # alone must restart it too.
+                  annotations."checksum/config" = builtins.hashString "sha256" configYaml;
                 };
                 spec = {
                   automountServiceAccountToken = false;

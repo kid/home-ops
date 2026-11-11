@@ -12,7 +12,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 08f8655c794c811daeffce3f9e86dec617f536383b2ab00915b1185cccc35ccb
+        checksum/config: 1279a358b6297e5219da21324aec2af649e7cdff63a073371f50064c50506e45
       labels:
         app.kubernetes.io/name: frigate
     spec:
