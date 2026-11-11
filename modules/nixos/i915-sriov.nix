@@ -69,5 +69,11 @@ in
         "i915.enable_guc=3"
         "module_blacklist=xe"
       ];
+
+      # The VF's render node by driver: Incus's virtio-gpu has one too, and
+      # PCI order decides which is renderD128 (generic-device-plugin).
+      services.udev.extraRules = ''
+        SUBSYSTEM=="drm", KERNEL=="renderD*", DRIVERS=="i915", SYMLINK+="dri/i915-render"
+      '';
     };
 }
