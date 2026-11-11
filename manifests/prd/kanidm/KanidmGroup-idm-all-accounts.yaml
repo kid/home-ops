@@ -6,6 +6,7 @@ metadata:
 spec:
   accountPolicy:
     authSessionExpiry: 604800
+    privilegeExpiry: 600
   kanidmName: idm_all_accounts
   kanidmRef:
     name: idm

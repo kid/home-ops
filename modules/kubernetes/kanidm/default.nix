@@ -38,7 +38,7 @@ in
       # The image's own kanidm user. The kopiur mover reads the volume as this same uid.
       appId = 389;
       # renovate: datasource=docker depName=docker.io/kanidm/server
-      serverTag = "1.12.0@sha256:71b6ff5a9c9c32b632894d8acef5a2afc77941b35a0aa95dcee959fe688d5ce9";
+      serverTag = "1.11.2@sha256:e45f00bd354c1fc1c06a4be484b4e87b094c431e78280f1d19e911815e63efb5";
       tlsSecretName = "${ref.name}-tls";
       serviceHostname = "${ref.name}.${namespace}.svc.cluster.local";
       # kaniop names the StatefulSet <Kanidm>-<replica group> and its
@@ -188,7 +188,10 @@ in
                         cpu = "50m";
                         memory = "128Mi";
                       };
-                      limits.memory = "512Mi";
+                      # Raised from 512Mi after a kaniop reconcile loop
+                      # (2026-11-09) bloated the replication changelog,
+                      # which Kanidm keeps for 7 days. Lower again after.
+                      limits.memory = "1536Mi";
                     };
                   }
                 ];
@@ -287,7 +290,14 @@ in
                 idm-all-accounts.spec = {
                   kanidmRef.name = ref.name;
                   kanidmName = "idm_all_accounts";
-                  accountPolicy.authSessionExpiry = 7 * 24 * 3600;
+                  accountPolicy = {
+                    authSessionExpiry = 7 * 24 * 3600;
+                    # Kanidm restores its 600s default whenever it is purged
+                    # (plugins/default_values.rs), while kaniop purges every
+                    # field left unset: leaving it out hot-looped kaniop
+                    # until Kanidm ran out of memory.
+                    privilegeExpiry = 600;
+                  };
                 };
               };
 
