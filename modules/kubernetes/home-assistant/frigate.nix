@@ -17,7 +17,8 @@ let
   # renovate: datasource=docker depName=ghcr.io/blakeblackshear/frigate
   tag = "0.18.2@sha256:fd60f99ffd4eb6c42360ed4e14953e270586f239309ab3983e55b2e97ffac09a";
 
-  # Frigate camera name → address.
+  # Frigate camera name → address. Each camera's stream login is the
+  # reolink-<name> 1Password item.
   cameras = {
     doorbell = config.den.devices.doorbell.address;
     litters = config.den.devices."litters camera".address;
@@ -29,11 +30,14 @@ let
     554
   ];
 
+  # A camera's login env vars, from its own item (the frigate-cameras Secret).
+  credEnv = cam: field: "FRIGATE_${lib.toUpper cam}_${field}";
+
   # Reolink's http-flv stream. Frigate fills the {FRIGATE_*} placeholders
   # with str.format, so the URL holds no other braces.
   flv =
-    address: stream:
-    "ffmpeg:http://${address}/flv?port=1935&app=bcs&stream=channel0_${stream}.bcs&user={FRIGATE_CAMERA_USER}&password={FRIGATE_CAMERA_PASSWORD}";
+    cam: stream:
+    "ffmpeg:http://${cameras.${cam}}/flv?port=1935&app=bcs&stream=channel0_${stream}.bcs&user={${credEnv cam "USER"}}&password={${credEnv cam "PASSWORD"}}";
 
   frigateConfig = {
     mqtt = {
@@ -76,9 +80,9 @@ let
       enabled = true;
       retain.default = 14;
     };
-    go2rtc.streams = lib.concatMapAttrs (cam: address: {
-      ${cam} = [ "${flv address "main"}#video=copy#audio=copy#audio=opus" ];
-      "${cam}_sub" = [ (flv address "ext") ];
+    go2rtc.streams = lib.concatMapAttrs (cam: _: {
+      ${cam} = [ "${flv cam "main"}#video=copy#audio=copy#audio=opus" ];
+      "${cam}_sub" = [ (flv cam "ext") ];
     }) cameras;
     cameras =
       lib.recursiveUpdate
@@ -151,7 +155,7 @@ in
           "kopiur-config"
           # Its MQTT password Secret.
           "mosquitto"
-          # The onepassword store, for the cameras' login.
+          # The onepassword store, for the cameras' logins.
           "external-secrets-config"
         ];
 
@@ -178,16 +182,21 @@ in
                 kind = "ClusterSecretStore";
               };
               target.name = "frigate-cameras";
-              data = [
-                {
-                  secretKey = "username";
-                  remoteRef.key = "frigate-cameras/username";
-                }
-                {
-                  secretKey = "password";
-                  remoteRef.key = "frigate-cameras/password";
-                }
-              ];
+              data =
+                cameras
+                |> lib.attrNames
+                |> lib.concatMap (
+                  cam:
+                  map
+                    (field: {
+                      secretKey = "${cam}-${field}";
+                      remoteRef.key = "reolink-${cam}/${field}";
+                    })
+                    [
+                      "username"
+                      "password"
+                    ]
+                );
             };
 
             configMaps.${name}.data."config.yml" = builtins.toJSON frigateConfig;
@@ -245,15 +254,17 @@ in
                         name = "mosquitto-${name}";
                         key = "password";
                       };
-                      FRIGATE_CAMERA_USER.valueFrom.secretKeyRef = {
+                    }
+                    // lib.concatMapAttrs (cam: _: {
+                      ${credEnv cam "USER"}.valueFrom.secretKeyRef = {
                         name = "frigate-cameras";
-                        key = "username";
+                        key = "${cam}-username";
                       };
-                      FRIGATE_CAMERA_PASSWORD.valueFrom.secretKeyRef = {
+                      ${credEnv cam "PASSWORD"}.valueFrom.secretKeyRef = {
                         name = "frigate-cameras";
-                        key = "password";
+                        key = "${cam}-password";
                       };
-                    };
+                    }) cameras;
                     ports = {
                       http.containerPort = port;
                       rtsp.containerPort = rtspPort;

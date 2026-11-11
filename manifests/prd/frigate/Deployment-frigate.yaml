@@ -12,22 +12,32 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: b02db5537135344b0fd0a0db9c759a56a083d058b7ef81e904dab8a6f113ab4c
+        checksum/config: 08f8655c794c811daeffce3f9e86dec617f536383b2ab00915b1185cccc35ccb
       labels:
         app.kubernetes.io/name: frigate
     spec:
       automountServiceAccountToken: false
       containers:
         - env:
-            - name: FRIGATE_CAMERA_PASSWORD
+            - name: FRIGATE_DOORBELL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  key: password
+                  key: doorbell-password
                   name: frigate-cameras
-            - name: FRIGATE_CAMERA_USER
+            - name: FRIGATE_DOORBELL_USER
               valueFrom:
                 secretKeyRef:
-                  key: username
+                  key: doorbell-username
+                  name: frigate-cameras
+            - name: FRIGATE_LITTERS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: litters-password
+                  name: frigate-cameras
+            - name: FRIGATE_LITTERS_USER
+              valueFrom:
+                secretKeyRef:
+                  key: litters-username
                   name: frigate-cameras
             - name: FRIGATE_MQTT_PASSWORD
               valueFrom:
