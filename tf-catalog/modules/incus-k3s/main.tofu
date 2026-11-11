@@ -24,6 +24,9 @@ variable "nodes" {
     # PCI address of an SR-IOV GPU on the remote (its PF): the VM gets one of
     # its free VFs. Not hotpluggable: the VM must be stopped to add it.
     gpu_sriov_parent = optional(string)
+    # Allow `incus move --stateful` between remotes: migration.stateful plus
+    # var.live_migration_cpu instead of the host's CPU. Takes a restart.
+    live_migration = optional(bool, false)
   }))
 }
 
@@ -49,6 +52,12 @@ variable "networks" {
 variable "storage_pool" {
   description = "Existing Incus storage pool for node root disks."
   type        = string
+}
+
+variable "live_migration_cpu" {
+  description = "QEMU CPU model for live-migratable nodes, one every remote's CPU supports (check with `qemu-system-x86_64 -accel kvm -cpu <model>,enforce`). Unclustered Incus otherwise passes the host CPU through, which can't move between different CPUs."
+  type        = string
+  default     = null
 }
 
 variable "base_image" {
@@ -165,18 +174,25 @@ resource "incus_instance" "k3s" {
 
   depends_on = [incus_network.this]
 
-  config = {
-    "limits.cpu"           = each.value.cpu
-    "limits.memory"        = each.value.memory
-    "cloud-init.user-data" = local.cloud_init_user_data
-    # The installed system boots an unsigned systemd-boot.
-    "security.secureboot" = "false"
-    # Incus force-stops a VM 30s after asking it to shut down when its host
-    # stops; the guest's kubelet takes up to its 180s grace period to stop
-    # its pods (modules/nixos/services/k3s/node-base.nix), then systemd stops
-    # the rest.
-    "boot.host_shutdown_timeout" = "240"
-  }
+  config = merge(
+    {
+      "limits.cpu"           = each.value.cpu
+      "limits.memory"        = each.value.memory
+      "cloud-init.user-data" = local.cloud_init_user_data
+      # The installed system boots an unsigned systemd-boot.
+      "security.secureboot" = "false"
+      # Incus force-stops a VM 30s after asking it to shut down when its host
+      # stops; the guest's kubelet takes up to its 180s grace period to stop
+      # its pods (modules/nixos/services/k3s/node-base.nix), then systemd stops
+      # the rest.
+      "boot.host_shutdown_timeout" = "240"
+    },
+    # raw.qemu comes after Incus's own `-cpu host,...`: QEMU keeps the last.
+    each.value.live_migration ? {
+      "migration.stateful" = "true"
+      "raw.qemu"           = "-cpu ${var.live_migration_cpu}"
+    } : {}
+  )
 
   device {
     name = "root"
