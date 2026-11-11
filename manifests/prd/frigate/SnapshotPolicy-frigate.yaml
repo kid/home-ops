@@ -1,0 +1,34 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: frigate
+  namespace: home-assistant
+spec:
+  credentialProjection:
+    enabled: true
+  files:
+    ignoreRules:
+      - /lost+found
+      - /model_cache
+  identity:
+    hostname: frigate
+    username: frigate
+  mover:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 0
+      runAsUser: 0
+  repository:
+    kind: ClusterRepository
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: frigate
+  staging:
+    storageClassName: miroir

@@ -65,7 +65,7 @@ spec:
             - |
               umask 077
               : > /mosquitto/auth/passwords
-              for client in home-assistant zigbee2mqtt; do
+              for client in home-assistant zigbee2mqtt frigate; do
                 mosquitto_passwd -b /mosquitto/auth/passwords "$client" "$(cat /mosquitto/clients/$client/password)"
               done
           image: docker.io/library/eclipse-mosquitto:2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98
@@ -79,6 +79,8 @@ spec:
           volumeMounts:
             - mountPath: /mosquitto/auth
               name: auth
+            - mountPath: /mosquitto/clients/frigate
+              name: mosquitto-frigate
             - mountPath: /mosquitto/clients/home-assistant
               name: mosquitto-home-assistant
             - mountPath: /mosquitto/clients/zigbee2mqtt
@@ -99,6 +101,9 @@ spec:
         - configMap:
             name: mosquitto
           name: config
+        - name: mosquitto-frigate
+          secret:
+            secretName: mosquitto-frigate
         - name: mosquitto-home-assistant
           secret:
             secretName: mosquitto-home-assistant

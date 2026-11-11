@@ -1,0 +1,24 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: frigate
+  namespace: home-assistant
+spec:
+  oidc:
+    clientID: frigate
+    clientSecret:
+      name: frigate-kanidm-oauth2-credentials
+    logoutPath: /oauth2/logout
+    provider:
+      authorizationEndpoint: https://idm.kidibox.net/ui/oauth2
+      issuer: https://idm.kidibox.net/oauth2/openid/frigate
+      tokenEndpoint: https://idm.kidibox.net/oauth2/token
+    redirectURL: https://frigate.kidibox.net/oauth2/callback
+    scopes:
+      - openid
+      - profile
+      - email
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: frigate

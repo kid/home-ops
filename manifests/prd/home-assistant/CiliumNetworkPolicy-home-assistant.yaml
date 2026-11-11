@@ -14,6 +14,15 @@ spec:
               protocol: TCP
     - toEndpoints:
         - matchLabels:
+            app.kubernetes.io/name: frigate
+      toPorts:
+        - ports:
+            - port: "5000"
+              protocol: TCP
+            - port: "8554"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
             app.kubernetes.io/name: envoy
             k8s:io.kubernetes.pod.namespace: envoy-gateway-system
       toPorts:
