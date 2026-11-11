@@ -35,6 +35,8 @@ spec:
               value: customCertificateDomain=
             - name: PLEX_PREFERENCE_8
               value: ScheduledLibraryUpdatesEnabled=0
+            - name: PLEX_PREFERENCE_9
+              value: HardwareDevicePath=
           image: ghcr.io/home-operations/plex:1.43.5.11079@sha256:06ef0fc23e9af9bbaf284c3f27972f94e703d13d6f745edeb6818fcbebf6c673
           livenessProbe:
             httpGet:
@@ -56,6 +58,7 @@ spec:
               port: http
           resources:
             limits:
+              devic.es/intel-gpu: 1
               memory: 4Gi
             requests:
               cpu: 50m

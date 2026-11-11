@@ -47,6 +47,9 @@ let
       # generated once into the <name>-api-key Secret, which the other apps
       # read too.
       apiKeyEnv ? if servarr then "${lib.toUpper app}__AUTH__APIKEY" else null,
+      # A share of k3s-prd-0's iGPU VF at /dev/dri/renderD128
+      # (generic-device-plugin), which also pins the pod to that node.
+      gpu ? false,
     }:
     let
       labels."app.kubernetes.io/name" = name;
@@ -194,7 +197,10 @@ let
                       cpu = "50m";
                       memory = "256Mi";
                     };
-                    limits.memory = memoryLimit;
+                    limits = {
+                      memory = memoryLimit;
+                    }
+                    // lib.optionalAttrs gpu { "devic.es/intel-gpu" = 1; };
                   };
                   volumeMounts = {
                     "/config".name = "config";

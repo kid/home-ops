@@ -42,6 +42,9 @@ in
           # No periodic full scan, which wakes tank's disks: sonarr, animarr
           # and radarr ask Plex to scan each folder they import into.
           PLEX_PREFERENCE_8 = "ScheduledLibraryUpdatesEnabled=0";
+          # The CT's iGPU at its own PCI address; empty picks the one at
+          # /dev/dri.
+          PLEX_PREFERENCE_9 = "HardwareDevicePath=";
         };
         # The CT's uid 490 behind the unprivileged-CT offset, which owns its
         # imported files.
@@ -56,6 +59,7 @@ in
         # Its databases plus ~15G of artwork and chapter images.
         storage = "40Gi";
         memoryLimit = "4Gi";
+        gpu = true;
         # Direct play streams whole files in one response.
         requestTimeout = "0s";
         # Only the databases and preferences go to R2; the rest is
