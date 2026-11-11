@@ -44,6 +44,7 @@ in
       imports = [ inputs.srvos.nixosModules.mixins-latest-zfs-kernel ];
 
       boot.loader.efi.canTouchEfiVariables = true;
+      hardware.cpu.intel.updateMicrocode = true;
 
       # No UART on this board (pikvm uses HDMI): srvos's ttyS0 console
       # leaves a serial getty failing and restarting every 10s.
