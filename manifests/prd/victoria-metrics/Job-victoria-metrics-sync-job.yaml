@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 55518f52ad857473338250d3103ba9ad2912ff173b2c0752705db87dadf0f447
+        checksum/config: c15c384e36cafb00c2da9f4283921c430bc259bc6d339999a54b767bff584053
       labels:
         app.kubernetes.io/component: syncJob
         app.kubernetes.io/instance: victoria-metrics
@@ -38,7 +38,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
-          image: ghcr.io/victoriametrics/sync-job:v0.0.17
+          image: ghcr.io/victoriametrics/sync-job:v0.0.18
           imagePullPolicy: IfNotPresent
           name: sync-job
           resources:
