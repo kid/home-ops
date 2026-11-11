@@ -42,11 +42,13 @@ in
     {
       pkgs,
       lib,
+      utils,
       nfs-exports ? [ ],
       ...
     }:
     let
       exportOf = path: "${path} ${storageCidr}(rw,insecure,no_subtree_check)\n";
+      exportMounts = map (e: "${utils.escapeSystemdPath e.path}.mount") nfs-exports;
     in
     {
       imports = [ inputs.srvos.nixosModules.mixins-latest-zfs-kernel ];
@@ -137,6 +139,12 @@ in
           }
         )
         |> lib.listToAttrs;
+      # A new dataset's mount starts on the switch that adds it, before
+      # switch-to-configuration restarts disko-zfs: pull disko-zfs in first.
+      systemd.services.disko-zfs = {
+        wantedBy = exportMounts;
+        before = exportMounts;
+      };
       # Exported with root_squash: the apps run as root, so the server sees nobody.
       systemd.tmpfiles.rules = map (e: "d ${e.path} 0750 nobody nogroup -") nfs-exports;
       # NFSv4 only; the kubelet negotiates 4.2.
