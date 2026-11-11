@@ -210,6 +210,7 @@ in
       flux-webhook
       apiserver
       snapshot-controller
+      generic-device-plugin
       miroir
       external-dns
       external-secrets

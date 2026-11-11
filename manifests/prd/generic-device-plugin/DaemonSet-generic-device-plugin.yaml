@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubernetes.io/instance: generic-device-plugin
+    app.kubernetes.io/name: generic-device-plugin
+  name: generic-device-plugin
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: generic-device-plugin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: generic-device-plugin
+        app.kubernetes.io/name: generic-device-plugin
+    spec:
+      containers:
+        - args:
+            - --device
+            - |
+              groups:
+              - count: 2
+                paths:
+                - mountPath: /dev/dri/renderD128
+                  path: /dev/dri/i915-render
+              name: intel-gpu
+          image: squat/generic-device-plugin:0.2.0@sha256:66c8d5c270eb2b721f1064c549b9b7898152a6d2f0163380a5d37dc7636c20ff
+          imagePullPolicy: IfNotPresent
+          name: generic-device-plugin
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            limits:
+              cpu: 50m
+              memory: 20Mi
+            requests:
+              cpu: 50m
+              memory: 10Mi
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /var/lib/kubelet/device-plugins
+              name: device-plugin
+            - mountPath: /dev
+              name: dev
+      priorityClassName: system-node-critical
+      serviceAccountName: generic-device-plugin
+      tolerations:
+        - effect: NoExecute
+          operator: Exists
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet/device-plugins
+          name: device-plugin
+        - hostPath:
+            path: /dev
+          name: dev
+  updateStrategy:
+    type: RollingUpdate
