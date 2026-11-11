@@ -1,11 +1,17 @@
 # Settings common to every host in the fleet: srvos's server profile and
 # mixins.
-{ inputs, ... }:
+{ den, inputs, ... }:
 {
   flake-file.inputs.srvos = {
     url = "github:nix-community/srvos";
     inputs.nixpkgs.follows = "nixpkgs";
   };
+
+  # modules/nixos/services/nix-builders.nix
+  den.aspects.base.includes = [
+    den.aspects.nix-cache
+    den.aspects.nix-builder
+  ];
 
   den.aspects.base.nixos =
     { lib, ... }:

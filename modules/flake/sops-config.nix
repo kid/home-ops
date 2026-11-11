@@ -35,11 +35,18 @@ let
   # provision-host-key) just doesn't get a rule — no error.
   provisionedHosts = builtins.filter (host: builtins.pathExists (hostPubKeyPath host)) hostNames;
 
+  # The raw ssh-ed25519 key serves sops CLI users holding the host key; the
+  # age-pub (see clusterMemberHostKeys) is what sops-nix decrypts with.
   hostRule = host: {
     path_regex = "secrets/hosts/${host}/.*";
     key_groups = [
       {
-        age = humanKeys ++ [ (builtins.readFile (hostPubKeyPath host) |> lib.removeSuffix "\n") ];
+        age =
+          humanKeys
+          ++ [ (builtins.readFile (hostPubKeyPath host) |> lib.removeSuffix "\n") ]
+          ++ lib.optional (builtins.pathExists (hostAgePubKeyPath host)) (
+            builtins.readFile (hostAgePubKeyPath host) |> lib.removeSuffix "\n"
+          );
       }
     ];
   };

@@ -12,6 +12,7 @@ creation_rules:
     - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAIK3S+uuJso9YfKgOuu94Ll8SVo1r7YYRk3esornCl2M/ 
       root@k3s-prd-0
+    - age14q38ykuylz090zv6vje9asr8v6s735f75vy2l858pd7qshynh35sdc6zcg
   path_regex: secrets/hosts/k3s-prd-0/.*
 - key_groups:
   - age:
@@ -24,6 +25,7 @@ creation_rules:
     - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAIPv0sJIXdJcDvx/G9LiAd6KKjRHqSZwtjdLdv3aBLVw5 
       root@k3s-prd-1
+    - age18xg36chpcupuumw5gertn784d8za0lp392pfdcu4swuu3zrj8ddq8w43w5
   path_regex: secrets/hosts/k3s-prd-1/.*
 - key_groups:
   - age:
@@ -36,6 +38,7 @@ creation_rules:
     - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAICVvHfF73kPaZ+x/Ypmq8t7JGSxt88KFObokM1YHaib+ 
       root@k3s-prd-2
+    - age133ahxf4vps07s4u3n533xevwkkmhyp2lsxcpe032gxqwgfuk6a4s09t38a
   path_regex: secrets/hosts/k3s-prd-2/.*
 - key_groups:
   - age:
@@ -48,6 +51,7 @@ creation_rules:
     - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAIGcdsS1ydjLN8FhJGd7m4O1X1rZzH2XyNI/NNc69aS+B 
       root@node0
+    - age1aqyp0gfaq4hpvnc4j4jqxcg308tuv3t8lc88n78a0kuh6dezf9tsqxeg20
   path_regex: secrets/hosts/node0/.*
 - key_groups:
   - age:
@@ -60,6 +64,7 @@ creation_rules:
     - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAILkFKxaxcAS/tQuS8Gfk8xaHSLDAm1VCPHo8M7umUdVJ 
       root@node1
+    - age1jnjhgp7chadmgmph7qkms4gfvh4enf02vvmr4pcv4ks9n7ml2e4savuu8v
   path_regex: secrets/hosts/node1/.*
 - key_groups:
   - age:

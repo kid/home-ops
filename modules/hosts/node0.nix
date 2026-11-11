@@ -13,6 +13,14 @@ in
     system-access-groups = [ "admins" ];
     settings.disko.zfs-disk-single.settings.device_id =
       "/dev/disk/by-id/nvme-WD_BLACK_SN850X_1000GB_22518J459213";
+    # A Nix builder and cache (modules/nixos/services/nix-builders.nix). zroot
+    # holds the VM zvols and NFS datasets too, hence the high GC band.
+    nix-builder = {
+      maxJobs = 2;
+      speedFactor = 1;
+      minFreeGiB = 200;
+      maxFreeGiB = 250;
+    };
   };
 
   den.devices.node0.interfaces = [

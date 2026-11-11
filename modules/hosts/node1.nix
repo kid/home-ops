@@ -10,6 +10,13 @@
     system-access-groups = [ "admins" ];
     settings.disko.zfs-disk-single.settings.device_id =
       "/dev/disk/by-id/nvme-Force_MP510_21368248000129171009";
+    # A Nix builder and cache (modules/nixos/services/nix-builders.nix).
+    nix-builder = {
+      maxJobs = 8;
+      speedFactor = 4;
+      minFreeGiB = 40;
+      maxFreeGiB = 60;
+    };
   };
 
   den.devices = {
