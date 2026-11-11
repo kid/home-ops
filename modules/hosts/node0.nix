@@ -156,9 +156,22 @@ in
         message = "nfs-exports: ${e.dataset} must sit under zroot/clusters and be exported at its inherited mountpoint, not ${e.path}";
       }) nfs-exports;
       # Exported with root_squash: the apps run as root, so the server sees
-      # nobody. On the switch that creates a dataset, chown it once mounted.
+      # nobody. At boot tmpfiles sets this once zfs-mount has run; on the
+      # switch that creates a dataset, `zfs create` mounts it inside
+      # disko-zfs, so disko-zfs sets it there too.
       systemd.tmpfiles.rules = map (e: "d ${e.path} 0750 nobody nogroup -") nfs-exports;
-      systemd.services.disko-zfs.before = [ "systemd-tmpfiles-resetup.service" ];
+      systemd.services.disko-zfs.serviceConfig.ExecStartPost = lib.mkIf (nfs-exports != [ ]) (
+        pkgs.writeShellScript "nfs-exports-owner" (
+          nfs-exports
+          |> map (e: ''
+            if ${pkgs.util-linux}/bin/mountpoint -q ${e.path}; then
+              chown nobody:nogroup ${e.path}
+              chmod 0750 ${e.path}
+            fi
+          '')
+          |> lib.concatStrings
+        )
+      );
       # NFSv4 only; the kubelet negotiates 4.2.
       services.nfs.settings.nfsd.vers3 = false;
       networking.firewall.interfaces.storage-prd.allowedTCPPorts = [ 2049 ];
