@@ -92,7 +92,7 @@ let
         nodes = {
           # 40G root LV (den.aspects.incus-vm), the rest for miroir.
           "k3s-${cluster.name}-0" = {
-            remote = "node1";
+            remote = "node0";
             nixos_attr = "k3s-${cluster.name}-0";
             cpu = 8;
             memory = "8GiB";
