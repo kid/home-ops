@@ -39,7 +39,15 @@ in
   };
 
   den.aspects.node0.nixos =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      nfs-exports ? [ ],
+      ...
+    }:
+    let
+      exportOf = path: "${path} ${storageCidr}(rw,insecure,no_subtree_check)\n";
+    in
     {
       imports = [ inputs.srvos.nixosModules.mixins-latest-zfs-kernel ];
 
@@ -99,9 +107,38 @@ in
             "/tank/library/series"
             "/tank/downloads/sabnzbd"
           ]
-          |> map (path: "${path} ${storageCidr}(rw,insecure,no_subtree_check)\n")
+          ++ map (e: e.path) nfs-exports
+          |> map exportOf
           |> builtins.concatStringsSep "";
       };
+
+      # The apps' own datasets (the nfs-exports quirk), on the NVMe pool, not
+      # tank, whose disks spin down. disko-zfs creates them; it doesn't mount them.
+      disko.zfs.settings.datasets =
+        nfs-exports
+        |> map (
+          e:
+          lib.nameValuePair e.dataset {
+            properties = {
+              mountpoint = "legacy";
+              atime = "off";
+            }
+            // e.properties or { };
+          }
+        )
+        |> lib.listToAttrs;
+      fileSystems =
+        nfs-exports
+        |> map (
+          e:
+          lib.nameValuePair e.path {
+            device = e.dataset;
+            fsType = "zfs";
+          }
+        )
+        |> lib.listToAttrs;
+      # Exported with root_squash: the apps run as root, so the server sees nobody.
+      systemd.tmpfiles.rules = map (e: "d ${e.path} 0750 nobody nogroup -") nfs-exports;
       # NFSv4 only; the kubelet negotiates 4.2.
       services.nfs.settings.nfsd.vers3 = false;
       networking.firewall.interfaces.storage-prd.allowedTCPPorts = [ 2049 ];

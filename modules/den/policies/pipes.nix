@@ -62,6 +62,16 @@ in
     (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
 
+  # Collects the `nfs-exports` quirk (modules/den/quirks/nfs-exports.nix,
+  # emitted by cluster-scoped app aspects) onto every host, exposed as the
+  # `nfs-exports` list arg to NixOS content; only node0 reads it. `cluster` is the
+  # entity kind, see routeros-device-collect-firewall above.
+  den.policies.host-collect-nfs-exports = _: [
+    (pipe.from "nfs-exports" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
+  ];
+
+  den.schema.host.includes = [ den.policies.host-collect-nfs-exports ];
+
   den.schema.cluster.includes = [
     den.policies.cluster-collect-miroir-nodes
     den.policies.cluster-collect-k3s-nodes
