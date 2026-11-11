@@ -18,7 +18,7 @@ let
   tag = "0.18.2@sha256:fd60f99ffd4eb6c42360ed4e14953e270586f239309ab3983e55b2e97ffac09a";
 
   # Frigate camera name → address. Each camera's stream login is the
-  # reolink-<name> 1Password item.
+  # reolink-<name> 1Password item in home-ops (the frigate stack below copies it).
   cameras = {
     doorbell = config.den.devices.doorbell.address;
     litters = config.den.devices."litters camera".address;
@@ -142,6 +142,14 @@ in
     }
   ];
 
+  # Copies each camera's stream login from home-ops into home-ops-prd, where
+  # the frigate-cameras ExternalSecret reads it.
+  den.aspects.kubernetes.home-assistant.frigate."terragrunt-stacks" = _: {
+    stack = "frigate";
+    localModule = "frigate";
+    inputs.cameras = lib.attrNames cameras;
+  };
+
   den.aspects.kubernetes.home-assistant.frigate.k8s-manifests =
     { cluster, ... }:
     let
@@ -190,7 +198,7 @@ in
                   map
                     (field: {
                       secretKey = "${cam}-${field}";
-                      remoteRef.key = "reolink-${cam}/${field}";
+                      remoteRef.key = "reolink-${cam}/credentials/${field}";
                     })
                     [
                       "username"
