@@ -22,6 +22,17 @@ inputs = {
     },
   ]
   dhcp_servers = {
+    CI = {
+      cidr = "10.0.30.0/24"
+      dns_servers = [
+        "10.0.30.1",
+      ]
+      domain  = "ci.home.kidibox.net"
+      gateway = "10.0.30.1"
+      ntp_servers = [
+        "10.0.30.1",
+      ]
+    }
     Guest = {
       cidr = "10.0.101.0/24"
       dns_servers = [
@@ -275,6 +286,7 @@ inputs = {
       comment = "node0"
       tagged = [
         20,
+        30,
         40,
       ]
       untagged = 10
@@ -288,6 +300,7 @@ inputs = {
       tagged = [
         10,
         20,
+        30,
         40,
         50,
         51,
@@ -301,6 +314,7 @@ inputs = {
       tagged = [
         10,
         20,
+        30,
         40,
         50,
         51,
@@ -336,6 +350,7 @@ inputs = {
       tagged = [
         10,
         20,
+        30,
         40,
         50,
         51,
@@ -347,6 +362,7 @@ inputs = {
   }
   hostname = "rb5009"
   ip_addresses = {
+    CI          = "10.0.30.1/24"
     Guest       = "10.0.101.1/24"
     IotInternet = "10.0.51.1/24"
     IotLocal    = "10.0.50.1/24"
@@ -378,6 +394,10 @@ inputs = {
     }
   }
   vlans = {
+    CI = {
+      name    = "CI"
+      vlan_id = 30
+    }
     Guest = {
       name    = "Guest"
       vlan_id = 101

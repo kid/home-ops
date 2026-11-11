@@ -39,6 +39,39 @@ let
     net: if net.dhcpDnsServers != null then net.dhcpDnsServers else [ (net.methods.host 1) ];
   ntpServersFor =
     net: if net.dhcpNtpServers != null then net.dhcpNtpServers else [ (net.methods.host 1) ];
+
+  allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
+
+  # Routed nix builder clients (nix-builder-client.routed, modules/nixos/
+  # services/nix-builders.nix) reach every builder's primary address over
+  # SSH (remote builds) and harmonia.
+  nixBuilderForwardRules =
+    allHosts
+    |> lib.filterAttrs (_: h: h.nix-builder-client.routed or false)
+    |> lib.attrNames
+    |> map (client: {
+      name = networks.${(builtins.head config.den.devices.${client}.interfaces).network}.name;
+      value =
+        lib.cartesianProduct {
+          builder = allHosts |> lib.filterAttrs (_: h: h ? nix-builder) |> lib.attrNames;
+          port = [
+            22
+            5000
+          ];
+        }
+        |> map (
+          { builder, port }:
+          {
+            action = "accept";
+            protocol = "tcp";
+            dst_address = config.den.devices.${builder}.address;
+            dst_port = port;
+            comment = "Allow ${client} to reach nix builder ${builder} on ${toString port}";
+          }
+        );
+    })
+    |> lib.groupBy (x: x.name)
+    |> lib.mapAttrs (_: xs: lib.concatMap (x: x.value) xs);
 in
 {
   den.routerosDevices.rb5009 = {
@@ -104,6 +137,7 @@ in
                 tagged = lib.sort (a: b: a < b) [
                   networks.Storage.vlanId
                   networks.K3s.vlanId
+                  networks.CI.vlanId
                 ];
               };
               ether2 = {
@@ -252,20 +286,23 @@ in
               ];
             };
 
-            vlans_forward_rules = {
-              "${networks.Trusted.name}" = [
-                {
-                  action = "accept";
-                  out_interface = networks.Management.name;
-                  comment = "Allow access to Management";
-                }
-                {
-                  action = "accept";
-                  out_interface_list = "all";
-                  comment = "Allow access to all vlans";
-                }
-              ];
-            };
+            vlans_forward_rules = lib.zipAttrsWith (_: lib.concatLists) [
+              {
+                "${networks.Trusted.name}" = [
+                  {
+                    action = "accept";
+                    out_interface = networks.Management.name;
+                    comment = "Allow access to Management";
+                  }
+                  {
+                    action = "accept";
+                    out_interface_list = "all";
+                    comment = "Allow access to all vlans";
+                  }
+                ];
+              }
+              nixBuilderForwardRules
+            ];
           };
       };
 

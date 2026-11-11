@@ -41,9 +41,11 @@ in
 
   # The k3s VMs' bridges, named like node1's Incus networks: a VM moving here
   # attaches to the same bridge names. The Storage address sits on storage-prd.
+  # ci-prd holds the GitHub runner VM (modules/hosts/gha.nix).
   den.devices.node0.vmBridges = {
     k3s-prd = "K3s";
     storage-prd = "Storage";
+    ci-prd = "CI";
   };
 
   den.aspects.node0.nixos =

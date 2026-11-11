@@ -24,6 +24,11 @@ inputs = {
   op_item_routeros    = "RB5009 - user - kid"
   op_vault            = "home-ops"
   vlans = {
+    CI = {
+      address = "10.0.30.1"
+      name    = "CI"
+      vlan_id = 30
+    }
     Guest = {
       address = "10.0.101.1"
       name    = "Guest"
@@ -66,6 +71,13 @@ inputs = {
     }
   }
   vlans_forward_rules = {
+    CI = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
+      },
+    ]
     Guest = [
       {
         action             = "accept"

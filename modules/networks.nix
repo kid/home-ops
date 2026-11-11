@@ -38,6 +38,15 @@ in
       mtu = 9000;
     };
 
+    # The GitHub Actions runner (modules/hosts/gha.nix). Beyond the internet it
+    # reaches only the nix builders (rb5009's nixBuilderForwardRules).
+    CI = {
+      environment = "prd";
+      vlanId = 30;
+      domain = "ci.${tld}";
+      internetAccess = true;
+    };
+
     IotLocal = {
       environment = "prd";
       vlanId = 50;
