@@ -32,7 +32,7 @@ _: {
                 name = "intel-gpu";
                 groups = [
                   {
-                    # Plex, and Frigate later.
+                    # Plex and Frigate.
                     count = 2;
                     paths = [
                       {

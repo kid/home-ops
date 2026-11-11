@@ -228,6 +228,7 @@ in
       home-assistant.home-assistant
       home-assistant.mosquitto
       home-assistant.zigbee2mqtt
+      home-assistant.frigate
       media.prowlarr
       media.animarr
       media.sonarr

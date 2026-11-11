@@ -21,6 +21,7 @@ let
   clients = [
     "home-assistant"
     "zigbee2mqtt"
+    "frigate"
   ];
   passwordSecret = client: "${name}-${client}";
   passwordFile = "/mosquitto/auth/passwords";

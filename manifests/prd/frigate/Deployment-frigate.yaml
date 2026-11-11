@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frigate
+  namespace: home-assistant
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frigate
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 08f8655c794c811daeffce3f9e86dec617f536383b2ab00915b1185cccc35ccb
+      labels:
+        app.kubernetes.io/name: frigate
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: FRIGATE_DOORBELL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: doorbell-password
+                  name: frigate-cameras
+            - name: FRIGATE_DOORBELL_USER
+              valueFrom:
+                secretKeyRef:
+                  key: doorbell-username
+                  name: frigate-cameras
+            - name: FRIGATE_LITTERS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: litters-password
+                  name: frigate-cameras
+            - name: FRIGATE_LITTERS_USER
+              valueFrom:
+                secretKeyRef:
+                  key: litters-username
+                  name: frigate-cameras
+            - name: FRIGATE_MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: mosquitto-frigate
+          image: ghcr.io/blakeblackshear/frigate:0.18.2@sha256:fd60f99ffd4eb6c42360ed4e14953e270586f239309ab3983e55b2e97ffac09a
+          livenessProbe:
+            httpGet:
+              path: /api/version
+              port: http
+          name: frigate
+          ports:
+            - containerPort: 5000
+              name: http
+            - containerPort: 8554
+              name: rtsp
+          resources:
+            limits:
+              devic.es/intel-gpu: 1
+              memory: 4Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /api/version
+              port: http
+            periodSeconds: 10
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /dev/shm
+              name: shm
+            - mountPath: /etc/cluster-ca
+              name: cluster-ca
+            - mountPath: /media/frigate
+              name: media
+            - mountPath: /tmp/cache
+              name: cache
+      initContainers:
+        - command:
+            - cp
+            - /etc/frigate/config.yml
+            - /config/config.yml
+          image: ghcr.io/blakeblackshear/frigate:0.18.2@sha256:fd60f99ffd4eb6c42360ed4e14953e270586f239309ab3983e55b2e97ffac09a
+          name: config
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /etc/frigate
+              name: frigate-config
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+          name: cache
+        - configMap:
+            name: cluster-ca
+          name: cluster-ca
+        - name: config
+          persistentVolumeClaim:
+            claimName: frigate
+        - configMap:
+            name: frigate
+          name: frigate-config
+        - name: media
+          nfs:
+            path: /srv/clusters/prd/apps/frigate
+            server: 10.0.20.10
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+          name: shm

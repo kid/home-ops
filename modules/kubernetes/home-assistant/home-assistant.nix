@@ -187,6 +187,11 @@ in
                 ];
                 egress = [
                   (toPods { "app.kubernetes.io/name" = "mosquitto"; } [ 8883 ])
+                  # Frigate's integration: its API and RTSP restream.
+                  (toPods { "app.kubernetes.io/name" = "frigate"; } [
+                    5000
+                    8554
+                  ])
                   # In-cluster apps by their hostname: Plex at plex.kidibox.net.
                   gatewayEgress
                   # Its devices, on whatever ports their integrations use.

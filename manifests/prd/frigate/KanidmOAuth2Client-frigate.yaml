@@ -1,0 +1,23 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: frigate
+  namespace: home-assistant
+spec:
+  disableConsentPrompt: true
+  displayname: frigate
+  kanidmRef:
+    name: idm
+    namespace: kanidm
+  origin: https://frigate.kidibox.net
+  redirectUrl:
+    - https://frigate.kidibox.net/oauth2/callback
+  scopeMap:
+    - group: admins
+      scopes:
+        - openid
+        - profile
+        - email
+  secretKeyAliases:
+    clientSecret:
+      - client-secret

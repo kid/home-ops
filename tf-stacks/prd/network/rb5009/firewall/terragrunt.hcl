@@ -185,6 +185,34 @@ inputs = {
         dst_port    = 6638
         protocol    = "tcp"
       },
+      {
+        action      = "accept"
+        comment     = "Allow Frigate on K3s to reach the doorbell camera on 80"
+        dst_address = "10.0.50.10"
+        dst_port    = 80
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Frigate on K3s to reach the doorbell camera on 554"
+        dst_address = "10.0.50.10"
+        dst_port    = 554
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Frigate on K3s to reach the litters camera on 80"
+        dst_address = "10.0.50.11"
+        dst_port    = 80
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Frigate on K3s to reach the litters camera on 554"
+        dst_address = "10.0.50.11"
+        dst_port    = 554
+        protocol    = "tcp"
+      },
     ]
     Management = [
       {

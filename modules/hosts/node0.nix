@@ -39,7 +39,22 @@ in
   };
 
   den.aspects.node0.nixos =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      nfs-exports ? [ ],
+      ...
+    }:
+    let
+      exportOf = path: "${path} ${storageCidr}(rw,insecure,no_subtree_check)\n";
+      # A dataset's ancestors below zroot, down to its parent.
+      ancestorsOf =
+        dataset:
+        let
+          parts = lib.splitString "/" dataset;
+        in
+        lib.genList (i: parts |> lib.take (i + 2) |> lib.concatStringsSep "/") (lib.length parts - 2);
+    in
     {
       imports = [ inputs.srvos.nixosModules.mixins-latest-zfs-kernel ];
 
@@ -99,9 +114,51 @@ in
             "/tank/library/series"
             "/tank/downloads/sabnzbd"
           ]
-          |> map (path: "${path} ${storageCidr}(rw,insecure,no_subtree_check)\n")
+          ++ map (e: e.path) nfs-exports
+          |> map exportOf
           |> builtins.concatStringsSep "";
       };
+
+      # The apps' own datasets (the nfs-exports quirk), on the NVMe pool, not
+      # tank, whose disks spin down. zroot/clusters sets the mountpoint and the
+      # rest inherit it, so `zfs create` mounts each at its export path; the
+      # levels in between don't mount.
+      disko.zfs.settings.datasets =
+        let
+          inherited = nfs-exports |> lib.concatMap (e: ancestorsOf e.dataset) |> lib.unique;
+        in
+        lib.genAttrs inherited (_: {
+          properties.canmount = "off";
+        })
+        // lib.optionalAttrs (nfs-exports != [ ]) {
+          "zroot/clusters".properties = {
+            mountpoint = "/srv/clusters";
+            canmount = "off";
+          };
+        }
+        // (
+          nfs-exports
+          |> map (
+            e:
+            lib.nameValuePair e.dataset {
+              properties = {
+                atime = "off";
+              }
+              // e.properties or { };
+            }
+          )
+          |> lib.listToAttrs
+        );
+      assertions = map (e: {
+        assertion =
+          lib.hasPrefix "zroot/clusters/" e.dataset
+          && e.path == "/srv/${lib.removePrefix "zroot/" e.dataset}";
+        message = "nfs-exports: ${e.dataset} must sit under zroot/clusters and be exported at its inherited mountpoint, not ${e.path}";
+      }) nfs-exports;
+      # Exported with root_squash: the apps run as root, so the server sees
+      # nobody. On the switch that creates a dataset, chown it once mounted.
+      systemd.tmpfiles.rules = map (e: "d ${e.path} 0750 nobody nogroup -") nfs-exports;
+      systemd.services.disko-zfs.before = [ "systemd-tmpfiles-resetup.service" ];
       # NFSv4 only; the kubelet negotiates 4.2.
       services.nfs.settings.nfsd.vers3 = false;
       networking.firewall.interfaces.storage-prd.allowedTCPPorts = [ 2049 ];
