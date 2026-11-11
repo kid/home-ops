@@ -59,6 +59,8 @@ let
       path = "/openvino-model/ssdlite_mobilenet_v2.xml";
       labelmap_path = "/openvino-model/coco_91cl_bkgr.txt";
     };
+    # Off by default since Frigate 0.14.
+    detect.enabled = true;
     ffmpeg.hwaccel_args = "preset-vaapi";
     # The VF, not Incus's virtio-gpu.
     telemetry.stats.intel_gpu_device = "/dev/dri/renderD128";

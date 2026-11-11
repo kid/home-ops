@@ -36,6 +36,8 @@ data:
           alerts:
             labels:
             - cat
+    detect:
+      enabled: true
     detectors:
       ov:
         device: GPU
