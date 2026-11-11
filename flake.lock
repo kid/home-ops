@@ -280,6 +280,27 @@
         "type": "github"
       }
     },
+    "i915-sriov": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793871918,
+        "narHash": "sha256-WFflka8QnGOQ5ZgaiUKd6uNVI5LQ5rB6AFeZb3Yp/is=",
+        "owner": "strongtz",
+        "repo": "i915-sriov-dkms",
+        "rev": "3fea06d13befa78e876048fa2da481d07e1f60c9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "strongtz",
+        "ref": "2026.11.05",
+        "repo": "i915-sriov-dkms",
+        "type": "github"
+      }
+    },
     "impermanence": {
       "inputs": {
         "home-manager": "home-manager",
@@ -646,6 +667,7 @@
         "flake-parts": "flake-parts",
         "git-hooks-nix": "git-hooks-nix",
         "haumea": "haumea",
+        "i915-sriov": "i915-sriov",
         "impermanence": "impermanence",
         "import-tree": "import-tree",
         "nix-kube-generators": "nix-kube-generators",

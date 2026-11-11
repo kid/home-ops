@@ -39,6 +39,8 @@
     imports = [ inputs.srvos.nixosModules.mixins-latest-zfs-kernel ];
 
     boot.loader.efi.canTouchEfiVariables = true;
+    hardware.enableRedistributableFirmware = true;
+    hardware.cpu.amd.updateMicrocode = true;
 
     # IPMI Serial-over-LAN (`ipmitool sol activate`). The last console=
     # is the one systemd puts a serial getty on.

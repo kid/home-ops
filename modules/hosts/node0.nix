@@ -44,6 +44,7 @@ in
       imports = [ inputs.srvos.nixosModules.mixins-latest-zfs-kernel ];
 
       boot.loader.efi.canTouchEfiVariables = true;
+      hardware.cpu.intel.updateMicrocode = true;
 
       # No UART on this board (pikvm uses HDMI): srvos's ttyS0 console
       # leaves a serial getty failing and restarting every 10s.
@@ -116,6 +117,7 @@ in
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
     den.aspects.incus
+    den.aspects.i915-sriov.host
     den.aspects.power-saving
   ];
 
