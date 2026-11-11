@@ -151,7 +151,7 @@ in
   };
 
   den.aspects.kubernetes.home-assistant.frigate.k8s-manifests =
-    { cluster, ... }:
+    { cluster, pkgs, ... }:
     let
       hostname = cluster.methods.mkAppHostname name;
     in
@@ -207,7 +207,12 @@ in
                 );
             };
 
-            configMaps.${name}.data."config.yml" = builtins.toJSON frigateConfig;
+            # Block-style YAML, as the upstream chart's is: Frigate's go2rtc
+            # config writer keeps the source's style, and in flow style (JSON)
+            # go2rtc misparses the unquoted stream URLs it writes back.
+            configMaps.${name}.data."config.yml" = builtins.readFile (
+              (pkgs.formats.yaml { }).generate "frigate-config.yml" frigateConfig
+            );
 
             ciliumNetworkPolicies.${name} =
               with cluster.methods.netpol;
