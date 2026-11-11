@@ -39,6 +39,7 @@
     den.aspects.k3s-bootstrap
     den.aspects.k3s-external-secrets
     den.aspects.k3s-miroir-node
+    den.aspects.i915-sriov.guest
   ];
 
   fleet.colmena.deployment.k3s-prd-0.targetHost = config.den.devices.k3s-prd-0.address;

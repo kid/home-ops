@@ -44,6 +44,10 @@
       url = "github:nix-community/haumea/v0.2.2";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    i915-sriov = {
+      url = "github:strongtz/i915-sriov-dkms/2026.11.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
     nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";

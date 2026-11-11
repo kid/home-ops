@@ -54,10 +54,11 @@ inputs = {
           mac = "52:54:00:20:00:01"
         }
       }
-      mac        = "52:54:00:40:00:01"
-      memory     = "8GiB"
-      nixos_attr = "k3s-prd-0"
-      remote     = "node0"
+      gpu_sriov_parent = "0000:00:02.0"
+      mac              = "52:54:00:40:00:01"
+      memory           = "8GiB"
+      nixos_attr       = "k3s-prd-0"
+      remote           = "node0"
     }
     k3s-prd-1 = {
       address   = "10.0.40.41"

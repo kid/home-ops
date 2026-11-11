@@ -100,6 +100,8 @@ let
             mac = macOf "k3s-${cluster.name}-0" "K3s";
             inherit (config.den.devices."k3s-${cluster.name}-0") address;
             extra_nics.storage.mac = macOf "k3s-${cluster.name}-0" "Storage";
+            # The iGPU's VFs (den.aspects.i915-sriov.host).
+            gpu_sriov_parent = "0000:00:02.0";
           };
           "k3s-${cluster.name}-1" = {
             remote = "node1";

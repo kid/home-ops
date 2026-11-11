@@ -116,6 +116,7 @@ in
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
     den.aspects.incus
+    den.aspects.i915-sriov.host
     den.aspects.power-saving
   ];
 

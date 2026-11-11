@@ -21,6 +21,9 @@ variable "nodes" {
     address = string
     # Extra NICs, keyed by a networks key.
     extra_nics = optional(map(object({ mac = optional(string) })), {})
+    # PCI address of an SR-IOV GPU on the remote (its PF): the VM gets one of
+    # its free VFs. Not hotpluggable: the VM must be stopped to add it.
+    gpu_sriov_parent = optional(string)
   }))
 }
 
@@ -212,6 +215,19 @@ resource "incus_instance" "k3s" {
         local.nic[each.key][device.key],
         device.value.mac != null ? { hwaddr = device.value.mac } : {}
       )
+    }
+  }
+
+  dynamic "device" {
+    for_each = each.value.gpu_sriov_parent != null ? [each.value.gpu_sriov_parent] : []
+
+    content {
+      name = "gpu"
+      type = "gpu"
+      properties = {
+        gputype = "sriov"
+        pci     = device.value
+      }
     }
   }
 
