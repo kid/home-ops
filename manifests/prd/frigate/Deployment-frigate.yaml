@@ -110,7 +110,7 @@ spec:
           name: frigate-config
         - name: media
           nfs:
-            path: /srv/frigate
+            path: /srv/clusters/prd/apps/frigate
             server: 10.0.20.10
         - emptyDir:
             medium: Memory

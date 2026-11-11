@@ -13,7 +13,6 @@ let
   rtspPort = 8554;
   mqttPort = 8883;
   caDir = "/etc/cluster-ca";
-  nfsPath = "/srv/frigate";
   # renovate: datasource=docker depName=ghcr.io/blakeblackshear/frigate
   tag = "0.18.2@sha256:fd60f99ffd4eb6c42360ed4e14953e270586f239309ab3983e55b2e97ffac09a";
 
@@ -131,15 +130,16 @@ in
   ];
 
   # Its recordings and snapshots: a node0 dataset, exported to the nodes.
-  den.aspects.kubernetes.home-assistant.frigate.nfs-exports = _: [
-    {
-      dataset = "zroot/frigate";
-      path = nfsPath;
-      properties = {
-        recordsize = "1M";
-        quota = "200G";
-      };
-    }
+  den.aspects.kubernetes.home-assistant.frigate.nfs-exports = { cluster, ... }: [
+    (
+      cluster.methods.nfsExport name
+      // {
+        properties = {
+          recordsize = "1M";
+          quota = "200G";
+        };
+      }
+    )
   ];
 
   # Copies each camera's stream login from home-ops into home-ops-prd, where
@@ -316,7 +316,7 @@ in
                     # outlives its NFS server.
                     media.nfs = {
                       server = cluster.methods.mediaNfsServer;
-                      path = nfsPath;
+                      inherit (cluster.methods.nfsExport name) path;
                     };
                     cluster-ca.configMap.name = "cluster-ca";
                     shm.emptyDir = {
