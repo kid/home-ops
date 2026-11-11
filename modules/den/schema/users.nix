@@ -15,12 +15,6 @@ let
         {
           config._module.args.user = config;
           options = {
-            name = lib.mkOption {
-              type = lib.types.str;
-              default = name;
-              description = "User name (from attrset key)";
-            };
-
             userName = lib.mkOption {
               type = lib.types.str;
               default = name;

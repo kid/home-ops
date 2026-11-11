@@ -60,7 +60,13 @@ in
     |> lib.filter (acl.admits gates)
     |> map (user: resolve.to "user" { inherit user; });
 
-  config.den.schema.host.includes = [ den.policies.acl-users ];
+  # den.batteries.user-aspects: a user's content (define-user, ssh-keys
+  # below) reaches the host it resolves onto; den stops doing this by
+  # default after 2027-01-01 (denful/den#694).
+  config.den.schema.host.includes = [
+    den.policies.acl-users
+    den.batteries.user-aspects
+  ];
   config.den.schema.host.excludes = [ den.policies.host-to-users ];
 
   # Content aspects need { host, user } context, which only exists at the
