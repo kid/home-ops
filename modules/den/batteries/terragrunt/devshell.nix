@@ -1,6 +1,7 @@
 # Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt/terragrunt-stacks.nix) to
-# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl and
-# tf-stacks/<env>/k3s/<stack>/terragrunt.hcl, exposed as
+# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl,
+# tf-stacks/<env>/k3s/<stack>/terragrunt.hcl and
+# tf-stacks/<env>/hosts/<host>/<stack>/terragrunt.hcl, exposed as
 # `nix run .#write-terragrunt` (mirrors apps.write-manifests/
 # write-terraform elsewhere in the dendritic ecosystem) + `checks.terragrunt`
 # (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
@@ -15,10 +16,12 @@ let
 
   routerosDevicesByName = config.den.routerosDevices;
   clustersByName = config.den.clusters;
+  allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
   # RouterOS: base sits directly under network/<routerosDevice>/, every other
   # stack nests one level deeper. Cluster (k3s) stacks have no such split —
-  # every one nests directly under k3s/<stack>/.
+  # every one nests directly under k3s/<stack>/. Host stacks nest under
+  # hosts/<host>/<stack>/.
   leafRelPath =
     kind: entityName: stack:
     if kind == "network" then
@@ -29,11 +32,13 @@ let
         "tf-stacks/${envName}/network/${entityName}/terragrunt.hcl"
       else
         "tf-stacks/${envName}/network/${entityName}/${stack}/terragrunt.hcl"
-    else
+    else if kind == "k3s" then
       let
         envName = clustersByName.${entityName}.environment;
       in
-      "tf-stacks/${envName}/k3s/${stack}/terragrunt.hcl";
+      "tf-stacks/${envName}/k3s/${stack}/terragrunt.hcl"
+    else
+      "tf-stacks/${allHosts.${entityName}.environment}/hosts/${entityName}/${stack}/terragrunt.hcl";
 
   # Every RouterOS stack's directory sits one level (base: network/<routerosDevice>/)
   # or two levels (non-base: network/<routerosDevice>/<stack>/) below
@@ -119,6 +124,13 @@ let
         content = renderLeaf stack leaf;
       }) stacks
     ) (config.flake.terragruntStacks.k3s or { }))
+    (lib.mapAttrsToList (
+      hostName: stacks:
+      lib.mapAttrsToList (stack: leaf: {
+        path = leafRelPath "hosts" hostName stack;
+        content = renderLeaf stack leaf;
+      }) stacks
+    ) (config.flake.terragruntStacks.hosts or { }))
   ];
 in
 {

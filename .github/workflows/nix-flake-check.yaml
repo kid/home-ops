@@ -15,17 +15,21 @@ permissions:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    # Same-repo PRs run on the self-hosted gha VM (modules/hosts/gha.nix);
+    # fork PRs stay on GitHub's runners.
+    runs-on: ${{ github.event.pull_request.head.repo.full_name == github.repository && fromJSON('["self-hosted","nix"]') || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install Nix
+        if: runner.environment == 'github-hosted'
         uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
           extra-conf: extra-experimental-features = pipe-operators
 
       - name: Cache Nix store
+        if: runner.environment == 'github-hosted'
         uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
         with:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
@@ -39,3 +43,16 @@ jobs:
 
       - name: Run nix flake check
         run: nix flake check --print-build-logs
+
+  # The KVM tests build on the nix builders (modules/nixos/services/nix-builders.nix).
+  integration-tests:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    needs: checks
+    runs-on: [self-hosted, nix]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Build integration tests
+        run: |
+          nix build --print-build-logs --no-link $(nix eval --raw .#integration-tests --apply 'ts: builtins.concatStringsSep " " (map (n: ".#integration-tests.${n}") (builtins.attrNames ts))')

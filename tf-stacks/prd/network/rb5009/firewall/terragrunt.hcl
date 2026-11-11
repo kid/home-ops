@@ -77,6 +77,34 @@ inputs = {
         comment            = "Allow WAN"
         out_interface_list = "WAN"
       },
+      {
+        action      = "accept"
+        comment     = "Allow gha to reach nix builder node0 on 22"
+        dst_address = "10.0.10.10"
+        dst_port    = 22
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow gha to reach nix builder node0 on 5000"
+        dst_address = "10.0.10.10"
+        dst_port    = 5000
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow gha to reach nix builder node1 on 22"
+        dst_address = "10.0.10.11"
+        dst_port    = 22
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow gha to reach nix builder node1 on 5000"
+        dst_address = "10.0.10.11"
+        dst_port    = 5000
+        protocol    = "tcp"
+      },
     ]
     Guest = [
       {

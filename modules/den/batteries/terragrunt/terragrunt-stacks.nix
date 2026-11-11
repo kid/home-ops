@@ -3,7 +3,7 @@
 # Modeled on nixopslab's modules/terranix/collect.nix host-to-terranix
 # policy: registers "terragrunt-stacks" as an aspect content class directly
 # on den.classes (no private namespace — see AGENTS.md), and collects it
-# across two entity kinds' aspect-includes chains:
+# across three entity kinds' aspect-includes chains:
 #   - a routerosDevice (den.aspects.<routerosDevice>.includes = [
 #     den.aspects.routeros.base den.aspects.routeros.capsman ... ]) into
 #     config.flake.terragruntStacks.network.<routerosDevice>.<stack>, git-ref
@@ -11,8 +11,11 @@
 #   - a cluster (den.aspects.<cluster>.includes = [ den.aspects.kubernetes.
 #     cert-manager ... ]) into config.flake.terragruntStacks.k3s.<cluster>.
 #     <stack>, path-sourced from this repo's own tf-catalog/modules/.
-# Nested under "network"/"k3s" (rather than a flat attrset keyed by entity
-# name) so a routerosDevice and a cluster can never collide on name.
+#   - a host (den.aspects.<host>, e.g. a VM declaring its own Incus
+#     instance) into config.flake.terragruntStacks.hosts.<host>.<stack>,
+#     path-sourced like cluster stacks.
+# Nested under "network"/"k3s"/"hosts" (rather than a flat attrset keyed by
+# entity name) so entities of different kinds can never collide on name.
 #
 # `terragruntInputs` is a reserved (non-class) aspect key: each routerosDevice's
 # own self-aspect (modules/routerosDevices/*.nix) precomputes its per-stack
@@ -114,6 +117,22 @@ in
       })
     ];
 
+  den.policies.host-to-terragrunt =
+    { host, ... }:
+    [
+      (den.lib.policy.instantiate {
+        name = "${host.name}-terragrunt";
+        class = "terragrunt-stacks";
+        instantiate = { modules, ... }: instantiateStacks modules { inherit host hcl; };
+        intoAttr = [
+          "terragruntStacks"
+          "hosts"
+          host.name
+        ];
+      })
+    ];
+
   den.schema.routerosDevice.includes = [ den.policies.routeros-device-to-terragrunt ];
   den.schema.cluster.includes = [ den.policies.cluster-to-terragrunt ];
+  den.schema.host.includes = [ den.policies.host-to-terragrunt ];
 }

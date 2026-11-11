@@ -132,6 +132,13 @@ inputs = {
     }
   }
   dhcp_static_leases = {
+    CI = [
+      {
+        address = "10.0.30.10"
+        mac     = "52:54:00:30:00:01"
+        name    = "gha"
+      },
+    ]
     IotInternet = [
       {
         address = "10.0.51.31"

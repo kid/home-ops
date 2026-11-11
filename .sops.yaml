@@ -10,6 +10,19 @@ creation_rules:
       AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb 
       kid@fw13
     - ssh-ed25519 
+      AAAAC3NzaC1lZDI1NTE5AAAAINOgsxp2qyWdtmA6ZX2znNYlP2q3DoW8NKjyl6WiD8tt 
+      root@gha
+    - age1ayh45ykrv6ceyq3clt8l54npplf6c5yycsc68vn3gkpe2czxld4sdemxlz
+  path_regex: secrets/hosts/gha/.*
+- key_groups:
+  - age:
+    - ssh-ed25519 
+      AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo 
+      kid@vulkan
+    - ssh-ed25519 
+      AAAAC3NzaC1lZDI1NTE5AAAAIHIM3nsk3HxvEcplSqwynh9V2NzlYdI10mrR746SiJZb 
+      kid@fw13
+    - ssh-ed25519 
       AAAAC3NzaC1lZDI1NTE5AAAAIK3S+uuJso9YfKgOuu94Ll8SVo1r7YYRk3esornCl2M/ 
       root@k3s-prd-0
     - age14q38ykuylz090zv6vje9asr8v6s735f75vy2l858pd7qshynh35sdc6zcg
