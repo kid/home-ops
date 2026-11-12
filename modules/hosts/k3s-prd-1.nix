@@ -6,8 +6,10 @@
   den.hosts.x86_64-linux.k3s-prd-1 = {
     environment = "prd";
     system-access-groups = [ "admins" ];
-    k3s.clusterName = "prd";
-    k3s.serverHost = "k3s-prd-0";
+    settings.k3s = {
+      clusterName = "prd";
+      agent.serverHost = "k3s-prd-0";
+    };
   };
 
   den.devices.k3s-prd-1 = {
@@ -36,9 +38,9 @@
   den.aspects.k3s-prd-1.includes = [
     den.aspects.base
     den.aspects.incus-vm
-    den.aspects.k3s-agent
-    den.aspects.k3s-cilium
-    den.aspects.k3s-miroir-node
+    den.aspects.k3s.agent
+    den.aspects.k3s.cilium
+    den.aspects.k3s.miroir-node
   ];
 
   fleet.colmena.deployment.k3s-prd-1.targetHost = config.den.devices.k3s-prd-1.address;

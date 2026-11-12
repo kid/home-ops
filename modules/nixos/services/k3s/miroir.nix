@@ -9,7 +9,7 @@
 # a k3s node (only node1, through srvos's latest-zfs-kernel mixin).
 { config, lib, ... }:
 {
-  den.aspects.k3s-miroir-node = {
+  den.aspects.k3s.miroir-node = {
     miroir-nodes =
       { host, ... }:
       {

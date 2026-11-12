@@ -152,7 +152,7 @@ in
               };
 
               # containerd's datasets (local/containerd + its snapshotter
-              # child) are declared by den.aspects.k3s-containerd via the
+              # child) are declared by den.aspects.k3s.containerd via the
               # `datasets` quirk instead of here — see
               # zfs-datasets-collector.nix. That lets disko-zfs create them
               # post-install, without a reformat.

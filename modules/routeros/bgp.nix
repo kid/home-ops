@@ -7,7 +7,7 @@
 #     den.aspects.prd.bgp in modules/clusters/prd.nix, collected via
 #     modules/den/policies/pipes.nix's routeros-device-collect-bgp)
 #   - `k3s-nodes` quirk (per-host K3s-VLAN address, emitted by
-#     den.aspects.k3s-server.k3s-nodes in modules/nixos/services/
+#     den.aspects.k3s.server.k3s-nodes in modules/nixos/services/
 #     k3s/k3s.nix, collected via routeros-device-collect-k3s-nodes)
 # terragrunt-infra-catalog's ros-bgp module (generic RouterOS
 # routeros_routing_bgp_{instance,template,connection} resources keyed by a

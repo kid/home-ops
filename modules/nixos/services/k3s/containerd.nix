@@ -16,7 +16,7 @@
 #   conf_dir at the standard /etc/cni/net.d. Cilium's own DaemonSet installs
 #   its CNI binary into /opt/cni/bin and its conflist into /etc/cni/net.d at
 #   runtime, so only bin_dir needs overriding there. Hosts without
-#   k3s-cilium run k3s's own embedded flannel management instead, which
+#   k3s.cilium run k3s's own embedded flannel management instead, which
 #   writes its conflist and a self-contained bin dir (flannel plus the
 #   bridge/host-local/etc chain it delegates to) under k3s's own
 #   /var/lib/rancher paths, not the standard locations at all — both
@@ -33,7 +33,7 @@
 #   found"), which cascades into the kubelet never registering a node.
 { den, ... }:
 {
-  den.aspects.k3s-containerd = {
+  den.aspects.k3s.containerd = {
     # /var/lib/containerd is intentionally absent from persist.directories:
     # it's its own dataset (declared below via the `datasets` quirk, see
     # zfs-datasets-collector.nix), so it survives wipeRootOnBoot untouched
@@ -76,7 +76,7 @@
         ...
       }:
       let
-        hasCilium = host.hasAspect den.aspects.k3s-cilium;
+        hasCilium = host.hasAspect den.aspects.k3s.cilium;
         hasZfs = config.boot.zfs.enabled;
       in
       {
