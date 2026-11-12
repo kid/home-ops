@@ -3,7 +3,7 @@
   den.hosts.x86_64-linux.k3s-prd-0 = {
     environment = "prd";
     system-access-groups = [ "admins" ];
-    k3s.clusterName = "prd";
+    settings.k3s.clusterName = "prd";
   };
 
   den.devices.k3s-prd-0 = {
@@ -32,12 +32,12 @@
   den.aspects.k3s-prd-0.includes = [
     den.aspects.base
     den.aspects.incus-vm
-    den.aspects.k3s-server
-    den.aspects.k3s-token
-    den.aspects.k3s-cilium
-    den.aspects.k3s-bootstrap
-    den.aspects.k3s-external-secrets
-    den.aspects.k3s-miroir-node
+    den.aspects.k3s.server
+    den.aspects.k3s.token
+    den.aspects.k3s.cilium
+    den.aspects.k3s.bootstrap
+    den.aspects.k3s.external-secrets
+    den.aspects.k3s.miroir-node
     den.aspects.i915-sriov.guest
   ];
 

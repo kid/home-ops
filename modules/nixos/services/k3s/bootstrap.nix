@@ -3,7 +3,7 @@
 # Cilium's operator registers its own CRDs at runtime — not shipped in the chart.
 { self, den, ... }:
 {
-  den.aspects.k3s-bootstrap = {
+  den.aspects.k3s.bootstrap = {
     nixos =
       {
         host,
@@ -11,7 +11,7 @@
         ...
       }:
       let
-        clusterName = host.k3s.clusterName or "prd";
+        inherit (host.settings.k3s) clusterName;
         manifestPath =
           name:
           builtins.path {
@@ -28,7 +28,7 @@
           path = self + "/manifests/${clusterName}";
           name = "k3s-${clusterName}-all";
         };
-        hasCilium = host.hasAspect den.aspects.k3s-cilium;
+        hasCilium = host.hasAspect den.aspects.k3s.cilium;
         waitForApi = ''
           echo "Waiting for k3s API server..."
           until kubectl get nodes >/dev/null 2>&1; do
@@ -163,7 +163,7 @@
               ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" (
                 if !hasCilium then
                   ''
-                    echo "This host has no den.aspects.k3s-cilium — Cilium isn't its CNI, skipping bootstrap."
+                    echo "This host has no den.aspects.k3s.cilium — Cilium isn't its CNI, skipping bootstrap."
                   ''
                 else
                   ''

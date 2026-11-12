@@ -5,10 +5,12 @@
 {
   den.hosts.x86_64-linux.test-vm = {
     environment = "prd";
-    k3s.clusterName = "prd";
-    # Irrelevant under disko's testMode: vmWithDisko substitutes its own
-    # qcow2 images regardless of the configured device.
-    settings.disk.zfs.device = "/dev/vda";
+    settings = {
+      k3s.clusterName = "prd";
+      # Irrelevant under disko's testMode: vmWithDisko substitutes its own
+      # qcow2 images regardless of the configured device.
+      disk.zfs.device = "/dev/vda";
+    };
   };
 
   den.aspects.test-vm.nixos =
@@ -28,6 +30,6 @@
     den.aspects.base
     den.aspects.disk.zfs
     den.aspects.impermanence
-    den.aspects.k3s-server
+    den.aspects.k3s.server
   ];
 }

@@ -6,10 +6,10 @@
 # only the CA with that hash, and a rebuilt server has a new CA.
 { inputs, ... }:
 {
-  den.aspects.k3s-token.nixos =
+  den.aspects.k3s.token.nixos =
     { host, config, ... }:
     let
-      clusterName = host.k3s.clusterName or "prd";
+      inherit (host.settings.k3s) clusterName;
     in
     {
       imports = [ inputs.sops-nix.nixosModules.sops ];

@@ -12,6 +12,7 @@
 # - If Kanidm is down, use the admin kubeconfig on the node: /etc/rancher/k3s/k3s.yaml.
 {
   config,
+  den,
   lib,
   ...
 }:
@@ -20,14 +21,18 @@ let
 
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
-  # The first host of the cluster (host.k3s.clusterName), at its address on the cluster network.
+  # The first k3s node of the cluster, at its address on the cluster network.
   nodeAddress =
     name:
     let
       members =
         allHosts
         |> builtins.attrNames
-        |> builtins.filter (host: (allHosts.${host}.k3s.clusterName or null) == name);
+        |> builtins.filter (
+          host:
+          allHosts.${host}.hasAspect den.aspects.k3s.node-base
+          && allHosts.${host}.settings.k3s.clusterName == name
+        );
     in
     config.den.devices.${builtins.head members}.address;
 

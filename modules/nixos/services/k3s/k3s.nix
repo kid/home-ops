@@ -11,8 +11,8 @@
 #
 # A server that already has a datastore ignores both settings. CIDRs come
 # from the host's own cluster
-# (config.den.clusters.<name>, cross-referenced via the freeform
-# host.k3s.clusterName field), matching the cluster entity as the single
+# (config.den.clusters.<name>, named by its `settings.k3s.clusterName`,
+# see settings.nix), matching the cluster entity as the single
 # source of truth pattern already used throughout this repo's
 # network/device fleet. A cluster with methods.kubeLogin
 # (modules/kubernetes/apiserver/default.nix) gets its API server's Kanidm
@@ -35,9 +35,9 @@ let
 
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
-  # A cluster's servers: its member hosts that are not agents
-  # (k3s.serverHost) and have a real address. test-vm has none, so it is no
-  # one's peer and stays a standalone server.
+  # A cluster's servers: its k3s nodes that are not agents and have a real
+  # address. test-vm has none, so it is no one's peer and stays a
+  # standalone server.
   serversOf =
     clusterName:
     allHosts
@@ -45,16 +45,20 @@ let
     |> lib.sort lib.lessThan
     |> lib.filter (
       name:
-      (allHosts.${name}.k3s.clusterName or null) == clusterName
-      && !(allHosts.${name}.k3s ? serverHost)
+      let
+        host = allHosts.${name};
+      in
+      host.hasAspect den.aspects.k3s.node-base
+      && !(host.hasAspect den.aspects.k3s.agent)
+      && host.settings.k3s.clusterName == clusterName
       && config.den.devices ? ${name}
     );
 in
 {
-  den.aspects.k3s-server = {
+  den.aspects.k3s.server = {
     includes = [
-      den.aspects.k3s-containerd
-      den.aspects.k3s-node-base
+      den.aspects.k3s.containerd
+      den.aspects.k3s.node-base
     ];
 
     k3s-nodes =
@@ -82,7 +86,7 @@ in
         ...
       }:
       let
-        clusterName = host.k3s.clusterName or "prd";
+        inherit (host.settings.k3s) clusterName;
         cluster = clusters.${clusterName};
         podCIDR = cluster.networks.pods.cidr;
         serviceCIDR = cluster.networks.services.cidr;
@@ -109,7 +113,7 @@ in
           clusterInit = shouldInit;
           serverAddr = lib.mkIf (!shouldInit) "https://${config.den.devices.${joinServer}.address}:6443";
           # CNI-agnostic disables only — CNI-dependent flags live in the
-          # sibling den.aspects.k3s-cilium aspect instead. A plain list, not
+          # sibling den.aspects.k3s.cilium aspect instead. A plain list, not
           # a concatStringsSep string: extraFlags accepts `listOf str`, and
           # multiple aspects setting it concatenate automatically.
           extraFlags = [

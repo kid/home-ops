@@ -1,7 +1,7 @@
 # Kernel and tooling every k3s node needs, server or agent, the k3s
 # release and graceful node shutdown.
 _: {
-  den.aspects.k3s-node-base.nixos =
+  den.aspects.k3s.node-base.nixos =
     { pkgs, ... }:
     let
       # Seconds; the Incus host's own timeout for the VMs must exceed it.

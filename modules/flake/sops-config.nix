@@ -8,6 +8,7 @@
 # templating needed, unlike _render-lib.nix's HCL renderer.
 {
   config,
+  den,
   lib,
   self,
   ...
@@ -50,7 +51,7 @@ let
 
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
-  # A cluster's member hosts (host.k3s.clusterName == cluster) that have
+  # A cluster's k3s nodes (settings.k3s.clusterName == cluster) that have
   # their own committed key, in provisioned-host key order — sops-nix
   # (modules/nixos/services/k3s/external-secrets.nix) decrypts
   # cluster-scoped secrets (e.g. the 1Password service account token) on
@@ -64,7 +65,8 @@ let
     provisionedHosts
     |> builtins.filter (
       host:
-      (allHosts.${host}.k3s.clusterName or null) == cluster
+      allHosts.${host}.hasAspect den.aspects.k3s.node-base
+      && allHosts.${host}.settings.k3s.clusterName == cluster
       && builtins.pathExists (hostAgePubKeyPath host)
     )
     |> map (host: builtins.readFile (hostAgePubKeyPath host) |> lib.removeSuffix "\n");

@@ -57,10 +57,10 @@ let
         # Only a test node, not a nixosConfigurations output.
         intoAttr = [ ];
         environment = "prd";
-        k3s = {
+        settings.k3s = {
           clusterName = "test";
         }
-        // lib.optionalAttrs (lib.elem name agents) { serverHost = lib.head servers; };
+        // lib.optionalAttrs (lib.elem name agents) { agent.serverHost = lib.head servers; };
       });
 
       den.devices = lib.genAttrs names (name: {
@@ -75,9 +75,9 @@ let
 
       den.aspects = lib.genAttrs names (name: {
         includes = [
-          (if lib.elem name agents then den.aspects.k3s-agent else den.aspects.k3s-server)
-          den.aspects.k3s-token
-          den.aspects.k3s-cilium
+          (if lib.elem name agents then den.aspects.k3s.agent else den.aspects.k3s.server)
+          den.aspects.k3s.token
+          den.aspects.k3s.cilium
         ];
 
         nixos = {
