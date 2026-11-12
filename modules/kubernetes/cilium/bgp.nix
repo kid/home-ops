@@ -25,7 +25,6 @@ _: {
           holdTimeSeconds
           keepAliveTimeSeconds
           ;
-        stack = cluster.bgp.routerosStack;
       }
     ];
 

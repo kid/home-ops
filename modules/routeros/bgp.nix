@@ -3,7 +3,7 @@
 # cluster's VLAN (see modules/kubernetes/cilium/bgp.nix for the Cilium side).
 # Two decoupled producers feed this, same "many producers, one consumer"
 # pattern as ros-firewall.nix:
-#   - `bgp` quirk (cluster-level name/localAsn/peers/timers/stack, emitted by
+#   - `bgp` quirk (cluster-level name/localAsn/peers/timers, emitted by
 #     den.aspects.kubernetes.cilium-bgp.bgp in modules/kubernetes/cilium/
 #     bgp.nix, collected via modules/den/policies/pipes.nix's
 #     routeros-device-collect-bgp)
@@ -17,8 +17,7 @@
 # ASN) / bgp_router_id (this router's own IP) pair and ONE shared
 # bgp_remote_asn (Cilium's ASN) applied to every node connection, and names
 # every resource after cluster_name. So each cluster peering with this
-# device gets its own stack (den.clusters.<name>.bgp.routerosStack) with
-# only its own nodes.
+# device gets its own stack, bgp-<cluster>, with only its own nodes.
 { lib, ... }:
 let
   # RouterOS echoes duration values back in its own canonical form (e.g.
@@ -64,7 +63,7 @@ in
         nodesByCluster = k3s-nodes |> lib.filter (n: n.address != null) |> lib.groupBy (n: n.cluster);
 
         mkStack = frag: peer: {
-          inherit (frag) stack;
+          stack = "bgp-${frag.name}";
           moduleSource = "ros-bgp";
           moduleVersion = "2.0.0";
           inherit (device) dependsOn;

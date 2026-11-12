@@ -175,8 +175,6 @@ in
           asn = 64512;
         }
       ];
-      # Predates per-cluster stacks: its remote state is keyed by this path.
-      routerosStack = "bgp";
     };
 
     storage = {

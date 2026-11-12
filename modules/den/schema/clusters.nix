@@ -126,16 +126,6 @@
               description = "BGP keepalive time (seconds), applied identically on both BGP peers";
             };
 
-            # ros-bgp names every RouterOS object after the cluster and takes
-            # one remote ASN for all its nodes, so each cluster gets its own
-            # stack on each peer router (modules/routeros/bgp.nix).
-            bgp.routerosStack = lib.mkOption {
-              type = lib.types.str;
-              default = "bgp-${name}";
-              defaultText = "bgp-<name>";
-              description = "Stack name of this cluster's ros-bgp stack on each RouterOS peer, rendered to tf-stacks/<env>/network/<router>/<stack>. Its remote state is keyed by that path: renaming it on a live cluster needs a state move.";
-            };
-
             k3s.initServer = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
               default = null;
