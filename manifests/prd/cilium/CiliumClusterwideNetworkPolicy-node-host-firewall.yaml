@@ -47,8 +47,6 @@ spec:
               protocol: TCP
     - fromCIDR:
         - 10.0.40.40/32
-        - 10.0.40.41/32
-        - 10.0.40.42/32
       toPorts:
         - ports:
             - endPort: 2380

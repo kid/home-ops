@@ -14,7 +14,9 @@
 # (config.den.clusters.<name>, cross-referenced via the freeform
 # host.k3s.clusterName field), matching the cluster entity as the single
 # source of truth pattern already used throughout this repo's
-# network/device fleet.
+# network/device fleet. A cluster with methods.kubeLogin
+# (modules/kubernetes/apiserver/default.nix) gets its API server's Kanidm
+# login (kubectl through kubelogin).
 #
 # Emits the `k3s-nodes` quirk ({hostname; address;}), collected onto
 # rb5009 by modules/den/policies/pipes.nix's
@@ -85,6 +87,7 @@ in
         podCIDR = cluster.networks.pods.cidr;
         serviceCIDR = cluster.networks.services.cidr;
         nodeIp = (config.den.devices.${host.name} or { }).address or null;
+        login = cluster.methods.kubeLogin or null;
 
         servers = serversOf clusterName;
         peers = lib.optionals (lib.elem host.name servers) (lib.remove host.name servers);
@@ -128,7 +131,20 @@ in
             "--kube-scheduler-arg=bind-address=0.0.0.0"
             "--kube-controller-manager-arg=bind-address=0.0.0.0"
           ]
-          ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}";
+          ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}"
+          ++ lib.optionals (login != null) [
+            # Adds the load balancer name from kubernetes/apiserver/default.nix to the serving certificate.
+            "--tls-san=${login.server}"
+            "--kube-apiserver-arg=oidc-issuer-url=${login.issuerUrl}"
+            "--kube-apiserver-arg=oidc-client-id=${login.clientId}"
+            "--kube-apiserver-arg=oidc-groups-claim=groups"
+            # Without these the username is "<issuer>#<sub>", an opaque UUID. The prefix keeps OIDC
+            # names apart from built-in ones (system:*); RBAC binds the group, not the user.
+            "--kube-apiserver-arg=oidc-username-claim=preferred_username"
+            "--kube-apiserver-arg=oidc-username-prefix=oidc:"
+            # Kanidm signs ID tokens with ES256; kube-apiserver only accepts RS256 by default.
+            "--kube-apiserver-arg=oidc-signing-algs=ES256"
+          ];
         };
       };
   };
