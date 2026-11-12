@@ -105,7 +105,7 @@ let
             gpu_sriov_parent = "0000:00:02.0";
           };
           "k3s-${cluster.name}-1" = {
-            remote = "node1";
+            remote = "node0";
             nixos_attr = "k3s-${cluster.name}-1";
             cpu = 8;
             memory = "8GiB";
