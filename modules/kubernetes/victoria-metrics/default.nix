@@ -164,6 +164,14 @@ _: {
 
             victoria-metrics-operator = {
               admissionWebhooks.certManager.enabled = true;
+              # One replica, no leader election (lease renewals were most of
+              # etcd's writes): comes after the chart's own --leader-elect.
+              # Recreate keeps an update from running two at once.
+              extraArgs.leader-elect = "false";
+              strategy = {
+                type = "Recreate";
+                rollingUpdate = null;
+              };
               resources = {
                 requests = {
                   cpu = "10m";

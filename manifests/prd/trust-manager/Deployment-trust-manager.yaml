@@ -12,6 +12,8 @@ spec:
   selector:
     matchLabels:
       app: trust-manager
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -27,7 +29,7 @@ spec:
             - --metrics-port=9402
             - --readiness-probe-port=6060
             - --readiness-probe-path=/readyz
-            - --leader-elect=true
+            - --leader-elect=false
             - --leader-election-lease-duration=15s
             - --leader-election-renew-deadline=10s
             - --trust-namespace=cert-manager

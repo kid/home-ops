@@ -41,6 +41,9 @@ _: {
           values = {
             crds.enabled = true;
             app.metrics.service.servicemonitor.enabled = true;
+            # One replica, no leader election (lease renewals were most of
+            # etcd's writes); Recreate below keeps an update from running two.
+            app.leaderElection.enabled = false;
             defaultPackage.resources.requests = {
               cpu = "10m";
               memory = "32Mi";
@@ -54,6 +57,8 @@ _: {
             };
           };
         };
+
+        resources.deployments.trust-manager.spec.strategy.type = "Recreate";
       };
 
       # Separate from the controller: its webhook must serve before the Bundle is applied.

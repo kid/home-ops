@@ -50,6 +50,9 @@ _: {
           chart = charts.grafana.grafana-operator;
           values = {
             serviceMonitor.enabled = true;
+            # One replica, no leader election (lease renewals were most of
+            # etcd's writes); Recreate below keeps an update from running two.
+            leaderElect = false;
             resources = {
               requests = {
                 cpu = "10m";
@@ -59,6 +62,8 @@ _: {
             };
           };
         };
+
+        resources.deployments.grafana-operator.spec.strategy.type = "Recreate";
 
         # Selected by GrafanaDatasource/GrafanaDashboard CRs' instanceSelector.
         resources.grafanas.grafana.metadata.labels.dashboards = "grafana";

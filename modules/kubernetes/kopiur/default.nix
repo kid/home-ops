@@ -156,6 +156,9 @@ in
           chart = charts.home-operations.kopiur;
           values = {
             features.credentialProjection.enabled = true;
+            # One replica, no leader election (lease renewals were most of
+            # etcd's writes); Recreate below keeps an update from running two.
+            leaderElection.enabled = false;
 
             monitoring = {
               serviceMonitor.enabled = true;
@@ -188,6 +191,8 @@ in
             };
           };
         };
+
+        resources.deployments.kopiur-controller.spec.strategy.type = "Recreate";
       };
 
       # Separate from the controller: its webhook must serve before the repository is applied.

@@ -94,6 +94,10 @@ in
             crds.enabled = true;
             # cainjector fills in the caBundle certgen used to patch in.
             topologyInjector.annotations."cert-manager.io/inject-ca-from" = "${namespace}/envoy-gateway";
+            # One replica, no leader election (lease renewals were most of
+            # etcd's writes). Recreate keeps an update from running two at once.
+            config.envoyGateway.provider.kubernetes.leaderElection.disable = true;
+            deployment.envoyGateway.strategy.type = "Recreate";
             deployment.envoyGateway.resources.requests = {
               cpu = "10m";
               memory = "128Mi";

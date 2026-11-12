@@ -132,6 +132,14 @@ in
             "--kube-controller-manager-arg=bind-address=0.0.0.0"
           ]
           ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}"
+          # A cluster's only server runs the only copy of each: their lease
+          # renewals (every 2s each) were most of etcd's writes. A second
+          # declared server turns leader election back on.
+          ++ lib.optionals (servers == [ host.name ]) [
+            "--kube-controller-manager-arg=leader-elect=false"
+            "--kube-scheduler-arg=leader-elect=false"
+            "--kube-cloud-controller-manager-arg=leader-elect=false"
+          ]
           ++ lib.optionals (login != null) [
             # Adds the load balancer name from kubernetes/apiserver/default.nix to the serving certificate.
             "--tls-san=${login.server}"

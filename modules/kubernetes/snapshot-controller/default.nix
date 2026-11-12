@@ -19,6 +19,12 @@ _: {
           chart = charts.home-operations.snapshot-controller;
           values = {
             monitoring.serviceMonitor.enabled = true;
+            # One replica, no leader election (lease renewals were most of
+            # etcd's writes). The chart's maxSurge 0 already stops an update
+            # from running two. /healthz/leader-election only exists with it on.
+            controller.leaderElection.enabled = false;
+            livenessProbe.httpGet.path = "/metrics";
+            readinessProbe.httpGet.path = "/metrics";
             resources = {
               requests = {
                 cpu = "10m";
