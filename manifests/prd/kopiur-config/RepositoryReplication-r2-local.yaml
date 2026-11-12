@@ -1,0 +1,28 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: RepositoryReplication
+metadata:
+  name: r2-local
+  namespace: kopiur-system
+spec:
+  destination:
+    filesystem:
+      path: /repo
+      volume:
+        nfs:
+          path: /srv/clusters/prd/apps/kopiur
+          server: 10.0.20.10
+  mover:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 65534
+      runAsUser: 65534
+  schedule:
+    cron: 30 * * * *
+  sourceRef:
+    kind: ClusterRepository
+    name: r2
+  sync:
+    deleteExtra: true

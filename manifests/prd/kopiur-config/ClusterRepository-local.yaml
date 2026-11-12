@@ -1,0 +1,31 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: ClusterRepository
+metadata:
+  name: local
+spec:
+  allowedNamespaces:
+    all: true
+  backend:
+    filesystem:
+      path: /repo
+      volume:
+        nfs:
+          path: /srv/clusters/prd/apps/kopiur
+          server: 10.0.20.10
+  catalog:
+    retain:
+      perIdentity: 0
+  create:
+    enabled: false
+  credentialProjection:
+    allowed: true
+  encryption:
+    passwordSecretRef:
+      key: KOPIA_PASSWORD
+      name: kopiur-r2
+      namespace: kopiur-system
+  mode: ReadOnly
+  moverDefaults:
+    securityContext:
+      runAsGroup: 65534
+      runAsUser: 65534
