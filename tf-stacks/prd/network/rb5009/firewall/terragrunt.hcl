@@ -44,6 +44,11 @@ inputs = {
       name    = "K3s"
       vlan_id = 40
     }
+    K3sDev = {
+      address = "10.0.41.1"
+      name    = "K3sDev"
+      vlan_id = 41
+    }
     Management = {
       address = "10.99.0.1"
       name    = "Management"
@@ -188,6 +193,13 @@ inputs = {
         dst_address = "10.0.50.11"
         dst_port    = 554
         protocol    = "tcp"
+      },
+    ]
+    K3sDev = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
       },
     ]
     Management = [

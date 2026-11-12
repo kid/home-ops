@@ -70,6 +70,17 @@ inputs = {
         "10.0.40.1",
       ]
     }
+    K3sDev = {
+      cidr = "10.0.41.0/24"
+      dns_servers = [
+        "10.0.41.1",
+      ]
+      domain  = "k3s-dev.home.kidibox.net"
+      gateway = "10.0.41.1"
+      ntp_servers = [
+        "10.0.41.1",
+      ]
+    }
     Management = {
       cidr = "10.99.0.0/16"
       dns_servers = [
@@ -182,6 +193,13 @@ inputs = {
         name    = "k3s-prd-1"
       },
     ]
+    K3sDev = [
+      {
+        address = "10.0.41.11"
+        mac     = "d0:50:99:fe:51:b5"
+        name    = "node1"
+      },
+    ]
     Management = [
       {
         address = "10.99.0.10"
@@ -215,11 +233,6 @@ inputs = {
         mac     = "74:56:3c:69:1e:30"
         name    = "node0"
       },
-      {
-        address = "10.0.10.11"
-        mac     = "d0:50:99:fe:51:b5"
-        name    = "node1"
-      },
     ]
     Storage = [
       {
@@ -236,6 +249,11 @@ inputs = {
         address = "10.0.20.10"
         mac     = "74:56:3c:69:1e:30"
         name    = "node0"
+      },
+      {
+        address = "10.0.20.11"
+        mac     = "d0:50:99:fe:51:b5"
+        name    = "node1"
       },
     ]
     Trusted = [
@@ -279,6 +297,7 @@ inputs = {
         10,
         20,
         40,
+        41,
         50,
         51,
         99,
@@ -292,6 +311,7 @@ inputs = {
         10,
         20,
         40,
+        41,
         50,
         51,
         99,
@@ -327,6 +347,7 @@ inputs = {
         10,
         20,
         40,
+        41,
         50,
         51,
         99,
@@ -341,6 +362,7 @@ inputs = {
     IotInternet = "10.0.51.1/24"
     IotLocal    = "10.0.50.1/24"
     K3s         = "10.0.40.1/24"
+    K3sDev      = "10.0.41.1/24"
     Management  = "10.99.0.1/16"
     Servers     = "10.0.10.1/24"
     Storage     = "10.0.20.1/24"
@@ -383,6 +405,10 @@ inputs = {
     K3s = {
       name    = "K3s"
       vlan_id = 40
+    }
+    K3sDev = {
+      name    = "K3sDev"
+      vlan_id = 41
     }
     Management = {
       interface_lists = [

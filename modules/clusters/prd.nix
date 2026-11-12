@@ -36,14 +36,15 @@ let
     host: network:
     (lib.findFirst (i: i.network == network) null config.den.devices.${host}.interfaces).mac;
 
-  # Provisions the Incus VLANs + k3s VMs node0 and node1 run this cluster on.
+  # Provisions the k3s VMs node0 runs this cluster on.
   # Not owned by any single Kubernetes app, so it lives here rather than under
   # modules/kubernetes/ — a small local aspect object appended to includes
   # below, the same shape as nixidy-defaults.nix's nixidyDefaultsAspect.
-  # VLANs, MACs and addresses come from den.networks/den.devices; the
-  # physical NIC names and the VM sizing have no Nix source and stay literal.
-  # node0's bridges are its own (den.devices vmBridges, no parent here): its
-  # single NIC can't have a second VLAN 20 next to its Storage address.
+  # VLANs, MACs and addresses come from den.networks/den.devices; the VM
+  # sizing has no Nix source and stays literal.
+  # node0's bridges are its own (den.devices vmBridges, no parent here), so
+  # the stack creates no Incus network: its single NIC can't have a second
+  # VLAN 20 next to its Storage address.
   incusTerragruntAspect = {
     name = "prd/incus";
     "terragrunt-stacks" = { cluster, ... }: {
@@ -55,16 +56,11 @@ let
         ifExists = "overwrite_terragrunt";
         contents = ''
           provider "incus" {
-            default_remote = "node1"
+            default_remote = "node0"
 
             remote {
               name    = "node0"
               address = "https://${config.den.devices.node0.address}:8443"
-            }
-
-            remote {
-              name    = "node1"
-              address = "https://${config.den.devices.node1.address}:8443"
             }
 
             remote {
@@ -76,10 +72,7 @@ let
         '';
       };
       inputs = {
-        remotes = {
-          node0 = { };
-          node1.parent = "enp36s0f1";
-        };
+        remotes.node0 = { };
         networks.k3s = {
           name = "k3s-${cluster.name}";
           vlan_id = config.den.networks.K3s.vlanId;

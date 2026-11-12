@@ -30,8 +30,8 @@ in
     }
   ];
 
-  # The k3s VMs' bridges, named like node1's Incus networks: a VM moving here
-  # attaches to the same bridge names. The Storage address sits on storage-prd.
+  # The k3s VMs' bridges, named like the incus stack's networks
+  # (tf-catalog/modules/incus-k3s). The Storage address sits on storage-prd.
   den.devices.node0.vmBridges = {
     k3s-prd = "K3s";
     storage-prd = "Storage";
