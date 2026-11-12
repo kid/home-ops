@@ -56,7 +56,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixidy = {
-      url = "github:arnarg/nixidy/9b10af554a7b45a71ed100a71f6958a1ccb13c95";
+      url = "github:arnarg/nixidy/d70510faa14c040fdb5cd7de781b65cdb1ea3f6b";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
