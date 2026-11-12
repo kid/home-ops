@@ -3,6 +3,7 @@
 {
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
     {
+      cluster,
       firewall-ports ? [ ],
       k3s-nodes ? [ ],
       ...
@@ -95,7 +96,7 @@
       # On every node, not only control-plane ones: an agent turning server keeps
       # its Cilium, which loses the API (127.0.0.1:6443 is now its own, down
       # until etcd joins) before it can see the control-plane label.
-      etcdIngress = lib.optionals (servers != [ ]) [
+      etcdIngress = lib.optionals (cluster.k3s.datastore == "etcd" && servers != [ ]) [
         {
           fromEntities = [ "remote-node" ];
           toPorts = etcdPorts;

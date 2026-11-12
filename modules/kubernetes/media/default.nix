@@ -4,8 +4,6 @@
 # `applications.<name>`.
 { config, lib, ... }:
 let
-  inherit (config.den.clusters.prd) methods;
-
   # The nodes reach node0 on the Storage VLAN, not through the router.
   nfsServer =
     config.den.devices.node0.interfaces
@@ -13,6 +11,7 @@ let
     |> (i: i.address);
 
   mkMediaApp =
+    methods:
     {
       name,
       # The image's app: animarr is a second sonarr.
@@ -264,6 +263,6 @@ let
     };
 in
 {
-  den.clusters.prd.methods.mkMediaApp = mkMediaApp;
-  den.clusters.prd.methods.mediaNfsServer = nfsServer;
+  den.clusterMethods.mkMediaApp = cluster: mkMediaApp cluster.methods;
+  den.clusterMethods.mediaNfsServer = _: nfsServer;
 }

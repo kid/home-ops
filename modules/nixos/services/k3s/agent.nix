@@ -28,6 +28,7 @@ in
         hostname = host.name;
         inherit (devices.${host.name}) address;
         role = "agent";
+        cluster = host.settings.k3s.clusterName;
       };
 
     nixos =

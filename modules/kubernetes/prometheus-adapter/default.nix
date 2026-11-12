@@ -41,7 +41,7 @@ let
     };
 in
 {
-  den.clusters.prd.methods.mkNfsScaler = mkNfsScaler;
+  den.clusterMethods.mkNfsScaler = _: mkNfsScaler;
 
   den.aspects.kubernetes.prometheus-adapter.k8s-manifests =
     { charts, cluster, ... }:

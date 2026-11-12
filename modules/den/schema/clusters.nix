@@ -16,7 +16,7 @@
   options.den.clusters = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
-        { name, ... }:
+        { name, config, ... }:
         {
           options = {
             name = lib.mkOption {
@@ -129,7 +129,22 @@
             k3s.initServer = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
               default = null;
-              description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/nixos/services/k3s/k3s.nix)";
+              description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/nixos/services/k3s/k3s.nix). Only for datastore = \"etcd\".";
+            };
+
+            k3s.datastore = lib.mkOption {
+              type = lib.types.enum [
+                "etcd"
+                "sqlite"
+              ];
+              default = "etcd";
+              description = "k3s datastore. etcd: embedded etcd (clusterInit), so more servers can join. sqlite: k3s's default SQLite on its only server, with no etcd ports or etcd metrics; the cluster can never have a second server.";
+            };
+
+            terragrunt.enable = lib.mkOption {
+              type = lib.types.bool;
+              default = true;
+              description = "Render this cluster's own terragrunt stacks (tf-stacks/<env>/k3s/<stack>, modules/den/batteries/terragrunt). Off for a cluster that reuses another one's cloud resources and 1Password items: the stack paths have no cluster segment, so two clusters of one environment can't both render the same stack.";
             };
 
             egressGateways = lib.mkOption {
@@ -168,23 +183,15 @@
               };
             };
 
-            storage = lib.mkOption {
-              type = lib.types.attrsOf (
-                lib.types.submodule {
-                  options = {
-                    server = lib.mkOption {
-                      type = lib.types.nullOr lib.types.str;
-                      default = null;
-                    };
-                    share = lib.mkOption {
-                      type = lib.types.nullOr lib.types.str;
-                      default = null;
-                    };
-                  };
-                }
-              );
-              default = { };
-              description = "Storage backends available to this cluster";
+            storage = {
+              replicatedClass = lib.mkOption {
+                type = lib.types.str;
+                description = "StorageClass of every app volume (mkKopiurBackup claims, Kanidm, VMSingle, VLSingle)";
+              };
+              localClass = lib.mkOption {
+                type = lib.types.str;
+                description = "Node-local StorageClass for throwaway copies: kopiur's staged backup snapshots";
+              };
             };
 
             aspect = lib.mkOption {
@@ -194,16 +201,43 @@
               description = "Aspect that configures this cluster (its app-catalog includes)";
             };
 
+            # Keyed like den's own hasAspect (nix/lib/aspects/has-aspect.nix):
+            # a den.aspects reference and the resolved entry in an includes
+            # list are different values, so they are compared by aspect path.
+            includesAspect = lib.mkOption {
+              type = lib.types.functionTo lib.types.bool;
+              readOnly = true;
+              default =
+                let
+                  inherit (den.lib.aspects.fx.identity) aspectPath pathKey;
+                  key = ref: if ref ? name && ref ? meta then pathKey (aspectPath ref) else pathKey ref.__aspectChain;
+                in
+                ref: lib.elem (key ref) (map key (config.aspect.includes or [ ]));
+              defaultText = "aspect: whether den.aspects.<name>.includes lists it";
+              description = "Whether this cluster's own aspect includes the given aspect (e.g. den.aspects.kubernetes.apiserver) directly";
+            };
+
             methods = lib.mkOption {
               type = lib.types.attrsOf lib.types.raw;
               default = { };
-              description = "Named callables contributed by aspects this cluster includes";
+              description = "Named callables for this cluster's aspects: every den.clusterMethods entry applied to this cluster, plus any set here directly";
             };
           };
+
+          config.methods = lib.mapAttrs (_: mkMethod: mkMethod config) den.clusterMethods;
         }
       )
     );
     default = { };
     description = "Kubernetes cluster entity registry for den";
+  };
+
+  # Lets an aspect file give every cluster a method without naming clusters:
+  # setting den.clusters.<name>.methods from a file that reads den.clusters to
+  # find the names would recurse forever.
+  options.den.clusterMethods = lib.mkOption {
+    type = lib.types.lazyAttrsOf lib.types.raw;
+    default = { };
+    description = "Methods every cluster gets as den.clusters.<name>.methods.<method>: each is a function from the cluster (its den.clusters entry) to the method. They are lazy, so a cluster that doesn't include the providing aspect just never calls it.";
   };
 }

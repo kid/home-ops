@@ -5,11 +5,9 @@
 # application module, for that application's `imports`. The server shares the
 # host of the app it serves: Envoy merges its /mcp and metadata routes with
 # the app's own, where the longer path wins.
-{ config, lib, ... }:
+{ lib, ... }:
 let
-  inherit (config.den.clusters.prd.methods) kanidm;
   clientId = "mcp";
-  issuer = kanidm.issuer clientId;
   # Matches callbackPort in .mcp.json.
   callbackPort = 33418;
   scopes = [
@@ -43,8 +41,9 @@ let
   metadataFilter = name: rule: "${name}-metadata-${rule}";
 
   mkAuth =
-    servers:
+    kanidm: servers:
     let
+      issuer = kanidm.issuer clientId;
       perServer = f: lib.concatMapAttrs f servers;
     in
     {
@@ -154,12 +153,12 @@ let
     };
 in
 {
-  den.clusters.prd.methods.mcp = {
+  den.clusterMethods.mcp = cluster: {
     inherit
       clientId
       scopes
       callbackPort
-      mkAuth
       ;
+    mkAuth = mkAuth cluster.methods.kanidm;
   };
 }

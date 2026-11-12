@@ -15,7 +15,5 @@ in
 {
   den.quirks.nfs-exports.description = "zroot datasets node0 creates and exports over NFS, contributed by cluster-scoped Kubernetes app aspects";
 
-  # Listed per cluster, as den has no reverse "which clusters include me"
-  # lookup (see modules/kubernetes/kopiur/default.nix).
-  den.clusters.prd.methods.nfsExport = nfsExport "prd";
+  den.clusterMethods.nfsExport = cluster: nfsExport cluster.name;
 }

@@ -4,10 +4,10 @@
 #
 # The endpoints are explicit: otherwise Envoy Gateway fetches discovery on every
 # config recompute and serves a 500 when Kanidm is unreachable.
-{ config, ... }:
+_:
 let
-  inherit (config.den.clusters.prd.methods) kanidm;
   mkOidcAuth =
+    kanidm:
     {
       name,
       httpRouteName,
@@ -62,5 +62,5 @@ let
     };
 in
 {
-  den.clusters.prd.methods.mkOidcAuth = mkOidcAuth;
+  den.clusterMethods.mkOidcAuth = cluster: mkOidcAuth cluster.methods.kanidm;
 }

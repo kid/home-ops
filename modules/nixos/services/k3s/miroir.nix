@@ -19,6 +19,7 @@
           (config.den.devices.${host.name} or { interfaces = [ ]; }).interfaces
           |> lib.findFirst (i: i.network == "Storage") null
           |> (i: if i == null then null else i.address);
+        cluster = host.settings.k3s.clusterName;
       };
 
     nixos =

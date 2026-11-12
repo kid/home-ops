@@ -90,7 +90,7 @@ let
   };
 in
 {
-  den.clusters.prd.methods.netpol = netpol;
+  den.clusterMethods.netpol = _: netpol;
 
   den.aspects.kubernetes.cilium-network-policy.k8s-manifests =
     { generators, pkgs, ... }:

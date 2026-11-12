@@ -9,20 +9,22 @@
 # `*NamespaceSelector`s below); other aspects point them at
 # cluster.methods.kanidm.ref.
 { acl, config, ... }:
-let
-  domain = config.den.clusters.prd.methods.mkAppHostname "idm";
-  origin = "https://${domain}";
-in
 {
-  den.clusters.prd.methods.kanidm = {
-    inherit domain origin;
-    ref = {
-      name = "idm";
-      namespace = "kanidm";
+  den.clusterMethods.kanidm =
+    cluster:
+    let
+      domain = cluster.methods.mkAppHostname "idm";
+      origin = "https://${domain}";
+    in
+    {
+      inherit domain origin;
+      ref = {
+        name = "idm";
+        namespace = "kanidm";
+      };
+      # Kanidm gives each OAuth2 client its own issuer.
+      issuer = clientId: "${origin}/oauth2/openid/${clientId}";
     };
-    # Kanidm gives each OAuth2 client its own issuer.
-    issuer = clientId: "${origin}/oauth2/openid/${clientId}";
-  };
 
   den.aspects.kubernetes.kanidm.k8s-manifests =
     {
@@ -33,7 +35,7 @@ in
       ...
     }:
     let
-      inherit (cluster.methods.kanidm) ref;
+      inherit (cluster.methods.kanidm) ref domain origin;
       inherit (ref) namespace;
       # The image's own kanidm user. The kopiur mover reads the volume as this same uid.
       appId = 389;
@@ -227,7 +229,7 @@ in
                 ];
 
                 storage.volumeClaimTemplate.spec = {
-                  storageClassName = "miroir-replicated";
+                  storageClassName = cluster.storage.replicatedClass;
                   accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "1Gi";
                   dataSourceRef = {

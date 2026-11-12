@@ -177,6 +177,11 @@ in
       ];
     };
 
+    storage = {
+      replicatedClass = "miroir-replicated";
+      localClass = "miroir";
+    };
+
     nixidy = {
       repository = "https://github.com/kid/home-ops.git";
       branch = "main";
@@ -232,26 +237,6 @@ in
       media.unpackerr
     ])
     ++ [ incusTerragruntAspect ];
-
-  # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
-  # quirks/bgp.nix), collected onto rb5009 by modules/den/policies/
-  # pipes.nix's routeros-device-collect-bgp and consumed by
-  # modules/routeros/bgp.nix. Parallels den.aspects.prd.firewall
-  # just below: a cluster contributes a small data fragment, the RouterOS
-  # side merges fragments from however many clusters/networks apply.
-  den.aspects.prd.bgp =
-    { cluster, ... }:
-    [
-      {
-        inherit (cluster) name;
-        inherit (cluster.bgp)
-          localAsn
-          peers
-          holdTimeSeconds
-          keepAliveTimeSeconds
-          ;
-      }
-    ];
 
   # Rules with no single-app owner: mikrotik-exporter isn't its own aspect here, and the LB CIDR rule is cluster-wide.
   den.aspects.prd.firewall = { cluster, ... }: [
