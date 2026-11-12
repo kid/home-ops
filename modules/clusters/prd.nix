@@ -148,7 +148,10 @@ in
 
   den.clusters.prd = {
     environment = "prd";
-    system-access-groups = [ "admins" ];
+    system-access-groups = [
+      "admins"
+      "home"
+    ];
     network = "K3s";
     domain = "kidibox.net";
 

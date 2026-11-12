@@ -179,7 +179,7 @@ in
           (cluster.methods.mkOidcAuth {
             inherit name hostname;
             httpRouteName = name;
-            group = "admins";
+            group = "home";
           })
         ];
 
