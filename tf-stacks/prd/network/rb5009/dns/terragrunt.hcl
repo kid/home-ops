@@ -31,12 +31,6 @@ inputs = {
     "k3s-prd-1.storage.home.kidibox.net" = {
       address = "10.0.20.41"
     }
-    "k3s-prd-2.k3s.home.kidibox.net" = {
-      address = "10.0.40.42"
-    }
-    "k3s-prd-2.storage.home.kidibox.net" = {
-      address = "10.0.20.42"
-    }
     "node0.srv.home.kidibox.net" = {
       address = "10.0.10.10"
     }
