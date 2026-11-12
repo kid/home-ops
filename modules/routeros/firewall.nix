@@ -23,13 +23,17 @@
 
         byNetwork = lib.groupBy (f: f.network) firewall;
 
+        # lib.unique: clusters sharing a network emit identical rules (e.g.
+        # cilium/bgp.nix's BGP input rule); one copy is enough.
         mergeDir =
           dir: manual:
           let
             names = lib.unique (builtins.attrNames manual ++ builtins.attrNames byNetwork);
           in
           lib.genAttrs names (
-            name: (lib.concatMap (f: f.${dir} or [ ]) (byNetwork.${name} or [ ])) ++ (manual.${name} or [ ])
+            name:
+            lib.unique (lib.concatMap (f: f.${dir} or [ ]) (byNetwork.${name} or [ ]))
+            ++ (manual.${name} or [ ])
           )
           |> lib.filterAttrs (_: rules: rules != [ ]);
       in

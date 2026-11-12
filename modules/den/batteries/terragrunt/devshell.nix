@@ -104,10 +104,11 @@ let
       inputs = ${toValue leaf.inputs}
     '';
 
-  allLeaves = lib.flatten [
+  leaves = lib.flatten [
     (lib.mapAttrsToList (
       routerosDeviceName: stacks:
       lib.mapAttrsToList (stack: leaf: {
+        owner = "RouterOS device ${routerosDeviceName}";
         path = leafRelPath "network" routerosDeviceName stack;
         content = renderLeaf stack leaf;
       }) stacks
@@ -115,11 +116,29 @@ let
     (lib.mapAttrsToList (
       clusterName: stacks:
       lib.mapAttrsToList (stack: leaf: {
+        owner = "cluster ${clusterName}";
         path = leafRelPath "k3s" clusterName stack;
         content = renderLeaf stack leaf;
       }) stacks
     ) (config.flake.terragruntStacks.k3s or { }))
   ];
+
+  # Cluster stacks render to tf-stacks/<env>/k3s/<stack>, with no cluster
+  # segment: two clusters of one environment rendering the same stack would
+  # overwrite each other's file and share its remote state.
+  collisions =
+    leaves
+    |> lib.groupBy (leaf: leaf.path)
+    |> lib.filterAttrs (_: group: builtins.length group > 1)
+    |> lib.mapAttrsToList (
+      path: group: "${path} (${group |> map (leaf: leaf.owner) |> lib.concatStringsSep ", "})"
+    );
+
+  allLeaves =
+    if collisions == [ ] then
+      leaves
+    else
+      throw "terragrunt stacks rendered more than once: ${lib.concatStringsSep "; " collisions}. Set den.clusters.<name>.terragrunt.enable = false on all but one of those clusters.";
 in
 {
   perSystem =

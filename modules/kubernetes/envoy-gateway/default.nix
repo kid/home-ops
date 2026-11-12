@@ -2,12 +2,8 @@
 # Cilium's own, see cilium/default.nix's envoy.enabled = false) and the
 # shared "apps" Gateway cluster.domain apps attach HTTPRoutes to — one
 # aspect, since neither is useful without the other in this repo.
-{ config, ... }:
-let
-  mkAppHostname = clusterName: appName: "${appName}.${config.den.clusters.${clusterName}.domain}";
-in
-{
-  den.clusters.prd.methods.mkAppHostname = mkAppHostname "prd";
+_: {
+  den.clusterMethods.mkAppHostname = cluster: appName: "${appName}.${cluster.domain}";
 
   den.aspects.kubernetes.envoy-gateway.k8s-manifests =
     {

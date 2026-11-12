@@ -45,25 +45,44 @@ let
   # pass, not this isolated per-stack one — evaluating it here recurses
   # forever). Real per-aspect content always carries a `key` (confirmed
   # empirically); skip anything without one.
+  #
+  # A content returns one stack as `{ stack = <name>; ... }`, or several as
+  # `{ stacks = [ { stack = <name>; ... } ]; }` (modules/routeros/bgp.nix:
+  # one per cluster). Two stacks of one entity with the same name fail
+  # evaluation instead of one silently replacing the other.
   instantiateStacks =
-    modules: specialArgs:
-    modules
-    |> builtins.filter (m: m ? key)
-    |> map (
-      m:
-      let
-        evaluated = lib.evalModules {
-          modules = [
-            (builtins.head m.imports)
-            { _module.freeformType = lib.types.attrsOf lib.types.raw; }
-          ];
-          inherit specialArgs;
-        };
-        content = evaluated.config;
-      in
-      lib.nameValuePair content.stack (removeAttrs content [ "stack" ])
-    )
-    |> lib.listToAttrs;
+    owner: modules: specialArgs:
+    let
+      stacks =
+        modules
+        |> builtins.filter (m: m ? key)
+        |> lib.concatMap (
+          m:
+          let
+            evaluated = lib.evalModules {
+              modules = [
+                (builtins.head m.imports)
+                { _module.freeformType = lib.types.attrsOf lib.types.raw; }
+              ];
+              inherit specialArgs;
+            };
+            content = evaluated.config;
+          in
+          map (leaf: lib.nameValuePair leaf.stack (removeAttrs leaf [ "stack" ])) (
+            content.stacks or [ content ]
+          )
+        );
+      duplicates =
+        stacks
+        |> map (s: s.name)
+        |> lib.groupBy (n: n)
+        |> lib.filterAttrs (_: ns: builtins.length ns > 1)
+        |> builtins.attrNames;
+    in
+    if duplicates != [ ] then
+      throw "terragrunt-stacks: ${owner} has more than one stack named ${lib.concatStringsSep ", " duplicates}"
+    else
+      lib.listToAttrs stacks;
 in
 {
   den.reservedKeys = [ "terragruntInputs" ];
@@ -90,7 +109,11 @@ in
       (den.lib.policy.instantiate {
         name = "${routerosDevice.name}-terragrunt";
         class = "terragrunt-stacks";
-        instantiate = { modules, ... }: instantiateStacks modules { inherit routerosDevice firewall; };
+        instantiate =
+          { modules, ... }:
+          instantiateStacks "RouterOS device ${routerosDevice.name}" modules {
+            inherit routerosDevice firewall;
+          };
         intoAttr = [
           "terragruntStacks"
           "network"
@@ -99,13 +122,15 @@ in
       })
     ];
 
+  # A cluster with terragrunt.enable = false renders no stacks of its own.
   den.policies.cluster-to-terragrunt =
     { cluster, ... }:
-    [
+    lib.optionals cluster.terragrunt.enable [
       (den.lib.policy.instantiate {
         name = "${cluster.name}-terragrunt";
         class = "terragrunt-stacks";
-        instantiate = { modules, ... }: instantiateStacks modules { inherit cluster hcl; };
+        instantiate =
+          { modules, ... }: instantiateStacks "cluster ${cluster.name}" modules { inherit cluster hcl; };
         intoAttr = [
           "terragruntStacks"
           "k3s"

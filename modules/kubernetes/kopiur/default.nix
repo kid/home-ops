@@ -8,8 +8,10 @@ let
   # existingClaim backs up a PVC something else creates (e.g. a StatefulSet
   # volumeClaimTemplate) instead: no PVC here, and that claim must carry the
   # dataSourceRef to Restore `name` itself. ignore lists paths the app can
-  # rebuild (caches, logs), kept out of the snapshots.
+  # rebuild (caches, logs), kept out of the snapshots. The claim and staging
+  # classes are the cluster's den.clusters.<name>.storage ones.
   mkKopiurBackup =
+    cluster:
     {
       name,
       uid ? 1000,
@@ -19,7 +21,7 @@ let
     }:
     lib.optionalAttrs (existingClaim == null) {
       persistentVolumeClaims.${name}.spec = {
-        storageClassName = "miroir-replicated";
+        storageClassName = cluster.storage.replicatedClass;
         accessModes = [ "ReadWriteOncePod" ];
         resources.requests.storage = storage;
         dataSourceRef = {
@@ -36,9 +38,9 @@ let
           name = "r2";
         };
         credentialProjection.enabled = true;
-        # The staged copy is read once and dropped: one copy-on-write leg of
-        # the snapshot, without a DRBD layer.
-        staging.storageClassName = "miroir";
+        # The staged copy is read once and dropped: on prd, one copy-on-write
+        # leg of the snapshot, without a DRBD layer.
+        staging.storageClassName = cluster.storage.localClass;
         mover = {
           securityContext = {
             runAsUser = uid;
@@ -84,11 +86,7 @@ let
     };
 in
 {
-  # Every cluster that includes this aspect needs the method — den has no
-  # reverse "which clusters include me" lookup, and reading config.den.clusters
-  # here to generalize it would self-reference (infinite recursion), so list
-  # clusters explicitly.
-  den.clusters.prd.methods.mkKopiurBackup = mkKopiurBackup;
+  den.clusterMethods.mkKopiurBackup = mkKopiurBackup;
 
   den.aspects.kubernetes.kopiur.k8s-manifests =
     {

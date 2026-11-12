@@ -1,4 +1,7 @@
-# k3s server aspect. Which server starts embedded etcd (clusterInit):
+# k3s server aspect. den.clusters.<name>.k3s.datastore = "sqlite": the
+# cluster's only server runs on k3s's default SQLite datastore (no
+# clusterInit, no etcd flags), and a second server is an evaluation error.
+# Otherwise, which server starts embedded etcd (clusterInit):
 #
 # - den.clusters.<name>.k3s.initServer set: that server, and every other one
 #   joins it. All servers can be declared and started together, so the
@@ -14,11 +17,11 @@
 # (config.den.clusters.<name>, named by its `settings.k3s.clusterName`,
 # see settings.nix), matching the cluster entity as the single
 # source of truth pattern already used throughout this repo's
-# network/device fleet. A cluster with methods.kubeLogin
-# (modules/kubernetes/apiserver/default.nix) gets its API server's Kanidm
-# login (kubectl through kubelogin).
+# network/device fleet. A cluster that includes den.aspects.kubernetes.apiserver
+# gets its API server's Kanidm login (kubectl through kubelogin), from its
+# methods.kubeLogin.
 #
-# Emits the `k3s-nodes` quirk ({hostname; address;}), collected onto
+# Emits the `k3s-nodes` quirk ({hostname; address; role; cluster;}), collected onto
 # rb5009 by modules/den/policies/pipes.nix's
 # routeros-device-collect-k3s-nodes (consumed by modules/routeros/
 # ros-bgp.nix, to build its per-node BGP connections) — `address` is this
@@ -71,6 +74,7 @@ in
         # out rather than feeding a bogus peer IP to RouterOS.
         address = (config.den.devices.${host.name} or { }).address or null;
         role = "server";
+        cluster = host.settings.k3s.clusterName;
       };
 
     persist.directories = [
@@ -91,12 +95,14 @@ in
         podCIDR = cluster.networks.pods.cidr;
         serviceCIDR = cluster.networks.services.cidr;
         nodeIp = (config.den.devices.${host.name} or { }).address or null;
-        login = cluster.methods.kubeLogin or null;
+        login =
+          if cluster.includesAspect den.aspects.kubernetes.apiserver then cluster.methods.kubeLogin else null;
+        etcd = cluster.k3s.datastore == "etcd";
 
         servers = serversOf clusterName;
         peers = lib.optionals (lib.elem host.name servers) (lib.remove host.name servers);
         initServer = if lib.elem cluster.k3s.initServer peers then cluster.k3s.initServer else null;
-        shouldInit = peers == [ ] || cluster.k3s.initServer == host.name;
+        shouldInit = etcd && (peers == [ ] || cluster.k3s.initServer == host.name);
         joinServer = if initServer != null then initServer else lib.head peers;
       in
       {
@@ -105,13 +111,19 @@ in
             assertion = cluster.k3s.initServer == null || lib.elem cluster.k3s.initServer servers;
             message = "den.clusters.${clusterName}.k3s.initServer (${toString cluster.k3s.initServer}) is not one of the cluster's servers: ${lib.concatStringsSep ", " servers}";
           }
+          {
+            assertion = etcd || (servers == [ host.name ] && cluster.k3s.initServer == null);
+            message = "den.clusters.${clusterName}.k3s.datastore is sqlite, which allows exactly one server and no initServer; servers: ${lib.concatStringsSep ", " servers}";
+          }
         ];
 
         services.k3s = {
           enable = true;
           role = "server";
           clusterInit = shouldInit;
-          serverAddr = lib.mkIf (!shouldInit) "https://${config.den.devices.${joinServer}.address}:6443";
+          serverAddr =
+            lib.mkIf (etcd && !shouldInit)
+              "https://${config.den.devices.${joinServer}.address}:6443";
           # CNI-agnostic disables only — CNI-dependent flags live in the
           # sibling den.aspects.k3s.cilium aspect instead. A plain list, not
           # a concatStringsSep string: extraFlags accepts `listOf str`, and
@@ -131,7 +143,9 @@ in
             # back, losing per-container metrics. The kubelet normalizes
             # the bare path for CRI itself.
             "--container-runtime-endpoint=/run/containerd/containerd.sock"
-            "--etcd-expose-metrics"
+          ]
+          ++ lib.optional etcd "--etcd-expose-metrics"
+          ++ [
             "--kube-scheduler-arg=bind-address=0.0.0.0"
             "--kube-controller-manager-arg=bind-address=0.0.0.0"
           ]

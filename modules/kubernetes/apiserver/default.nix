@@ -6,9 +6,8 @@
 # stops also stops its kubelet and probes: it drops out once the node controller marks it NotReady.
 # external-dns names it through the Service annotation. The kubernetes Service itself can't be a
 # LoadBalancer: the API server reconciles it back. The login side is modules/nixos/services/k3s/oidc.nix.
-{ config, ... }:
+_:
 let
-  inherit (config.den.clusters.prd) methods;
   clientId = "kube_login";
   name = "kube-api";
   labels."app.kubernetes.io/name" = name;
@@ -17,12 +16,15 @@ let
 in
 {
   # Shared by the Kanidm client below, the k3s API server flags and modules/flake/kube-login.nix.
-  den.clusters.prd.methods.kubeLogin = {
-    inherit clientId;
-    group = "admins";
-    issuerUrl = methods.kanidm.issuer clientId;
-    server = methods.mkAppHostname "kube";
-  };
+  # Every cluster has it: the last two check cluster.includesAspect for this aspect first.
+  den.clusterMethods.kubeLogin =
+    { methods, ... }:
+    {
+      inherit clientId;
+      group = "admins";
+      issuerUrl = methods.kanidm.issuer clientId;
+      server = methods.mkAppHostname "kube";
+    };
 
   den.aspects.kubernetes.apiserver.k8s-manifests =
     { cluster, ... }:

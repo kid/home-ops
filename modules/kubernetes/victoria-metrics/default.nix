@@ -1,35 +1,38 @@
-_: {
+{ lib, ... }:
+{
   # Host ports vmagent scrapes: node-exporter on every node, and the
   # control-plane components of the static scrapes below.
-  den.aspects.kubernetes.victoria-metrics.firewall-ports = _: [
-    {
-      port = 9100;
-      protocol = "TCP";
-      description = "node-exporter";
-      from = [ "cluster" ];
-    }
-    {
-      port = 10259;
-      protocol = "TCP";
-      description = "kube-scheduler metrics";
-      from = [ "cluster" ];
-      controlPlane = true;
-    }
-    {
-      port = 10257;
-      protocol = "TCP";
-      description = "kube-controller-manager metrics";
-      from = [ "cluster" ];
-      controlPlane = true;
-    }
-    {
+  den.aspects.kubernetes.victoria-metrics.firewall-ports =
+    { cluster, ... }:
+    [
+      {
+        port = 9100;
+        protocol = "TCP";
+        description = "node-exporter";
+        from = [ "cluster" ];
+      }
+      {
+        port = 10259;
+        protocol = "TCP";
+        description = "kube-scheduler metrics";
+        from = [ "cluster" ];
+        controlPlane = true;
+      }
+      {
+        port = 10257;
+        protocol = "TCP";
+        description = "kube-controller-manager metrics";
+        from = [ "cluster" ];
+        controlPlane = true;
+      }
+    ]
+    ++ lib.optional (cluster.k3s.datastore == "etcd") {
       port = 2381;
       protocol = "TCP";
       description = "etcd metrics";
       from = [ "cluster" ];
       controlPlane = true;
-    }
-  ];
+    };
 
   den.aspects.kubernetes.victoria-metrics.k8s-manifests =
     {
@@ -281,7 +284,7 @@ _: {
                 retentionPeriod = "30d";
                 # 15 days of data filled 5Gi and put the storage in read-only mode.
                 storage = {
-                  storageClassName = "miroir-replicated";
+                  storageClassName = cluster.storage.replicatedClass;
                   accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "10Gi";
                 };
@@ -315,7 +318,7 @@ _: {
               spec = {
                 retentionPeriod = "30d";
                 storage = {
-                  storageClassName = "miroir-replicated";
+                  storageClassName = cluster.storage.replicatedClass;
                   accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "5Gi";
                 };
@@ -401,12 +404,12 @@ _: {
             port = 10257;
             keep = "workqueue|node_collector|garbagecollector|pv_collector|[a-z_]+_controller|root_ca_cert_publisher";
           })
-          # --etcd-expose-metrics serves plain HTTP on 2381; 2379 wants a client cert.
-          {
-            targets = map (address: "${address}:2381") k3sNodeAddresses;
-            labels.job = "kube-etcd";
-          }
-        ];
+        ]
+        # --etcd-expose-metrics serves plain HTTP on 2381; 2379 wants a client cert.
+        ++ lib.optional (cluster.k3s.datastore == "etcd") {
+          targets = map (address: "${address}:2381") k3sNodeAddresses;
+          labels.job = "kube-etcd";
+        };
 
         # The sync job, a post-install/upgrade Helm hook rendered as a plain
         # Job, creates the chart's dashboards and rules from this ConfigMap.

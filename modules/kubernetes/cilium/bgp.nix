@@ -10,7 +10,28 @@
 # value and modules/routeros/bgp.nix (the RouterOS side of this
 # same peering) for BGP sessions to actually come up.
 _: {
+  # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
+  # quirks/bgp.nix), collected onto every RouterOS device by modules/den/
+  # policies/pipes.nix's routeros-device-collect-bgp and consumed by
+  # modules/routeros/bgp.nix, which renders one stack per cluster.
+  den.aspects.kubernetes.cilium-bgp.bgp =
+    { cluster, ... }:
+    [
+      {
+        inherit (cluster) name;
+        inherit (cluster.bgp)
+          localAsn
+          peers
+          holdTimeSeconds
+          keepAliveTimeSeconds
+          ;
+        stack = cluster.bgp.routerosStack;
+      }
+    ];
+
   # RouterOS access this BGP peering needs — see modules/den/quirks/firewall.nix.
+  # Clusters sharing a network emit the same rule; modules/routeros/firewall.nix
+  # keeps one.
   den.aspects.kubernetes.cilium-bgp.firewall = { cluster, ... }: [
     {
       inherit (cluster) network;
