@@ -1,4 +1,4 @@
-# RouterOS firewall-rule fragments, contributed by any network/cluster/etc.
+# RouterOS firewall-rule fragments, contributed by any network/cluster/host
 # aspect and collected onto every RouterOS device (modules/den/policies/pipes.nix's
 # routeros-device-collect-firewall). Fragment shape: { network; input ? [ ]; forward
 # ? [ ]; } — the `network` field names the den.networks entry the fragment

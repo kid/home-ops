@@ -39,6 +39,7 @@ _: {
       config,
       lib,
       k3s-nodes ? [ ],
+      node-exporter-targets ? [ ],
       ...
     }:
     let
@@ -134,7 +135,15 @@ _: {
                 (fqdnEgress [ "raw.githubusercontent.com" ] [ 443 ])
               ];
             };
-            vmagent = mkPolicy (app "vmagent") { egress = [ clusterEgress ]; };
+            vmagent = mkPolicy (app "vmagent") {
+              egress = [
+                clusterEgress
+              ]
+              ++ map (t: {
+                toCIDR = [ "${t.address}/32" ];
+                toPorts = tcp [ t.port ];
+              }) node-exporter-targets;
+            };
             vlagent = mkPolicy (app "vlagent") { egress = [ apiserverEgress ]; };
             # Queried by the MCP servers (mcp.nix).
             vmsingle = mkPolicy (app "vmsingle") {
@@ -397,6 +406,15 @@ _: {
           {
             targets = map (address: "${address}:2381") k3sNodeAddresses;
             labels.job = "kube-etcd";
+          }
+        ];
+
+        # Same job as the chart's DaemonSet targets, so its node rules,
+        # alerts and dashboards cover these hosts too.
+        resources.vmStaticScrapes.hosts.spec.targetEndpoints = [
+          {
+            targets = map (t: "${t.address}:${toString t.port}") node-exporter-targets;
+            labels.job = "node-exporter";
           }
         ];
 

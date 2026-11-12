@@ -5,7 +5,7 @@ let
 in
 {
   # Collects the `firewall` quirk (den.quirks.firewall — rule fragments
-  # emitted by network/cluster/etc. aspects, see modules/den/quirks/
+  # emitted by network/cluster/host aspects, see modules/den/quirks/
   # firewall.nix) onto every RouterOS device, exposed as the `firewall` list
   # arg to any terragrunt-stacks module that names it (currently only
   # modules/routeros/firewall.nix, on rb5009).
@@ -21,6 +21,7 @@ in
       # again.
       (pipe.collectAll ({ network, ... }: network != null))
       (pipe.collectAll ({ cluster, ... }: cluster != null))
+      (pipe.collectAll ({ host, ... }: host != null))
     ])
   ];
 
@@ -62,6 +63,13 @@ in
     (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
 
+  # Collects the `node-exporter-targets` quirk (emitted per host by
+  # modules/nixos/services/node-exporter.nix) onto the cluster entity, for
+  # modules/kubernetes/victoria-metrics/default.nix's scrape and firewall rules.
+  den.policies.cluster-collect-node-exporter-targets = _: [
+    (pipe.from "node-exporter-targets" [ (pipe.collectAll ({ host, ... }: host != null)) ])
+  ];
+
   # Collects the `nfs-exports` quirk (modules/den/quirks/nfs-exports.nix,
   # emitted by cluster-scoped app aspects) onto every host, exposed as the
   # `nfs-exports` list arg to NixOS content; only node0 reads it. `cluster` is the
@@ -75,5 +83,6 @@ in
   den.schema.cluster.includes = [
     den.policies.cluster-collect-miroir-nodes
     den.policies.cluster-collect-k3s-nodes
+    den.policies.cluster-collect-node-exporter-targets
   ];
 }

@@ -1,0 +1,12 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMStaticScrape
+metadata:
+  name: hosts
+  namespace: monitoring
+spec:
+  targetEndpoints:
+    - labels:
+        job: node-exporter
+      targets:
+        - 10.0.10.10:9100
+        - 10.0.10.11:9100

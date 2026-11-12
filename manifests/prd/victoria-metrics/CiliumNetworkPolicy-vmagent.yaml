@@ -7,6 +7,18 @@ spec:
   egress:
     - toEntities:
         - cluster
+    - toCIDR:
+        - 10.0.10.10/32
+      toPorts:
+        - ports:
+            - port: "9100"
+              protocol: TCP
+    - toCIDR:
+        - 10.0.10.11/32
+      toPorts:
+        - ports:
+            - port: "9100"
+              protocol: TCP
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: vmagent

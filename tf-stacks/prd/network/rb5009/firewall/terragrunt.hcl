@@ -213,6 +213,20 @@ inputs = {
         dst_port    = 554
         protocol    = "tcp"
       },
+      {
+        action      = "accept"
+        comment     = "Allow access to node0 from K3s for node-exporter"
+        dst_address = "10.0.10.10"
+        dst_port    = 9100
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow access to node1 from K3s for node-exporter"
+        dst_address = "10.0.10.11"
+        dst_port    = 9100
+        protocol    = "tcp"
+      },
     ]
     Management = [
       {
