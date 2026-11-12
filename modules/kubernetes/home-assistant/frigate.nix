@@ -102,7 +102,45 @@ let
           ];
         }) cameras)
         {
-          doorbell.objects.track = [ "person" ];
+          doorbell = {
+            objects.track = [
+              "person"
+              "car"
+            ];
+            # Relative coordinates. A car is in `lane` (the track behind the
+            # carport, not the parked cars' bays) only after stopping there
+            # for loitering_time, so passing cars stay detections and a car
+            # that stops is an alert. `everywhere` keeps person alerts
+            # frame-wide, since required_zones applies to every alert label.
+            # `delivery` covers the mailbox and the carport opening where
+            # parcels are left.
+            zones = {
+              everywhere = {
+                coordinates = "0,0,1,0,1,1,0,1";
+                objects = [ "person" ];
+              };
+              lane = {
+                coordinates = "0.25,0.42,0.88,0.42,0.88,0.8,0.25,0.8";
+                objects = [ "car" ];
+                loitering_time = 10;
+              };
+              delivery = {
+                coordinates = "0.06,0.48,0.37,0.48,0.37,0.76,0.06,0.76";
+                objects = [ "person" ];
+                loitering_time = 3;
+              };
+            };
+            review.alerts = {
+              labels = [
+                "person"
+                "car"
+              ];
+              required_zones = [
+                "everywhere"
+                "lane"
+              ];
+            };
+          };
           litters = {
             objects.track = [ "cat" ];
             review.alerts.labels = [ "cat" ];

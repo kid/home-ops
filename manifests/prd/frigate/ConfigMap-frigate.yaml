@@ -18,6 +18,30 @@ data:
         objects:
           track:
           - person
+          - car
+        review:
+          alerts:
+            labels:
+            - person
+            - car
+            required_zones:
+            - everywhere
+            - lane
+        zones:
+          delivery:
+            coordinates: 0.06,0.48,0.37,0.48,0.37,0.76,0.06,0.76
+            loitering_time: 3
+            objects:
+            - person
+          everywhere:
+            coordinates: 0,0,1,0,1,1,0,1
+            objects:
+            - person
+          lane:
+            coordinates: 0.25,0.42,0.88,0.42,0.88,0.8,0.25,0.8
+            loitering_time: 10
+            objects:
+            - car
       litters:
         ffmpeg:
           inputs:
