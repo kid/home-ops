@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: vlagent-hosts
+  namespace: monitoring
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: hosts
+      app.kubernetes.io/name: vlagent
+  ingress:
+    - fromCIDR:
+        - 10.0.10.10/32
+        - 10.0.10.11/32
+      toPorts:
+        - ports:
+            - port: "9429"
+              protocol: TCP

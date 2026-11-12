@@ -102,6 +102,7 @@ _: {
           kindFilter = [
             "VMStaticScrape"
             "VMProbe"
+            "VLAgent"
           ];
         })
       ];

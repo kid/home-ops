@@ -188,6 +188,7 @@ in
     den.aspects.impermanence.tmpfs
     den.aspects.incus
     den.aspects.i915-sriov.host
+    den.aspects.log-shipping
     den.aspects.node-exporter
     den.aspects.power-saving
   ];

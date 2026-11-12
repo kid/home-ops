@@ -173,6 +173,10 @@ in
       loadBalancer = {
         cidr = lbCidr;
         description = "Cilium BGP-advertised LoadBalancer IP pool";
+        # The hosts outside the cluster send their journal here
+        # (modules/nixos/services/log-shipping.nix). High in the pool, clear
+        # of the dynamically assigned addresses.
+        assignments.vlagent-hosts = "10.0.42.200";
       };
     };
 
@@ -225,6 +229,7 @@ in
       blackbox-exporter
       prometheus-adapter
       victoria-metrics-mcp
+      vlagent-hosts
       grafana-operator
       grafana-oidc
       cloudflared
