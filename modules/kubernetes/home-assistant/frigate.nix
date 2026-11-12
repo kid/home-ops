@@ -137,7 +137,10 @@ let
                   objects = [ "car" ];
                 };
                 delivery = {
-                  coordinates = "0.06,0.48,0.37,0.48,0.37,0.76,0.06,0.76";
+                  # Ends at x 0.25: people walking left on the lane vanish
+                  # behind the wall just right of it, and Frigate keeps them
+                  # at their last position for max_disappeared (~5 s).
+                  coordinates = "0.06,0.48,0.25,0.48,0.25,0.76,0.06,0.76";
                   objects = [ "person" ];
                   loitering_time = 3;
                 };
