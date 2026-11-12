@@ -27,6 +27,10 @@ data:
             required_zones:
             - everywhere
             - lane
+          detections:
+            required_zones:
+            - everywhere
+            - street
         zones:
           delivery:
             coordinates: 0.06,0.48,0.37,0.48,0.37,0.76,0.06,0.76
@@ -37,9 +41,18 @@ data:
             coordinates: 0,0,1,0,1,1,0,1
             objects:
             - person
+          house:
+            coordinates: 0,0.78,0.24,0.78,0.24,1,0,1
+            inertia: 1
+            objects:
+            - person
           lane:
             coordinates: 0.25,0.42,0.88,0.42,0.88,0.8,0.25,0.8
             loitering_time: 10
+            objects:
+            - car
+          street:
+            coordinates: 0.25,0.42,0.88,0.42,0.88,0.8,0.25,0.8
             objects:
             - car
       litters:
