@@ -95,7 +95,8 @@ let
             remote = "node0";
             nixos_attr = "k3s-${cluster.name}-0";
             cpu = 8;
-            memory = "8GiB";
+            # The only server: the control plane on top of its share of pods.
+            memory = "12GiB";
             disk_size = "128GiB";
             mac = macOf "k3s-${cluster.name}-0" "K3s";
             inherit (config.den.devices."k3s-${cluster.name}-0") address;
