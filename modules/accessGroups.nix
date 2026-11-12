@@ -8,6 +8,14 @@
         "mfa"
       ];
     };
+    home = {
+      description = "Household apps on the cluster";
+      labels = [
+        "oauth-grant"
+        "mfa"
+      ];
+      members = [ "admins" ];
+    };
     wheel = {
       labels = [ "posix" ];
       members = [ "admins" ];

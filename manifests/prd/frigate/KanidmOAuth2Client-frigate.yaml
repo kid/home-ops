@@ -13,7 +13,7 @@ spec:
   redirectUrl:
     - https://frigate.kidibox.net/oauth2/callback
   scopeMap:
-    - group: admins
+    - group: home
       scopes:
         - openid
         - profile
