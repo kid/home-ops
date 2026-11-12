@@ -72,6 +72,7 @@
     den.aspects.impermanence
     den.aspects.impermanence.tmpfs
     den.aspects.incus
+    den.aspects.log-shipping
     den.aspects.node-exporter
     den.aspects.power-saving
   ];

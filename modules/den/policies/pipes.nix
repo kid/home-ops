@@ -70,6 +70,13 @@ in
     (pipe.from "node-exporter-targets" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
 
+  # Collects the `log-shippers` quirk (emitted per host by
+  # modules/nixos/services/log-shipping.nix) onto the cluster entity, for
+  # modules/kubernetes/victoria-metrics/vlagent-hosts.nix's ingress policy.
+  den.policies.cluster-collect-log-shippers = _: [
+    (pipe.from "log-shippers" [ (pipe.collectAll ({ host, ... }: host != null)) ])
+  ];
+
   # Collects the `nfs-exports` quirk (modules/den/quirks/nfs-exports.nix,
   # emitted by cluster-scoped app aspects) onto every host, exposed as the
   # `nfs-exports` list arg to NixOS content; only node0 reads it. `cluster` is the
@@ -84,5 +91,6 @@ in
     den.policies.cluster-collect-miroir-nodes
     den.policies.cluster-collect-k3s-nodes
     den.policies.cluster-collect-node-exporter-targets
+    den.policies.cluster-collect-log-shippers
   ];
 }

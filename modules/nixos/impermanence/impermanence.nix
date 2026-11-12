@@ -48,6 +48,8 @@
         hideMounts = true;
         directories = [
           "/var/lib/nixos"
+          # The persistent journal; a host's machine-id (below) keeps it readable across boots.
+          "/var/log"
           "/var/tmp"
         ];
       };

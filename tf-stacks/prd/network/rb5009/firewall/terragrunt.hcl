@@ -241,6 +241,20 @@ inputs = {
         comment            = "Allow WAN"
         out_interface_list = "WAN"
       },
+      {
+        action      = "accept"
+        comment     = "Allow node0 to ship its journal to VictoriaLogs"
+        dst_address = "10.0.42.200"
+        dst_port    = 9429
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow node1 to ship its journal to VictoriaLogs"
+        dst_address = "10.0.42.200"
+        dst_port    = 9429
+        protocol    = "tcp"
+      },
     ]
     Trusted = [
       {

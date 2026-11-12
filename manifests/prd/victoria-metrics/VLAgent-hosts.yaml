@@ -1,0 +1,17 @@
+apiVersion: operator.victoriametrics.com/v1
+kind: VLAgent
+metadata:
+  name: hosts
+  namespace: monitoring
+spec:
+  image:
+    tag: v1.53.0
+  port: "9429"
+  remoteWrite:
+    - url: http://vlsingle-victoria-metrics.monitoring.svc.cluster.local.:9428/insert/native
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi

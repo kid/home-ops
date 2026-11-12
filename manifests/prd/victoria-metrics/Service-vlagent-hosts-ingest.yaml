@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    lbipam.cilium.io/ips: 10.0.42.200
+  name: vlagent-hosts-ingest
+  namespace: monitoring
+spec:
+  externalTrafficPolicy: Local
+  ports:
+    - name: http
+      port: 9429
+      protocol: TCP
+      targetPort: 9429
+  selector:
+    app.kubernetes.io/instance: hosts
+    app.kubernetes.io/name: vlagent
+  type: LoadBalancer
