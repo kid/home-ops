@@ -114,22 +114,8 @@ let
             inherit (config.den.devices."k3s-${cluster.name}-1") address;
             extra_nics.storage.mac = macOf "k3s-${cluster.name}-1" "Storage";
           };
-          "k3s-${cluster.name}-2" = {
-            remote = "node0";
-            nixos_attr = "k3s-${cluster.name}-2";
-            cpu = 8;
-            memory = "8GiB";
-            disk_size = "128GiB";
-            mac = macOf "k3s-${cluster.name}-2" "K3s";
-            inherit (config.den.devices."k3s-${cluster.name}-2") address;
-            extra_nics.storage.mac = macOf "k3s-${cluster.name}-2" "Storage";
-            # Moves between node0 and node1 for host upgrades.
-            live_migration = true;
-          };
         };
         storage_pool = "default";
-        # Common to node0's i3-12100 and node1's Ryzen 3900X (QEMU 11.1, enforce).
-        live_migration_cpu = "Haswell-v4,-pcid,-erms,-invpcid,-spec-ctrl";
         ssh_authorized_keys =
           config.den.users.registry
           |> lib.attrValues

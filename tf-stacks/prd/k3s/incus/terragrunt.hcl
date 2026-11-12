@@ -33,7 +33,6 @@ EOF
 }
 
 inputs = {
-  live_migration_cpu = "Haswell-v4,-pcid,-erms,-invpcid,-spec-ctrl"
   networks = {
     k3s = {
       name    = "k3s-prd"
@@ -74,21 +73,6 @@ inputs = {
       memory     = "8GiB"
       nixos_attr = "k3s-prd-1"
       remote     = "node0"
-    }
-    k3s-prd-2 = {
-      address   = "10.0.40.42"
-      cpu       = 8
-      disk_size = "128GiB"
-      extra_nics = {
-        storage = {
-          mac = "52:54:00:20:00:03"
-        }
-      }
-      live_migration = true
-      mac            = "52:54:00:40:00:03"
-      memory         = "8GiB"
-      nixos_attr     = "k3s-prd-2"
-      remote         = "node0"
     }
   }
   remotes = {

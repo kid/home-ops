@@ -1,9 +1,0 @@
-apiVersion: miroir.home-operations.com/v1alpha1
-kind: MiroirNode
-metadata:
-  name: k3s-prd-2
-spec:
-  address: 10.0.20.42
-  pools:
-    - lvmthin: {}
-      name: default
