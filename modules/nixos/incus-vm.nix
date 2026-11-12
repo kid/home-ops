@@ -1,8 +1,8 @@
 # An Incus VM installed with nixos-anywhere (tf-catalog/modules/incus-k3s).
 # One disk: an ESP, and an LVM VG with a fixed-size root LV. The rest of the
 # VG is free for miroir, which makes its thin pool there: `vg-miroir` is the
-# VG of its `default` pool. No den.aspects.disko: that one turns on
-# disko-zfs.
+# VG of its `default` pool. Not den.aspects.disk.zfs: that one is a ZFS
+# layout and turns on disko-zfs.
 { inputs, ... }:
 {
   den.aspects.incus-vm.nixos =

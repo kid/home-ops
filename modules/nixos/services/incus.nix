@@ -1,5 +1,8 @@
 _: {
   den.aspects.incus.datasets."zroot/incus".properties.mountpoint = "none";
+  # Incus's database, certificates and instance configs; its pool's datasets
+  # mount below it.
+  den.aspects.incus.persist.directories = [ "/var/lib/incus" ];
 
   den.aspects.incus.nixos =
     { pkgs, ... }:

@@ -5,7 +5,7 @@
 # `persist`/`cache` attrset (e.g. modules/nixos/services/k3s/k3s.nix's
 # `persist.directories = [...]`).
 {
-  den.aspects.impermanence.persist-collector = {
+  den.aspects.impermanence.collect = {
     nixos =
       {
         persist,
@@ -14,14 +14,14 @@
         ...
       }:
       let
-        mergePersist = entries: {
+        merge = entries: {
           directories = entries |> lib.concatMap (e: e.directories or [ ]) |> lib.unique;
           files = entries |> lib.concatMap (e: e.files or [ ]) |> lib.unique;
         };
       in
       {
-        environment.persistence."/persist" = mergePersist persist;
-        environment.persistence."/cache" = mergePersist cache;
+        environment.persistence."/persist" = merge persist;
+        environment.persistence."/cache" = merge cache;
       };
   };
 }

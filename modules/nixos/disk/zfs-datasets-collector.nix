@@ -1,6 +1,6 @@
 # Collects the `datasets` quirk (modules/den/quirks/disko.nix) across a
 # host's full aspect-includes chain and wires the merged result into
-# disko-zfs, mirroring impermanence/persist-collector.nix's `persist`/`cache`
+# disko-zfs, mirroring impermanence/collect.nix's `persist`/`cache`
 # collection. `datasets` is a den-injected special module arg — the list of
 # every included aspect's own top-level `datasets` attrset (e.g.
 # modules/nixos/services/k3s/containerd.nix's
@@ -12,7 +12,7 @@
 # corresponding `fileSystems.<mountpoint>` entry itself.
 #
 # Also mirrors those entries into virtualisation.vmVariantWithDisko, for the
-# same reason zfs-disk-single.nix does it for /persist and /cache:
+# same reason zfs.nix does it for /persist and /cache:
 # system.build.vmWithDisko (see modules/hosts/test-vm.nix) rebuilds
 # fileSystems from scratch under virtualisation.fileSystems, and only
 # datasets declared through disko.devices get carried over automatically —
@@ -20,7 +20,7 @@
 # zroot/local/containerd fine, but `zfs list` shows it unmounted and
 # containerd silently writes to the root fs instead.
 {
-  den.aspects.disko.zfs-datasets-collector.nixos =
+  den.aspects.disk.zfs.collect.nixos =
     { datasets, lib, ... }:
     let
       merged = lib.foldl' lib.recursiveUpdate { } datasets;

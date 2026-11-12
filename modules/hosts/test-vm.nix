@@ -8,7 +8,7 @@
     k3s.clusterName = "prd";
     # Irrelevant under disko's testMode: vmWithDisko substitutes its own
     # qcow2 images regardless of the configured device.
-    settings.disko.zfs-disk-single.settings.device_id = "/dev/vda";
+    settings.disk.zfs.device = "/dev/vda";
   };
 
   den.aspects.test-vm.nixos =
@@ -26,9 +26,8 @@
 
   den.aspects.test-vm.includes = [
     den.aspects.base
-    den.aspects.disko.zfs-disk-single
+    den.aspects.disk.zfs
     den.aspects.impermanence
-    den.aspects.impermanence.tmpfs
     den.aspects.k3s-server
   ];
 }
