@@ -1,4 +1,4 @@
-# k3s agent for the prd cluster, joining k3s-prd-0: an Incus VM on node1,
+# k3s agent for the prd cluster, joining k3s-prd-0: an Incus VM on node0,
 # installed with nixos-anywhere by the tf-stacks/prd/k3s/incus stack, then
 # updated with `colmena apply --on k3s-prd-1`.
 { den, config, ... }:

@@ -73,7 +73,7 @@ inputs = {
       mac        = "52:54:00:40:00:02"
       memory     = "8GiB"
       nixos_attr = "k3s-prd-1"
-      remote     = "node1"
+      remote     = "node0"
     }
     k3s-prd-2 = {
       address   = "10.0.40.42"
