@@ -158,6 +158,18 @@ _: {
               # It registers the CRDs of enabled features (egressGateway's
               # CiliumEgressGatewayPolicy) at start: restart it on config changes.
               rollOutPods = true;
+              # cilium-operator can't run without leader election: renew every
+              # 60s instead of 2s (lease renewals were most of etcd's writes).
+              # Recreate keeps an update from running two copies at once.
+              extraArgs = [
+                "--leader-election-lease-duration=180s"
+                "--leader-election-renew-deadline=120s"
+                "--leader-election-retry-period=60s"
+              ];
+              updateStrategy = {
+                type = "Recreate";
+                rollingUpdate = null;
+              };
               prometheus.serviceMonitor.enabled = true;
               resources = {
                 requests = {

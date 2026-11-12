@@ -90,6 +90,14 @@ _: {
           values = {
             crds.enabled = true;
             replicaCount = 1;
+            # One replica each, no leader election (lease renewals were most of
+            # etcd's writes). Recreate keeps an update from running two at once.
+            extraArgs = [ "--leader-elect=false" ];
+            strategy.type = "Recreate";
+            cainjector = {
+              extraArgs = [ "--leader-elect=false" ];
+              strategy.type = "Recreate";
+            };
             prometheus.servicemonitor.enabled = true;
             resources = {
               requests = {

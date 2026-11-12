@@ -83,6 +83,10 @@ _: {
         helm.releases.flux-operator = {
           chart = charts.controlplaneio-fluxcd.flux-operator;
           values = {
+            # One replica, no leader election (lease renewals were most of
+            # etcd's writes). Recreate keeps an update from running two at once.
+            extraArgs = [ "--enable-leader-election=false" ];
+            strategy.type = "Recreate";
             web = {
               # The CiliumNetworkPolicy above replaces it.
               networkPolicy.create = false;
@@ -117,6 +121,28 @@ _: {
             # Upstream's NetworkPolicies would widen the CiliumNetworkPolicies above.
             networkPolicy = false;
           };
+          # The same for the controllers. The flag comes after the manifests'
+          # own --enable-leader-election; source-controller is already Recreate.
+          kustomize.patches = [
+            {
+              target = {
+                kind = "Deployment";
+                name = "(source-controller|kustomize-controller|notification-controller)";
+              };
+              patch = builtins.toJSON [
+                {
+                  op = "add";
+                  path = "/spec/template/spec/containers/0/args/-";
+                  value = "--enable-leader-election=false";
+                }
+                {
+                  op = "replace";
+                  path = "/spec/strategy";
+                  value.type = "Recreate";
+                }
+              ];
+            }
+          ];
           sync = with config.nixidy.target; {
             kind = "GitRepository";
             url = repository;

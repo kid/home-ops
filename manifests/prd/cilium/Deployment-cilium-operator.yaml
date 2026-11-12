@@ -15,10 +15,7 @@ spec:
       io.cilium/app: operator
       name: cilium-operator
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 100%
-    type: RollingUpdate
+    type: Recreate
   template:
     metadata:
       annotations:
@@ -41,6 +38,9 @@ spec:
         - args:
             - --config-dir=/tmp/cilium/config-map
             - --debug=$(CILIUM_DEBUG)
+            - --leader-election-lease-duration=180s
+            - --leader-election-renew-deadline=120s
+            - --leader-election-retry-period=60s
           command:
             - cilium-operator-generic
           env:

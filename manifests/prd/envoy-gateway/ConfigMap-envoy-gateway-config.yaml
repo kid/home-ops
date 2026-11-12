@@ -11,6 +11,8 @@ data:
         default: info
     provider:
       kubernetes:
+        leaderElection:
+          disable: true
         rateLimitDeployment:
           container:
             image: docker.io/envoyproxy/ratelimit:5ae0682e

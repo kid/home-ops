@@ -15,6 +15,12 @@ spec:
   distribution:
     registry: ghcr.io/fluxcd
     version: 2.x
+  kustomize:
+    patches:
+      - patch: '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-leader-election=false"},{"op":"replace","path":"/spec/strategy","value":{"type":"Recreate"}}]'
+        target:
+          kind: Deployment
+          name: (source-controller|kustomize-controller|notification-controller)
   sync:
     kind: GitRepository
     path: manifests/prd/apps
