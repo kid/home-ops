@@ -171,6 +171,16 @@ in
           |> lib.concatStrings
         )
       );
+      # Snapshots only the exports that ask for them (their `sanoid` entry), so
+      # autoSnapshot stays off for tank. sanoid's cache needs no persistence.
+      services.sanoid =
+        let
+          snapshotted = lib.filter (e: e ? sanoid) nfs-exports;
+        in
+        lib.mkIf (snapshotted != [ ]) {
+          enable = true;
+          datasets = snapshotted |> map (e: lib.nameValuePair e.dataset e.sanoid) |> lib.listToAttrs;
+        };
       # NFSv4 only; the kubelet negotiates 4.2.
       services.nfs.settings.nfsd.vers3 = false;
       networking.firewall.interfaces.storage-prd.allowedTCPPorts = [ 2049 ];
