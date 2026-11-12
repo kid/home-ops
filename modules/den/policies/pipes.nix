@@ -65,7 +65,7 @@ in
 
   # Collects the `node-exporter-targets` quirk (emitted per host by
   # modules/nixos/services/node-exporter.nix) onto the cluster entity, for
-  # modules/kubernetes/victoria-metrics/default.nix's scrape and firewall rules.
+  # modules/kubernetes/victoria-metrics/default.nix's scrape and egress policy.
   den.policies.cluster-collect-node-exporter-targets = _: [
     (pipe.from "node-exporter-targets" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
