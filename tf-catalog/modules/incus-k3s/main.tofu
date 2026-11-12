@@ -186,6 +186,10 @@ resource "incus_instance" "k3s" {
       # its pods (modules/nixos/services/k3s/node-base.nix), then systemd stops
       # the rest.
       "boot.host_shutdown_timeout" = "240"
+      # Start with the host whatever state the VM was last left in: by default
+      # Incus only restarts instances that were running at host shutdown, so a
+      # VM stopped by hand before a reboot stays down.
+      "boot.autostart" = "true"
     },
     # raw.qemu comes after Incus's own `-cpu host,...`: QEMU keeps the last.
     each.value.live_migration ? {
