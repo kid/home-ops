@@ -3,7 +3,7 @@
 # chart. .renovaterc.json5 runs this through postUpgradeTasks right after each
 # bump; other Nix pins are rehashed by kid/renovate-config's refresh-nix-hash.
 #
-#   rehash-chart charts/<org>/<chart>/default.nix
+#   nix run .#rehash-chart charts/<org>/<chart>/default.nix
 _: {
   perSystem =
     {
