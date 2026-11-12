@@ -7,7 +7,7 @@
 #
 # NixOS's containerd module already defaults root/state/grpc.address to
 # containerd's own built-in paths, and — since boot.zfs.enabled is true on
-# zfs-disk-single hosts — already puts zfs on containerd's PATH and
+# den.aspects.disk.zfs hosts — already puts zfs on containerd's PATH and
 # defaults the CRI snapshotter to "zfs". Two defaults still need overriding
 # on zfs hosts:
 #

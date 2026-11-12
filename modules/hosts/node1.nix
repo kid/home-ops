@@ -8,8 +8,7 @@
   den.hosts.x86_64-linux.node1 = {
     environment = "prd";
     system-access-groups = [ "admins" ];
-    settings.disko.zfs-disk-single.settings.device_id =
-      "/dev/disk/by-id/nvme-Force_MP510_21368248000129171009";
+    settings.disk.zfs.device = "/dev/disk/by-id/nvme-Force_MP510_21368248000129171009";
   };
 
   den.devices = {
@@ -68,9 +67,8 @@
 
   den.aspects.node1.includes = [
     den.aspects.base
-    den.aspects.disko.zfs-disk-single
+    den.aspects.disk.zfs
     den.aspects.impermanence
-    den.aspects.impermanence.tmpfs
     den.aspects.incus
     den.aspects.power-saving
   ];

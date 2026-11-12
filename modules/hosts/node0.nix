@@ -11,8 +11,7 @@ in
   den.hosts.x86_64-linux.node0 = {
     environment = "prd";
     system-access-groups = [ "admins" ];
-    settings.disko.zfs-disk-single.settings.device_id =
-      "/dev/disk/by-id/nvme-WD_BLACK_SN850X_1000GB_22518J459213";
+    settings.disk.zfs.device = "/dev/disk/by-id/nvme-WD_BLACK_SN850X_1000GB_22518J459213";
   };
 
   den.devices.node0.interfaces = [
@@ -183,9 +182,8 @@ in
 
   den.aspects.node0.includes = [
     den.aspects.base
-    den.aspects.disko.zfs-disk-single
+    den.aspects.disk.zfs
     den.aspects.impermanence
-    den.aspects.impermanence.tmpfs
     den.aspects.incus
     den.aspects.i915-sriov.host
     den.aspects.power-saving

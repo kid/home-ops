@@ -5,10 +5,14 @@
 {
   perSystem =
     { pkgs, ... }:
-    {
-      legacyPackages.integration-tests = import ../../tests/integration/k3s.nix {
+    let
+      args = {
         inherit pkgs inputs;
         modulesTree = inputs.import-tree ../.;
       };
+    in
+    {
+      legacyPackages.integration-tests =
+        import ../../tests/integration/k3s.nix args // import ../../tests/integration/impermanence.nix args;
     };
 }
