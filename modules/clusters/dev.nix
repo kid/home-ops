@@ -101,6 +101,8 @@ in
     external-secrets
     kopiur
     prometheus-operator-crds
+    # Restore drill: its claim fills from prd's latest r2 snapshot.
+    media.prowlarr
   ];
 
   den.aspects.dev.firewall = { cluster, ... }: [
