@@ -43,6 +43,9 @@
           |> lib.last;
       in
       {
+        # The thin pool and the root LV live in vg-miroir.
+        services.lvm.enable = true;
+
         # Note this might jump back and forth as kernels are added or removed.
         boot.kernelPackages = latestKernelPackages;
         # Load at boot whatever miroir-agent needs: extraModulePackages turns
