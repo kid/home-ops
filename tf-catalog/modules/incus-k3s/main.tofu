@@ -107,21 +107,6 @@ locals {
   }
 }
 
-moved {
-  from = incus_network.this["k3s"]
-  to   = incus_network.this["node1/k3s"]
-}
-
-moved {
-  from = incus_network.this["storage"]
-  to   = incus_network.this["node1/storage"]
-}
-
-moved {
-  from = incus_image.base
-  to   = incus_image.base["node1"]
-}
-
 resource "incus_network" "this" {
   for_each = local.remote_networks
 

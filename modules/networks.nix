@@ -38,6 +38,17 @@ in
       mtu = 9000;
     };
 
+    # The dev k3s cluster's VLAN, node1's native one. Declared here, not with
+    # its cluster like K3s in clusters/prd.nix: node1 lives on it whether or
+    # not a cluster runs there. VLANs 42 and 43 stay unused: their /24s are
+    # the prd and dev clusters' LoadBalancer pools.
+    K3sDev = {
+      environment = "prd";
+      vlanId = 41;
+      domain = "k3s-dev.${tld}";
+      internetAccess = true;
+    };
+
     IotLocal = {
       environment = "prd";
       vlanId = 50;

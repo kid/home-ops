@@ -11,16 +11,11 @@ generate "incus_provider" {
   if_exists = "overwrite_terragrunt"
   contents  = <<-EOF
 provider "incus" {
-  default_remote = "node1"
+  default_remote = "node0"
 
   remote {
     name    = "node0"
     address = "https://10.0.10.10:8443"
-  }
-
-  remote {
-    name    = "node1"
-    address = "https://10.0.10.11:8443"
   }
 
   remote {
@@ -77,9 +72,6 @@ inputs = {
   }
   remotes = {
     node0 = {}
-    node1 = {
-      parent = "enp36s0f1"
-    }
   }
   ssh_authorized_keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcnmLrPeTJeKsasfU0qn4sP4lBNeOUgRG4iZDS8nyEo kid@vulkan",
