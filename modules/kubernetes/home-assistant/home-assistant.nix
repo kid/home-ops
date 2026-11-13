@@ -271,7 +271,8 @@ in
                     };
                     resources = {
                       requests = {
-                        cpu = "100m";
+                        # Also its CPU share when the node is contended.
+                        cpu = "500m";
                         memory = "512Mi";
                       };
                       limits.memory = "2Gi";

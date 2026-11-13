@@ -157,7 +157,8 @@ in
                     # container anyway.
                     resources = {
                       requests = {
-                        cpu = "10m";
+                        # Also its CPU share when the node is contended.
+                        cpu = "100m";
                         memory = "16Mi";
                       };
                       limits.memory = "128Mi";
