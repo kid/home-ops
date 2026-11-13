@@ -138,6 +138,10 @@ in
           inherit (cluster.methods.nfsExport "kopiur") path;
         };
       };
+      # A restore-only cluster gets a token R2 itself limits to reads
+      # (tf-catalog/modules/kopiur-r2), not just kopiur's ReadOnly mode.
+      credentialsItem =
+        if cluster.kopiur.backups then "kopiur-r2-credentials" else "kopiur-r2-readonly-credentials";
       nobody = {
         runAsUser = 65534;
         runAsGroup = 65534;
@@ -261,15 +265,15 @@ in
             data = [
               {
                 secretKey = "AWS_ACCESS_KEY_ID";
-                remoteRef.key = "kopiur-r2-credentials/credentials/access-key-id";
+                remoteRef.key = "${credentialsItem}/credentials/access-key-id";
               }
               {
                 secretKey = "AWS_SECRET_ACCESS_KEY";
-                remoteRef.key = "kopiur-r2-credentials/credentials/secret-access-key";
+                remoteRef.key = "${credentialsItem}/credentials/secret-access-key";
               }
               {
                 secretKey = "KOPIA_PASSWORD";
-                remoteRef.key = "kopiur-r2-credentials/credentials/repository-password";
+                remoteRef.key = "${credentialsItem}/credentials/repository-password";
               }
             ];
           };
