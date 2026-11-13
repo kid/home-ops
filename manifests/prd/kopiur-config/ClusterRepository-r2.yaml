@@ -23,3 +23,6 @@ spec:
       key: KOPIA_PASSWORD
       name: kopiur-r2
       namespace: kopiur-system
+  parameters:
+    epoch:
+      minDuration: 6h
