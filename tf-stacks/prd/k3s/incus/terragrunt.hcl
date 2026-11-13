@@ -62,7 +62,7 @@ inputs = {
     }
     k3s-prd-1 = {
       address   = "10.0.40.41"
-      cpu       = 8
+      cpu       = 4
       disk_size = "128GiB"
       extra_nics = {
         storage = {
