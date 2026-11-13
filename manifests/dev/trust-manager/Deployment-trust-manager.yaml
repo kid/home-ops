@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: trust-manager
+    app.kubernetes.io/name: trust-manager
+  name: trust-manager
+  namespace: cert-manager
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: trust-manager
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: trust-manager
+        app.kubernetes.io/instance: trust-manager
+        app.kubernetes.io/name: trust-manager
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - --log-format=text
+            - --log-level=1
+            - --metrics-port=9402
+            - --readiness-probe-port=6060
+            - --readiness-probe-path=/readyz
+            - --leader-elect=false
+            - --leader-election-lease-duration=15s
+            - --leader-election-renew-deadline=10s
+            - --trust-namespace=cert-manager
+            - --webhook-host=0.0.0.0
+            - --webhook-port=6443
+            - --webhook-certificate-dir=/tls
+            - --default-package-location=/packages/cert-manager-package-debian.json
+          image: quay.io/jetstack/trust-manager:v0.26.0
+          imagePullPolicy: IfNotPresent
+          name: trust-manager
+          ports:
+            - containerPort: 6443
+              name: webhook
+            - containerPort: 9402
+              name: metrics
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 6060
+            initialDelaySeconds: 3
+            periodSeconds: 7
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /tls
+              name: tls
+              readOnly: true
+            - mountPath: /packages
+              name: packages
+              readOnly: true
+      initContainers:
+        - args:
+            - /copyandmaybepause
+            - /debian-package
+            - /packages
+          image: quay.io/jetstack/trust-pkg-debian-trixie:20250419-deb13u1.1
+          imagePullPolicy: IfNotPresent
+          name: cert-manager-package-debian
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /packages
+              name: packages
+              readOnly: false
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: trust-manager
+      volumes:
+        - emptyDir:
+            sizeLimit: 50M
+          name: packages
+        - name: tls
+          secret:
+            defaultMode: 420
+            secretName: trust-manager-tls

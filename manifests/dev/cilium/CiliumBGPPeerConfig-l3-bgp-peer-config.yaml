@@ -1,0 +1,14 @@
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
+metadata:
+  name: l3-bgp-peer-config
+spec:
+  families:
+    - advertisements:
+        matchLabels:
+          advertise: bgp
+      afi: ipv4
+      safi: unicast
+  timers:
+    holdTimeSeconds: 90
+    keepAliveTimeSeconds: 30

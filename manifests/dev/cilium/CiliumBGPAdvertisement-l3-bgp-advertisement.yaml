@@ -1,0 +1,19 @@
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  labels:
+    advertise: bgp
+  name: l3-bgp-advertisement
+spec:
+  advertisements:
+    - advertisementType: PodCIDR
+    - advertisementType: Service
+      selector:
+        matchExpressions:
+          - key: fakeSelector
+            operator: NotIn
+            values:
+              - will-match-and-announce-all-services
+      service:
+        addresses:
+          - LoadBalancerIP

@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/instance: kopiur
+    app.kubernetes.io/name: kopiur
+    app.kubernetes.io/part-of: kopiur
+  name: kopiur-webhook
+  namespace: kopiur-system
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: https
+      scheme: https
+      scrapeTimeout: 10s
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - kopiur-system
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: webhook
+      app.kubernetes.io/instance: kopiur
+      app.kubernetes.io/name: kopiur

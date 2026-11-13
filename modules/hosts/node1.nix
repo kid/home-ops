@@ -9,6 +9,7 @@
     environment = "prd";
     system-access-groups = [ "admins" ];
     settings.disk.zfs.device = "/dev/disk/by-id/nvme-Force_MP510_21368248000129171009";
+    settings.k3s.clusterName = "dev";
   };
 
   den.devices = {
@@ -70,11 +71,18 @@
     services.zfs.autoSnapshot.enable = false;
   };
 
+  # The dev cluster's only server (modules/clusters/dev.nix), on sqlite.
   den.aspects.node1.includes = [
     den.aspects.base
     den.aspects.disk.zfs
     den.aspects.impermanence
     den.aspects.power-saving
+    den.aspects.k3s.server
+    den.aspects.k3s.token
+    den.aspects.k3s.cilium
+    den.aspects.k3s.bootstrap
+    den.aspects.k3s.external-secrets
+    den.aspects.k3s.zfs-localpv-node
   ];
 
   fleet.colmena.deployment.node1.targetHost = config.den.devices.node1.address;

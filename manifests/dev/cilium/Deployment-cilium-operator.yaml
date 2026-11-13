@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: cilium-operator
+    app.kubernetes.io/part-of: cilium
+    io.cilium/app: operator
+    name: cilium-operator
+  name: cilium-operator
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.cilium/app: operator
+      name: cilium-operator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        cilium.io/cilium-configmap-checksum: bf835226c3315565ecc7d6ff31302cbdb685fe9084b136596d226c6f90457412
+      labels:
+        app.kubernetes.io/name: cilium-operator
+        app.kubernetes.io/part-of: cilium
+        io.cilium/app: operator
+        name: cilium-operator
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  io.cilium/app: operator
+              topologyKey: kubernetes.io/hostname
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - --config-dir=/tmp/cilium/config-map
+            - --debug=$(CILIUM_DEBUG)
+            - --leader-election-lease-duration=180s
+            - --leader-election-renew-deadline=120s
+            - --leader-election-retry-period=60s
+          command:
+            - cilium-operator-generic
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: CILIUM_K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: CILIUM_DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  key: debug
+                  name: cilium-config
+                  optional: true
+            - name: KUBERNETES_SERVICE_HOST
+              value: 127.0.0.1
+            - name: KUBERNETES_SERVICE_PORT
+              value: "6443"
+          image: quay.io/cilium/operator-generic:v1.20.4@sha256:7a7a3489dc66ad67e420d285c8a8d2e169b0957ad15e120f593d27081bf38d82
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: health
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 3
+          name: cilium-operator
+          ports:
+            - containerPort: 9234
+              hostPort: 9234
+              name: health
+            - containerPort: 9963
+              hostPort: 9963
+              name: prometheus
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: health
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - mountPath: /tmp/cilium/config-map
+              name: cilium-config-path
+              readOnly: true
+      hostNetwork: true
+      hostUsers: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      restartPolicy: Always
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: cilium-operator
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+        - key: node.cloudprovider.kubernetes.io/uninitialized
+          operator: Exists
+        - key: node.cilium.io/agent-not-ready
+          operator: Exists
+      volumes:
+        - configMap:
+            name: cilium-config
+          name: cilium-config-path

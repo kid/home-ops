@@ -201,6 +201,11 @@ inputs = {
         comment            = "Allow WAN"
         out_interface_list = "WAN"
       },
+      {
+        action      = "accept"
+        comment     = "Allow Traffic to load balancer ips"
+        dst_address = "10.0.43.0/24"
+      },
     ]
     Management = [
       {
@@ -255,6 +260,15 @@ inputs = {
         comment     = "Allow access to Management from K3s for external-dns"
         dst_address = "10.99.0.1"
         dst_port    = 443
+        protocol    = "tcp"
+      },
+    ]
+    K3sDev = [
+      {
+        action      = "accept"
+        comment     = "Allow BGP from k3s nodes to rb5009 for Cilium"
+        dst_address = "10.0.41.1"
+        dst_port    = 179
         protocol    = "tcp"
       },
     ]
