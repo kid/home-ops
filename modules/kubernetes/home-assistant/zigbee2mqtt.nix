@@ -140,7 +140,9 @@ in
                     };
                     resources = {
                       requests = {
-                        cpu = "20m";
+                        # Also its CPU share when the node is contended: at
+                        # 20m it lost to Frigate and failed its liveness probe.
+                        cpu = "250m";
                         memory = "192Mi";
                       };
                       limits.memory = "512Mi";
