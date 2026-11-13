@@ -12,6 +12,8 @@ in
     environment = "prd";
     system-access-groups = [ "admins" ];
     settings.disk.zfs.device = "/dev/disk/by-id/nvme-WD_BLACK_SN850X_1000GB_22518J459213";
+    # Runs both prd k3s VMs on 4 cores: `power` pinned it at 1.2 GHz.
+    settings.power-saving.cpuEpp = "balance_power";
   };
 
   den.devices.node0.interfaces = [
