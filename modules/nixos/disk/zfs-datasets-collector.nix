@@ -25,6 +25,9 @@
     let
       merged = lib.foldl' lib.recursiveUpdate { } datasets;
 
+      # x-systemd.after, as disko-zfs does for disko's own datasets: on the
+      # switch that adds a dataset, local-fs-pre.target is long reached, and
+      # only this keeps its new mount from starting before disko-zfs creates it.
       mountedFileSystems =
         merged
         |> lib.filterAttrs (_: v: v ? mountpoint)
@@ -33,6 +36,7 @@
           lib.nameValuePair v.mountpoint {
             device = name;
             fsType = "zfs";
+            options = [ "x-systemd.after=disko-zfs.service" ];
           }
         );
     in
