@@ -107,7 +107,8 @@ let
           "k3s-${cluster.name}-1" = {
             remote = "node0";
             nixos_attr = "k3s-${cluster.name}-1";
-            cpu = 8;
+            # Shares node0's 8 cores with k3s-prd-0; at 8 it starved it.
+            cpu = 4;
             memory = "8GiB";
             disk_size = "128GiB";
             mac = macOf "k3s-${cluster.name}-1" "K3s";
