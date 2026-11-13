@@ -8,14 +8,17 @@
 #
 # The operator also serves the Flux web UI, which logs in through Kanidm and
 # acts as the user's own name and groups. Its config, with the client secret
-# Flux substitutes in at apply time, lives in the flux-web app's Secret.
-_: {
+# Flux substitutes in at apply time, lives in the flux-web app's Secret. A
+# cluster without Kanidm runs no web UI.
+{ den, ... }:
+{
   den.aspects.kubernetes.flux.k8s-manifests =
     {
       charts,
       generators,
       cluster,
       config,
+      lib,
       ...
     }:
     let
@@ -25,6 +28,7 @@ _: {
       clientId = "flux-web";
       configSecret = "flux-web-config";
       inherit (cluster.methods) kanidm kubeLogin;
+      webUi = cluster.includesAspect den.aspects.kubernetes.kanidm;
     in
     {
       nixidy.applicationImports = [
@@ -90,9 +94,16 @@ _: {
             web = {
               # The CiliumNetworkPolicy above replaces it.
               networkPolicy.create = false;
-              # Watched, so the operator picks it up once the flux-web app creates it.
-              configSecretName = configSecret;
-            };
+            }
+            // (
+              if webUi then
+                {
+                  # Watched, so the operator picks it up once the flux-web app creates it.
+                  configSecretName = configSecret;
+                }
+              else
+                { enabled = false; }
+            );
             resources = {
               requests = {
                 cpu = "10m";
@@ -153,7 +164,7 @@ _: {
       };
 
       # The UI's Kanidm client, separate so flux-web can wait for its credentials Secret.
-      applications.flux-web-client = {
+      applications.flux-web-client = lib.mkIf webUi {
         namespace = "flux-system";
         flux.dependsOn = [ "kaniop" ];
 
@@ -181,7 +192,7 @@ _: {
       };
 
       # Separate from flux-operator so the operator never waits on Kanidm.
-      applications.flux-web = {
+      applications.flux-web = lib.mkIf webUi {
         namespace = "flux-system";
         flux.dependsOn = [ "flux-web-client" ];
         # kaniop's credentials Secret for the client above.

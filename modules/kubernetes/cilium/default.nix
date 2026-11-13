@@ -1,7 +1,8 @@
 # Cilium CNI, configured for kube-proxy replacement + native routing to
 # match modules/nixos/services/k3s/k3s.nix's k3s flags
 # (--flannel-backend=none --disable-network-policy --disable-kube-proxy).
-_: {
+{ den, ... }:
+{
   # cilium-agent health (9879) and Hubble gRPC (4244) bind on the host itself.
   den.aspects.kubernetes.cilium.firewall-ports = _: [
     {
@@ -45,38 +46,44 @@ _: {
   ];
 
   den.aspects.kubernetes.cilium.k8s-manifests =
-    { charts, cluster, ... }:
+    {
+      charts,
+      cluster,
+      lib,
+      ...
+    }:
     {
       applications.cilium = {
         namespace = "kube-system";
         # Hubble's certificates.
         flux.dependsOn = [ "cert-manager" ];
 
-        resources.httpRoutes.hubble-ui.spec = {
-          parentRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = "apps";
-              namespace = "envoy-gateway-system";
-              sectionName = "https";
-            }
-          ];
-          hostnames = [ (cluster.methods.mkAppHostname "hubble") ];
-          rules = [
-            {
-              backendRefs = [
+        # Hubble UI has no login of its own: published only behind Kanidm.
+        imports = lib.optionals (cluster.includesAspect den.aspects.kubernetes.kanidm) [
+          {
+            resources.httpRoutes.hubble-ui.spec = {
+              parentRefs = [
                 {
-                  name = "hubble-ui";
-                  port = 80;
+                  group = "gateway.networking.k8s.io";
+                  kind = "Gateway";
+                  name = "apps";
+                  namespace = "envoy-gateway-system";
+                  sectionName = "https";
                 }
               ];
-            }
-          ];
-        };
-
-        # Hubble UI has no login of its own.
-        imports = [
+              hostnames = [ (cluster.methods.mkAppHostname "hubble") ];
+              rules = [
+                {
+                  backendRefs = [
+                    {
+                      name = "hubble-ui";
+                      port = 80;
+                    }
+                  ];
+                }
+              ];
+            };
+          }
           (cluster.methods.mkOidcAuth {
             name = "hubble-ui";
             httpRouteName = "hubble-ui";
