@@ -1,6 +1,8 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
+  annotations:
+    external-dns.kubernetes.io/controller: none
   name: flux-operator-mcp
   namespace: flux-system
 spec:

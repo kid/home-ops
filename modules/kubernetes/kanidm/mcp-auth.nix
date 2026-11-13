@@ -25,6 +25,10 @@ let
       sectionName = "https";
     }
   ];
+  # The app's own route already publishes this host. Two more routes for it
+  # leave external-dns to pick the TXT owner record's resource at random each
+  # sync, so it rewrote that record every interval.
+  annotations."external-dns.kubernetes.io/controller" = "none";
 
   # Both well-known URIs MCP clients probe. nixidy keys HTTPRoute rules by name, so they need one.
   metadataPath = "/.well-known/oauth-protected-resource";
@@ -52,59 +56,65 @@ let
           name:
           { hostname, port }:
           {
-            ${name}.spec = {
-              inherit parentRefs;
-              hostnames = [ hostname ];
-              rules = [
-                {
-                  matches = [
-                    {
-                      path = {
-                        type = "PathPrefix";
-                        value = mcpPath;
-                      };
-                    }
-                  ];
-                  backendRefs = [
-                    {
-                      group = "";
-                      kind = "Service";
-                      inherit name port;
-                      weight = 1;
-                    }
-                  ];
-                }
-              ];
-            };
-            # A route of its own, so the SecurityPolicy below leaves it open.
-            "${name}-metadata".spec = {
-              inherit parentRefs;
-              hostnames = [ hostname ];
-              rules =
-                metadataDocuments hostname
-                |> lib.mapAttrsToList (
-                  rule: document: {
-                    name = rule;
+            ${name} = {
+              metadata = { inherit annotations; };
+              spec = {
+                inherit parentRefs;
+                hostnames = [ hostname ];
+                rules = [
+                  {
                     matches = [
                       {
                         path = {
-                          type = "Exact";
-                          value = document.path;
+                          type = "PathPrefix";
+                          value = mcpPath;
                         };
                       }
                     ];
-                    filters = [
+                    backendRefs = [
                       {
-                        type = "ExtensionRef";
-                        extensionRef = {
-                          group = "gateway.envoyproxy.io";
-                          kind = "HTTPRouteFilter";
-                          name = metadataFilter name rule;
-                        };
+                        group = "";
+                        kind = "Service";
+                        inherit name port;
+                        weight = 1;
                       }
                     ];
                   }
-                );
+                ];
+              };
+            };
+            # A route of its own, so the SecurityPolicy below leaves it open.
+            "${name}-metadata" = {
+              metadata = { inherit annotations; };
+              spec = {
+                inherit parentRefs;
+                hostnames = [ hostname ];
+                rules =
+                  metadataDocuments hostname
+                  |> lib.mapAttrsToList (
+                    rule: document: {
+                      name = rule;
+                      matches = [
+                        {
+                          path = {
+                            type = "Exact";
+                            value = document.path;
+                          };
+                        }
+                      ];
+                      filters = [
+                        {
+                          type = "ExtensionRef";
+                          extensionRef = {
+                            group = "gateway.envoyproxy.io";
+                            kind = "HTTPRouteFilter";
+                            name = metadataFilter name rule;
+                          };
+                        }
+                      ];
+                    }
+                  );
+              };
             };
           }
         );
