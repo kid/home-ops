@@ -12,7 +12,7 @@ spec:
             - port: "6443"
               protocol: TCP
     - toFQDNs:
-        - matchName: acme-v02.api.letsencrypt.org
+        - matchName: acme-staging-v02.api.letsencrypt.org
         - matchName: api.cloudflare.com
       toPorts:
         - ports:
