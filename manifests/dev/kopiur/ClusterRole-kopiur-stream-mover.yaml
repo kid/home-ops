@@ -1,0 +1,44 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: kopiur
+    app.kubernetes.io/name: kopiur
+    app.kubernetes.io/part-of: kopiur
+  name: kopiur-stream-mover
+rules:
+  - apiGroups:
+      - kopiur.home-operations.com
+    resources:
+      - snapshots/status
+      - restores/status
+      - repositories/status
+      - clusterrepositories/status
+      - maintenances/status
+      - snapshotpolicies/status
+      - repositoryreplications/status
+      - snapshotreplications/status
+    verbs:
+      - get
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - create
+      - get
