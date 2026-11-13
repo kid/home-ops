@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ den, lib, ... }:
 let
   # Builds the four kopiur objects a PVC-backed app needs: the PVC itself
   # (restored from the named Restore), the SnapshotPolicy, its hourly
@@ -9,7 +9,9 @@ let
   # volumeClaimTemplate) instead: no PVC here, and that claim must carry the
   # dataSourceRef to Restore `name` itself. ignore lists paths the app can
   # rebuild (caches, logs), kept out of the snapshots. The claim and staging
-  # classes are the cluster's den.clusters.<name>.storage ones.
+  # classes are the cluster's den.clusters.<name>.storage ones. A cluster
+  # without kopiur.backups gets no SnapshotSchedule: the policy only names
+  # the identity its Restore reads.
   mkKopiurBackup =
     cluster:
     {
@@ -66,12 +68,14 @@ let
         # one an ext4 volume has.
         files.ignoreRules = [ "/lost+found" ] ++ ignore;
       };
-      snapshotSchedules.${name}.spec = {
-        policyRef.name = name;
-        schedule = {
-          cron = "H * * * *";
-          jitter = "5m";
-          runOnCreate = false;
+      snapshotSchedules = lib.optionalAttrs cluster.kopiur.backups {
+        ${name}.spec = {
+          policyRef.name = name;
+          schedule = {
+            cron = "H * * * *";
+            jitter = "5m";
+            runOnCreate = false;
+          };
         };
       };
       restores.${name}.spec = {
@@ -90,27 +94,30 @@ in
 
   # The on-premises mirror of the r2 repository (the RepositoryReplication
   # below). Daily ZFS snapshots on node0 keep a bad sync, which `--delete`
-  # would otherwise propagate, from overwriting every copy.
-  den.aspects.kubernetes.kopiur.nfs-exports = { cluster, ... }: [
-    (
-      cluster.methods.nfsExport "kopiur"
-      // {
-        # kopia already compresses and encrypts its blobs.
-        properties = {
-          recordsize = "1M";
-          compression = "off";
-        };
-        sanoid = {
-          autosnap = true;
-          autoprune = true;
-          hourly = 0;
-          daily = 14;
-          monthly = 0;
-          yearly = 0;
-        };
-      }
-    )
-  ];
+  # would otherwise propagate, from overwriting every copy. Only a cluster
+  # with kopiur.backups mirrors it.
+  den.aspects.kubernetes.kopiur.nfs-exports =
+    { cluster, ... }:
+    lib.optionals cluster.kopiur.backups [
+      (
+        cluster.methods.nfsExport "kopiur"
+        // {
+          # kopia already compresses and encrypts its blobs.
+          properties = {
+            recordsize = "1M";
+            compression = "off";
+          };
+          sanoid = {
+            autosnap = true;
+            autoprune = true;
+            hourly = 0;
+            daily = 14;
+            monthly = 0;
+            yearly = 0;
+          };
+        }
+      )
+    ];
 
   den.aspects.kubernetes.kopiur.k8s-manifests =
     {
@@ -199,8 +206,9 @@ in
 
             monitoring = {
               serviceMonitor.enabled = true;
+              # GrafanaDashboard objects, which need grafana-operator's CRDs.
               dashboards = {
-                enabled = true;
+                enabled = cluster.includesAspect den.aspects.kubernetes.grafana-operator;
                 grafanaOperator = {
                   enabled = true;
                   matchLabels.dashboards = "grafana";
@@ -267,6 +275,8 @@ in
           };
         };
 
+        # Without kopiur.backups, restore-only: ReadOnly refuses backup Jobs
+        # and runs no maintenance, and nothing creates the repository.
         resources.clusterRepositories.r2.spec = {
           allowedNamespaces.all = true;
           backend.s3 = {
@@ -284,27 +294,30 @@ in
             namespace = "kopiur-system";
           };
           credentialProjection.allowed = true;
-          create.enabled = true;
-        };
+          create.enabled = cluster.kopiur.backups;
+        }
+        // lib.optionalAttrs (!cluster.kopiur.backups) { mode = "ReadOnly"; };
 
         # A blob-level copy of r2 (`kopia repository sync-to`): same format and
         # password, so `local` below opens it. Its credentials are r2's own
         # Secret, which must sit in this namespace (no credential projection
         # here).
-        resources.repositoryReplications.r2-local.spec = {
-          sourceRef = {
-            kind = "ClusterRepository";
-            name = "r2";
-          };
-          destination = mirrorBackend;
-          schedule.cron = "30 * * * *";
-          # Track r2's retention and maintenance instead of growing forever.
-          sync.deleteExtra = true;
-          mover = {
-            securityContext = nobody;
-            resources.requests = {
-              cpu = "50m";
-              memory = "192Mi";
+        resources.repositoryReplications = lib.optionalAttrs cluster.kopiur.backups {
+          r2-local.spec = {
+            sourceRef = {
+              kind = "ClusterRepository";
+              name = "r2";
+            };
+            destination = mirrorBackend;
+            schedule.cron = "30 * * * *";
+            # Track r2's retention and maintenance instead of growing forever.
+            sync.deleteExtra = true;
+            mover = {
+              securityContext = nobody;
+              resources.requests = {
+                cpu = "50m";
+                memory = "192Mi";
+              };
             };
           };
         };
@@ -312,21 +325,23 @@ in
         # Restore-only: no SnapshotPolicy may point here (ReadOnly refuses
         # backups and runs no maintenance; r2's carries over in the sync). Its
         # movers run as 65534; a Restore setting another uid can't read it.
-        resources.clusterRepositories.local.spec = {
-          mode = "ReadOnly";
-          allowedNamespaces.all = true;
-          backend = mirrorBackend;
-          encryption.passwordSecretRef = {
-            name = "kopiur-r2";
-            key = "KOPIA_PASSWORD";
-            namespace = "kopiur-system";
+        resources.clusterRepositories.local = lib.mkIf cluster.kopiur.backups {
+          spec = {
+            mode = "ReadOnly";
+            allowedNamespaces.all = true;
+            backend = mirrorBackend;
+            encryption.passwordSecretRef = {
+              name = "kopiur-r2";
+              key = "KOPIA_PASSWORD";
+              namespace = "kopiur-system";
+            };
+            credentialProjection.allowed = true;
+            # Filled by the replication only.
+            create.enabled = false;
+            # Restores name a kopia identity; no duplicate Snapshot catalog of r2's.
+            catalog.retain.perIdentity = 0;
+            moverDefaults.securityContext = nobody;
           };
-          credentialProjection.allowed = true;
-          # Filled by the replication only.
-          create.enabled = false;
-          # Restores name a kopia identity; no duplicate Snapshot catalog of r2's.
-          catalog.retain.perIdentity = 0;
-          moverDefaults.securityContext = nobody;
         };
       };
     };

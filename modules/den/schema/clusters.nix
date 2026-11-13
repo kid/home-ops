@@ -194,6 +194,12 @@
               };
             };
 
+            kopiur.backups = lib.mkOption {
+              type = lib.types.bool;
+              default = true;
+              description = "Whether this cluster backs up to and maintains kopiur's r2 repository (modules/kubernetes/kopiur): SnapshotSchedules, repository creation and maintenance, the r2-local RepositoryReplication and its node0 mirror. Off for a cluster that shares another one's repository: its r2 ClusterRepository is ReadOnly and it only restores, since two clusters must never write to or maintain the same repository.";
+            };
+
             aspect = lib.mkOption {
               type = lib.types.raw;
               default = den.aspects.${name} or { };
