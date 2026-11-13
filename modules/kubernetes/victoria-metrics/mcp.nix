@@ -61,6 +61,8 @@ _: {
               _: server: {
                 hostname = cluster.methods.mkAppHostname server.host;
                 inherit port;
+                # Declared in default.nix.
+                route = "${server.backend.name}-victoria-metrics";
               }
             )
             |> mcp.mkAuth

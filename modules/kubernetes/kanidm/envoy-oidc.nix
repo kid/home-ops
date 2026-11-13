@@ -1,16 +1,18 @@
 # Gates an app behind Kanidm with Envoy Gateway's native OIDC: one Kanidm client
-# per app, only granted to `group`, and a SecurityPolicy on the app's HTTPRoute.
+# per app, only granted to `group`, and a SecurityPolicy on the app's HTTPRoute,
+# or only on its rule `sectionName` when the route has rules that must stay open.
 # Returns an application module, for that application's `imports`.
 #
 # The endpoints are explicit: otherwise Envoy Gateway fetches discovery on every
 # config recompute and serves a 500 when Kanidm is unreachable.
-_:
+{ lib, ... }:
 let
   mkOidcAuth =
     kanidm:
     {
       name,
       httpRouteName,
+      sectionName ? null,
       hostname,
       group,
     }:
@@ -39,11 +41,14 @@ let
 
       resources.securityPolicies.${name}.spec = {
         targetRefs = [
-          {
-            group = "gateway.networking.k8s.io";
-            kind = "HTTPRoute";
-            name = httpRouteName;
-          }
+          (
+            {
+              group = "gateway.networking.k8s.io";
+              kind = "HTTPRoute";
+              name = httpRouteName;
+            }
+            // lib.optionalAttrs (sectionName != null) { inherit sectionName; }
+          )
         ];
         oidc = {
           provider = {
