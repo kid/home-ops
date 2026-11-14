@@ -20,11 +20,12 @@ _: {
     }:
     let
       issuerName = if cluster.letsencrypt.staging then "letsencrypt-staging" else "letsencrypt-prod";
-      acmeServer =
+      acmeHost =
         if cluster.letsencrypt.staging then
-          "https://acme-staging-v02.api.letsencrypt.org/directory"
+          "acme-staging-v02.api.letsencrypt.org"
         else
-          "https://acme-v02.api.letsencrypt.org/directory";
+          "acme-v02.api.letsencrypt.org";
+      acmeServer = "https://${acmeHost}/directory";
     in
     {
       nixidy.applicationImports = [
@@ -61,7 +62,7 @@ _: {
                 apiserverEgress
                 (fqdnEgress
                   [
-                    "acme-v02.api.letsencrypt.org"
+                    acmeHost
                     "api.cloudflare.com"
                   ]
                   [ 443 ]

@@ -31,7 +31,20 @@
     };
 
     nixos = {
-      imports = [ inputs.impermanence.nixosModules.impermanence ];
+      imports = [
+        inputs.impermanence.nixosModules.impermanence
+        # sops-nix decrypts with the host key in an activation script, which
+        # nothing orders after impermanence's bind mount of
+        # /etc/ssh/ssh_host_ed25519_key: read it from /persist directly.
+        (
+          { options, ... }:
+          {
+            config = lib.optionalAttrs (options ? sops) {
+              sops.age.sshKeyPaths = [ "/persist/etc/ssh/ssh_host_ed25519_key" ];
+            };
+          }
+        )
+      ];
 
       # ed25519 only — no RSA host key.
       services.openssh.hostKeys = lib.mkForce [
