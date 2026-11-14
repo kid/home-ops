@@ -35,7 +35,7 @@ spec:
               value: /tls/tls.crt
             - name: KOPIUR_WEBHOOK_TLS_KEY
               value: /tls/tls.key
-          image: ghcr.io/home-operations/kopiur-webhook@sha256:954f7e8a408e0cafba9bfa5eb9c3d40b83d577c582eebd883609e96983441e63
+          image: ghcr.io/home-operations/kopiur-webhook@sha256:bda93eed94b444e8fc8f95d9ee167931a61be08fb8a8fc89051ee304976715e2
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
