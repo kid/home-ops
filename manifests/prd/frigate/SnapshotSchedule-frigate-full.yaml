@@ -1,0 +1,12 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: frigate-full
+  namespace: home-assistant
+spec:
+  policyRef:
+    name: frigate-full
+  schedule:
+    cron: H 1 * * *
+    jitter: 30m
+    runOnCreate: false

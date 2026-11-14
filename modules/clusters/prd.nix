@@ -176,6 +176,9 @@ in
       localClass = "miroir";
     };
 
+    # Full on-site backups next to r2's; claims still restore from r2.
+    kopiur.local = true;
+
     nixidy = {
       repository = "https://github.com/kid/home-ops.git";
       branch = "main";

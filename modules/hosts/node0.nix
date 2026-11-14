@@ -44,10 +44,38 @@ in
       pkgs,
       lib,
       nfs-exports ? [ ],
+      k3s-nodes ? [ ],
       ...
     }:
     let
-      exportOf = path: "${path} ${storageCidr}(rw,insecure,no_subtree_check)\n";
+      # An export with a `writer` cluster (the nfs-exports quirk) is
+      # read-write only for its nodes' Storage addresses and read-only for the
+      # rest of the VLAN. Linux NFS picks a single host's entry over a
+      # network's, whatever their order on the line.
+      exportOf =
+        e:
+        let
+          options = access: "(${access},insecure,no_subtree_check)";
+          clients =
+            if e ? writer then
+              map (address: address + options "rw") (lib.concatMap storageAddresses (writersOf e))
+              ++ [ (storageCidr + options "ro") ]
+            else
+              [ (storageCidr + options "rw") ];
+        in
+        "${e.path} ${builtins.concatStringsSep " " clients}\n";
+      writersOf =
+        e:
+        k3s-nodes
+        |> lib.filter (n: n.cluster == e.writer && n.address != null)
+        |> map (n: n.hostname)
+        |> lib.unique;
+      storageAddresses =
+        hostname:
+        config.den.devices.${hostname}.interfaces
+        |> lib.filter (i: i.network == "Storage")
+        |> map (i: i.address);
+      snapshotted = lib.filter (e: e ? sanoid) nfs-exports;
       # A dataset's ancestors below zroot, down to its parent.
       ancestorsOf =
         dataset:
@@ -108,14 +136,14 @@ in
       services.nfs.server = {
         enable = true;
         exports =
-          [
+          map (path: { inherit path; }) [
             "/tank/library"
             "/tank/library/animes"
             "/tank/library/movies"
             "/tank/library/series"
             "/tank/downloads/sabnzbd"
           ]
-          ++ map (e: e.path) nfs-exports
+          ++ nfs-exports
           |> map exportOf
           |> builtins.concatStringsSep "";
       };
@@ -150,12 +178,22 @@ in
           )
           |> lib.listToAttrs
         );
-      assertions = map (e: {
-        assertion =
-          lib.hasPrefix "zroot/clusters/" e.dataset
-          && e.path == "/srv/${lib.removePrefix "zroot/" e.dataset}";
-        message = "nfs-exports: ${e.dataset} must sit under zroot/clusters and be exported at its inherited mountpoint, not ${e.path}";
-      }) nfs-exports;
+      assertions =
+        map (e: {
+          assertion =
+            lib.hasPrefix "zroot/clusters/" e.dataset
+            && e.path == "/srv/${lib.removePrefix "zroot/" e.dataset}";
+          message = "nfs-exports: ${e.dataset} must sit under zroot/clusters and be exported at its inherited mountpoint, not ${e.path}";
+        }) nfs-exports
+        ++ (
+          nfs-exports
+          |> lib.filter (e: e ? writer)
+          |> map (e: {
+            assertion =
+              writersOf e != [ ] && lib.all (hostname: lib.length (storageAddresses hostname) == 1) (writersOf e);
+            message = "nfs-exports: ${e.dataset} is writable by cluster ${e.writer}, which needs k3s nodes with exactly one Storage interface each in den.devices";
+          })
+        );
       # Exported with root_squash: the apps run as root, so the server sees
       # nobody. At boot tmpfiles sets this once zfs-mount has run; on the
       # switch that creates a dataset, `zfs create` mounts it inside
@@ -175,14 +213,10 @@ in
       );
       # Snapshots only the exports that ask for them (their `sanoid` entry), so
       # autoSnapshot stays off for tank. sanoid's cache needs no persistence.
-      services.sanoid =
-        let
-          snapshotted = lib.filter (e: e ? sanoid) nfs-exports;
-        in
-        lib.mkIf (snapshotted != [ ]) {
-          enable = true;
-          datasets = snapshotted |> map (e: lib.nameValuePair e.dataset e.sanoid) |> lib.listToAttrs;
-        };
+      services.sanoid = lib.mkIf (snapshotted != [ ]) {
+        enable = true;
+        datasets = snapshotted |> map (e: lib.nameValuePair e.dataset e.sanoid) |> lib.listToAttrs;
+      };
       # NFSv4 only; the kubelet negotiates 4.2.
       services.nfs.settings.nfsd.vers3 = false;
       networking.firewall.interfaces.storage-prd.allowedTCPPorts = [ 2049 ];
