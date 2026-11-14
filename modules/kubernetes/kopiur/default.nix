@@ -296,7 +296,19 @@ in
           credentialProjection.allowed = true;
           create.enabled = cluster.kopiur.backups;
         }
-        // lib.optionalAttrs (!cluster.kopiur.backups) { mode = "ReadOnly"; };
+        // (
+          if cluster.kopiur.backups then
+            {
+              # Kopia compacts an epoch only once the next one closes, so the
+              # current and previous epochs stay uncompacted. At kopia's 24h
+              # default, hourly backups kept ~2000 index blobs, past kopiur's
+              # 1000 IndexBlobHealth threshold. ReadOnly repositories can't
+              # set parameters.
+              parameters.epoch.minDuration = "6h";
+            }
+          else
+            { mode = "ReadOnly"; }
+        );
 
         # A blob-level copy of r2 (`kopia repository sync-to`): same format and
         # password, so `local` below opens it. Its credentials are r2's own
