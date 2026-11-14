@@ -12,6 +12,8 @@ spec:
         nfs:
           path: /srv/clusters/prd/apps/kopiur-local
           server: 10.0.20.10
+  concurrency:
+    maxConcurrentJobs: 1
   create:
     enabled: true
   credentialProjection:

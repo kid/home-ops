@@ -15,9 +15,11 @@ spec:
   mover:
     privilegedMode: true
     resources:
+      limits:
+        memory: 1Gi
       requests:
         cpu: 50m
-        memory: 192Mi
+        memory: 512Mi
     securityContext:
       runAsGroup: 0
       runAsNonRoot: false
