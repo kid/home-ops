@@ -115,19 +115,35 @@
           ];
         };
 
+      parentRefs = [
+        {
+          group = "gateway.networking.k8s.io";
+          kind = "Gateway";
+          name = "apps";
+          namespace = "envoy-gateway-system";
+          sectionName = "https";
+        }
+      ];
       mkRoute = hostname: {
         enabled = true;
-        parentRefs = [
-          {
-            group = "gateway.networking.k8s.io";
-            kind = "Gateway";
-            name = "apps";
-            namespace = "envoy-gateway-system";
-            sectionName = "https";
-          }
-        ];
+        inherit parentRefs;
         hostnames = [ hostname ];
       };
+
+      # Routes declared here instead of by the chart, so the MCP servers
+      # (mcp.nix) can add their rules to them. They keep the chart's
+      # <component>-victoria-metrics names. OIDC covers only their `app` rule.
+      ownRoutes = {
+        vmsingle = {
+          host = "metrics";
+          port = 8428;
+        };
+        vlsingle = {
+          host = "logs";
+          port = 9428;
+        };
+      };
+      appRule = "app";
     in
     {
       nixidy.applicationImports = [
@@ -340,7 +356,6 @@
                   limits.memory = "2Gi";
                 };
               };
-              route = mkRoute (cluster.methods.mkAppHostname "metrics");
             };
 
             vmalert = {
@@ -375,7 +390,6 @@
                   limits.memory = "512Mi";
                 };
               };
-              route = mkRoute (cluster.methods.mkAppHostname "logs");
             };
 
             vlagent = {
@@ -469,23 +483,50 @@
           in
           configMap.data |> builtins.toJSON |> builtins.hashString "sha256";
 
-        # The chart names each route <component>-victoria-metrics.
-        imports =
-          lib.mapAttrsToList
-            (
-              name: host:
-              cluster.methods.mkOidcAuth {
-                inherit name;
-                httpRouteName = "${name}-victoria-metrics";
-                hostname = cluster.methods.mkAppHostname host;
-                group = "admins";
-              }
-            )
-            {
-              vmsingle = "metrics";
-              vlsingle = "logs";
-              vmalert = "vmalert";
+        resources.httpRoutes = lib.mapAttrs' (
+          name:
+          { host, port }:
+          lib.nameValuePair "${name}-victoria-metrics" {
+            spec = {
+              inherit parentRefs;
+              hostnames = [ (cluster.methods.mkAppHostname host) ];
+              rules = [
+                {
+                  name = appRule;
+                  matches = [
+                    {
+                      path = {
+                        type = "PathPrefix";
+                        value = "/";
+                      };
+                    }
+                  ];
+                  backendRefs = [
+                    {
+                      group = "";
+                      kind = "Service";
+                      name = "${name}-victoria-metrics";
+                      inherit port;
+                      weight = 1;
+                    }
+                  ];
+                }
+              ];
             };
+          }
+        ) ownRoutes;
+
+        # Every route is named <component>-victoria-metrics.
+        imports = lib.mapAttrsToList (
+          name: host:
+          cluster.methods.mkOidcAuth {
+            inherit name;
+            httpRouteName = "${name}-victoria-metrics";
+            sectionName = if ownRoutes ? ${name} then appRule else null;
+            hostname = cluster.methods.mkAppHostname host;
+            group = "admins";
+          }
+        ) (lib.mapAttrs (_: route: route.host) ownRoutes // { vmalert = "vmalert"; });
 
         resources.grafanaDatasources.victoria-metrics.spec = {
           instanceSelector.matchLabels.dashboards = "grafana";
