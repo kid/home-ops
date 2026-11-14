@@ -111,8 +111,16 @@ let
             repository = clusterRepository "local";
             credentialProjection.enabled = true;
             inherit staging;
+            # A full run walks every file (Plex's 170k peaked at 608Mi): the
+            # request places it, the limit keeps a runaway mover from taking
+            # the node down with it.
             mover = rootMover // {
-              resources = moverResources;
+              resources = {
+                requests = moverResources.requests // {
+                  memory = "512Mi";
+                };
+                limits.memory = "1Gi";
+              };
             };
             sources = [ { pvc.name = claim; } ];
             identity = {
@@ -466,6 +474,9 @@ in
                 # As r2's above: few index blobs per daily run, but the same
                 # bound on what an uncompacted epoch can hold.
                 parameters.epoch.minDuration = "6h";
+                # The -full runs all fall in the same nightly window: one at a
+                # time, not a dozen full-volume reads at once.
+                concurrency.maxConcurrentJobs = 1;
               }
             else
               { mode = "ReadOnly"; }
