@@ -10,13 +10,10 @@ spec:
       path: /repo
       volume:
         nfs:
-          path: /srv/clusters/prd/apps/kopiur
+          path: /srv/clusters/prd/apps/kopiur-local
           server: 10.0.20.10
-  catalog:
-    retain:
-      perIdentity: 0
   create:
-    enabled: false
+    enabled: true
   credentialProjection:
     allowed: true
   encryption:
@@ -24,8 +21,10 @@ spec:
       key: KOPIA_PASSWORD
       name: kopiur-r2
       namespace: kopiur-system
-  mode: ReadOnly
   moverDefaults:
     securityContext:
       runAsGroup: 65534
       runAsUser: 65534
+  parameters:
+    epoch:
+      minDuration: 6h

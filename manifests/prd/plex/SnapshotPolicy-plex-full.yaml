@@ -1,0 +1,35 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: plex-full
+  namespace: media
+spec:
+  credentialProjection:
+    enabled: true
+  files:
+    ignoreRules:
+      - /lost+found
+  identity:
+    hostname: plex-full
+    username: plex-full
+  mover:
+    privilegedMode: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 0
+      runAsNonRoot: false
+      runAsUser: 0
+  repository:
+    kind: ClusterRepository
+    name: local
+  retention:
+    keepDaily: 7
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: plex
+  staging:
+    storageClassName: miroir

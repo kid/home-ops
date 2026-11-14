@@ -85,7 +85,17 @@ in
     (pipe.from "nfs-exports" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
   ];
 
-  den.schema.host.includes = [ den.policies.host-collect-nfs-exports ];
+  # Same for the `k3s-nodes` quirk: node0 exports a cluster's writable
+  # datasets (an nfs-exports fragment's `writer`) read-write only to that
+  # cluster's nodes. `host` is the entity kind, as above.
+  den.policies.host-collect-k3s-nodes = _: [
+    (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
+  ];
+
+  den.schema.host.includes = [
+    den.policies.host-collect-nfs-exports
+    den.policies.host-collect-k3s-nodes
+  ];
 
   den.schema.cluster.includes = [
     den.policies.cluster-collect-miroir-nodes

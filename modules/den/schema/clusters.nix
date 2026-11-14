@@ -194,10 +194,25 @@
               };
             };
 
-            kopiur.backups = lib.mkOption {
-              type = lib.types.bool;
-              default = true;
-              description = "Whether this cluster backs up to and maintains kopiur's r2 repository (modules/kubernetes/kopiur): SnapshotSchedules, repository creation and maintenance, the r2-local RepositoryReplication and its node0 mirror. Off for a cluster that shares another one's repository: its r2 ClusterRepository is ReadOnly and it only restores, since two clusters must never write to or maintain the same repository.";
+            kopiur = {
+              backups = lib.mkOption {
+                type = lib.types.bool;
+                default = true;
+                description = "Whether this cluster backs up to and maintains kopiur's r2 repository (modules/kubernetes/kopiur): SnapshotSchedules, repository creation and maintenance. Off for a cluster that shares another one's repository: its r2 ClusterRepository is ReadOnly and it only restores, since two clusters must never write to or maintain the same repository.";
+              };
+              local = lib.mkOption {
+                type = lib.types.bool;
+                default = false;
+                description = "Whether this cluster writes full backups to its own on-site `local` kopiur repository (modules/kubernetes/kopiur), a node0 NFS export: a daily root `<name>-full` SnapshotPolicy per backed-up claim, ignore rules and all, plus VMSingle's and VLSingle's claims. At most one cluster per environment: the others open it ReadOnly when restoreFrom is \"local\".";
+              };
+              restoreFrom = lib.mkOption {
+                type = lib.types.enum [
+                  "r2"
+                  "local"
+                ];
+                default = "r2";
+                description = "Which repository new claims' Restores read: r2 (each claim's own policy identity), or local (its `<name>-full` identity, run as root to keep every file's owner; VMSingle and VLSingle restore too). Only affects claims created from then on: a bound claim never repopulates.";
+              };
             };
 
             aspect = lib.mkOption {

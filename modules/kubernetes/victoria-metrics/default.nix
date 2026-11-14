@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ den, lib, ... }:
 {
   # Host ports vmagent scrapes: node-exporter on every node, and the
   # control-plane components of the static scrapes below.
@@ -45,6 +45,39 @@
       ...
     }:
     let
+      # The claims the operator makes from spec.storage, named after the
+      # VMSingle and VLSingle: spec.storage is their whole PVC spec, a
+      # dataSourceRef included, read only when the claim is created.
+      kopiurBackups =
+        if cluster.includesAspect den.aspects.kubernetes.kopiur then
+          [
+            "vmsingle-victoria-metrics"
+            "vlsingle-victoria-metrics"
+          ]
+          |> map (
+            claim:
+            cluster.methods.mkKopiurBackup {
+              name = claim;
+              existingClaim = claim;
+              r2 = false;
+            }
+          )
+          |> lib.foldl' lib.recursiveUpdate { }
+        else
+          {
+            snapshotPolicies = { };
+            restores = { };
+          };
+      restoredFrom =
+        claim:
+        lib.optionalAttrs (kopiurBackups.restores ? ${claim}) {
+          dataSourceRef = {
+            apiGroup = "kopiur.home-operations.com";
+            kind = "Restore";
+            name = claim;
+          };
+        };
+
       # Control-plane ports only exist on servers.
       k3sNodeAddresses =
         k3s-nodes |> lib.filter (n: n.address != null && n.role == "server") |> map (n: n.address);
@@ -107,6 +140,16 @@
           ];
         })
       ];
+
+      # Full backups of both claims to kopiur's local repository only (too
+      # big and too easily rebuilt for r2), and restores from it.
+      imports = lib.optional (kopiurBackups.snapshotPolicies != { } || kopiurBackups.restores != { }) {
+        applications.victoria-metrics = {
+          # The kopiur webhook admits the backup objects.
+          flux.dependsOn = [ "kopiur-config" ];
+          resources = kopiurBackups;
+        };
+      };
 
       applications.victoria-metrics = {
         namespace = "monitoring";
@@ -287,7 +330,8 @@
                   storageClassName = cluster.storage.replicatedClass;
                   accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "10Gi";
-                };
+                }
+                // restoredFrom "vmsingle-victoria-metrics";
                 resources = {
                   requests = {
                     cpu = "100m";
@@ -321,7 +365,8 @@
                   storageClassName = cluster.storage.replicatedClass;
                   accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "5Gi";
-                };
+                }
+                // restoredFrom "vlsingle-victoria-metrics";
                 resources = {
                   requests = {
                     cpu = "10m";
