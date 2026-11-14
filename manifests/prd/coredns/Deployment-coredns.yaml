@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: a23c329ada59510de2301ccf907328ea6e89f2dee9e8bca383d29dbce1ec3f3f
+        checksum/config: c76753060cb10d9cfcbc17fdc1936505adde74f361b9abd229fc0ef430d42625
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
       labels:
         app.kubernetes.io/instance: coredns
@@ -43,7 +43,7 @@ spec:
               path: /health
               port: 8080
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 0
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 5
@@ -64,7 +64,7 @@ spec:
               path: /ready
               port: 8181
               scheme: HTTP
-            initialDelaySeconds: 30
+            initialDelaySeconds: 0
             periodSeconds: 5
             successThreshold: 1
             timeoutSeconds: 5
@@ -87,6 +87,7 @@ spec:
             runAsUser: 65532
             seccompProfile:
               type: RuntimeDefault
+          terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
             - mountPath: /etc/coredns
               name: config-volume
