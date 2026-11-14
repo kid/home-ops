@@ -75,6 +75,9 @@ in
         config.den.devices.${hostname}.interfaces
         |> lib.filter (i: i.network == "Storage")
         |> map (i: i.address);
+      # Where syncoid keeps a copy of a snapshotted export: the same path on
+      # tank, under tank/backups.
+      backupOf = dataset: "tank/backups/${lib.removePrefix "zroot/" dataset}";
       snapshotted = lib.filter (e: e ? sanoid) nfs-exports;
       # A dataset's ancestors below zroot, down to its parent.
       ancestorsOf =
@@ -216,6 +219,67 @@ in
       services.sanoid = lib.mkIf (snapshotted != [ ]) {
         enable = true;
         datasets = snapshotted |> map (e: lib.nameValuePair e.dataset e.sanoid) |> lib.listToAttrs;
+      };
+      # Copies those snapshots to tank daily, off the NVMe pool: only sanoid's
+      # (no sync snapshot of its own), and the copy keeps the same ones. The
+      # copy is readonly and never mounted. Nothing here touches tank's own
+      # properties: syncoid's zfs allow lands on tank/backups' datasets, which
+      # it creates as needed. No state to persist: a local syncoid keeps none.
+      services.syncoid = lib.mkIf (snapshotted != [ ]) {
+        enable = true;
+        interval = "*-*-* 06:00:00";
+        commonArgs = [
+          "--no-sync-snap"
+          "--delete-target-snapshots"
+        ];
+        commands =
+          snapshotted
+          |> map (
+            e:
+            let
+              target = backupOf e.dataset;
+              # zfs receive creates no missing parent; tank/backups/clusters/...
+              # down to the target's parent, none of them mounted.
+              parents = lib.genList (
+                i:
+                target
+                |> lib.splitString "/"
+                |> lib.take (i + 2)
+                |> lib.concatStringsSep "/"
+              ) (lib.length (lib.splitString "/" target) - 2);
+            in
+            lib.nameValuePair e.dataset {
+              inherit target;
+              recvOptions = "u o readonly=on o canmount=noauto";
+              # Without its own sync snapshots, syncoid only reads the source.
+              localSourceAllow = [
+                "hold"
+                "send"
+              ];
+              localTargetAllow = [
+                "create"
+                "mount"
+                "receive"
+                "rollback"
+                "destroy"
+                "readonly"
+                "canmount"
+              ];
+              service.serviceConfig.ExecStartPre = lib.mkBefore [
+                "+${
+                  pkgs.writeShellScript "syncoid-parents" (
+                    parents
+                    |> map (d: ''
+                      /run/booted-system/sw/bin/zfs list ${d} >/dev/null 2>&1 \
+                        || /run/booted-system/sw/bin/zfs create -o canmount=off ${d}
+                    '')
+                    |> lib.concatStrings
+                  )
+                }"
+              ];
+            }
+          )
+          |> lib.listToAttrs;
       };
       # NFSv4 only; the kubelet negotiates 4.2.
       services.nfs.settings.nfsd.vers3 = false;

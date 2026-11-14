@@ -6,8 +6,8 @@
 # `dataset` zroot/clusters/<cluster>/apps/<app>, mounted (inherited ZFS
 # mountpoint) and exported at `path` /srv/clusters/<cluster>/apps/<app>, which
 # the app's pods mount; `properties` extra ZFS properties; `sanoid`, when set,
-# the dataset's `services.sanoid.datasets` entry (node0 snapshots nothing else);
-# `writer`, when set, the cluster whose k3s
+# the dataset's `services.sanoid.datasets` entry (node0 snapshots nothing else),
+# also copied to tank by syncoid; `writer`, when set, the cluster whose k3s
 # nodes (the k3s-nodes quirk) get the export read-write, through their Storage
 # addresses; every other client gets it read-only.
 let

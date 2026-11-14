@@ -185,7 +185,7 @@ in
 
   # The on-site full backup repository (`local` below), on node0's NVMe pool.
   # Daily ZFS snapshots keep a bad maintenance run or a deleted snapshot
-  # recoverable.
+  # recoverable; node0 also replicates them to tank (modules/hosts/node0.nix).
   # Only the cluster with kopiur.local writes it: node0 exports it read-write
   # to that cluster's nodes only, read-only to every other Storage client.
   den.aspects.kubernetes.kopiur.nfs-exports =
