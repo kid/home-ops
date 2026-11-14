@@ -77,10 +77,6 @@ in
       # snapshot every tank dataset.
       services.zfs.autoSnapshot.enable = false;
 
-      # ZFS only. LVM would otherwise scan the Incus zvols and try to
-      # activate the volume groups the k3s VMs created on them.
-      services.lvm.enable = false;
-
       # The ARC would otherwise grow to nearly all RAM, which the k3s VMs need.
       boot.extraModprobeConfig = "options zfs zfs_arc_max=${toString (4 * 1024 * 1024 * 1024)}";
 
