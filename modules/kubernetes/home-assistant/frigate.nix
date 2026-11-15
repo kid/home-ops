@@ -196,6 +196,9 @@ in
   ];
 
   # Its recordings and snapshots: a node0 dataset, exported to the nodes.
+  # sanoid's dailies are what node0's syncoid copies to tank; Frigate keeps
+  # its own 14 days, so three are enough for an incremental base (they count
+  # against the quota, at ~0.3G of churn a day).
   den.aspects.kubernetes.home-assistant.frigate.nfs-exports = { cluster, ... }: [
     (
       cluster.methods.nfsExport name
@@ -203,6 +206,14 @@ in
         properties = {
           recordsize = "1M";
           quota = "200G";
+        };
+        sanoid = {
+          autosnap = true;
+          autoprune = true;
+          hourly = 0;
+          daily = 3;
+          monthly = 0;
+          yearly = 0;
         };
       }
     )
