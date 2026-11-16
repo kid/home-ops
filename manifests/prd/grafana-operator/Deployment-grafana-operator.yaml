@@ -46,7 +46,7 @@ spec:
               value: safe
             - name: CLUSTER_DOMAIN
               value: ""
-          image: ghcr.io/grafana/grafana-operator:v5.25.0
+          image: ghcr.io/grafana/grafana-operator:v5.26.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
