@@ -239,6 +239,10 @@ in
       );
     in
     {
+      # Public through the tunnel, still behind the Envoy OIDC below.
+      applications.envoy-gateway.resources.httpRoutes."${name}-public" =
+        cluster.methods.mkGatewayTunnelRoute hostname;
+
       applications.frigate = {
         inherit namespace;
         flux.dependsOn = [

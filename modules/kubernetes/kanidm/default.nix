@@ -69,6 +69,10 @@
         |> lib.mapAttrs (_: u: u // { allGroups = acl.closure u.groups; });
     in
     {
+      # Public through the tunnel, so OAuth2 logins work from outside.
+      applications.envoy-gateway.resources.httpRoutes.kanidm-public =
+        cluster.methods.mkGatewayTunnelRoute domain;
+
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
           name = "kaniop";

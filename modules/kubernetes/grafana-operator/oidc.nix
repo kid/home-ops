@@ -8,6 +8,10 @@ _: {
       origin = "https://${cluster.methods.mkAppHostname "grafana"}";
     in
     {
+      # Public through the tunnel: with the login form off, Kanidm is the only way in.
+      applications.envoy-gateway.resources.httpRoutes.grafana-public =
+        cluster.methods.mkGatewayTunnelRoute (cluster.methods.mkAppHostname "grafana");
+
       applications.grafana-operator = {
         flux.dependsOn = [ "kaniop" ];
 

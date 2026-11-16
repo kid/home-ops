@@ -263,5 +263,10 @@
           ];
         };
       };
+
+      # Public through the tunnel: the UI and its MCP server keep their own Kanidm logins.
+      applications.envoy-gateway = lib.mkIf webUi {
+        resources.httpRoutes.flux-web-public = cluster.methods.mkGatewayTunnelRoute hostname;
+      };
     };
 }
