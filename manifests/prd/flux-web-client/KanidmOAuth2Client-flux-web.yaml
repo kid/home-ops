@@ -18,4 +18,3 @@ spec:
         - openid
         - profile
         - email
-        - groups_name

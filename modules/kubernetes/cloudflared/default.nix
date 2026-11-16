@@ -1,4 +1,50 @@
-_: {
+# Public routes take one of two paths. An HTTPRoute on the cloudflare-tunnel
+# Gateway can go straight to an app's Service (home-assistant), which then
+# bypasses the apps Gateway. mkGatewayTunnelRoute's route instead hands the
+# request to the apps Gateway's Envoy, which serves it through the app's own
+# route there: its SecurityPolicies (envoy-oidc.nix, mcp-auth.nix), timeouts
+# and filters apply from outside too.
+_:
+let
+  gatewayNamespace = "envoy-gateway-system";
+  gatewayService = "apps-tunnel";
+  # trust-manager's ConfigMap of the public roots that sign wildcard-tls.
+  publicRoots = "public-roots";
+  # The SNI the tunnel proxy sends to Envoy. The apps Gateway has a single
+  # listener and certificate, so Envoy routes by Host whatever the SNI, as long
+  # as wildcard-tls covers it.
+  sni = cluster: cluster.methods.mkAppHostname "apps-gateway";
+in
+{
+  den.clusterMethods.mkGatewayTunnelRoute = _: hostname: {
+    metadata.labels."home-ops.dev/public-dns" = "true";
+    spec = {
+      parentRefs = [
+        {
+          group = "gateway.networking.k8s.io";
+          kind = "Gateway";
+          name = "cloudflare-tunnel";
+          namespace = "cloudflare-tunnel-system";
+          sectionName = "http";
+        }
+      ];
+      hostnames = [ hostname ];
+      rules = [
+        {
+          backendRefs = [
+            {
+              group = "";
+              kind = "Service";
+              name = gatewayService;
+              port = 443;
+              weight = 1;
+            }
+          ];
+        }
+      ];
+    };
+  };
+
   den.aspects.kubernetes.cloudflared.k8s-manifests =
     {
       charts,
@@ -111,6 +157,59 @@ _: {
               }
             ];
           };
+        };
+      };
+
+      # mkGatewayTunnelRoute's backend: the apps Gateway's Envoy pods, on a
+      # ClusterIP Service of its own (Envoy Gateway names its LoadBalancer
+      # after a hash). The wss appProtocol makes the tunnel proxy pass
+      # WebSocket upgrades, over TLS.
+      applications.envoy-gateway.resources = {
+        services.${gatewayService}.spec = {
+          selector = {
+            "app.kubernetes.io/name" = "envoy";
+            "gateway.envoyproxy.io/owning-gateway-name" = "apps";
+            "gateway.envoyproxy.io/owning-gateway-namespace" = gatewayNamespace;
+          };
+          ports = [
+            {
+              name = "https";
+              port = 443;
+              # Envoy Gateway remaps privileged listener ports to 10000 + port.
+              targetPort = 10443;
+              protocol = "TCP";
+              appProtocol = "kubernetes.io/wss";
+            }
+          ];
+        };
+
+        backendTLSPolicies.${gatewayService}.spec = {
+          targetRefs = [
+            {
+              group = "";
+              kind = "Service";
+              name = gatewayService;
+            }
+          ];
+          validation = {
+            hostname = sni cluster;
+            caCertificateRefs = [
+              {
+                group = "";
+                kind = "ConfigMap";
+                name = publicRoots;
+              }
+            ];
+          };
+        };
+      };
+
+      # The tunnel proxy only takes explicit CA references, no system roots.
+      applications.trust-manager-config.resources.bundles.${publicRoots}.spec = {
+        sources = [ { useDefaultCAs = true; } ];
+        target = {
+          configMap.key = "ca.crt";
+          namespaceSelector.matchLabels."kubernetes.io/metadata.name" = gatewayNamespace;
         };
       };
     };
