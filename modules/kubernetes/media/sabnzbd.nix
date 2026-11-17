@@ -12,7 +12,7 @@
         # The image writes it into sabnzbd.ini at start.
         apiKeyEnv = "SABNZBD__API_KEY";
         # renovate: datasource=docker depName=ghcr.io/home-operations/sabnzbd
-        tag = "5.1.3@sha256:c89b0322721c3eba47221e5f916505e7e742684651f73c5215717340b6b5402f";
+        tag = "5.1.3@sha256:07790a7829201d9ea302e8b862078beac4b1a07003fe8359e3f069b6bcd84a95";
         port = 8080;
         # The image writes these into sabnzbd.ini at start.
         env = {
