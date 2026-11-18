@@ -1,0 +1,23 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: radarr
+  namespace: media
+spec:
+  disableConsentPrompt: true
+  displayname: radarr
+  kanidmRef:
+    name: idm
+    namespace: kanidm
+  origin: https://radarr.kidibox.net
+  redirectUrl:
+    - https://radarr.kidibox.net/oauth2/callback
+  scopeMap:
+    - group: media
+      scopes:
+        - openid
+        - profile
+        - email
+  secretKeyAliases:
+    clientSecret:
+      - client-secret

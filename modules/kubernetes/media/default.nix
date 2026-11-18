@@ -1,7 +1,8 @@
 # The shape every media app here shares: one Deployment on a kopiur-backed
-# config volume, its Service and HTTPRoute on the apps Gateway, NFS mounts
-# from node0's tank pool, and its Cilium policy. Returns the nixidy application, for
-# `applications.<name>`.
+# config volume, its Service and HTTPRoute on the apps Gateway, behind Kanidm
+# and public through the tunnel, NFS mounts from node0's tank pool, and its
+# Cilium policy. Returns the k8s-manifests content: the nixidy application,
+# plus its tunnel route in envoy-gateway.
 { config, lib, ... }:
 let
   # The nodes reach node0 on the Storage VLAN, not through the router.
@@ -49,6 +50,11 @@ let
       # A share of k3s-prd-0's iGPU VF at /dev/dri/renderD128
       # (generic-device-plugin), which also pins the pod to that node.
       gpu ? false,
+      # The Kanidm group let through Envoy's OIDC on its route, which then
+      # also goes public through the tunnel. null: no OIDC, LAN only.
+      oidcGroup ? "media",
+      # Passed on to the app by the image's entrypoint.
+      args ? [ ],
     }:
     let
       labels."app.kubernetes.io/name" = name;
@@ -70,196 +76,213 @@ let
         ];
       };
       apiKeySecret = "${name}-api-key";
-    in
-    {
-      inherit namespace;
-      flux.dependsOn = [
-        # The kopiur webhook admits the backup objects.
-        "kopiur-config"
-      ]
-      # The API key's Password generator and ExternalSecret.
-      ++ lib.optional (apiKeyEnv != null) "external-secrets-config";
+      application = {
+        inherit namespace;
+        flux.dependsOn = [
+          # The kopiur webhook admits the backup objects.
+          "kopiur-config"
+        ]
+        # The API key's Password generator and ExternalSecret.
+        ++ lib.optional (apiKeyEnv != null) "external-secrets-config";
 
-      resources =
-        methods.mkKopiurBackup {
-          inherit name uid storage;
-          # Cover art and indexer definitions are re-downloaded, the rest is
-          # the app's own logs and zip backups.
-          ignore = [
-            "/MediaCover"
-            "/Definitions"
-            "/Backups"
-            "/Sentry"
-            "/UpdateLogs"
-            "/logs"
-            "/logs.db*"
-          ]
-          ++ backupIgnore;
-        }
-        // lib.optionalAttrs (replicas == null) (methods.mkNfsScaler { inherit name; })
-        // lib.optionalAttrs (apiKeyEnv != null) {
-          # Generated once: the other apps keep it in their own settings.
-          passwords.${apiKeySecret}.spec = {
-            length = 32;
-            digits = 10;
-            symbols = 0;
-            noUpper = true;
-            allowRepeat = true;
-            secretKeys = [ "api-key" ];
-          };
-          externalSecrets.${apiKeySecret}.spec = {
-            refreshPolicy = "CreatedOnce";
-            target.name = apiKeySecret;
-            dataFrom = [
-              {
-                sourceRef.generatorRef = {
-                  apiVersion = "generators.external-secrets.io/v1alpha1";
-                  kind = "Password";
-                  name = apiKeySecret;
-                };
-              }
-            ];
-          };
-        }
-        // {
-          ciliumNetworkPolicies.${name} =
-            with methods.netpol;
-            mkPolicy labels {
-              ingress = [
-                (gatewayIngress port)
-                # The other media apps, by Service name.
-                (fromPods { } [ port ])
-              ];
-              # Indexers and metadata (world); the other media apps, by
-              # Service name.
-              egress = [
-                (worldEgress egressPorts)
-                { toEndpoints = [ { } ]; }
+        imports = lib.optional (oidcGroup != null) (
+          methods.mkOidcAuth {
+            inherit name hostname;
+            httpRouteName = name;
+            group = oidcGroup;
+          }
+        );
+
+        resources =
+          methods.mkKopiurBackup {
+            inherit name uid storage;
+            # Cover art and indexer definitions are re-downloaded, the rest is
+            # the app's own logs and zip backups.
+            ignore = [
+              "/MediaCover"
+              "/Definitions"
+              "/Backups"
+              "/Sentry"
+              "/UpdateLogs"
+              "/logs"
+              "/logs.db*"
+            ]
+            ++ backupIgnore;
+          }
+          // lib.optionalAttrs (replicas == null) (methods.mkNfsScaler { inherit name; })
+          // lib.optionalAttrs (apiKeyEnv != null) {
+            # Generated once: the other apps keep it in their own settings.
+            passwords.${apiKeySecret}.spec = {
+              length = 32;
+              digits = 10;
+              symbols = 0;
+              noUpper = true;
+              allowRepeat = true;
+              secretKeys = [ "api-key" ];
+            };
+            externalSecrets.${apiKeySecret}.spec = {
+              refreshPolicy = "CreatedOnce";
+              target.name = apiKeySecret;
+              dataFrom = [
+                {
+                  sourceRef.generatorRef = {
+                    apiVersion = "generators.external-secrets.io/v1alpha1";
+                    kind = "Password";
+                    name = apiKeySecret;
+                  };
+                }
               ];
             };
+          }
+          // {
+            ciliumNetworkPolicies.${name} =
+              with methods.netpol;
+              mkPolicy labels {
+                ingress = [
+                  (gatewayIngress port)
+                  # The other media apps, by Service name.
+                  (fromPods { } [ port ])
+                ];
+                # Indexers and metadata (world); the other media apps, by
+                # Service name.
+                egress = [
+                  (worldEgress egressPorts)
+                  { toEndpoints = [ { } ]; }
+                ];
+              };
 
-          deployments.${name}.spec = lib.optionalAttrs (replicas != null) { inherit replicas; } // {
-            strategy.type = "Recreate";
-            selector.matchLabels = labels;
-            template = {
-              metadata = { inherit labels; };
-              spec = {
-                automountServiceAccountToken = false;
-                securityContext = {
-                  runAsNonRoot = true;
-                  runAsUser = uid;
-                  runAsGroup = uid;
-                  fsGroup = uid;
-                  fsGroupChangePolicy = "OnRootMismatch";
-                  seccompProfile.type = "RuntimeDefault";
-                }
-                // lib.optionalAttrs (supplementalGroups != [ ]) { inherit supplementalGroups; };
-                containers.${name} = {
-                  image = "ghcr.io/home-operations/${app}:${tag}";
-                  env =
-                    lib.mapAttrs (_: value: { inherit value; }) (
-                      lib.optionalAttrs servarr {
-                        # No login of its own; Kanidm in front of it comes later.
-                        "${envPrefix}__AUTH__METHOD" = "External";
-                        "${envPrefix}__AUTH__REQUIRED" = "DisabledForLocalAddresses";
-                        # Only requests through the apps Gateway or the Service.
-                        "${envPrefix}__SERVER__ALLOWEDHOSTS" = "${hostname},${serviceHostname}";
-                        # Logs go to stdout; the log database behind System ->
-                        # Events only duplicates them.
-                        "${envPrefix}__LOG__DBENABLED" = "false";
-                        # Over whatever level the imported config.xml carries.
-                        "${envPrefix}__LOG__LEVEL" = "info";
-                      }
-                      // env
-                    )
-                    // lib.optionalAttrs (apiKeyEnv != null) {
-                      ${apiKeyEnv}.valueFrom.secretKeyRef = {
-                        name = apiKeySecret;
-                        key = "api-key";
-                      };
-                    };
-                  ports.http.containerPort = port;
-                  # Database migrations run before the app answers.
-                  startupProbe = {
-                    httpGet = probe;
-                    failureThreshold = 60;
-                  };
-                  livenessProbe.httpGet = probe;
-                  readinessProbe.httpGet = probe;
+            deployments.${name}.spec = lib.optionalAttrs (replicas != null) { inherit replicas; } // {
+              strategy.type = "Recreate";
+              selector.matchLabels = labels;
+              template = {
+                metadata = { inherit labels; };
+                spec = {
+                  automountServiceAccountToken = false;
                   securityContext = {
-                    allowPrivilegeEscalation = false;
-                    readOnlyRootFilesystem = true;
-                    capabilities.drop = [ "ALL" ];
-                  };
-                  resources = {
-                    requests = {
-                      cpu = "50m";
-                      memory = "256Mi";
+                    runAsNonRoot = true;
+                    runAsUser = uid;
+                    runAsGroup = uid;
+                    fsGroup = uid;
+                    fsGroupChangePolicy = "OnRootMismatch";
+                    seccompProfile.type = "RuntimeDefault";
+                  }
+                  // lib.optionalAttrs (supplementalGroups != [ ]) { inherit supplementalGroups; };
+                  containers.${name} = {
+                    image = "ghcr.io/home-operations/${app}:${tag}";
+                    env =
+                      lib.mapAttrs (_: value: { inherit value; }) (
+                        lib.optionalAttrs servarr {
+                          # No login of its own: Kanidm in front, through Envoy.
+                          "${envPrefix}__AUTH__METHOD" = "External";
+                          "${envPrefix}__AUTH__REQUIRED" = "DisabledForLocalAddresses";
+                          # Only requests through the apps Gateway or the Service.
+                          "${envPrefix}__SERVER__ALLOWEDHOSTS" = "${hostname},${serviceHostname}";
+                          # Logs go to stdout; the log database behind System ->
+                          # Events only duplicates them.
+                          "${envPrefix}__LOG__DBENABLED" = "false";
+                          # Over whatever level the imported config.xml carries.
+                          "${envPrefix}__LOG__LEVEL" = "info";
+                        }
+                        // env
+                      )
+                      // lib.optionalAttrs (apiKeyEnv != null) {
+                        ${apiKeyEnv}.valueFrom.secretKeyRef = {
+                          name = apiKeySecret;
+                          key = "api-key";
+                        };
+                      };
+                    ports.http.containerPort = port;
+                    # Database migrations run before the app answers.
+                    startupProbe = {
+                      httpGet = probe;
+                      failureThreshold = 60;
                     };
-                    limits = {
-                      memory = memoryLimit;
+                    livenessProbe.httpGet = probe;
+                    readinessProbe.httpGet = probe;
+                    securityContext = {
+                      allowPrivilegeEscalation = false;
+                      readOnlyRootFilesystem = true;
+                      capabilities.drop = [ "ALL" ];
+                    };
+                    resources = {
+                      requests = {
+                        cpu = "50m";
+                        memory = "256Mi";
+                      };
+                      limits = {
+                        memory = memoryLimit;
+                      }
+                      // lib.optionalAttrs gpu { "devic.es/intel-gpu" = 1; };
+                    };
+                    volumeMounts = {
+                      "/config".name = "config";
+                      # The log files have no off switch; keep them off the
+                      # volume.
+                      "/config/logs".name = "logs";
+                      "/tmp".name = "tmp";
                     }
-                    // lib.optionalAttrs gpu { "devic.es/intel-gpu" = 1; };
-                  };
-                  volumeMounts = {
-                    "/config".name = "config";
-                    # The log files have no off switch; keep them off the
-                    # volume.
-                    "/config/logs".name = "logs";
-                    "/tmp".name = "tmp";
+                    // lib.mapAttrs' (
+                      volume: v:
+                      lib.nameValuePair v.mountPath (
+                        { name = volume; } // lib.optionalAttrs (v.readOnly or false) { readOnly = true; }
+                      )
+                    ) nfs;
                   }
-                  // lib.mapAttrs' (
-                    volume: v:
-                    lib.nameValuePair v.mountPath (
-                      { name = volume; } // lib.optionalAttrs (v.readOnly or false) { readOnly = true; }
-                    )
-                  ) nfs;
+                  // lib.optionalAttrs (args != [ ]) { inherit args; };
+                  volumes = {
+                    config.persistentVolumeClaim.claimName = name;
+                    logs.emptyDir = { };
+                    tmp.emptyDir = { };
+                  }
+                  // lib.mapAttrs (_: v: {
+                    nfs = {
+                      server = nfsServer;
+                      inherit (v) path;
+                    }
+                    // lib.optionalAttrs (v.readOnly or false) { readOnly = true; };
+                  }) nfs;
                 };
-                volumes = {
-                  config.persistentVolumeClaim.claimName = name;
-                  logs.emptyDir = { };
-                  tmp.emptyDir = { };
-                }
-                // lib.mapAttrs (_: v: {
-                  nfs = {
-                    server = nfsServer;
-                    inherit (v) path;
-                  }
-                  // lib.optionalAttrs (v.readOnly or false) { readOnly = true; };
-                }) nfs;
               };
             };
-          };
 
-          services.${name}.spec = {
-            selector = labels;
-            ports.http = {
-              inherit port;
-              targetPort = "http";
+            services.${name}.spec = {
+              selector = labels;
+              ports.http = {
+                inherit port;
+                targetPort = "http";
+              };
+            };
+
+            httpRoutes.${name}.spec = {
+              parentRefs = [
+                {
+                  group = "gateway.networking.k8s.io";
+                  kind = "Gateway";
+                  name = "apps";
+                  namespace = "envoy-gateway-system";
+                  sectionName = "https";
+                }
+              ];
+              hostnames = [ hostname ];
+              rules = [
+                (
+                  {
+                    backendRefs = [ { inherit name port; } ];
+                  }
+                  // lib.optionalAttrs (requestTimeout != null) { timeouts.request = requestTimeout; }
+                )
+              ];
             };
           };
-
-          httpRoutes.${name}.spec = {
-            parentRefs = [
-              {
-                group = "gateway.networking.k8s.io";
-                kind = "Gateway";
-                name = "apps";
-                namespace = "envoy-gateway-system";
-                sectionName = "https";
-              }
-            ];
-            hostnames = [ hostname ];
-            rules = [
-              (
-                {
-                  backendRefs = [ { inherit name port; } ];
-                }
-                // lib.optionalAttrs (requestTimeout != null) { timeouts.request = requestTimeout; }
-              )
-            ];
-          };
-        };
+      };
+    in
+    {
+      applications = {
+        ${name} = application;
+      }
+      // lib.optionalAttrs (oidcGroup != null) {
+        envoy-gateway.resources.httpRoutes."${name}-public" = methods.mkGatewayTunnelRoute hostname;
+      };
     };
 in
 {

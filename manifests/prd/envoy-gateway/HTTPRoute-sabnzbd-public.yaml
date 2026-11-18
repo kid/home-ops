@@ -1,0 +1,23 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    home-ops.dev/public-dns: "true"
+  name: sabnzbd-public
+  namespace: envoy-gateway-system
+spec:
+  hostnames:
+    - sabnzbd.kidibox.net
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: cloudflare-tunnel
+      namespace: cloudflare-tunnel-system
+      sectionName: http
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: apps-tunnel
+          port: 443
+          weight: 1
