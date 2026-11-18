@@ -39,8 +39,12 @@
       inherit (ref) namespace;
       # The image's own kanidm user. The kopiur mover reads the volume as this same uid.
       appId = 389;
-      # renovate: datasource=docker depName=docker.io/kanidm/server
-      serverTag = "1.11.2@sha256:e45f00bd354c1fc1c06a4be484b4e87b094c431e78280f1d19e911815e63efb5";
+      # The Kanidm release kaniop's latest release is built against (its
+      # kanidm_client crate), so Renovate bumps it in the same PR as the kaniop
+      # chart. A plain tag: the custom datasource has no digests, and a stale
+      # digest next to a new tag would keep running the old image.
+      # renovate: datasource=custom.kaniop-kanidm depName=docker.io/kanidm/server
+      serverTag = "1.11.2";
       tlsSecretName = "${ref.name}-tls";
       serviceHostname = "${ref.name}.${namespace}.svc.cluster.local";
       # kaniop names the StatefulSet <Kanidm>-<replica group> and its
