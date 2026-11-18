@@ -12,5 +12,5 @@ spec:
     caCertificateRefs:
       - group: ""
         kind: ConfigMap
-        name: public-roots
+        name: letsencrypt-roots
     hostname: apps-gateway.kidibox.net
