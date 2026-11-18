@@ -13,7 +13,7 @@ let
   # The image's mosquitto user.
   uid = 1883;
   # renovate: datasource=docker depName=docker.io/library/eclipse-mosquitto
-  tag = "2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98";
+  tag = "2.1.4-alpine@sha256:fa12172a051310efe5bcb7a6a11b77bd5faacb82cbacd7742aa758bf024fd8e4";
   image = "docker.io/library/eclipse-mosquitto:${tag}";
   tlsSecret = "${name}-tls";
   # Usernames; each client's password is generated once into the
