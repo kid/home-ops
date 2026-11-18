@@ -2,7 +2,10 @@
 # `home` gate and she has no sshKeys, so she gets no host or RouterOS account.
 {
   den.users.registry.cecton = {
-    groups = [ "home" ];
+    groups = [
+      "home"
+      "media"
+    ];
     displayName = "Cecile";
   };
 }

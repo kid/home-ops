@@ -16,6 +16,14 @@
       ];
       members = [ "admins" ];
     };
+    media = {
+      description = "Media apps on the cluster";
+      labels = [
+        "oauth-grant"
+        "mfa"
+      ];
+      members = [ "admins" ];
+    };
     wheel = {
       labels = [ "posix" ];
       members = [ "admins" ];

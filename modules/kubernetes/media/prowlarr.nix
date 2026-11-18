@@ -8,14 +8,12 @@ in
 {
   den.aspects.kubernetes.media.prowlarr.k8s-manifests =
     { cluster, ... }:
-    {
-      applications.prowlarr = cluster.methods.mkMediaApp {
-        name = "prowlarr";
-        inherit tag;
-        port = 9696;
-        # The image runs as any uid.
-        uid = 1000;
-        replicas = 1;
-      };
+    cluster.methods.mkMediaApp {
+      name = "prowlarr";
+      inherit tag;
+      port = 9696;
+      # The image runs as any uid.
+      uid = 1000;
+      replicas = 1;
     };
 }
