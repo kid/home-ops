@@ -53,6 +53,19 @@
       packageNameTemplate: "https://github.com/{{{depName}}}",
     },
   ],
+  customDatasources: {
+    // The Kanidm release kaniop's latest release is built against: the
+    // kanidm_client crate in its Cargo.toml. jsDelivr's @latest resolves to
+    // the newest release tag (kaniop's master can carry a bump that a release
+    // never ships), cached up to 12h behind it.
+    "kaniop-kanidm": {
+      defaultRegistryUrlTemplate: "https://cdn.jsdelivr.net/gh/pando85/kaniop@latest/Cargo.toml",
+      format: "toml",
+      transformTemplates: [
+        '($c := workspace.dependencies.kanidm_client; {"releases": [{"version": $type($c) = "string" ? $c : $c.version}], "sourceUrl": "https://github.com/kanidm/kanidm", "homepage": "https://kanidm.com"})',
+      ],
+    },
+  },
   packageRules: [
     {
       matchManagers: ["nix"],
@@ -82,19 +95,25 @@
       },
     },
     {
-      // Kanidm only supports upgrading one minor at a time, so a jump over
-      // several minors becomes one PR each. kaniop shares the group, but its
-      // own minors land on their own branch: the group slug carries the minor.
-      matchDatasources: ["docker"],
+      // Kanidm follows kaniop (custom.kaniop-kanidm above), so both land in
+      // one PR. kaniop releases step Kanidm one minor at a time, the only
+      // upgrade Kanidm supports.
+      matchDatasources: ["docker", "custom.kaniop-kanidm"],
       matchDepNames: [
         "docker.io/kanidm/server",
         "ghcr.io/pando85/helm-charts/kaniop",
       ],
       groupName: "kanidm",
-      separateMultipleMinor: true,
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
+    },
+    {
+      // The OCI chart carries no source annotation, so without this the PR
+      // has no release notes.
+      matchDatasources: ["docker"],
+      matchDepNames: ["ghcr.io/pando85/helm-charts/kaniop"],
+      sourceUrl: "https://github.com/pando85/kaniop",
     },
     {
       // Moves every input not pinned by rev (nixpkgs, the other flake
@@ -117,10 +136,11 @@
       },
     },
     {
-      // Image pins in chart values: regenerate manifests/ so the PR passes
-      // checks.manifests.
+      // Image pins in Nix: regenerate manifests/ so the PR passes
+      // checks.manifests. Also replaces the inherited refresh-nix-hash for
+      // custom.kaniop-kanidm, which has no hash to refresh.
       matchManagers: ["custom.regex"],
-      matchDatasources: ["docker"],
+      matchDatasources: ["docker", "custom.kaniop-kanidm"],
       matchFileNames: ["modules/**"],
       postUpgradeTasks: {
         commands: ["nix run .#write-manifests -- --skip-secrets"],
