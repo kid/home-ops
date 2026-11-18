@@ -8,8 +8,11 @@ _:
 let
   gatewayNamespace = "envoy-gateway-system";
   gatewayService = "apps-tunnel";
-  # trust-manager's ConfigMap of the public roots that sign wildcard-tls.
-  publicRoots = "public-roots";
+  # Let's Encrypt's roots, which sign wildcard-tls. The tunnel proxy only takes
+  # explicit CA references, no system roots, and the controller copies the
+  # bundle into every route's config, which its proxies cap at 1 MiB: the
+  # system bundle stopped fitting at 11 routes.
+  caRoots = "letsencrypt-roots";
   # The SNI the tunnel proxy sends to Envoy. The apps Gateway has a single
   # listener and certificate, so Envoy routes by Host whatever the SNI, as long
   # as wildcard-tls covers it.
@@ -197,20 +200,13 @@ in
               {
                 group = "";
                 kind = "ConfigMap";
-                name = publicRoots;
+                name = caRoots;
               }
             ];
           };
         };
-      };
 
-      # The tunnel proxy only takes explicit CA references, no system roots.
-      applications.trust-manager-config.resources.bundles.${publicRoots}.spec = {
-        sources = [ { useDefaultCAs = true; } ];
-        target = {
-          configMap.key = "ca.crt";
-          namespaceSelector.matchLabels."kubernetes.io/metadata.name" = gatewayNamespace;
-        };
+        configMaps.${caRoots}.data."ca.crt" = builtins.readFile ./isrg-roots.pem;
       };
     };
 }
