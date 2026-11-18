@@ -51,6 +51,17 @@ _: {
       perServer = f: lib.concatMapAttrs f servers;
     in
     {
+      # Public through the tunnel, for the MCP servers off the LAN: the whole
+      # host goes, its UI still behind the Envoy OIDC (default.nix) and /mcp
+      # behind the JWT check.
+      applications.envoy-gateway.resources.httpRoutes = perServer (
+        _: server: {
+          "${server.host}-public" = cluster.methods.mkGatewayTunnelRoute (
+            cluster.methods.mkAppHostname server.host
+          );
+        }
+      );
+
       applications.victoria-metrics = {
         # kaniop's webhook admits the MCP client.
         flux.dependsOn = [ "kaniop" ];
