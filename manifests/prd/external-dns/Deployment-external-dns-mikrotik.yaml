@@ -24,7 +24,7 @@ spec:
       containers:
         - args:
             - --log-level=info
-            - --log-format=text
+            - --log-format=json
             - --interval=1m
             - --source=gateway-httproute
             - --source=gateway-tlsroute
@@ -86,6 +86,8 @@ spec:
               value: "1800"
             - name: MIKROTIK_DEFAULT_COMMENT
               value: Managed by ExternalDNS
+            - name: LOG_FORMAT
+              value: json
             - name: MIKROTIK_BASEURL
               value: https://10.99.0.1:443
             - name: MIKROTIK_USERNAME

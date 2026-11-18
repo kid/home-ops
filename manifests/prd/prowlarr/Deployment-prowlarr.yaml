@@ -27,6 +27,8 @@ spec:
               value: External
             - name: PROWLARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: PROWLARR__LOG__CONSOLEFORMAT
+              value: Clef
             - name: PROWLARR__LOG__DBENABLED
               value: "false"
             - name: PROWLARR__LOG__LEVEL

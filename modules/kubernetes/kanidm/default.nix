@@ -101,6 +101,7 @@
             # A Helm pre-install hook; the chart's crds/ are rendered with the
             # rest.
             crdApply.enabled = false;
+            logging.format = "json";
 
             metrics = {
               enabled = true;
@@ -120,6 +121,7 @@
             # cert-manager, not from the chart's random-cert Job.
             webhook = {
               enabled = true;
+              logging.format = "json";
               certManager = {
                 enabled = true;
                 # The chart's schema takes no group.

@@ -31,7 +31,7 @@ spec:
             - name: LOG_FILTER
               value: info
             - name: LOG_FORMAT
-              value: text
+              value: json
             - name: TLS_CERT
               value: /etc/webhook/certs/tls.crt
             - name: TLS_KEY

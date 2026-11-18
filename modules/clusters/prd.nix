@@ -217,6 +217,7 @@ in
       blackbox-exporter
       prometheus-adapter
       victoria-metrics-mcp
+      opentelemetry-collector
       grafana-operator
       grafana-oidc
       cloudflared

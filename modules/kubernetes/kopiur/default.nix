@@ -341,6 +341,8 @@ in
             # One replica, no leader election (lease renewals were most of
             # etcd's writes); Recreate below keeps an update from running two.
             leaderElection.enabled = false;
+            # Controller, webhook and movers.
+            logging.format = "json";
 
             monitoring = {
               serviceMonitor.enabled = true;

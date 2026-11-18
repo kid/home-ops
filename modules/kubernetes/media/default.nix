@@ -182,6 +182,8 @@ let
                           "${envPrefix}__LOG__DBENABLED" = "false";
                           # Over whatever level the imported config.xml carries.
                           "${envPrefix}__LOG__LEVEL" = "info";
+                          # Compact Log Event Format, i.e. JSON (case-sensitive).
+                          "${envPrefix}__LOG__CONSOLEFORMAT" = "Clef";
                         }
                         // env
                       )

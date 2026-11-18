@@ -26,6 +26,8 @@ spec:
               value: External
             - name: RADARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: RADARR__LOG__CONSOLEFORMAT
+              value: Clef
             - name: RADARR__LOG__DBENABLED
               value: "false"
             - name: RADARR__LOG__LEVEL

@@ -15,6 +15,7 @@ _: {
             "Grafana"
             "GrafanaDashboard"
             "GrafanaDatasource"
+            "GrafanaManifest"
           ];
         })
       ];
@@ -53,6 +54,7 @@ _: {
             # One replica, no leader election (lease renewals were most of
             # etcd's writes); Recreate below keeps an update from running two.
             leaderElect = false;
+            logging.encoder = "json";
             resources = {
               requests = {
                 cpu = "10m";
@@ -76,6 +78,9 @@ _: {
             # Needed so the OIDC callback Grafana computes matches Kanidm's registered redirect URL.
             server.root_url = "https://${cluster.methods.mkAppHostname "grafana"}";
             security.disable_gravatar = "true";
+            "log.console".format = "json";
+            # GrafanaManifest Correlations (victoria-metrics/default.nix).
+            feature_toggles.kubernetesCorrelations = "true";
           };
 
           # No dedicated "install a plugin" CR field — Grafana's own image

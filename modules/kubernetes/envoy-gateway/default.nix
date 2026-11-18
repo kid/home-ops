@@ -28,6 +28,37 @@ _: {
         algorithm = "ECDSA";
         size = 256;
       };
+
+      # Access log fields under OTel semantic-convention names. No time key:
+      # the collector uses the CRI timestamp.
+      accessLogJson = {
+        msg = "%REQ(:METHOD)% %REQ(:AUTHORITY)%%REQ_WITHOUT_QUERY(X-ENVOY-ORIGINAL-PATH?:PATH)% %RESPONSE_CODE%";
+        "http.request.method" = "%REQ(:METHOD)%";
+        "url.scheme" = "%REQ(:SCHEME)%";
+        "server.address" = "%REQ(:AUTHORITY)%";
+        "url.path" = "%REQ_WITHOUT_QUERY(X-ENVOY-ORIGINAL-PATH?:PATH)%";
+        "http.response.status_code" = "%RESPONSE_CODE%";
+        "http.request.body.size" = "%BYTES_RECEIVED%";
+        "http.response.body.size" = "%BYTES_SENT%";
+        "client.address" = "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%";
+        "user_agent.original" = "%REQ(USER-AGENT)%";
+        "http.request.header.x-request-id" = "%REQ(X-REQUEST-ID)%";
+        "envoy.route.name" = "%ROUTE_NAME%";
+        "envoy.upstream.host" = "%UPSTREAM_HOST%";
+        "envoy.upstream.cluster" = "%UPSTREAM_CLUSTER%";
+        "envoy.response.flags" = "%RESPONSE_FLAGS%";
+        "envoy.duration_ms" = "%DURATION%";
+      };
+      # Envoy's own process logs as JSON; JSON is valid YAML for the merge.
+      envoyAppLogBootstrap = builtins.toJSON {
+        application_log_config.log_format.json_format = {
+          level = "%l";
+          msg = "%j";
+          logger = "%n";
+          "code.file.path" = "%g";
+          "code.line.number" = "%#";
+        };
+      };
     in
     {
       nixidy.applicationImports = [
@@ -93,6 +124,28 @@ _: {
             # One replica, no leader election (lease renewals were most of
             # etcd's writes). Recreate keeps an update from running two at once.
             config.envoyGateway.provider.kubernetes.leaderElection.disable = true;
+            config.envoyGateway.logging.encoder = "JSON";
+            # The default EnvoyProxy spec, for every proxy.
+            config.envoyGateway.envoyProxy = {
+              telemetry.accessLog.settings = [
+                {
+                  format = {
+                    type = "JSON";
+                    json = accessLogJson;
+                  };
+                  sinks = [
+                    {
+                      type = "File";
+                      file.path = "/dev/stdout";
+                    }
+                  ];
+                }
+              ];
+              bootstrap = {
+                type = "Merge";
+                value = envoyAppLogBootstrap;
+              };
+            };
             deployment.envoyGateway.strategy.type = "Recreate";
             deployment.envoyGateway.resources.requests = {
               cpu = "10m";

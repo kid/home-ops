@@ -21,6 +21,7 @@ _: {
           values = {
             fullnameOverride = "external-dns-cloudflare";
             replicaCount = 1;
+            logFormat = "json";
             sources = [ "gateway-httproute" ];
             serviceMonitor.enabled = true;
             resources = {

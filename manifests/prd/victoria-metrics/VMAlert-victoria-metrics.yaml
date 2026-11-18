@@ -9,6 +9,8 @@ metadata:
   namespace: monitoring
 spec:
   configMaps: []
+  configReloaderExtraArgs:
+    loggerFormat: json
   datasource:
     url: http://vmauth-victoria-metrics-internal.monitoring.svc.cluster.local.:8427
   evaluationInterval: 20s
@@ -20,6 +22,7 @@ spec:
     remoteWrite.disablePathAppend: "true"
   image:
     tag: v1.156.0
+  logFormat: json
   notifiers:
     - url: http://vmalertmanager-victoria-metrics-0.vmalertmanager-victoria-metrics.monitoring.svc.cluster.local.:9093
   port: "8080"

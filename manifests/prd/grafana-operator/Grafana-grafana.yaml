@@ -20,6 +20,10 @@ spec:
       scopes: openid profile email groups_name
       token_url: https://idm.kidibox.net/oauth2/token
       use_pkce: "true"
+    feature_toggles:
+      kubernetesCorrelations: "true"
+    log.console:
+      format: json
     plugins:
       allow_loading_unsigned_plugins: victoriametrics-metrics-datasource,victoriametrics-logs-datasource
     security:

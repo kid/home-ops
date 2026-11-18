@@ -32,6 +32,7 @@ spec:
             - --dynamic-serving-dns-names=cert-manager-webhook
             - --dynamic-serving-dns-names=cert-manager-webhook.$(POD_NAMESPACE)
             - --dynamic-serving-dns-names=cert-manager-webhook.$(POD_NAMESPACE).svc
+            - --logging-format=json
           env:
             - name: POD_NAMESPACE
               valueFrom:

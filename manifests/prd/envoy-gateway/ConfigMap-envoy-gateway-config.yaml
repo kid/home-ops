@@ -3,10 +3,42 @@ data:
   envoy-gateway.yaml: |
     apiVersion: gateway.envoyproxy.io/v1alpha1
     kind: EnvoyGateway
+    envoyProxy:
+      bootstrap:
+        type: Merge
+        value: '{"application_log_config":{"log_format":{"json_format":{"code.file.path":"%g","code.line.number":"%#","level":"%l","logger":"%n","msg":"%j"}}}}'
+      telemetry:
+        accessLog:
+          settings:
+          - format:
+              json:
+                client.address: '%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%'
+                envoy.duration_ms: '%DURATION%'
+                envoy.response.flags: '%RESPONSE_FLAGS%'
+                envoy.route.name: '%ROUTE_NAME%'
+                envoy.upstream.cluster: '%UPSTREAM_CLUSTER%'
+                envoy.upstream.host: '%UPSTREAM_HOST%'
+                http.request.body.size: '%BYTES_RECEIVED%'
+                http.request.header.x-request-id: '%REQ(X-REQUEST-ID)%'
+                http.request.method: '%REQ(:METHOD)%'
+                http.response.body.size: '%BYTES_SENT%'
+                http.response.status_code: '%RESPONSE_CODE%'
+                msg: '%REQ(:METHOD)% %REQ(:AUTHORITY)%%REQ_WITHOUT_QUERY(X-ENVOY-ORIGINAL-PATH?:PATH)%
+                  %RESPONSE_CODE%'
+                server.address: '%REQ(:AUTHORITY)%'
+                url.path: '%REQ_WITHOUT_QUERY(X-ENVOY-ORIGINAL-PATH?:PATH)%'
+                url.scheme: '%REQ(:SCHEME)%'
+                user_agent.original: '%REQ(USER-AGENT)%'
+              type: JSON
+            sinks:
+            - file:
+                path: /dev/stdout
+              type: File
     extensionApis: {}
     gateway:
       controllerName: gateway.envoyproxy.io/gatewayclass-controller
     logging:
+      encoder: JSON
       level:
         default: info
     provider:

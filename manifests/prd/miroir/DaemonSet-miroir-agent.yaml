@@ -92,6 +92,7 @@ spec:
         - args:
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=/var/lib/kubelet/plugins/miroir.home-operations.com/csi.sock
+            - --logging-format=json
           image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.18.0
           name: node-driver-registrar
           resources:

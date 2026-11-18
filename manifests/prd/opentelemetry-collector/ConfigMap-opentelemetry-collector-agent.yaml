@@ -1,0 +1,271 @@
+apiVersion: v1
+data:
+  relay: |
+    exporters:
+      otlp_http/victorialogs:
+        headers:
+          VL-Stream-Fields: k8s.namespace.name,k8s.pod.name,k8s.container.name
+        logs_endpoint: http://vlsingle-victoria-metrics.monitoring.svc.cluster.local.:9428/insert/opentelemetry/v1/logs
+        sending_queue:
+          storage: file_storage
+    extensions:
+      file_storage:
+        directory: /var/lib/otelcol
+      health_check:
+        endpoint: ${env:MY_POD_IP}:13133
+    processors:
+      batch: {}
+      k8s_attributes:
+        extract:
+          metadata:
+          - k8s.namespace.name
+          - k8s.pod.name
+          - k8s.pod.uid
+          - k8s.node.name
+          - k8s.deployment.name
+          - k8s.statefulset.name
+          - k8s.daemonset.name
+          - k8s.cronjob.name
+          - k8s.job.name
+          - k8s.container.name
+          - container.image.name
+          - container.image.tags
+          - service.name
+          - service.namespace
+          - service.version
+          - service.instance.id
+          otel_annotations: true
+        filter:
+          node_from_env_var: K8S_NODE_NAME
+        passthrough: false
+        pod_association:
+        - sources:
+          - from: resource_attribute
+            name: k8s.pod.ip
+        - sources:
+          - from: resource_attribute
+            name: k8s.pod.uid
+        - sources:
+          - from: connection
+        wait_for_metadata: true
+      memory_limiter:
+        check_interval: 5s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+      resource/cluster:
+        attributes:
+        - action: insert
+          key: k8s.cluster.name
+          value: prd
+      transform/logs:
+        error_mode: ignore
+        log_statements:
+        - set(log.cache["json"], true) where IsString(log.body) and IsMatch(log.body,
+          "^\\s*\\{")
+        - merge_maps(log.attributes, ParseJSON(log.body), "upsert") where log.cache["json"]
+          == true
+        - set(log.body, log.attributes["msg"]) where log.cache["msg_key"] == nil and log.attributes["msg"]
+          != nil
+        - set(log.cache["msg_key"], "msg") where log.cache["msg_key"] == nil and log.attributes["msg"]
+          != nil
+        - set(log.body, log.attributes["message"]) where log.cache["msg_key"] == nil and
+          log.attributes["message"] != nil
+        - set(log.cache["msg_key"], "message") where log.cache["msg_key"] == nil and log.attributes["message"]
+          != nil
+        - set(log.body, log.attributes["@m"]) where log.cache["msg_key"] == nil and log.attributes["@m"]
+          != nil
+        - set(log.cache["msg_key"], "@m") where log.cache["msg_key"] == nil and log.attributes["@m"]
+          != nil
+        - set(log.body, log.attributes["@mt"]) where log.cache["msg_key"] == nil and log.attributes["@mt"]
+          != nil
+        - set(log.cache["msg_key"], "@mt") where log.cache["msg_key"] == nil and log.attributes["@mt"]
+          != nil
+        - set(log.body, log.attributes["fields"]["message"]) where log.cache["msg_key"]
+          == nil and IsMap(log.attributes["fields"]) and log.attributes["fields"]["message"]
+          != nil
+        - set(log.cache["msg_key"], "fields.message") where log.cache["msg_key"] == nil
+          and IsMap(log.attributes["fields"]) and log.attributes["fields"]["message"]
+          != nil
+        - delete_key(log.attributes["fields"], "message") where log.cache["msg_key"] ==
+          "fields.message"
+        - merge_maps(log.attributes, log.attributes["fields"], "insert") where IsMap(log.attributes["fields"])
+        - delete_key(log.attributes, "fields") where IsMap(log.attributes["fields"])
+        - delete_key(log.attributes, "msg") where log.cache["msg_key"] == "msg"
+        - delete_key(log.attributes, "message") where log.cache["msg_key"] == "message"
+        - delete_key(log.attributes, "@m") where log.cache["msg_key"] == "@m"
+        - delete_key(log.attributes, "@mt")
+        - merge_maps(log.cache, ExtractPatterns(log.body, "^(?P<klog_sev>[IWEF])\\d{4}
+          [0-9:.]+ +\\d+ (?P<klog_file>[^ \\]]+):(?P<klog_line>\\d+)\\] (?P<klog_msg>[\\s\\S]*)$"),
+          "upsert") where log.cache["json"] == nil and IsString(log.body)
+        - set(log.body, log.cache["klog_msg"]) where log.cache["klog_msg"] != nil
+        - set(log.attributes["code.file.path"], log.cache["klog_file"]) where log.cache["klog_file"]
+          != nil
+        - set(log.attributes["code.line.number"], Int(log.cache["klog_line"])) where log.cache["klog_line"]
+          != nil
+        - set(log.cache["lvl"], "info") where log.cache["klog_sev"] == "I"
+        - set(log.cache["lvl"], "warn") where log.cache["klog_sev"] == "W"
+        - set(log.cache["lvl"], "error") where log.cache["klog_sev"] == "E"
+        - set(log.cache["lvl"], "fatal") where log.cache["klog_sev"] == "F"
+        - set(log.cache["lvl"], ToLowerCase(log.attributes["level"])) where log.cache["lvl"]
+          == nil and IsString(log.attributes["level"])
+        - delete_key(log.attributes, "level") where IsString(log.attributes["level"])
+        - set(log.cache["lvl"], ToLowerCase(log.attributes["@l"])) where log.cache["lvl"]
+          == nil and IsString(log.attributes["@l"])
+        - delete_key(log.attributes, "@l")
+        - set(log.cache["lvl"], "info") where log.cache["lvl"] == nil and log.attributes["@t"]
+          != nil
+        - set(log.cache["lvl"], "error") where log.cache["lvl"] == nil and log.cache["json"]
+          == true and log.attributes["err"] != nil and log.attributes["v"] == nil
+        - set(log.cache["lvl"], "info") where log.cache["lvl"] == nil and log.cache["json"]
+          == true and log.attributes["v"] != nil
+        - set(log.severity_number, SEVERITY_NUMBER_TRACE) where IsMatch(log.cache["lvl"],
+          "^trace")
+        - set(log.severity_text, "TRACE") where IsMatch(log.cache["lvl"], "^trace")
+        - set(log.severity_number, SEVERITY_NUMBER_DEBUG) where IsMatch(log.cache["lvl"],
+          "^(debug|dbg|verbose)")
+        - set(log.severity_text, "DEBUG") where IsMatch(log.cache["lvl"], "^(debug|dbg|verbose)")
+        - set(log.severity_number, SEVERITY_NUMBER_INFO) where IsMatch(log.cache["lvl"],
+          "^(info|notice)")
+        - set(log.severity_text, "INFO") where IsMatch(log.cache["lvl"], "^(info|notice)")
+        - set(log.severity_number, SEVERITY_NUMBER_WARN) where IsMatch(log.cache["lvl"],
+          "^warn")
+        - set(log.severity_text, "WARN") where IsMatch(log.cache["lvl"], "^warn")
+        - set(log.severity_number, SEVERITY_NUMBER_ERROR) where IsMatch(log.cache["lvl"],
+          "^(err|eror)")
+        - set(log.severity_text, "ERROR") where IsMatch(log.cache["lvl"], "^(err|eror)")
+        - set(log.severity_number, SEVERITY_NUMBER_FATAL) where IsMatch(log.cache["lvl"],
+          "^(fatal|crit|panic|dpanic|alert|emerg)")
+        - set(log.severity_text, "FATAL") where IsMatch(log.cache["lvl"], "^(fatal|crit|panic|dpanic|alert|emerg)")
+        - set(log.severity_text, ToUpperCase(log.cache["lvl"])) where log.cache["lvl"]
+          != nil and log.severity_number == SEVERITY_NUMBER_UNSPECIFIED
+        - delete_key(log.attributes, "time") where log.cache["json"] == true
+        - delete_key(log.attributes, "ts") where log.cache["json"] == true
+        - delete_key(log.attributes, "timestamp") where log.cache["json"] == true
+        - delete_key(log.attributes, "@t") where log.cache["json"] == true
+        - delete_key(log.attributes, "t") where log.cache["json"] == true and resource.attributes["k8s.container.name"]
+          == "grafana"
+        - merge_maps(log.cache, ExtractPatterns(log.attributes["caller"], "^(?P<caller_file>.+):(?P<caller_line>\\d+)$"),
+          "upsert") where IsString(log.attributes["caller"])
+        - set(log.attributes["code.file.path"], log.cache["caller_file"]) where log.cache["caller_file"]
+          != nil
+        - set(log.attributes["code.line.number"], Int(log.cache["caller_line"])) where
+          log.cache["caller_line"] != nil
+        - delete_key(log.attributes, "caller") where log.cache["caller_file"] != nil
+        - merge_maps(log.cache, ExtractPatterns(log.attributes["source"], "^(?P<source_file>.+):(?P<source_line>\\d+)$"),
+          "upsert") where IsString(log.attributes["source"])
+        - set(log.attributes["code.file.path"], log.cache["source_file"]) where log.cache["source_file"]
+          != nil
+        - set(log.attributes["code.line.number"], Int(log.cache["source_line"])) where
+          log.cache["source_line"] != nil
+        - delete_key(log.attributes, "source") where log.cache["source_file"] != nil
+        - set(log.attributes["code.function.name"], log.attributes["source"]["function"])
+          where IsMap(log.attributes["source"])
+        - set(log.attributes["code.file.path"], log.attributes["source"]["file"]) where
+          IsMap(log.attributes["source"])
+        - set(log.attributes["code.line.number"], log.attributes["source"]["line"]) where
+          IsMap(log.attributes["source"])
+        - delete_key(log.attributes, "source") where IsMap(log.attributes["source"])
+        - set(log.attributes["code.file.path"], log.attributes["filename"]) where log.attributes["filename"]
+          != nil
+        - delete_key(log.attributes, "filename")
+        - set(log.attributes["code.line.number"], log.attributes["line_number"]) where
+          log.attributes["line_number"] != nil
+        - delete_key(log.attributes, "line_number")
+        - set(log.attributes["code.line.number"], Int(log.attributes["code.line.number"]))
+          where IsString(log.attributes["code.line.number"])
+        - set(log.attributes["exception.message"], log.attributes["error"]) where log.attributes["exception.message"]
+          == nil and IsString(log.attributes["error"])
+        - delete_key(log.attributes, "error") where IsString(log.attributes["error"])
+        - set(log.attributes["exception.message"], log.attributes["err"]) where log.attributes["exception.message"]
+          == nil and IsString(log.attributes["err"])
+        - delete_key(log.attributes, "err") where IsString(log.attributes["err"])
+        - set(log.attributes["exception.stacktrace"], log.attributes["stacktrace"]) where
+          log.attributes["exception.stacktrace"] == nil and IsString(log.attributes["stacktrace"])
+        - delete_key(log.attributes, "stacktrace") where IsString(log.attributes["stacktrace"])
+        - set(log.attributes["exception.stacktrace"], log.attributes["stack"]) where log.attributes["exception.stacktrace"]
+          == nil and IsString(log.attributes["stack"])
+        - delete_key(log.attributes, "stack") where IsString(log.attributes["stack"])
+        - set(log.attributes["exception.stacktrace"], log.attributes["@x"]) where log.attributes["exception.stacktrace"]
+          == nil and IsString(log.attributes["@x"])
+        - delete_key(log.attributes, "@x") where IsString(log.attributes["@x"])
+        - set(log.attributes["logger.name"], log.attributes["logger"]) where log.attributes["logger.name"]
+          == nil and IsString(log.attributes["logger"])
+        - delete_key(log.attributes, "logger") where IsString(log.attributes["logger"])
+        - set(log.attributes["logger.name"], log.attributes["target"]) where log.attributes["logger.name"]
+          == nil and IsString(log.attributes["target"])
+        - delete_key(log.attributes, "target") where IsString(log.attributes["target"])
+        - set(log.attributes["logger.name"], log.attributes["subsys"]) where log.attributes["logger.name"]
+          == nil and IsString(log.attributes["subsys"])
+        - delete_key(log.attributes, "subsys") where IsString(log.attributes["subsys"])
+        - 'merge_maps(log.cache, ExtractPatterns(log.body, "^(?P<z2m_ns>[A-Za-z0-9:_-]+):
+          (?P<z2m_msg>[\\s\\S]*)$"), "upsert") where resource.attributes["k8s.container.name"]
+          == "zigbee2mqtt" and IsString(log.body)'
+        - set(log.attributes["logger.name"], log.cache["z2m_ns"]) where log.cache["z2m_ns"]
+          != nil
+        - set(log.body, log.cache["z2m_msg"]) where log.cache["z2m_msg"] != nil
+        - delete_key(log.attributes, "logtag")
+        - delete_key(log.attributes, "log.file.path")
+    receivers:
+      file_log:
+        exclude: []
+        include:
+        - /var/log/pods/*/*/*.log
+        include_file_name: false
+        include_file_path: true
+        operators:
+        - id: container-parser
+          max_log_size: 102400
+          type: container
+        retry_on_failure:
+          enabled: true
+        start_at: end
+        storage: file_storage
+    service:
+      extensions:
+      - health_check
+      - file_storage
+      pipelines:
+        logs:
+          exporters:
+          - otlp_http/victorialogs
+          processors:
+          - memory_limiter
+          - k8s_attributes
+          - resource/cluster
+          - transform/logs
+          - batch
+          receivers:
+          - file_log
+      telemetry:
+        logs:
+          encoding: json
+        metrics:
+          readers:
+          - pull:
+              exporter:
+                prometheus:
+                  host: ${env:MY_POD_IP}
+                  port: 8888
+        resource:
+          attributes:
+          - name: host.name
+            value: ${env:OTEL_K8S_NODE_NAME}
+          - name: k8s.namespace.name
+            value: ${env:OTEL_K8S_NAMESPACE}
+          - name: k8s.node.ip
+            value: ${env:OTEL_K8S_NODE_IP}
+          - name: k8s.node.name
+            value: ${env:OTEL_K8S_NODE_NAME}
+          - name: k8s.pod.ip
+            value: ${env:OTEL_K8S_POD_IP}
+          - name: k8s.pod.name
+            value: ${env:OTEL_K8S_POD_NAME}
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: agent-collector
+    app.kubernetes.io/instance: opentelemetry-collector
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/part-of: opentelemetry-collector
+  name: opentelemetry-collector-agent
+  namespace: monitoring
