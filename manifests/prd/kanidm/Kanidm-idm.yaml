@@ -23,7 +23,7 @@ spec:
     - name: KANIDM_ONLINE_BACKUP_VERSIONS
       value: "7"
   groupNamespaceSelector: {}
-  image: docker.io/kanidm/server:1.11.2
+  image: docker.io/kanidm/server:1.12.1
   oauth2ClientNamespaceSelector: {}
   origin: https://idm.kidibox.net
   personNamespaceSelector: {}
