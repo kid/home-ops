@@ -90,8 +90,8 @@ resource "github_repository_webhook" "renovate" {
 
 # Bearer token for /webhook/v1/schedule.
 resource "github_actions_secret" "webhook_token" {
-  for_each        = toset(var.dispatch_repositories)
-  repository      = each.key
-  secret_name     = "RENOVATE_WEBHOOK_TOKEN"
-  plaintext_value = random_password.token.result
+  for_each    = toset(var.dispatch_repositories)
+  repository  = each.key
+  secret_name = "RENOVATE_WEBHOOK_TOKEN"
+  value       = random_password.token.result
 }
