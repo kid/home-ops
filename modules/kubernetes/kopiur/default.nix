@@ -164,8 +164,10 @@ let
       restores = lib.optionalAttrs restored {
         ${name}.spec = {
           target.populator = { };
-          # Deploy-or-restore from r2; from local, a missing snapshot blocks.
-          policy.onMissingSnapshot = if fromLocal then "Fail" else "Continue";
+          # A restore-only rebuild from local must not create an empty volume
+          # for a missing snapshot; otherwise a new claim has nothing to
+          # restore yet and starts empty.
+          policy.onMissingSnapshot = if fromLocal && !cluster.kopiur.backups then "Fail" else "Continue";
           credentialProjection.enabled = true;
         }
         // (

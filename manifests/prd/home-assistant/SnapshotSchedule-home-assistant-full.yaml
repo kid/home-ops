@@ -1,0 +1,12 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: home-assistant-full
+  namespace: home-assistant
+spec:
+  policyRef:
+    name: home-assistant-full
+  schedule:
+    cron: H 1 * * *
+    jitter: 30m
+    runOnCreate: false
