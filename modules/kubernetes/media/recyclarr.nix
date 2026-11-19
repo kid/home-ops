@@ -94,7 +94,9 @@ in
               map (i: "api_key: !env_var ${apiKeyEnv i}") instances
             );
 
-          # Its state (what it synced, by id) and the guides' clone.
+          # Its state (what it synced, by id), which delete_old_custom_formats
+          # needs, and the guides' clone. Pending, and its Kustomization
+          # unready, until the first Job binds it.
           persistentVolumeClaims.${name}.spec = {
             storageClassName = cluster.storage.replicatedClass;
             accessModes = [ "ReadWriteOncePod" ];
@@ -114,67 +116,65 @@ in
               ];
             };
 
-          # The image's own cron (supercronic) runs the sync: a CronJob's claim
-          # would stay Pending, and its Kustomization unready, until its first
-          # run.
-          deployments.${name}.spec = {
-            replicas = 1;
-            strategy.type = "Recreate";
-            selector.matchLabels = labels;
-            template = {
-              metadata = { inherit labels; };
-              spec = {
-                automountServiceAccountToken = false;
-                securityContext = {
-                  runAsNonRoot = true;
-                  runAsUser = uid;
-                  runAsGroup = uid;
-                  fsGroup = uid;
-                  fsGroupChangePolicy = "OnRootMismatch";
-                  seccompProfile.type = "RuntimeDefault";
-                };
-                containers.${name} = {
-                  image = "ghcr.io/recyclarr/recyclarr:${tag}";
-                  env = {
-                    CRON_SCHEDULE.value = "0 5 * * *";
-                  }
-                  // (
-                    instances
-                    |> map (
-                      i:
-                      lib.nameValuePair (apiKeyEnv i) {
-                        valueFrom.secretKeyRef = {
-                          name = "${i}-api-key";
-                          key = "api-key";
-                        };
-                      }
-                    )
-                    |> lib.listToAttrs
-                  );
+          cronJobs.${name}.spec = {
+            schedule = "0 5 * * *";
+            concurrencyPolicy = "Forbid";
+            jobTemplate.spec = {
+              # A failed sync waits for the next night, and KubeJobFailed.
+              backoffLimit = 0;
+              template = {
+                metadata = { inherit labels; };
+                spec = {
+                  restartPolicy = "Never";
+                  automountServiceAccountToken = false;
                   securityContext = {
-                    allowPrivilegeEscalation = false;
-                    readOnlyRootFilesystem = true;
-                    capabilities.drop = [ "ALL" ];
+                    runAsNonRoot = true;
+                    runAsUser = uid;
+                    runAsGroup = uid;
+                    fsGroup = uid;
+                    fsGroupChangePolicy = "OnRootMismatch";
+                    seccompProfile.type = "RuntimeDefault";
                   };
-                  resources = {
-                    requests = {
-                      cpu = "10m";
-                      memory = "64Mi";
+                  containers.${name} = {
+                    image = "ghcr.io/recyclarr/recyclarr:${tag}";
+                    # The entrypoint runs the CLI when given arguments.
+                    args = [ "sync" ];
+                    env =
+                      instances
+                      |> map (
+                        i:
+                        lib.nameValuePair (apiKeyEnv i) {
+                          valueFrom.secretKeyRef = {
+                            name = "${i}-api-key";
+                            key = "api-key";
+                          };
+                        }
+                      )
+                      |> lib.listToAttrs;
+                    securityContext = {
+                      allowPrivilegeEscalation = false;
+                      readOnlyRootFilesystem = true;
+                      capabilities.drop = [ "ALL" ];
                     };
-                    limits.memory = "512Mi";
+                    resources = {
+                      requests = {
+                        cpu = "50m";
+                        memory = "128Mi";
+                      };
+                      limits.memory = "512Mi";
+                    };
+                    volumeMounts = {
+                      "/config".name = "config";
+                      # Recyclarr reads every configs/*.yml.
+                      "/config/configs".name = "configs";
+                      "/tmp".name = "tmp";
+                    };
                   };
-                  volumeMounts = {
-                    "/config".name = "config";
-                    # Recyclarr reads every configs/*.yml.
-                    "/config/configs".name = "configs";
-                    # supercronic's crontab.
-                    "/tmp".name = "tmp";
+                  volumes = {
+                    config.persistentVolumeClaim.claimName = name;
+                    configs.configMap.name = name;
+                    tmp.emptyDir = { };
                   };
-                };
-                volumes = {
-                  config.persistentVolumeClaim.claimName = name;
-                  configs.configMap.name = name;
-                  tmp.emptyDir = { };
                 };
               };
             };
