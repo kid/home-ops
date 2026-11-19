@@ -325,5 +325,10 @@ in
     den.aspects.k3s.zfs-localpv-node
   ];
 
-  fleet.colmena.deployment.k3s-prd-0.targetHost = config.den.devices.k3s-prd-0.address;
+  fleet.colmena.deployment.k3s-prd-0 = {
+    targetHost = config.den.devices.k3s-prd-0.address;
+    # CI (the in-cluster runner) builds every PR's toplevel in this host's
+    # store, so building here instead of locally is mostly a lookup.
+    buildOnTarget = true;
+  };
 }
