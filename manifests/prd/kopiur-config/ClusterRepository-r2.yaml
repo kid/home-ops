@@ -15,7 +15,7 @@ spec:
       endpoint: fadfc390b1e5fb0ce019b9f7a8917d42.r2.cloudflarestorage.com
       region: auto
   create:
-    enabled: false
+    enabled: true
   credentialProjection:
     allowed: true
   encryption:
@@ -23,4 +23,6 @@ spec:
       key: KOPIA_PASSWORD
       name: kopiur-r2
       namespace: kopiur-system
-  mode: ReadOnly
+  parameters:
+    epoch:
+      minDuration: 6h

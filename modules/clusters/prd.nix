@@ -98,13 +98,11 @@ in
 
     # Full on-site backups next to r2's, and the claims restore from them:
     # the cluster moved from the Incus VMs onto k3s-prd-0 by restoring every
-    # claim from its last `-full` snapshot.
+    # claim from its last `-full` snapshot. Rebuilding without k3s-prd-0's
+    # disks means restoreFrom = "r2" (and kopiur.backups = false until the
+    # restored apps are verified).
     kopiur.local = true;
     kopiur.restoreFrom = "local";
-    # No new snapshot to either repository until the restored apps are
-    # verified, so a bad restore never becomes the newest backup. A
-    # follow-up drops this line once they are.
-    kopiur.backups = false;
 
     nixidy = {
       repository = "https://github.com/kid/home-ops.git";
