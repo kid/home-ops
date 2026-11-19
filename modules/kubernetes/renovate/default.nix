@@ -45,7 +45,7 @@ in
         charts,
         cluster,
         generators,
-        pkgs,
+        images,
         ...
       }:
       let
@@ -175,7 +175,7 @@ in
             parallelism = 1;
             provider.name = "github";
             discoveryFilters = [ "${githubOwner cluster}/*" ];
-            image = "ghcr.io/kid/home-ops-renovate:${(pkgs.callPackage ./_image.nix { }).imageTag}";
+            image = images.renovate;
             githubAppReference = {
               secretName = githubSecret;
               appIdSecretKey = "client-id";

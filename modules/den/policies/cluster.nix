@@ -48,10 +48,12 @@
         instantiate =
           { modules, ... }:
           withSystem system (
-            { pkgs, ... }:
+            { pkgs, config, ... }:
             inputs.nixidy.lib.mkEnv {
               inherit pkgs modules;
               charts = self.chartsDerivations.${system};
+              # modules/flake/images.nix
+              extraSpecialArgs.images = config.legacyPackages.imageRefs;
             }
           );
       }

@@ -4,13 +4,9 @@
 #   nix run .#refresh-nix-hash <file> <dep-name> <new-value>
 _: {
   perSystem =
-    { lib, pkgs, ... }:
+    { pkgs, ... }:
     {
-      packages = {
-        refresh-nix-hash = pkgs.callPackage ./_refresh-nix-hash.nix { };
-      }
-      // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-        renovate-image = pkgs.callPackage ./_image.nix { };
-      };
+      packages.refresh-nix-hash = pkgs.callPackage ./_refresh-nix-hash.nix { };
+      images.renovate = pkgs.callPackage ./_image.nix { };
     };
 }
