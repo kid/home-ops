@@ -1,0 +1,30 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    home-ops.dev/public-dns: "true"
+  name: renovate-webhook
+  namespace: renovate
+spec:
+  hostnames:
+    - renovate-webhook.kidibox.net
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: cloudflare-tunnel
+      namespace: cloudflare-tunnel-system
+      sectionName: http
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: renovate-operator
+          port: 8082
+          weight: 1
+      matches:
+        - path:
+            type: Exact
+            value: /webhook/v1/github
+        - path:
+            type: Exact
+            value: /webhook/v1/schedule

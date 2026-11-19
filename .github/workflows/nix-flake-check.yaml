@@ -11,6 +11,7 @@ concurrency:
 
 permissions:
   contents: read
+  packages: write
   pull-requests: write
 
 jobs:
@@ -25,6 +26,22 @@ jobs:
 
       - name: Run nix flake check
         run: nix flake check --print-build-logs
+
+      # The RenovateJob (modules/kubernetes/renovate) names this image by its
+      # Nix hash, so it must exist before the change that renders it merges.
+      - name: Push the Renovate image
+        env:
+          CREDS: ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ref=docker://ghcr.io/kid/home-ops-renovate:$(nix eval --raw .#renovate-image.imageTag)
+          skopeo() { nix run --inputs-from . nixpkgs#skopeo -- --insecure-policy "$@"; }
+          if skopeo inspect --creds "$CREDS" "$ref" >/dev/null 2>&1; then
+            echo "$ref already pushed"
+            exit 0
+          fi
+          "$(nix build --no-link --print-out-paths .#renovate-image)" > "$RUNNER_TEMP/renovate-image.tar"
+          skopeo copy --dest-creds "$CREDS" "docker-archive:$RUNNER_TEMP/renovate-image.tar" "$ref"
+          rm "$RUNNER_TEMP/renovate-image.tar"
 
       # What the PR changes in k3s-prd-0's packages against its deployed
       # system, as one PR comment updated on every run. The check already

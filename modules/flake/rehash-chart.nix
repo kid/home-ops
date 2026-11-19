@@ -1,7 +1,7 @@
 # Renovate rewrites only the `version` of a charts/<org>/<chart>/default.nix
 # pin, never its `chartHash`. Left stale, the hash still matches the *old*
 # chart. .renovaterc.json5 runs this through postUpgradeTasks right after each
-# bump; other Nix pins are rehashed by kid/renovate-config's refresh-nix-hash.
+# bump; other Nix pins are rehashed by refresh-nix-hash (modules/kubernetes/renovate).
 #
 #   nix run .#rehash-chart charts/<org>/<chart>/default.nix
 _: {

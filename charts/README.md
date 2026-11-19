@@ -19,8 +19,8 @@ helmupdater rehash "<org>/<chart-name>"               # recompute hash only
 
 After bumping, run `nix run .#write-manifests` and commit both the
 `charts/` change and the regenerated `manifests/prd/` output together —
-`checks.manifests` fails otherwise. Renovate does this on its own: its
-self-hosted run (kid/renovate-config) bumps each pin's `version`, then
+`checks.manifests` fails otherwise. Renovate does this on its own: the
+in-cluster renovate-operator (`modules/kubernetes/renovate`) bumps each pin's `version`, then
 `postUpgradeTasks` (`.renovaterc.json5`) runs `rehash-chart` (which calls
 `helmupdater rehash`) and `write-manifests`,
 and opens a PR with the changelog.

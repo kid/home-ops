@@ -1,0 +1,23 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: renovate
+  namespace: renovate
+spec:
+  disableConsentPrompt: true
+  displayname: renovate
+  kanidmRef:
+    name: idm
+    namespace: kanidm
+  origin: https://renovate.kidibox.net
+  redirectUrl:
+    - https://renovate.kidibox.net/oauth2/callback
+  scopeMap:
+    - group: admins
+      scopes:
+        - openid
+        - profile
+        - email
+  secretKeyAliases:
+    clientSecret:
+      - client-secret

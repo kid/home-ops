@@ -1,0 +1,37 @@
+apiVersion: renovate-operator.mogenius.com/v1alpha1
+kind: RenovateJob
+metadata:
+  name: renovate
+  namespace: renovate
+spec:
+  discoveryFilters:
+    - kid/*
+  githubAppReference:
+    appIdSecretKey: client-id
+    installationIdSecretKey: installation-id
+    pemSecretKey: private-key
+    secretName: renovate-github-app
+  image: ghcr.io/kid/home-ops-renovate:ys0wx7y6s5msncdc6pznas7jyq9pisz6
+  metadata:
+    labels:
+      app.kubernetes.io/name: renovate
+  parallelism: 1
+  provider:
+    name: github
+  renovateConfig:
+    fileName: config.json
+    inline: '{"allowedCommands":["^refresh-nix-hash [\\w./-]+ [\\w./-]+ [\\w.-]+$","^nix run \\.#rehash-chart -- [\\w./-]+$","^nix run \\.#write-manifests -- --skip-secrets$","^nix run \\.#write-flake$","^nix flake lock$"],"binarySource":"global","customEnvVariables":{"GIT_SSL_CAINFO":"/etc/ssl/certs/ca-bundle.crt","NIX_SSL_CERT_FILE":"/etc/ssl/certs/ca-bundle.crt","SSL_CERT_FILE":"/etc/ssl/certs/ca-bundle.crt","USER":"renovate"},"executionTimeout":30,"ignorePrAuthor":true,"inheritConfig":true,"inheritConfigFileName":".renovate/org-inherited-config.json5","inheritConfigRepoName":"kid/home-ops","inheritConfigStrict":true}'
+  resources:
+    limits:
+      memory: 8Gi
+    requests:
+      cpu: 250m
+      memory: 1Gi
+  schedule: 0 */3 * * *
+  webhook:
+    authentication:
+      enabled: true
+      secretRef:
+        key: token
+        name: renovate-webhook-token
+    enabled: true
