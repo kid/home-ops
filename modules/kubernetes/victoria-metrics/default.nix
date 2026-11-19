@@ -187,33 +187,6 @@
             |> builtins.replaceStrings [ "__POD__" ] [ "\${__value.raw}" ]
           );
       };
-
-      # source/target: { group = datasource plugin type; name = datasource uid; }.
-      mkPodLogsCorrelation = name: source: {
-        instanceSelector.matchLabels.dashboards = "grafana";
-        template = {
-          apiVersion = "correlations.grafana.app/v0alpha1";
-          kind = "Correlation";
-          metadata.name = name;
-          spec = {
-            type = "query";
-            inherit source;
-            target = {
-              group = "victoriametrics-logs-datasource";
-              name = "vm-logs";
-            };
-            label = "Pod logs";
-            description = "This pod's logs in VictoriaLogs";
-            config = {
-              field = "pod";
-              target = {
-                queryType = "instant";
-                expr = ''k8s.namespace.name:="''${namespace}" AND k8s.pod.name:="''${pod}"'';
-              };
-            };
-          };
-        };
-      };
     in
     {
       nixidy.applicationImports = [
@@ -610,7 +583,7 @@
           }
         ) (lib.mapAttrs (_: route: route.host) ownRoutes // { vmalert = "vmalert"; });
 
-        # Fixed uids, which the derived field and the correlations reference.
+        # Fixed uids, so links into them survive a datasource's recreation.
         resources.grafanaDatasources.vm-metrics.spec = {
           uid = "vm-metrics";
           instanceSelector.matchLabels.dashboards = "grafana";
@@ -644,17 +617,6 @@
               derivedFields = [ podMetricsLink ];
             };
           };
-        };
-
-        # Metrics → logs: a "Pod logs" link on the pod label of either
-        # metrics datasource (Grafana's kubernetesCorrelations toggle).
-        resources.grafanaManifests.pod-logs-prometheus.spec = mkPodLogsCorrelation "pod-logs-prometheus" {
-          group = "prometheus";
-          name = "VictoriaMetrics";
-        };
-        resources.grafanaManifests.pod-logs-vm-metrics.spec = mkPodLogsCorrelation "pod-logs-vm-metrics" {
-          group = "victoriametrics-metrics-datasource";
-          name = "vm-metrics";
         };
 
         resources.grafanaDatasources.victoria-metrics-prometheus.spec = {
