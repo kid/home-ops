@@ -15,7 +15,6 @@ _: {
             "Grafana"
             "GrafanaDashboard"
             "GrafanaDatasource"
-            "GrafanaManifest"
           ];
         })
       ];
@@ -79,8 +78,6 @@ _: {
             server.root_url = "https://${cluster.methods.mkAppHostname "grafana"}";
             security.disable_gravatar = "true";
             "log.console".format = "json";
-            # GrafanaManifest Correlations (victoria-metrics/default.nix).
-            feature_toggles.kubernetesCorrelations = "true";
           };
 
           # No dedicated "install a plugin" CR field — Grafana's own image
