@@ -46,6 +46,12 @@ let
           # DV (Disk): the disc's own DV layer (Profile 7) over WEB hybrids.
           select = [ "f700d29429c023a5734505e77daeaea7" ];
         }
+        {
+          # [Optional] Movie Versions: IMAX (Enhanced), Hybrid, Criterion,
+          # Special Edition, ... None is a group default.
+          trash_id = "f4f1474b963b24cf983455743aa9906c";
+          select_all = true;
+        }
       ];
     };
     sonarr = {
