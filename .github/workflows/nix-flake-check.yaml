@@ -11,31 +11,16 @@ concurrency:
 
 permissions:
   contents: read
-  actions: write
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    # The in-cluster runner (modules/kubernetes/actions-runner-controller),
+    # building on the node's Nix daemon: never for pull requests from forks.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: home-ops
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
-        with:
-          extra-conf: extra-experimental-features = pipe-operators
-
-      - name: Cache Nix store
-        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
-        with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
-          restore-prefixes-first-match: nix-${{ runner.os }}-
-          gc-max-store-size-linux: 5G
-          purge: true
-          purge-prefixes: nix-${{ runner.os }}-
-          purge-created: 0
-          purge-last-accessed: P7D
-          purge-primary-key: never
 
       - name: Run nix flake check
         run: nix flake check --print-build-logs
