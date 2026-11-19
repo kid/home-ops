@@ -19,6 +19,9 @@ let
     api_key = apiKeyEnv instance;
     # Only the ones it synced itself, once dropped from the guide or here.
     delete_old_custom_formats = true;
+    # The Repack/Proper custom formats rank them; the apps' own preference
+    # would put any repack above the scores.
+    media_management.propers_and_repacks = "do_not_prefer";
   };
   # Every playback direct-plays, so DV without an HDR10 fallback (Profile 5)
   # stays allowed: the "DV (w/o HDR fallback)" group is left out.
@@ -27,10 +30,31 @@ let
     # Zero the scores of custom formats it doesn't manage.
     reset_unmatched_scores.enabled = true;
   };
+  # TRaSH's Plex naming. Only new imports follow it: existing files and
+  # folders keep their names until renamed in the app.
+  sonarrNaming = {
+    # TVDB, Sonarr's own metadata source, so every series has the id.
+    series = "plex-tvdb";
+    season = "default";
+    episodes = {
+      rename = true;
+      standard = "default";
+      daily = "default";
+      anime = "default";
+    };
+  };
 
   recyclarrConfig = {
     radarr.radarr = instance "radarr" 7878 // {
       quality_definition.type = "movie";
+      # TMDb, Radarr's own metadata source: not every movie has an IMDb id.
+      media_naming = {
+        folder = "plex-tmdb";
+        movie = {
+          rename = true;
+          standard = "plex-tmdb";
+        };
+      };
       # Remux 2160p (Combined)
       quality_profiles = [ (profile "d1d310673359205736b4b84acd5ea8c8") ];
       # Audio Formats (Atmos first), HDR and Unwanted Formats (BR-DISK) are
@@ -57,6 +81,7 @@ let
     sonarr = {
       sonarr = instance "sonarr" 8989 // {
         quality_definition.type = "series";
+        media_naming = sonarrNaming;
         # Remux 2160p (Combined)
         quality_profiles = [ (profile "911df0e05a395c19d8b3efc76a7467c1") ];
         custom_format_groups.add = [
@@ -76,6 +101,7 @@ let
       };
       animarr = instance "animarr" 8989 // {
         quality_definition.type = "anime";
+        media_naming = sonarrNaming;
         # [Anime] Remux-1080p
         quality_profiles = [ (profile "20e0fc959f1f1704bed501f23bdae76f") ];
       };
