@@ -120,6 +120,8 @@
             kubeProxyReplacement = true;
             k8sServiceHost = "127.0.0.1";
             k8sServicePort = 6443;
+            # json drops the time; the collector maps subsys to logger.name.
+            logOptions.format = "json-ts";
 
             routingMode = "native";
             autoDirectNodeRoutes = true;
@@ -201,6 +203,7 @@
             hubble = {
               relay = {
                 enabled = true;
+                logOptions.format = "json-ts";
                 resources = {
                   requests = {
                     cpu = "10m";

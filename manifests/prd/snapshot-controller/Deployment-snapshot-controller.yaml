@@ -30,6 +30,7 @@ spec:
             - --leader-election=false
             - --http-endpoint=:8080
             - --feature-gates=CSIVolumeGroupSnapshot=true
+            - --logging-format=json
           env:
             - name: NAMESPACE
               valueFrom:

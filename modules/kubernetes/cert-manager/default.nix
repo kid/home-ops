@@ -93,10 +93,16 @@ _: {
             replicaCount = 1;
             # One replica each, no leader election (lease renewals were most of
             # etcd's writes). Recreate keeps an update from running two at once.
-            extraArgs = [ "--leader-elect=false" ];
+            extraArgs = [
+              "--leader-elect=false"
+              "--logging-format=json"
+            ];
             strategy.type = "Recreate";
             cainjector = {
-              extraArgs = [ "--leader-elect=false" ];
+              extraArgs = [
+                "--leader-elect=false"
+                "--logging-format=json"
+              ];
               strategy.type = "Recreate";
             };
             prometheus.servicemonitor.enabled = true;
@@ -107,6 +113,7 @@ _: {
               };
               limits.memory = "192Mi";
             };
+            webhook.extraArgs = [ "--logging-format=json" ];
             webhook.resources = {
               requests = {
                 cpu = "10m";

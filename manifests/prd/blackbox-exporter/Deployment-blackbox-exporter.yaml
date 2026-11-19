@@ -30,6 +30,7 @@ spec:
       containers:
         - args:
             - --config.file=/config/blackbox.yaml
+            - --log.format=json
           image: quay.io/prometheus/blackbox-exporter:v0.29.1
           imagePullPolicy: IfNotPresent
           livenessProbe:

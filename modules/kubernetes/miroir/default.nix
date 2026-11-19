@@ -32,6 +32,7 @@ _: {
       charts,
       generators,
       cluster,
+      config,
       lib,
       miroir-nodes ? [ ],
       ...
@@ -92,6 +93,48 @@ _: {
               registrar.resources.requests.memory = "32Mi";
             };
           };
+
+          # JSON logs for the CSI sidecars, which have no args value of their
+          # own. Composes with the default transformer, which a release's own replaces.
+          transformer =
+            let
+              csiSidecars = [
+                "csi-provisioner"
+                "csi-snapshotter"
+                "csi-resizer"
+                "node-driver-registrar"
+              ];
+            in
+            manifests:
+            config.nixidy.defaults.helm.transformer manifests
+            |> map (
+              m:
+              if
+                builtins.elem m.kind [
+                  "Deployment"
+                  "DaemonSet"
+                ]
+              then
+                lib.updateManyAttrsByPath [
+                  {
+                    path = [
+                      "spec"
+                      "template"
+                      "spec"
+                      "containers"
+                    ];
+                    update = map (
+                      c:
+                      if builtins.elem c.name csiSidecars then
+                        c // { args = (c.args or [ ]) ++ [ "--logging-format=json" ]; }
+                      else
+                        c
+                    );
+                  }
+                ] m
+              else
+                m
+            );
         };
 
         resources.miroirNodes =

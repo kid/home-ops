@@ -20,6 +20,8 @@ spec:
               value: documentation
             - name: MCP_LISTEN_ADDR
               value: :8080
+            - name: MCP_LOG_FORMAT
+              value: json
             - name: MCP_SERVER_MODE
               value: http
             - name: VL_INSTANCE_ENTRYPOINT

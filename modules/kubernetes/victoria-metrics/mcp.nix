@@ -113,6 +113,7 @@ _: {
                         server.env
                         // {
                           MCP_SERVER_MODE = "http";
+                          MCP_LOG_FORMAT = "json";
                           MCP_LISTEN_ADDR = ":${toString port}";
                         }
                       );

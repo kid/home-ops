@@ -26,6 +26,8 @@ spec:
               value: External
             - name: SONARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: SONARR__LOG__CONSOLEFORMAT
+              value: Clef
             - name: SONARR__LOG__DBENABLED
               value: "false"
             - name: SONARR__LOG__LEVEL

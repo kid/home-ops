@@ -8,6 +8,9 @@ metadata:
   name: victoria-metrics-internal
   namespace: monitoring
 spec:
+  configReloaderExtraArgs:
+    loggerFormat: json
+  logFormat: json
   port: "8427"
   resources:
     limits:

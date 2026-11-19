@@ -32,6 +32,7 @@ in
           chart = charts.prometheus-community.prometheus-blackbox-exporter;
           values = {
             fullnameOverride = "blackbox-exporter";
+            extraArgs = [ "--log.format=json" ];
             config.modules.tcp_connect = {
               prober = "tcp";
               timeout = "5s";

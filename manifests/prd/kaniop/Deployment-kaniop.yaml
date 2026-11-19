@@ -30,7 +30,7 @@ spec:
             - name: LOG_FILTER
               value: info
             - name: LOG_FORMAT
-              value: text
+              value: json
             - name: IDM_RECONCILE_INTERVAL_SECONDS
               value: "60"
             - name: CLUSTER_DOMAIN

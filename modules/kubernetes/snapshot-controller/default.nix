@@ -23,6 +23,7 @@ _: {
             # etcd's writes). The chart's maxSurge 0 already stops an update
             # from running two. /healthz/leader-election only exists with it on.
             controller.leaderElection.enabled = false;
+            controller.extraArgs = [ "--logging-format=json" ];
             livenessProbe.httpGet.path = "/metrics";
             readinessProbe.httpGet.path = "/metrics";
             resources = {

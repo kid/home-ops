@@ -44,6 +44,7 @@ _: {
             # One replica, no leader election (lease renewals were most of
             # etcd's writes); Recreate below keeps an update from running two.
             app.leaderElection.enabled = false;
+            app.logFormat = "json";
             defaultPackage.resources.requests = {
               cpu = "10m";
               memory = "32Mi";

@@ -144,6 +144,76 @@
         };
       };
       appRule = "app";
+
+      # Logs → metrics: the line's pod's CPU and memory in Explore.
+      # Grafana substitutes ${__value.raw} after escaping; pod names are URL-safe.
+      podMetricsLink = {
+        name = "Pod metrics";
+        matcherType = "label";
+        matcherRegex = "k8s.pod.name";
+        urlDisplayLabel = "Pod CPU and memory";
+        url =
+          "/explore?schemaVersion=1&orgId=1&panes="
+          + (
+            {
+              pod = {
+                datasource = "VictoriaMetrics";
+                range = {
+                  from = "now-1h";
+                  to = "now";
+                };
+                queries = [
+                  {
+                    refId = "cpu";
+                    datasource = {
+                      type = "prometheus";
+                      uid = "VictoriaMetrics";
+                    };
+                    expr = ''sum by (container) (rate(container_cpu_usage_seconds_total{pod="__POD__",container!=""}[5m]))'';
+                  }
+                  {
+                    refId = "memory";
+                    datasource = {
+                      type = "prometheus";
+                      uid = "VictoriaMetrics";
+                    };
+                    expr = ''sum by (container) (container_memory_working_set_bytes{pod="__POD__",container!=""})'';
+                  }
+                ];
+              };
+            }
+            |> builtins.toJSON
+            |> lib.escapeURL
+            |> builtins.replaceStrings [ "__POD__" ] [ "\${__value.raw}" ]
+          );
+      };
+
+      # source/target: { group = datasource plugin type; name = datasource uid; }.
+      mkPodLogsCorrelation = name: source: {
+        instanceSelector.matchLabels.dashboards = "grafana";
+        template = {
+          apiVersion = "correlations.grafana.app/v0alpha1";
+          kind = "Correlation";
+          metadata.name = name;
+          spec = {
+            type = "query";
+            inherit source;
+            target = {
+              group = "victoriametrics-logs-datasource";
+              name = "vm-logs";
+            };
+            label = "Pod logs";
+            description = "This pod's logs in VictoriaLogs";
+            config = {
+              field = "pod";
+              target = {
+                queryType = "instant";
+                expr = ''k8s.namespace.name:="''${namespace}" AND k8s.pod.name:="''${pod}"'';
+              };
+            };
+          };
+        };
+      };
     in
     {
       nixidy.applicationImports = [
@@ -197,7 +267,6 @@
               ];
             };
             vmagent = mkPolicy (app "vmagent") { egress = [ clusterEgress ]; };
-            vlagent = mkPolicy (app "vlagent") { egress = [ apiserverEgress ]; };
             # Queried by the MCP servers (mcp.nix).
             vmsingle = mkPolicy (app "vmsingle") {
               ingress = [
@@ -285,12 +354,20 @@
               limits.memory = "128Mi";
             };
 
-            prometheus-node-exporter.resources = {
-              requests = {
-                cpu = "10m";
-                memory = "32Mi";
+            prometheus-node-exporter = {
+              resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "32Mi";
+                };
+                limits.memory = "64Mi";
               };
-              limits.memory = "64Mi";
+              # A list replaces the chart's, so its two args are restated.
+              extraArgs = [
+                "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
+                "--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs)$"
+                "--log.format=json"
+              ];
             };
 
             defaultDashboards = {
@@ -299,7 +376,6 @@
                 grafana-overview.enabled = true;
                 victorialogs-cluster.enabled = true;
                 victorialogs-single-node.enabled = true;
-                victorialogs-vlagent.enabled = true;
               };
             };
 
@@ -340,6 +416,7 @@
 
             vmsingle = {
               spec = {
+                logFormat = "json";
                 retentionPeriod = "30d";
                 # 15 days of data filled 5Gi and put the storage in read-only mode.
                 storage = {
@@ -360,6 +437,8 @@
 
             vmalert = {
               spec = {
+                logFormat = "json";
+                configReloaderExtraArgs.loggerFormat = "json";
                 extraArgs."external.url" = "https://${cluster.methods.mkAppHostname "vmalert"}";
                 resources = {
                   requests = {
@@ -375,6 +454,7 @@
             vlsingle = {
               enabled = true;
               spec = {
+                logFormat = "json";
                 retentionPeriod = "30d";
                 storage = {
                   storageClassName = cluster.storage.replicatedClass;
@@ -392,41 +472,43 @@
               };
             };
 
-            vlagent = {
-              enabled = true;
-              spec.resources = {
+            # No CPU limit: the operator's default 200m throttled vmagent
+            # in ~30% of CFS periods at 60m average use.
+            vmagent.spec = {
+              logFormat = "json";
+              # The CR's logFormat doesn't reach the config reloader.
+              configReloaderExtraArgs.loggerFormat = "json";
+              resources = {
+                requests = {
+                  cpu = "100m";
+                  memory = "128Mi";
+                };
+                limits.memory = "384Mi";
+              };
+            };
+
+            internal.vmauth.spec = {
+              logFormat = "json";
+              configReloaderExtraArgs.loggerFormat = "json";
+              resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "32Mi";
+                };
+                limits.memory = "64Mi";
+              };
+            };
+
+            alertmanager.spec = {
+              logFormat = "json";
+              configReloaderExtraArgs.loggerFormat = "json";
+              resources = {
                 requests = {
                   cpu = "10m";
                   memory = "64Mi";
                 };
                 limits.memory = "128Mi";
               };
-            };
-
-            # No CPU limit: the operator's default 200m throttled vmagent
-            # in ~30% of CFS periods at 60m average use.
-            vmagent.spec.resources = {
-              requests = {
-                cpu = "100m";
-                memory = "128Mi";
-              };
-              limits.memory = "384Mi";
-            };
-
-            internal.vmauth.spec.resources = {
-              requests = {
-                cpu = "10m";
-                memory = "32Mi";
-              };
-              limits.memory = "64Mi";
-            };
-
-            alertmanager.spec.resources = {
-              requests = {
-                cpu = "10m";
-                memory = "64Mi";
-              };
-              limits.memory = "128Mi";
             };
           };
 
@@ -528,7 +610,9 @@
           }
         ) (lib.mapAttrs (_: route: route.host) ownRoutes // { vmalert = "vmalert"; });
 
-        resources.grafanaDatasources.victoria-metrics.spec = {
+        # Fixed uids, which the derived field and the correlations reference.
+        resources.grafanaDatasources.vm-metrics.spec = {
+          uid = "vm-metrics";
           instanceSelector.matchLabels.dashboards = "grafana";
           datasource = {
             name = "VictoriaMetrics";
@@ -539,14 +623,38 @@
           };
         };
 
-        resources.grafanaDatasources.victoria-logs.spec = {
+        resources.grafanaDatasources.vm-logs.spec = {
+          uid = "vm-logs";
           instanceSelector.matchLabels.dashboards = "grafana";
           datasource = {
             name = "VictoriaLogs";
             type = "victoriametrics-logs-datasource";
             access = "proxy";
             url = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
+            jsonData = {
+              # The OTel collector's field names (opentelemetry-collector/default.nix).
+              otelPreset = {
+                enabled = true;
+                detection.severity = {
+                  field = "severity_text";
+                  valueCase = "string";
+                  source = "manual";
+                };
+              };
+              derivedFields = [ podMetricsLink ];
+            };
           };
+        };
+
+        # Metrics → logs: a "Pod logs" link on the pod label of either
+        # metrics datasource (Grafana's kubernetesCorrelations toggle).
+        resources.grafanaManifests.pod-logs-prometheus.spec = mkPodLogsCorrelation "pod-logs-prometheus" {
+          group = "prometheus";
+          name = "VictoriaMetrics";
+        };
+        resources.grafanaManifests.pod-logs-vm-metrics.spec = mkPodLogsCorrelation "pod-logs-vm-metrics" {
+          group = "victoriametrics-metrics-datasource";
+          name = "vm-metrics";
         };
 
         resources.grafanaDatasources.victoria-metrics-prometheus.spec = {

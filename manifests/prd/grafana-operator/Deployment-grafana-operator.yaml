@@ -29,7 +29,7 @@ spec:
             - --health-probe-bind-address=:8081
             - --metrics-bind-address=0.0.0.0:9090
             - --pprof-addr=0.0.0.0:8888
-            - --zap-encoder=console
+            - --zap-encoder=json
             - --zap-log-level=info
             - --zap-time-encoding=rfc3339
             - --default-resync-period=10m
