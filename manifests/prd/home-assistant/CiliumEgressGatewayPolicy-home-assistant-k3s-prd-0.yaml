@@ -9,7 +9,7 @@ spec:
     - 10.0.100.0/24
     - 10.0.101.0/24
   egressGateway:
-    egressIP: 10.0.40.20
+    egressIP: 10.0.40.41
     nodeSelector:
       matchLabels:
         kubernetes.io/hostname: k3s-prd-0
