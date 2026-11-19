@@ -110,6 +110,16 @@ data:
         - set(log.cache["lvl"], "warn") where log.cache["klog_sev"] == "W"
         - set(log.cache["lvl"], "error") where log.cache["klog_sev"] == "E"
         - set(log.cache["lvl"], "fatal") where log.cache["klog_sev"] == "F"
+        - merge_maps(log.cache, ExtractPatterns(log.body, "^\\[(?P<serilog_sev>VRB|DBG|INF|WRN|ERR|FTL)\\]
+          (?P<serilog_msg>[\\s\\S]*)$"), "upsert") where resource.attributes["k8s.container.name"]
+          == "recyclarr" and IsString(log.body)
+        - set(log.body, log.cache["serilog_msg"]) where log.cache["serilog_msg"] != nil
+        - set(log.cache["lvl"], "debug") where log.cache["serilog_sev"] == "DBG"
+        - set(log.cache["lvl"], "error") where log.cache["serilog_sev"] == "ERR"
+        - set(log.cache["lvl"], "fatal") where log.cache["serilog_sev"] == "FTL"
+        - set(log.cache["lvl"], "info") where log.cache["serilog_sev"] == "INF"
+        - set(log.cache["lvl"], "trace") where log.cache["serilog_sev"] == "VRB"
+        - set(log.cache["lvl"], "warn") where log.cache["serilog_sev"] == "WRN"
         - set(log.cache["lvl"], ToLowerCase(log.attributes["level"])) where log.cache["lvl"]
           == nil and IsString(log.attributes["level"])
         - delete_key(log.attributes, "level") where IsString(log.attributes["level"])
