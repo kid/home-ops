@@ -1,8 +1,11 @@
 # GitHub Actions runners for the cluster's own repository (`runs-on:
 # home-ops`): actions-runner-controller's scale-set mode, one ephemeral
 # runner pod per job, none while idle. The runner uses the node's Nix daemon
-# (its socket, store and nix binary mounted from the host), so builds run in
-# the host's sandbox and land in its store, which stays warm between jobs.
+# (its socket, store and system profiles mounted from the host), so builds run
+# in the host's sandbox and land in its store, which stays warm between jobs.
+# The profiles give the nix binary, and the system the workflow diffs a pull
+# request's k3s-prd-0 toplevel against: a symlink resolves there, unlike a
+# hostPath of /run/current-system, which mounts its target directory.
 # The daemon runs fixed-output derivations in the host's network namespace,
 # outside this namespace's policy: only same-repository pull requests may run
 # here (the workflow's job condition), never forks.
@@ -147,7 +150,7 @@ in
                   env = [
                     {
                       name = "PATH";
-                      value = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/current-system/sw/bin";
+                      value = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/nix/var/nix/profiles/system/sw/bin";
                     }
                     {
                       name = "NIX_REMOTE";
@@ -178,8 +181,8 @@ in
                       mountPath = "/nix/var/nix/daemon-socket";
                     }
                     {
-                      name = "current-system";
-                      mountPath = "/run/current-system";
+                      name = "nix-profiles";
+                      mountPath = "/nix/var/nix/profiles";
                       readOnly = true;
                     }
                   ];
@@ -201,9 +204,9 @@ in
                   };
                 }
                 {
-                  name = "current-system";
+                  name = "nix-profiles";
                   hostPath = {
-                    path = "/run/current-system";
+                    path = "/nix/var/nix/profiles";
                     type = "Directory";
                   };
                 }

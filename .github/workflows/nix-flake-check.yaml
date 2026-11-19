@@ -11,6 +11,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   checks:
@@ -24,3 +25,50 @@ jobs:
 
       - name: Run nix flake check
         run: nix flake check --print-build-logs
+
+      # What the PR changes in k3s-prd-0's packages against its deployed
+      # system, as one PR comment updated on every run. The check already
+      # built the toplevel in the host's store. Report only: never fails
+      # the required check.
+      - name: Diff k3s-prd-0's closure
+        continue-on-error: true
+        env:
+          NO_COLOR: "1"
+        run: |
+          old=$(readlink -f /nix/var/nix/profiles/system)
+          new=$(nix build --no-link --print-out-paths .#nixosConfigurations.k3s-prd-0.config.system.build.toplevel)
+          {
+            echo '<!-- closure-diff:k3s-prd-0 -->'
+            echo '### k3s-prd-0 closure diff'
+            echo
+            echo "Deployed: \`$old\`"
+            echo "This PR: \`$new\`"
+            echo
+            if [ "$old" = "$new" ]; then
+              echo 'No change: this PR builds the deployed system.'
+            else
+              diff=$(nix store diff-closures "$old" "$new" | head -c 60000)
+              if [ -z "$diff" ]; then
+                echo 'No package version or size change: configuration only.'
+              else
+                printf '```\n%s\n```\n' "$diff"
+              fi
+            fi
+          } > "$RUNNER_TEMP/closure-diff.md"
+
+      - name: Comment the closure diff
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const body = require('fs').readFileSync(`${process.env.RUNNER_TEMP}/closure-diff.md`, 'utf8');
+            const marker = body.split('\n')[0];
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const previous = comments.find((c) => c.user.type === 'Bot' && c.body.startsWith(marker));
+            if (previous) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: previous.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
