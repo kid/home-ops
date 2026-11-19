@@ -57,5 +57,5 @@ spec:
         resources:
           requests:
             storage: 1Gi
-        storageClassName: miroir-replicated
+        storageClassName: zfs
   tlsSecretName: idm-tls

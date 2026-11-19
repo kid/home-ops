@@ -112,8 +112,10 @@ in
             message = "den.clusters.${clusterName}.k3s.initServer (${toString cluster.k3s.initServer}) is not one of the cluster's servers: ${lib.concatStringsSep ", " servers}";
           }
           {
-            assertion = etcd || (servers == [ host.name ] && cluster.k3s.initServer == null);
-            message = "den.clusters.${clusterName}.k3s.datastore is sqlite, which allows exactly one server and no initServer; servers: ${lib.concatStringsSep ", " servers}";
+            # A host with no den.devices entry (test-vm) is standalone, not
+            # one of the cluster's servers.
+            assertion = etcd || (lib.length servers <= 1 && cluster.k3s.initServer == null);
+            message = "den.clusters.${clusterName}.k3s.datastore is sqlite, which allows one server and no initServer; servers: ${lib.concatStringsSep ", " servers}";
           }
         ];
 

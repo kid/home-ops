@@ -31,4 +31,4 @@ spec:
     - pvc:
         name: frigate
   staging:
-    storageClassName: miroir
+    storageClassName: zfs

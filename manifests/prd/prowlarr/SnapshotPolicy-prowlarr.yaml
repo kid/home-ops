@@ -37,4 +37,4 @@ spec:
     - pvc:
         name: prowlarr
   staging:
-    storageClassName: miroir
+    storageClassName: zfs

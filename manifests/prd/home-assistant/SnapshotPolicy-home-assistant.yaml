@@ -36,4 +36,4 @@ spec:
     - pvc:
         name: home-assistant
   staging:
-    storageClassName: miroir
+    storageClassName: zfs

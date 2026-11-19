@@ -25,16 +25,18 @@ let
   # dataSourceRef to Restore `name` itself. ignore lists paths the app can
   # rebuild (caches, logs), kept out of the r2 snapshots. The claim and
   # staging classes are the cluster's den.clusters.<name>.storage ones. A
-  # cluster without kopiur.backups gets no r2 SnapshotSchedule: the policy
-  # only names the identity its Restore reads.
+  # cluster without kopiur.backups gets no SnapshotSchedule at all, r2's or
+  # local's: the policies only name the identities its Restores read.
   #
   # With kopiur.local, a second policy `<name>-full` backs the same claim up
   # daily to the on-site `local` repository: no ignore rules, as root, so it
   # also holds what r2 skips. kopiur.restoreFrom = "local" restores from that
-  # identity instead of r2's. r2 = false keeps a claim out of r2 altogether
-  # (VMSingle's and VLSingle's): it is only backed up with kopiur.local and
-  # only gets a Restore with restoreFrom = "local", so its claim may carry the
-  # dataSourceRef only then.
+  # identity instead of r2's, and a Restore that finds no snapshot there
+  # fails instead of provisioning an empty volume: the claim stays Pending
+  # (a new app's too, until its first `-full` snapshot exists). r2 = false
+  # keeps a claim out of r2 altogether (VMSingle's and VLSingle's): it is only
+  # backed up with kopiur.local and only gets a Restore with restoreFrom =
+  # "local", so its claim may carry the dataSourceRef only then.
   mkKopiurBackup =
     cluster:
     {
@@ -148,7 +150,7 @@ let
             };
           };
         }
-        // lib.optionalAttrs cluster.kopiur.local {
+        // lib.optionalAttrs (cluster.kopiur.local && cluster.kopiur.backups) {
           ${full}.spec = {
             policyRef.name = full;
             # Before the repository's daily full maintenance at 03:00.
@@ -162,7 +164,8 @@ let
       restores = lib.optionalAttrs restored {
         ${name}.spec = {
           target.populator = { };
-          policy.onMissingSnapshot = "Continue";
+          # Deploy-or-restore from r2; from local, a missing snapshot blocks.
+          policy.onMissingSnapshot = if fromLocal then "Fail" else "Continue";
           credentialProjection.enabled = true;
         }
         // (
@@ -231,6 +234,9 @@ in
     let
       r2Endpoint = "${cluster.cloudflare.accountId}.r2.cloudflarestorage.com";
       inherit (cluster.kopiur) local;
+      # The kopiur.local cluster only writes and maintains it with
+      # kopiur.backups: without, it opens it ReadOnly like any other reader.
+      writesLocal = local && cluster.kopiur.backups;
       restoresLocal = cluster.kopiur.restoreFrom == "local";
       # The cluster writing the environment's local repository: this one with
       # kopiur.local, else the single one that has it (opened ReadOnly, like a
@@ -452,9 +458,10 @@ in
 
         # The on-site full backup repository: the `<name>-full` policies,
         # daily, nothing ignored, VMSingle and VLSingle included. Written and
-        # maintained by its kopiur.local cluster only; any other cluster of
-        # the environment that restores from it opens it ReadOnly, over an
-        # export k3s-prd-0 serves it read-only anyway. Same password as r2.
+        # maintained by its kopiur.local cluster only, and only with
+        # kopiur.backups; any other cluster of the environment that restores
+        # from it opens it ReadOnly, over an export k3s-prd-0 serves it
+        # read-only anyway. Same password as r2.
         resources.clusterRepositories.local = lib.mkIf (local || restoresLocal) {
           spec = {
             allowedNamespaces.all = true;
@@ -465,13 +472,13 @@ in
               namespace = "kopiur-system";
             };
             credentialProjection.allowed = true;
-            create.enabled = local;
+            create.enabled = writesLocal;
             # Bootstrap and maintenance; the -full policies and their Restores
             # run as root instead.
             moverDefaults.securityContext = nobody;
           }
           // (
-            if local then
+            if writesLocal then
               {
                 # As r2's above: few index blobs per daily run, but the same
                 # bound on what an uncompacted epoch can hold.

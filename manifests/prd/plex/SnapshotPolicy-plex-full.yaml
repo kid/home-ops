@@ -34,4 +34,4 @@ spec:
     - pvc:
         name: plex
   staging:
-    storageClassName: miroir
+    storageClassName: zfs

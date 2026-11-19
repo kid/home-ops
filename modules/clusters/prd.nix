@@ -50,6 +50,9 @@ in
 
     secrets.onepasswordVault = "home-ops-prd";
 
+    # One bare-metal server (k3s-prd-0) and no agents.
+    k3s.datastore = "sqlite";
+
     cloudflare = {
       accountId = "fadfc390b1e5fb0ce019b9f7a8917d42";
       zoneId = "dba2b63221015f1957d718defbf6b871";
@@ -87,13 +90,21 @@ in
       ];
     };
 
+    # OpenEBS LocalPV-ZFS on k3s-prd-0's zroot/k8s.
     storage = {
-      replicatedClass = "miroir-replicated";
-      localClass = "miroir";
+      replicatedClass = "zfs";
+      localClass = "zfs";
     };
 
-    # Full on-site backups next to r2's; claims still restore from r2.
+    # Full on-site backups next to r2's, and the claims restore from them:
+    # the cluster moved from the Incus VMs onto k3s-prd-0 by restoring every
+    # claim from its last `-full` snapshot.
     kopiur.local = true;
+    kopiur.restoreFrom = "local";
+    # No new snapshot to either repository until the restored apps are
+    # verified, so a bad restore never becomes the newest backup. A
+    # follow-up drops this line once they are.
+    kopiur.backups = false;
 
     nixidy = {
       repository = "https://github.com/kid/home-ops.git";
@@ -122,7 +133,7 @@ in
     apiserver
     snapshot-controller
     generic-device-plugin
-    miroir
+    zfs-localpv
     external-dns
     external-secrets
     kopiur

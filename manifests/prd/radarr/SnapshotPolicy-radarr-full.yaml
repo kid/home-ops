@@ -34,4 +34,4 @@ spec:
     - pvc:
         name: radarr
   staging:
-    storageClassName: miroir
+    storageClassName: zfs

@@ -17,8 +17,6 @@
       # On a reboot or poweroff the kubelet stops pods first (regular ones,
       # then critical ones in the last 60s), so the apps close their SQLite
       # databases and NFS mounts are released before the network goes down.
-      # The critical window must cover the miroir agent's 60s
-      # terminationGracePeriodSeconds, so it releases its DRBD backings last.
       # Kubelet config file fields, not flags: the module writes them to a
       # KubeletConfiguration passed with --kubelet-arg=config=.
       services.k3s.gracefulNodeShutdown = {

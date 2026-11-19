@@ -33,7 +33,3 @@ spec:
         - 10.0.40.40:10257
       tlsConfig:
         insecureSkipVerify: true
-    - labels:
-        job: kube-etcd
-      targets:
-        - 10.0.40.40:2381

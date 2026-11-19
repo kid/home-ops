@@ -34,4 +34,4 @@ spec:
     - pvc:
         name: vmsingle-victoria-metrics
   staging:
-    storageClassName: miroir
+    storageClassName: zfs
