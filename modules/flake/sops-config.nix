@@ -96,7 +96,7 @@ let
 in
 {
   perSystem =
-    { pkgs, config, ... }:
+    { pkgs, ... }:
     let
       renderedSopsYaml = (pkgs.formats.yaml { }).generate "sops-config.yaml" sopsConfig;
     in
@@ -107,11 +107,6 @@ in
           install -m 644 "${renderedSopsYaml}" .sops.yaml
           echo "==> Wrote .sops.yaml"
         '';
-      };
-
-      apps.write-sops-config = {
-        type = "app";
-        program = "${config.packages.write-sops-config}/bin/write-sops-config";
       };
 
       checks.sops-config =

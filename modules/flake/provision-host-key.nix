@@ -17,7 +17,7 @@
 # post-boot ssh-keyscan capture step.
 {
   perSystem =
-    { pkgs, config, ... }:
+    { pkgs, ... }:
     {
       packages.provision-host-key = pkgs.writeShellApplication {
         name = "provision-host-key";
@@ -59,11 +59,6 @@
 
           echo "==> Run 'nix run .#write-sops-config' to add $host as an sops recipient."
         '';
-      };
-
-      apps.provision-host-key = {
-        type = "app";
-        program = "${config.packages.provision-host-key}/bin/provision-host-key";
       };
     };
 }
