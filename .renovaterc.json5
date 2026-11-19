@@ -1,5 +1,6 @@
 // Base config (presets, the `# renovate:` comment manager, the Nix hash
-// refresh) is inherited from kid/renovate-config, which also runs Renovate.
+// refresh) is .renovate/org-inherited-config.json5, inherited by every repo
+// the renovate-operator of modules/kubernetes/renovate runs.
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   ignorePaths: [
@@ -80,9 +81,16 @@
       semanticCommitScope: "terraform",
     },
     {
+      // A nixpkgs bump changes the Renovate image, and with it the
+      // RenovateJob's image tag (modules/kubernetes/renovate).
       matchManagers: ["nix"],
       matchUpdateTypes: ["lockFileMaintenance"],
       semanticCommitScope: "nix",
+      postUpgradeTasks: {
+        commands: ["nix run .#write-manifests -- --skip-secrets"],
+        fileFilters: ["manifests/**"],
+        executionMode: "update",
+      },
     },
     {
       // The chart and the CRD source pin (cilium/network-policy.nix) share a
@@ -118,9 +126,9 @@
     {
       // Moves every input not pinned by rev (nixpkgs, the other flake
       // inputs, transitive ones) together in the weekly lockFileMaintenance
-      // PR. Manifests must not change with it: pin anything a chart derives
-      // from Helm's own version (e.g. .Capabilities.KubeVersion) in the
-      // chart values instead.
+      // PR. Manifests must not change with it, the Renovate image's tag
+      // excepted: pin anything a chart derives from Helm's own version (e.g.
+      // .Capabilities.KubeVersion) in the chart values instead.
       matchManagers: ["nix"],
       matchUpdateTypes: ["major", "minor", "patch", "digest", "pin", "pinDigest", "bump"],
       enabled: false,

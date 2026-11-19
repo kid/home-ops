@@ -157,6 +157,7 @@ in
     media.unpackerr
     media.recyclarr
     actions-runner-controller
+    renovate
   ];
 
   # Rules with no single-app owner: mikrotik-exporter isn't its own aspect here, and the LB CIDR rule is cluster-wide.

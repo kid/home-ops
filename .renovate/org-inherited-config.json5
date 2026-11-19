@@ -1,0 +1,151 @@
+// Inherited by every repo the in-cluster renovate-operator runs
+// (modules/kubernetes/renovate), ahead of the repo's own config: repos only
+// add what is specific to them.
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    // 12.0.0+ sets dependencyDashboard as an object, which the image's
+    // Renovate (nixpkgs' renovate, 44.151.2) still reads as a boolean.
+    "github>home-operations/renovate-presets#11.0.0",
+    ":semanticCommits",
+    ":timezone(Europe/Brussels)",
+  ],
+  // Keeps each repo's existing dashboard issue; the presets rename it.
+  dependencyDashboardTitle: "Dependency Dashboard",
+  // Ticking this box makes the repo's GitHub webhook schedule a run on the
+  // operator.
+  dependencyDashboardFooter: "- [ ] <!-- manual job -->Check this box to trigger a request for Renovate to run again on this repository",
+  suppressNotifications: [
+    "prEditedNotification",
+    "prIgnoreNotification",
+  ],
+  // Adopt the PRs the hosted Renovate GitHub App opened before a repo moved
+  // to self-hosted Renovate: without this it reads the App's commits as
+  // manual edits and never updates them. Its other half, ignorePrAuthor, is
+  // global-only (the operator's global config, renovate/default.nix). Keep
+  // both while any of those PRs is still open.
+  gitIgnoredAuthors: ["29139614+renovate[bot]@users.noreply.github.com"],
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: ["/.*\\.nix$/"],
+      // A docker tag pinned by digest (`tag@sha256:…`) splits into
+      // currentValue and currentDigest: docker versioning rejects the
+      // combined string, which silently skips the dependency.
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>[a-z.-]+?)(?: depName=(?<depName>\\S+?))?(?: versioning=(?<versioning>\\S+?))?\\s+\\S+\\s*=\\s*\"(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[0-9a-f]+))?\";",
+      ],
+    },
+  ],
+  nix: {
+    enabled: true,
+  },
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["before 4am on monday"],
+  },
+  // addLabels, not labels: the update-type rules below set `labels`, which
+  // would replace a top-level `labels` value.
+  addLabels: ["dependencies"],
+  packageRules: [
+    {
+      description: "Link to the upstream commit range for GitHub-sourced digest updates",
+      matchSourceUrls: ["https://github.com/**/*"],
+      matchUpdateTypes: ["digest"],
+      changelogUrl: "{{sourceUrl}}/compare/{{currentDigest}}..{{newDigest}}",
+    },
+    {
+      // Flake-input digest bumps (git-refs custom.regex, no currentValue)
+      // never get a sourceUrl attached, since Renovate only resolves one
+      // through a release lookup that pure digest tracking never runs.
+      // packageNameTemplate already resolves to the GitHub URL though.
+      description: "Link to the upstream commit range for flake-input digest updates",
+      matchManagers: ["custom.regex"],
+      matchDatasources: ["git-refs"],
+      matchUpdateTypes: ["digest"],
+      changelogUrl: "{{packageName}}/compare/{{currentDigest}}...{{newDigest}}",
+    },
+    {
+      description: "Flux Operator Group",
+      groupName: "flux-operator",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["/flux-operator/", "/flux-instance/", "/flux-operator-manifests/"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 3,
+    },
+    {
+      description: "Kubernetes Group",
+      groupName: "kubernetes",
+      matchDatasources: ["docker"],
+      matchPackageNames: [
+        "/kube-apiserver/",
+        "/kube-controller-manager/",
+        "/kube-proxy/",
+        "/kube-scheduler/",
+        "/kubelet/",
+      ],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+      minimumGroupSize: 5,
+    },
+    {
+      matchUpdateTypes: ["major"],
+      labels: ["type/major"],
+    },
+    {
+      matchUpdateTypes: ["minor"],
+      labels: ["type/minor"],
+    },
+    {
+      matchUpdateTypes: ["patch"],
+      labels: ["type/patch"],
+    },
+    {
+      matchUpdateTypes: ["digest"],
+      labels: ["type/digest"],
+    },
+    {
+      matchDatasources: ["docker"],
+      addLabels: ["renovate/container"],
+    },
+    {
+      matchDatasources: ["helm"],
+      addLabels: ["renovate/helm"],
+    },
+    {
+      matchManagers: ["github-actions"],
+      addLabels: ["renovate/github-action"],
+    },
+    {
+      matchDatasources: ["github-releases"],
+      addLabels: ["renovate/github-release"],
+    },
+    {
+      description: "Override Talos Installer Package Name",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["/factory\\.talos\\.dev/"],
+      overridePackageName: "ghcr.io/siderolabs/installer",
+    },
+    {
+      description: "Closing a PR only ignores updates whose title matches it, so a major title must not change with each release.",
+      matchUpdateTypes: ["major"],
+      commitMessageExtra: "to {{prettyNewMajor}}",
+    },
+    {
+      // Every `# renovate:` pin in Nix has a content hash next to its
+      // version, which Renovate cannot recompute. refresh-nix-hash is on the
+      // Renovate image's PATH (modules/kubernetes/renovate/_image.nix).
+      matchManagers: ["custom.regex"],
+      matchFileNames: ["**/*.nix"],
+      matchDatasources: ["github-releases", "github-tags", "/^custom\\./"],
+      postUpgradeTasks: {
+        commands: ["refresh-nix-hash {{{packageFile}}} {{{depName}}} {{{newValue}}}"],
+        fileFilters: ["**/*.nix"],
+        executionMode: "update",
+      },
+    },
+  ],
+}
