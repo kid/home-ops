@@ -15,6 +15,13 @@ data:
             - f700d29429c023a5734505e77daeaea7
             trash_id: 9337080378236ce4c0b183e35790d2a7
         delete_old_custom_formats: true
+        media_management:
+          propers_and_repacks: do_not_prefer
+        media_naming:
+          folder: plex-tmdb
+          movie:
+            rename: true
+            standard: plex-tmdb
         quality_definition:
           type: movie
         quality_profiles:
@@ -26,6 +33,16 @@ data:
         api_key: !env_var ANIMARR_API_KEY
         base_url: http://animarr.media.svc.cluster.local:8989
         delete_old_custom_formats: true
+        media_management:
+          propers_and_repacks: do_not_prefer
+        media_naming:
+          episodes:
+            anime: default
+            daily: default
+            rename: true
+            standard: default
+          season: default
+          series: plex-tvdb
         quality_definition:
           type: anime
         quality_profiles:
@@ -44,6 +61,16 @@ data:
             - ef4963043b0987f8485bc9106f16db38
             trash_id: f4a0410a1df109a66d6e47dcadcce014
         delete_old_custom_formats: true
+        media_management:
+          propers_and_repacks: do_not_prefer
+        media_naming:
+          episodes:
+            anime: default
+            daily: default
+            rename: true
+            standard: default
+          season: default
+          series: plex-tvdb
         quality_definition:
           type: series
         quality_profiles:
