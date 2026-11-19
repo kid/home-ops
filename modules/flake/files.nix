@@ -19,7 +19,6 @@
   perSystem =
     {
       pkgs,
-      config,
       system,
       ...
     }:
@@ -90,11 +89,6 @@
           )
           |> lib.concatStringsSep "\n"
         );
-      };
-
-      apps.write-manifests = {
-        type = "app";
-        program = "${config.packages.write-manifests}/bin/write-manifests";
       };
     };
 }

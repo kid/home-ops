@@ -57,7 +57,7 @@ let
 in
 {
   perSystem =
-    { pkgs, config, ... }:
+    { pkgs, ... }:
     {
       packages.kube-login = pkgs.writeShellApplication {
         name = "kube-login";
@@ -102,11 +102,6 @@ in
 
           echo "==> Context $cluster ready. 'kubectl auth whoami' opens Kanidm in your browser and should list the group $group."
         '';
-      };
-
-      apps.kube-login = {
-        type = "app";
-        program = "${config.packages.kube-login}/bin/kube-login";
       };
     };
 }

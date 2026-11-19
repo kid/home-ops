@@ -1,8 +1,8 @@
 # Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt/terragrunt-stacks.nix) to
 # tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl and
 # tf-stacks/<env>/k3s/<stack>/terragrunt.hcl, exposed as
-# `nix run .#write-terragrunt` (mirrors apps.write-manifests/
-# write-terraform elsewhere in the dendritic ecosystem) + `checks.terragrunt`
+# `nix run .#write-terragrunt` (mirrors write-manifests/write-terraform
+# elsewhere in the dendritic ecosystem) + `checks.terragrunt`
 # (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
 {
   config,
@@ -142,7 +142,7 @@ let
 in
 {
   perSystem =
-    { pkgs, config, ... }:
+    { pkgs, ... }:
     let
       # treefmt's hclfmt formatter (modules/flake/devshell.nix) covers *.hcl
       # repo-wide, so the committed leaves must already be hclfmt-clean —
@@ -165,11 +165,6 @@ in
           mkdir -p "$(dirname "${leaf.path}")"
           install -m 644 "${formattedLeaf leaf}" "${leaf.path}"
         '') allLeaves;
-      };
-
-      apps.write-terragrunt = {
-        type = "app";
-        program = "${config.packages.write-terragrunt}/bin/write-terragrunt";
       };
 
       checks.terragrunt =

@@ -89,10 +89,5 @@
           nixos-anywhere "''${nixos_anywhere_args[@]}"
         '';
       };
-
-      apps.nixos-anywhere-install = {
-        type = "app";
-        program = "${config.packages.nixos-anywhere-install}/bin/nixos-anywhere-install";
-      };
     };
 }
