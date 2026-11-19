@@ -73,6 +73,9 @@ in
     terragrunt.enable = false;
     letsencrypt.staging = true;
     kopiur.backups = false;
+    # Restore drill for the cutover: claims fill from prd's full `local`
+    # copies, opened ReadOnly over node0's export (read-only to this node).
+    kopiur.restoreFrom = "local";
 
     storage = {
       replicatedClass = "zfs";
