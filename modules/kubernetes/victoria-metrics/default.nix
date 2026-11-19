@@ -251,6 +251,12 @@
               ingress = [
                 (gatewayIngress 9428)
                 (fromPods (app "mcp-victorialogs") [ 9428 ])
+                # The other nodes' journal uploads (k3s/journald-upload.nix);
+                # the default-deny policy already admits the local host's.
+                {
+                  fromEntities = [ "remote-node" ];
+                  toPorts = tcp [ 9428 ];
+                }
               ];
             };
             vmalert = mkPolicy (app "vmalert") { ingress = [ (gatewayIngress 8080) ]; };
@@ -537,6 +543,25 @@
                 config.applications.victoria-metrics.helm.releases.victoria-metrics.objects;
           in
           configMap.data |> builtins.toJSON |> builtins.hashString "sha256";
+
+        # The k3s nodes' journal uploads, at a fixed IP: the hosts don't
+        # resolve cluster DNS.
+        resources.services = lib.optionalAttrs (cluster.networks.services.assignments ? vlsingle-journald) {
+          vlsingle-journald.spec = {
+            clusterIP = cluster.networks.services.assignments.vlsingle-journald;
+            selector = {
+              "app.kubernetes.io/name" = "vlsingle";
+              "app.kubernetes.io/instance" = "victoria-metrics";
+            };
+            ports = [
+              {
+                name = "http";
+                port = 9428;
+                targetPort = 9428;
+              }
+            ];
+          };
+        };
 
         resources.httpRoutes = lib.mapAttrs' (
           name:

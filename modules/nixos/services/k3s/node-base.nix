@@ -1,6 +1,9 @@
 # Kernel and tooling every k3s node needs, server or agent, the k3s
-# release and graceful node shutdown.
-_: {
+# release, graceful node shutdown and the journal upload.
+{ den, ... }:
+{
+  den.aspects.k3s.node-base.includes = [ den.aspects.k3s.journald-upload ];
+
   den.aspects.k3s.node-base.nixos =
     { pkgs, ... }:
     let

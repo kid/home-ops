@@ -23,3 +23,9 @@ spec:
         - ports:
             - port: "9428"
               protocol: TCP
+    - fromEntities:
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "9428"
+              protocol: TCP

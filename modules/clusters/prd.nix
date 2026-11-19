@@ -152,7 +152,11 @@ in
       services = {
         cidr = "172.42.0.0/16";
         description = "k3s service overlay network";
-        assignments.coredns = "172.42.0.10";
+        assignments = {
+          coredns = "172.42.0.10";
+          # VLSingle's journald endpoint for the k3s nodes' journal uploads.
+          vlsingle-journald = "172.42.0.11";
+        };
       };
       loadBalancer = {
         cidr = lbCidr;
