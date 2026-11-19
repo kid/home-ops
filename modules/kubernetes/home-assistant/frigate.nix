@@ -1,7 +1,8 @@
 # Frigate, the NVR for the two Reolink cameras: decodes on k3s-prd-0's iGPU
 # VF (VA-API) and detects with OpenVINO on it, sharing the VF with Plex.
-# Recordings and snapshots go to a node0 NVMe dataset over NFS (the
-# nfs-exports quirk); its database and config sit on the kopiur-backed volume.
+# Recordings and snapshots go to a node0 NVMe dataset (the nfs-exports
+# quirk), mounted from the host; its database and config sit on the
+# kopiur-backed volume.
 # The ConfigMap's config.yml is copied over /config/config.yml on every start,
 # so edits made in the UI don't survive a restart: change them here.
 { config, lib, ... }:
@@ -195,7 +196,7 @@ in
     }
   ];
 
-  # Its recordings and snapshots: a node0 dataset, exported to the nodes.
+  # Its recordings and snapshots: a node0 dataset, mounted from the host.
   # sanoid's dailies are what node0's syncoid copies to tank; Frigate keeps
   # its own 14 days, so three are enough for an incremental base (they count
   # against the quota, at ~0.3G of churn a day).
@@ -401,11 +402,9 @@ in
                   volumes = {
                     config.persistentVolumeClaim.claimName = name;
                     frigate-config.configMap.name = name;
-                    # No mkNfsScaler: k3s-prd-0 runs on node0, so it never
-                    # outlives its NFS server.
-                    media.nfs = {
-                      server = cluster.methods.mediaNfsServer;
+                    media.hostPath = {
                       inherit (cluster.methods.nfsExport name) path;
+                      type = "Directory";
                     };
                     cluster-ca.configMap.name = "cluster-ca";
                     shm.emptyDir = {

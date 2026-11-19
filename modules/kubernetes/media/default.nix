@@ -1,16 +1,10 @@
 # The shape every media app here shares: one Deployment on a kopiur-backed
 # config volume, its Service and HTTPRoute on the apps Gateway, behind Kanidm
-# and public through the tunnel, NFS mounts from node0's tank pool, and its
+# and public through the tunnel, host mounts of node0's tank pool, and its
 # Cilium policy. Returns the k8s-manifests content: the nixidy application,
 # plus its tunnel route in envoy-gateway.
-{ config, lib, ... }:
+{ lib, ... }:
 let
-  # The nodes reach node0 on the Storage VLAN, not through the router.
-  nfsServer =
-    config.den.devices.node0.interfaces
-    |> lib.findFirst (i: i.network == "Storage") (throw "node0 has no Storage interface")
-    |> (i: i.address);
-
   mkMediaApp =
     methods:
     {
@@ -24,15 +18,13 @@ let
       probePath ? "/ping",
       tag,
       port,
-      # Also the kopiur mover's uid, and the owner of what it writes over NFS.
+      # Also the kopiur mover's uid, and the owner of what it writes on tank.
       uid,
       supplementalGroups ? [ ],
-      # <volume> = { path = <export on node0>; mountPath = <in the pod>;
-      # readOnly ? false; }
-      nfs ? { },
+      # <volume> = { path = <directory on the node>; mountPath = <in the pod>;
+      # readOnly ? false; }: tank's datasets, on the node that holds them.
+      hostPaths ? { },
       storage ? "1Gi",
-      # null leaves it to the HPA from mkNfsScaler.
-      replicas ? null,
       # Out to the world (indexers, metadata, Usenet servers).
       egressPorts ? [
         80
@@ -109,7 +101,6 @@ let
             ]
             ++ backupIgnore;
           }
-          // lib.optionalAttrs (replicas == null) (methods.mkNfsScaler { inherit name; })
           // lib.optionalAttrs (apiKeyEnv != null) {
             # Generated once: the other apps keep it in their own settings.
             passwords.${apiKeySecret}.spec = {
@@ -151,7 +142,8 @@ let
                 ];
               };
 
-            deployments.${name}.spec = lib.optionalAttrs (replicas != null) { inherit replicas; } // {
+            deployments.${name}.spec = {
+              replicas = 1;
               strategy.type = "Recreate";
               selector.matchLabels = labels;
               template = {
@@ -228,7 +220,7 @@ let
                       lib.nameValuePair v.mountPath (
                         { name = volume; } // lib.optionalAttrs (v.readOnly or false) { readOnly = true; }
                       )
-                    ) nfs;
+                    ) hostPaths;
                   }
                   // lib.optionalAttrs (args != [ ]) { inherit args; };
                   volumes = {
@@ -237,12 +229,13 @@ let
                     tmp.emptyDir = { };
                   }
                   // lib.mapAttrs (_: v: {
-                    nfs = {
-                      server = nfsServer;
+                    hostPath = {
                       inherit (v) path;
-                    }
-                    // lib.optionalAttrs (v.readOnly or false) { readOnly = true; };
-                  }) nfs;
+                      # Never created: a missing path means the wrong node or
+                      # an unmounted dataset.
+                      type = "Directory";
+                    };
+                  }) hostPaths;
                 };
               };
             };
@@ -289,5 +282,4 @@ let
 in
 {
   den.clusterMethods.mkMediaApp = cluster: mkMediaApp cluster.methods;
-  den.clusterMethods.mediaNfsServer = _: nfsServer;
 }

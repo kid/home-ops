@@ -4,6 +4,7 @@ metadata:
   name: sonarr
   namespace: media
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: sonarr
@@ -98,14 +99,14 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: sonarr
-        - name: downloads
-          nfs:
+        - hostPath:
             path: /tank/downloads/sabnzbd
-            server: 10.0.20.10
-        - name: library
-          nfs:
+            type: Directory
+          name: downloads
+        - hostPath:
             path: /tank/library/series
-            server: 10.0.20.10
+            type: Directory
+          name: library
         - emptyDir: {}
           name: logs
         - emptyDir: {}

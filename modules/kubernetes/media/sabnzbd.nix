@@ -23,7 +23,7 @@ _: {
       uid = 100330;
       # The CT's own mount path, which sabnzbd.ini and the *arr apps'
       # completed-download paths refer to.
-      nfs.downloads = {
+      hostPaths.downloads = {
         path = "/tank/downloads/sabnzbd";
         mountPath = "/var/lib/sabnzbd/Downloads";
       };

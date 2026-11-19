@@ -11,7 +11,7 @@
       shutdownGracePeriod = 180;
     in
     {
-      # 1.37 enables HPAScaleToZero, which cluster.methods.mkNfsScaler needs.
+      # The release the clusters run: k3s doesn't support downgrades.
       services.k3s.package = pkgs.k3s_1_37;
 
       # On a reboot or poweroff the kubelet stops pods first (regular ones,

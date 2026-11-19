@@ -254,7 +254,7 @@ in
       localBackend.filesystem = {
         path = "/repo";
         volume.nfs = {
-          server = cluster.methods.mediaNfsServer;
+          server = cluster.methods.nfsServer;
           inherit (localWriter.methods.nfsExport "kopiur-local") path;
         };
       };

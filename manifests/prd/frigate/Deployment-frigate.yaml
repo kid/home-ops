@@ -108,10 +108,10 @@ spec:
         - configMap:
             name: frigate
           name: frigate-config
-        - name: media
-          nfs:
+        - hostPath:
             path: /srv/clusters/prd/apps/frigate
-            server: 10.0.20.10
+            type: Directory
+          name: media
         - emptyDir:
             medium: Memory
             sizeLimit: 256Mi

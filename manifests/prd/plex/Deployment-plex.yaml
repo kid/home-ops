@@ -4,6 +4,7 @@ metadata:
   name: plex
   namespace: media
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: plex
@@ -99,11 +100,10 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: plex
-        - name: library
-          nfs:
+        - hostPath:
             path: /tank/library
-            readOnly: true
-            server: 10.0.20.10
+            type: Directory
+          name: library
         - emptyDir: {}
           name: logs
         - emptyDir: {}
