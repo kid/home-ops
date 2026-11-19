@@ -63,7 +63,7 @@ jobs:
                 echo
               fi
               if [ -n "$sizes" ]; then
-                echo "<details><summary>$(printf '%s\n' "$sizes" | wc -l) packages changed size only</summary>"
+                echo "<details><summary>Size-only changes ($(printf '%s\n' "$sizes" | wc -l))</summary>"
                 echo
                 printf '```\n%s\n```\n' "$sizes"
                 echo '</details>'
