@@ -15,7 +15,7 @@ let
   mqttPort = 8883;
   caDir = "/etc/cluster-ca";
   # renovate: datasource=docker depName=ghcr.io/blakeblackshear/frigate
-  tag = "0.18.2@sha256:fd60f99ffd4eb6c42360ed4e14953e270586f239309ab3983e55b2e97ffac09a";
+  tag = "0.18.3@sha256:d1a3e0008557bb3f3314d442ecd4ba68e9b16ab7872d64612649f7a6e5156635";
 
   # Frigate camera name → address. Each camera's stream login is the
   # reolink-<name> 1Password item in home-ops (the frigate stack below copies it).
