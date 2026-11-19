@@ -14,6 +14,8 @@ data:
           - select:
             - f700d29429c023a5734505e77daeaea7
             trash_id: 9337080378236ce4c0b183e35790d2a7
+          - select_all: true
+            trash_id: f4f1474b963b24cf983455743aa9906c
         delete_old_custom_formats: true
         quality_definition:
           type: movie
