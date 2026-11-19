@@ -2,6 +2,8 @@
 // (modules/kubernetes/renovate), ahead of the repo's own config: repos only
 // add what is specific to them.
 {
+  // Renovate validates the inherited config without migrating it, so
+  // `description` must be an array here, unlike in a repo's own config.
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
     // 12.0.0+ sets dependencyDashboard as an object, which the image's
@@ -49,7 +51,7 @@
   addLabels: ["dependencies"],
   packageRules: [
     {
-      description: "Link to the upstream commit range for GitHub-sourced digest updates",
+      description: ["Link to the upstream commit range for GitHub-sourced digest updates"],
       matchSourceUrls: ["https://github.com/**/*"],
       matchUpdateTypes: ["digest"],
       changelogUrl: "{{sourceUrl}}/compare/{{currentDigest}}..{{newDigest}}",
@@ -59,14 +61,14 @@
       // never get a sourceUrl attached, since Renovate only resolves one
       // through a release lookup that pure digest tracking never runs.
       // packageNameTemplate already resolves to the GitHub URL though.
-      description: "Link to the upstream commit range for flake-input digest updates",
+      description: ["Link to the upstream commit range for flake-input digest updates"],
       matchManagers: ["custom.regex"],
       matchDatasources: ["git-refs"],
       matchUpdateTypes: ["digest"],
       changelogUrl: "{{packageName}}/compare/{{currentDigest}}...{{newDigest}}",
     },
     {
-      description: "Flux Operator Group",
+      description: ["Flux Operator Group"],
       groupName: "flux-operator",
       matchDatasources: ["docker"],
       matchPackageNames: ["/flux-operator/", "/flux-instance/", "/flux-operator-manifests/"],
@@ -76,7 +78,7 @@
       minimumGroupSize: 3,
     },
     {
-      description: "Kubernetes Group",
+      description: ["Kubernetes Group"],
       groupName: "kubernetes",
       matchDatasources: ["docker"],
       matchPackageNames: [
@@ -124,13 +126,13 @@
       addLabels: ["renovate/github-release"],
     },
     {
-      description: "Override Talos Installer Package Name",
+      description: ["Override Talos Installer Package Name"],
       matchDatasources: ["docker"],
       matchPackageNames: ["/factory\\.talos\\.dev/"],
       overridePackageName: "ghcr.io/siderolabs/installer",
     },
     {
-      description: "Closing a PR only ignores updates whose title matches it, so a major title must not change with each release.",
+      description: ["Closing a PR only ignores updates whose title matches it, so a major title must not change with each release."],
       matchUpdateTypes: ["major"],
       commitMessageExtra: "to {{prettyNewMajor}}",
     },
