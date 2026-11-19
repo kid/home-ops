@@ -73,6 +73,24 @@ let
       ''set(log.cache["lvl"], "error") where log.cache["klog_sev"] == "E"''
       ''set(log.cache["lvl"], "fatal") where log.cache["klog_sev"] == "F"''
 
+      # Recyclarr's "[INF] <instance>: <message>" (Serilog's short levels):
+      # v8 has no JSON output.
+      ''merge_maps(log.cache, ExtractPatterns(log.body, "^\\[(?P<serilog_sev>VRB|DBG|INF|WRN|ERR|FTL)\\] (?P<serilog_msg>[\\s\\S]*)$"), "upsert") where resource.attributes["k8s.container.name"] == "recyclarr" and IsString(log.body)''
+      ''set(log.body, log.cache["serilog_msg"]) where log.cache["serilog_msg"] != nil''
+    ]
+    ++
+      lib.mapAttrsToList
+        (sev: lvl: ''set(log.cache["lvl"], "${lvl}") where log.cache["serilog_sev"] == "${sev}"'')
+        {
+          VRB = "trace";
+          DBG = "debug";
+          INF = "info";
+          WRN = "warn";
+          ERR = "error";
+          FTL = "fatal";
+        }
+    ++ [
+
       # Level → cache["lvl"], lower case. klog JSON has none: derived from v/err.
       ''set(log.cache["lvl"], ToLowerCase(log.attributes["level"])) where log.cache["lvl"] == nil and IsString(log.attributes["level"])''
       ''delete_key(log.attributes, "level") where IsString(log.attributes["level"])''
