@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recyclarr
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: recyclarr
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: recyclarr
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: ANIMARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: animarr-api-key
+            - name: CRON_SCHEDULE
+              value: 0 5 * * *
+            - name: RADARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: radarr-api-key
+            - name: SONARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: sonarr-api-key
+          image: ghcr.io/recyclarr/recyclarr:8.8.1@sha256:3e9c41b9ec29bbf65fe846864058730d321a21f7695d8c0d9437b73e34d50ad9
+          name: recyclarr
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /config/configs
+              name: configs
+            - mountPath: /tmp
+              name: tmp
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: recyclarr
+        - configMap:
+            name: recyclarr
+          name: configs
+        - emptyDir: {}
+          name: tmp

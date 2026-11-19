@@ -237,6 +237,7 @@ in
       media.sabnzbd
       media.plex
       media.unpackerr
+      media.recyclarr
     ])
     ++ [ incusTerragruntAspect ];
 
