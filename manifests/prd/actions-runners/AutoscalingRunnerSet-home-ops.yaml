@@ -1,0 +1,71 @@
+apiVersion: actions.github.com/v1alpha1
+kind: AutoscalingRunnerSet
+metadata:
+  annotations:
+    actions.github.com/cleanup-manager-role-binding: home-ops-gha-rs-manager
+    actions.github.com/cleanup-manager-role-name: home-ops-gha-rs-manager
+    actions.github.com/cleanup-no-permission-service-account-name: home-ops-gha-rs-no-permission
+    actions.github.com/values-hash: 1a7c8c12250de46030ad26a210f928387984899e4079eff968136cde9b82237
+  labels:
+    actions.github.com/scale-set-name: home-ops
+    actions.github.com/scale-set-namespace: arc-runners
+    app.kubernetes.io/component: autoscaling-runner-set
+    app.kubernetes.io/instance: home-ops
+    app.kubernetes.io/name: home-ops
+    app.kubernetes.io/part-of: gha-rs
+  name: home-ops
+  namespace: arc-runners
+spec:
+  githubConfigSecret: arc-github-app
+  githubConfigUrl: https://github.com/kid/home-ops
+  listenerConfig:
+    scaler:
+      burst: 100
+      qps: 50
+  maxRunners: 1
+  minRunners: 0
+  runnerScaleSetName: home-ops
+  template:
+    spec:
+      containers:
+        - command:
+            - /home/runner/run.sh
+          env:
+            - name: PATH
+              value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/current-system/sw/bin
+            - name: NIX_REMOTE
+              value: daemon
+            - name: NIX_CONFIG
+              value: experimental-features = nix-command flakes pipe-operators
+          image: ghcr.io/actions/actions-runner:2.338.2@sha256:6d0b2d80d80f143f77dcb676e50920100bbb547e39e883454d57f45ab8c31300
+          name: runner
+          resources:
+            limits:
+              memory: 8Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /nix/store
+              name: nix-store
+              readOnly: true
+            - mountPath: /nix/var/nix/daemon-socket
+              name: nix-daemon-socket
+            - mountPath: /run/current-system
+              name: current-system
+              readOnly: true
+      restartPolicy: Never
+      serviceAccountName: home-ops-gha-rs-no-permission
+      volumes:
+        - hostPath:
+            path: /nix/store
+            type: Directory
+          name: nix-store
+        - hostPath:
+            path: /nix/var/nix/daemon-socket
+            type: Directory
+          name: nix-daemon-socket
+        - hostPath:
+            path: /run/current-system
+            type: Directory
+          name: current-system
