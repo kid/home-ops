@@ -15,7 +15,7 @@ _: {
       supplementalGroups = [ 100330 ];
       # The CT's own mount paths, which its database and sabnzbd's
       # reported paths refer to.
-      nfs = {
+      hostPaths = {
         library = {
           path = "/tank/library/animes";
           mountPath = "/tank/library/animes";

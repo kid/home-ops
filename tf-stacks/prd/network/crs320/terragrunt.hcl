@@ -53,7 +53,7 @@ inputs = {
       untagged = 99
     }
     ether16 = {
-      comment  = "node0-kvm"
+      comment  = "k3s-prd-0-kvm"
       untagged = 99
     }
     ether17 = {

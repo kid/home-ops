@@ -63,7 +63,7 @@ let
     ++ [
       ''delete_key(log.attributes, "@mt")''
 
-      # klog text (kube-state-metrics, prometheus-adapter, …).
+      # klog text (kube-state-metrics, …).
       ''merge_maps(log.cache, ExtractPatterns(log.body, "^(?P<klog_sev>[IWEF])\\d{4} [0-9:.]+ +\\d+ (?P<klog_file>[^ \\]]+):(?P<klog_line>\\d+)\\] (?P<klog_msg>[\\s\\S]*)$"), "upsert") where log.cache["json"] == nil and IsString(log.body)''
       ''set(log.body, log.cache["klog_msg"]) where log.cache["klog_msg"] != nil''
       ''set(log.attributes["code.file.path"], log.cache["klog_file"]) where log.cache["klog_file"] != nil''

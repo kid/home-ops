@@ -6,11 +6,21 @@ metadata:
 spec:
   credentialProjection:
     enabled: true
+  mover:
+    privilegedMode: true
+    securityContext:
+      runAsGroup: 0
+      runAsNonRoot: false
+      runAsUser: 0
   policy:
-    onMissingSnapshot: Continue
+    onMissingSnapshot: Fail
+  repository:
+    kind: ClusterRepository
+    name: local
   source:
-    fromPolicy:
-      name: kanidm
-      offset: 0
+    identity:
+      hostname: kanidm-full
+      sourcePath: /pvc/kanidm-data-idm-default-0
+      username: kanidm-full
   target:
     populator: {}

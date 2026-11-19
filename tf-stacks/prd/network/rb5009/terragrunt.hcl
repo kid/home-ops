@@ -184,13 +184,8 @@ inputs = {
     K3s = [
       {
         address = "10.0.40.40"
-        mac     = "52:54:00:40:00:01"
+        mac     = "74:56:3c:69:1e:30"
         name    = "k3s-prd-0"
-      },
-      {
-        address = "10.0.40.41"
-        mac     = "52:54:00:40:00:02"
-        name    = "k3s-prd-1"
       },
     ]
     K3sDev = [
@@ -227,28 +222,11 @@ inputs = {
         name    = "pikvm"
       },
     ]
-    Servers = [
-      {
-        address = "10.0.10.10"
-        mac     = "74:56:3c:69:1e:30"
-        name    = "node0"
-      },
-    ]
     Storage = [
       {
         address = "10.0.20.40"
-        mac     = "52:54:00:20:00:01"
-        name    = "k3s-prd-0"
-      },
-      {
-        address = "10.0.20.41"
-        mac     = "52:54:00:20:00:02"
-        name    = "k3s-prd-1"
-      },
-      {
-        address = "10.0.20.10"
         mac     = "74:56:3c:69:1e:30"
-        name    = "node0"
+        name    = "k3s-prd-0"
       },
       {
         address = "10.0.20.11"
@@ -280,12 +258,11 @@ inputs = {
   ]
   ethernet_interfaces = {
     ether1 = {
-      comment = "node0"
+      comment = "k3s-prd-0"
       tagged = [
         20,
-        40,
       ]
-      untagged = 10
+      untagged = 40
     }
     ether2 = {
       comment  = "switch"

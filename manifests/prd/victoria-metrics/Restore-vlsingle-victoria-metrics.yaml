@@ -1,0 +1,26 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: vlsingle-victoria-metrics
+  namespace: monitoring
+spec:
+  credentialProjection:
+    enabled: true
+  mover:
+    privilegedMode: true
+    securityContext:
+      runAsGroup: 0
+      runAsNonRoot: false
+      runAsUser: 0
+  policy:
+    onMissingSnapshot: Fail
+  repository:
+    kind: ClusterRepository
+    name: local
+  source:
+    identity:
+      hostname: vlsingle-victoria-metrics-full
+      sourcePath: /pvc/vlsingle-victoria-metrics
+      username: vlsingle-victoria-metrics-full
+  target:
+    populator: {}

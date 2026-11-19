@@ -50,7 +50,7 @@ in
       uid = 100490;
       # The CT's own mount path, which the library's paths in its database
       # refer to. Plex only reads it.
-      nfs.library = {
+      hostPaths.library = {
         path = "/tank/library";
         mountPath = "/tank/library";
         readOnly = true;

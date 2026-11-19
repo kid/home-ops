@@ -99,12 +99,9 @@ in
                 tagged = allVlanIds;
               };
               ether1 = {
-                comment = "node0";
-                untagged = networks.Servers.vlanId;
-                tagged = lib.sort (a: b: a < b) [
-                  networks.Storage.vlanId
-                  networks.K3s.vlanId
-                ];
+                comment = "k3s-prd-0";
+                untagged = networks.K3s.vlanId;
+                tagged = [ networks.Storage.vlanId ];
               };
               ether2 = {
                 comment = "switch";

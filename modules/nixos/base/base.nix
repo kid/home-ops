@@ -22,8 +22,8 @@
       # later release sets its own.
       system.stateVersion = lib.mkDefault "26.05";
 
-      # The bare-metal hosts are ZFS-only, and LVM would scan their zvols and
-      # activate volume groups guests created on them. miroir-node turns it on.
+      # The hosts are ZFS-only, and LVM would scan their zvols and activate
+      # volume groups guests created on them.
       services.lvm.enable = lib.mkDefault false;
     };
 }

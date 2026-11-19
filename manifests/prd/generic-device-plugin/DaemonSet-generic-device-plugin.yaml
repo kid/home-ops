@@ -24,7 +24,7 @@ spec:
               - count: 2
                 paths:
                 - mountPath: /dev/dri/renderD128
-                  path: /dev/dri/i915-render
+                  path: /dev/dri/by-path/pci-0000:00:02.0-render
               name: intel-gpu
           image: squat/generic-device-plugin:0.2.0@sha256:66c8d5c270eb2b721f1064c549b9b7898152a6d2f0163380a5d37dc7636c20ff
           imagePullPolicy: IfNotPresent

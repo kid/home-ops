@@ -7,18 +7,16 @@
   den.aspects.k3s.node-base.nixos =
     { pkgs, ... }:
     let
-      # Seconds; the Incus host's own timeout for the VMs must exceed it.
+      # Seconds.
       shutdownGracePeriod = 180;
     in
     {
-      # 1.37 enables HPAScaleToZero, which cluster.methods.mkNfsScaler needs.
+      # The release the clusters run: k3s doesn't support downgrades.
       services.k3s.package = pkgs.k3s_1_37;
 
       # On a reboot or poweroff the kubelet stops pods first (regular ones,
       # then critical ones in the last 60s), so the apps close their SQLite
       # databases and NFS mounts are released before the network goes down.
-      # The critical window must cover the miroir agent's 60s
-      # terminationGracePeriodSeconds, so it releases its DRBD backings last.
       # Kubelet config file fields, not flags: the module writes them to a
       # KubeletConfiguration passed with --kubelet-arg=config=.
       services.k3s.gracefulNodeShutdown = {

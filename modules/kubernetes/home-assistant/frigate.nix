@@ -1,7 +1,8 @@
 # Frigate, the NVR for the two Reolink cameras: decodes on k3s-prd-0's iGPU
-# VF (VA-API) and detects with OpenVINO on it, sharing the VF with Plex.
-# Recordings and snapshots go to a node0 NVMe dataset over NFS (the
-# nfs-exports quirk); its database and config sit on the kopiur-backed volume.
+# (VA-API) and detects with OpenVINO on it, sharing it with Plex.
+# Recordings and snapshots go to a k3s-prd-0 NVMe dataset (the nfs-exports
+# quirk), mounted from the host; its database and config sit on the
+# kopiur-backed volume.
 # The ConfigMap's config.yml is copied over /config/config.yml on every start,
 # so edits made in the UI don't survive a restart: change them here.
 { config, lib, ... }:
@@ -62,7 +63,7 @@ let
     # Off by default since Frigate 0.14.
     detect.enabled = true;
     ffmpeg.hwaccel_args = "preset-vaapi";
-    # The VF, not Incus's virtio-gpu.
+    # GPU stats: intel_gpu_top on the render node, the one the pod gets.
     telemetry.stats.intel_gpu_device = "/dev/dri/renderD128";
     record = {
       enabled = true;
@@ -195,8 +196,8 @@ in
     }
   ];
 
-  # Its recordings and snapshots: a node0 dataset, exported to the nodes.
-  # sanoid's dailies are what node0's syncoid copies to tank; Frigate keeps
+  # Its recordings and snapshots: a k3s-prd-0 dataset, mounted from the host.
+  # sanoid's dailies are what k3s-prd-0's syncoid copies to tank; Frigate keeps
   # its own 14 days, so three are enough for an incremental base (they count
   # against the quota, at ~0.3G of churn a day).
   den.aspects.kubernetes.home-assistant.frigate.nfs-exports = { cluster, ... }: [
@@ -379,6 +380,10 @@ in
                       path = "/api/version";
                       port = "http";
                     };
+                    # intel_gpu_top reads the i915 PMU through perf_event_open,
+                    # which the default seccomp profile and perf_event_paranoid
+                    # allow only with it.
+                    securityContext.capabilities.add = [ "PERFMON" ];
                     resources = {
                       requests = {
                         cpu = "500m";
@@ -386,7 +391,7 @@ in
                       };
                       limits = {
                         memory = "4Gi";
-                        # Its share of the VF, which also pins it to k3s-prd-0.
+                        # Its share of the iGPU, which also pins it to k3s-prd-0.
                         "devic.es/intel-gpu" = 1;
                       };
                     };
@@ -401,11 +406,9 @@ in
                   volumes = {
                     config.persistentVolumeClaim.claimName = name;
                     frigate-config.configMap.name = name;
-                    # No mkNfsScaler: k3s-prd-0 runs on node0, so it never
-                    # outlives its NFS server.
-                    media.nfs = {
-                      server = cluster.methods.mediaNfsServer;
+                    media.hostPath = {
                       inherit (cluster.methods.nfsExport name) path;
+                      type = "Directory";
                     };
                     cluster-ca.configMap.name = "cluster-ca";
                     shm.emptyDir = {

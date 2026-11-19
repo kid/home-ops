@@ -14,6 +14,5 @@ in
       port = 9696;
       # The image runs as any uid.
       uid = 1000;
-      replicas = 1;
     };
 }

@@ -25,7 +25,11 @@ spec:
   storage:
     accessModes:
       - ReadWriteOncePod
+    dataSourceRef:
+      apiGroup: kopiur.home-operations.com
+      kind: Restore
+      name: vlsingle-victoria-metrics
     resources:
       requests:
         storage: 5Gi
-    storageClassName: miroir-replicated
+    storageClassName: zfs

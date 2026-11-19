@@ -34,4 +34,4 @@ spec:
     - pvc:
         name: sonarr
   staging:
-    storageClassName: miroir
+    storageClassName: zfs

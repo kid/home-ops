@@ -91,13 +91,6 @@ in
               description = "Network attachments (VLAN/host-number/MAC)";
             };
 
-            vmBridges = lib.mkOption {
-              type = lib.types.attrsOf lib.types.str;
-              default = { };
-              example.k3s-prd = "K3s";
-              description = "Bridges for VMs (bridge name -> den.networks name), each holding that VLAN on the host's first NIC. The host's own tagged interface on such a network moves onto its bridge (modules/nixos/base/network.nix).";
-            };
-
             # Resolved directly here (not left to every consumer to redo
             # network.methods.host themselves) — consumers just read
             # config.den.devices.<name>.address.

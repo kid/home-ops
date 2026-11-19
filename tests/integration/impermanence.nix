@@ -1,5 +1,5 @@
 # VM test of den.aspects.disk.zfs and den.aspects.impermanence. A fixture
-# host includes both, like node0 and node1; disko's installTest formats its
+# host includes both, like k3s-prd-0 and node1; disko's installTest formats its
 # layout (the real postCreateHooks take @empty), installs the host's own
 # den-resolved NixOS configuration, then boots it from that disk twice.
 {

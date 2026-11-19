@@ -34,4 +34,4 @@ spec:
     - pvc:
         name: animarr
   staging:
-    storageClassName: miroir
+    storageClassName: zfs

@@ -151,8 +151,8 @@
               type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
               default = { };
               example.home-assistant = {
-                k3s-prd-0 = "10.0.40.20";
-                k3s-prd-1 = "10.0.40.21";
+                k3s-prd-0 = "10.0.40.41";
+                k3s-prd-1 = "10.0.40.51";
               };
               description = "Dedicated egress IPs on the cluster's network (outside its DHCP pool), keyed by the app that leaves through them, then by k3s node (den.hosts name). Each is added as a /32 on its node (modules/nixos/services/k3s/egress-gateway.nix, which also asserts every node has one) and used by a CiliumEgressGatewayPolicy for the app's pods on that node, so its traffic leaves from the node it runs on and RouterOS rules can match that app alone. Open-source Cilium has no gateway failover, hence one per node.";
             };
@@ -198,12 +198,12 @@
               backups = lib.mkOption {
                 type = lib.types.bool;
                 default = true;
-                description = "Whether this cluster backs up to and maintains kopiur's r2 repository (modules/kubernetes/kopiur): SnapshotSchedules, repository creation and maintenance. Off for a cluster that shares another one's repository: its r2 ClusterRepository is ReadOnly and it only restores, since two clusters must never write to or maintain the same repository.";
+                description = "Whether this cluster backs up to and maintains kopiur's r2 repository (modules/kubernetes/kopiur), and its `local` one with kopiur.local: SnapshotSchedules, repository creation and maintenance. Off for a cluster that shares another one's repository, or to stop every new snapshot for a while (a restore being verified): its r2 ClusterRepository, and its local one, are ReadOnly and it only restores, since two clusters must never write to or maintain the same repository.";
               };
               local = lib.mkOption {
                 type = lib.types.bool;
                 default = false;
-                description = "Whether this cluster writes full backups to its own on-site `local` kopiur repository (modules/kubernetes/kopiur), a node0 NFS export: a daily root `<name>-full` SnapshotPolicy per backed-up claim, ignore rules and all, plus VMSingle's and VLSingle's claims. At most one cluster per environment: the others open it ReadOnly when restoreFrom is \"local\".";
+                description = "Whether this cluster writes full backups to its own on-site `local` kopiur repository (modules/kubernetes/kopiur), a k3s-prd-0 NFS export: a daily root `<name>-full` SnapshotPolicy per backed-up claim, ignore rules and all, plus VMSingle's and VLSingle's claims, scheduled only with kopiur.backups. At most one cluster per environment: the others open it ReadOnly when restoreFrom is \"local\".";
               };
               restoreFrom = lib.mkOption {
                 type = lib.types.enum [

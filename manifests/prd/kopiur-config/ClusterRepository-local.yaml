@@ -11,11 +11,9 @@ spec:
       volume:
         nfs:
           path: /srv/clusters/prd/apps/kopiur-local
-          server: 10.0.20.10
-  concurrency:
-    maxConcurrentJobs: 1
+          server: 10.0.20.40
   create:
-    enabled: true
+    enabled: false
   credentialProjection:
     allowed: true
   encryption:
@@ -23,10 +21,8 @@ spec:
       key: KOPIA_PASSWORD
       name: kopiur-r2
       namespace: kopiur-system
+  mode: ReadOnly
   moverDefaults:
     securityContext:
       runAsGroup: 65534
       runAsUser: 65534
-  parameters:
-    epoch:
-      minDuration: 6h
