@@ -225,6 +225,14 @@ in
                   "service.version"
                   "service.instance.id"
                 ];
+                # For transform/resource below.
+                extract.labels = [
+                  {
+                    tag_name = "app.kubernetes.io/managed-by";
+                    key = "app.kubernetes.io/managed-by";
+                    from = "pod";
+                  }
+                ];
               };
               processors."resource/cluster".attributes = [
                 {
@@ -233,6 +241,20 @@ in
                   action = "insert";
                 }
               ];
+              # kopiur's Job pods would otherwise take the Job's name, a new
+              # timestamp or UUID every run, as service.name.
+              processors."transform/resource" = {
+                error_mode = "ignore";
+                log_statements = [
+                  {
+                    context = "resource";
+                    statements = [
+                      ''set(resource.attributes["service.name"], "kopiur-mover") where resource.attributes["app.kubernetes.io/managed-by"] == "kopiur"''
+                      ''delete_key(resource.attributes, "app.kubernetes.io/managed-by")''
+                    ];
+                  }
+                ];
+              };
               processors."transform/logs" = {
                 error_mode = "ignore";
                 log_statements = transformStatements;
@@ -240,7 +262,8 @@ in
 
               exporters."otlphttp/victorialogs" = {
                 logs_endpoint = "http://vlsingle-victoria-metrics.monitoring.svc.cluster.local.:9428/insert/opentelemetry/v1/logs";
-                headers."VL-Stream-Fields" = "k8s.namespace.name,k8s.pod.name,k8s.container.name";
+                # service.name is a function of the pod: no extra streams.
+                headers."VL-Stream-Fields" = "k8s.namespace.name,service.name,k8s.pod.name,k8s.container.name";
                 # The preset's extension: queued logs survive a VLSingle restart.
                 sending_queue.storage = "file_storage";
               };
@@ -256,6 +279,7 @@ in
                     "memory_limiter"
                     "k8s_attributes"
                     "resource/cluster"
+                    "transform/resource"
                     "transform/logs"
                     "batch"
                   ];
