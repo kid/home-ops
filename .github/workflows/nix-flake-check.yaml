@@ -32,29 +32,47 @@ jobs:
       # the required check.
       - name: Diff k3s-prd-0's closure
         continue-on-error: true
-        env:
-          NO_COLOR: "1"
         run: |
           old=$(readlink -f /nix/var/nix/profiles/system)
           new=$(nix build --no-link --print-out-paths .#nixosConfigurations.k3s-prd-0.config.system.build.toplevel)
+          # diff-closures colors its sizes even off a terminal, and they reached
+          # the comment as caret text ("^[[31;1m"): strip both forms.
+          diff=$(nix store diff-closures "$old" "$new" | sed -e 's/\x1b\[[0-9;]*m//g' -e 's/\^\[\[[0-9;]*m//g')
           {
             echo '<!-- closure-diff:k3s-prd-0 -->'
             echo '### k3s-prd-0 closure diff'
             echo
-            echo "Deployed: \`$old\`"
-            echo "This PR: \`$new\`"
-            echo
             if [ "$old" = "$new" ]; then
               echo 'No change: this PR builds the deployed system.'
+            elif [ -z "$diff" ]; then
+              echo 'No package version or size change: configuration only.'
             else
-              diff=$(nix store diff-closures "$old" "$new" | head -c 60000)
-              if [ -z "$diff" ]; then
-                echo 'No package version or size change: configuration only.'
-              else
-                printf '```\n%s\n```\n' "$diff"
+              # "name: old → new[, size]" lines become table rows; the
+              # size-only ones go in a collapsed list.
+              versions=$(printf '%s\n' "$diff" | awk '/→/ {
+                name = $0; sub(/: .*/, "", name)
+                rest = $0; sub(/^[^:]*: /, "", rest)
+                n = split(rest, part, ", ")
+                printf "| %s | %s | %s |\n", name, part[1], (n > 1 ? part[2] : "")
+              }')
+              sizes=$(printf '%s\n' "$diff" | grep -v '→' || true)
+              if [ -n "$versions" ]; then
+                echo '| Package | Version | Size |'
+                echo '| --- | --- | --- |'
+                printf '%s\n' "$versions"
+                echo
+              fi
+              if [ -n "$sizes" ]; then
+                echo "<details><summary>Size-only changes ($(printf '%s\n' "$sizes" | wc -l))</summary>"
+                echo
+                printf '```\n%s\n```\n' "$sizes"
+                echo '</details>'
+                echo
               fi
             fi
-          } > "$RUNNER_TEMP/closure-diff.md"
+            echo
+            echo "<sub>Deployed \`$old\`<br>This PR \`$new\`</sub>"
+          } | head -c 60000 > "$RUNNER_TEMP/closure-diff.md"
 
       - name: Comment the closure diff
         continue-on-error: true
