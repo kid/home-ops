@@ -1,8 +1,10 @@
 # Advertises host devices as extended resources (devic.es/<name>), so a pod
 # asks for one in resources.limits instead of a hostPath and lands on a node
-# that has it. intel-gpu: k3s-prd-0's iGPU VF (den.aspects.i915-sriov.guest's
-# /dev/dri/i915-render, not the virtio-gpu render node next to it), mounted
-# where VA-API and Plex look first.
+# that has it. intel-gpu: node0's UHD 730 render node, by udev's PCI-path
+# link to it, mounted where VA-API and Plex look first. The render node is
+# all VA-API, OpenVINO's GPU plugin and Frigate's intel_gpu_top open;
+# systemd's udev rules make it 0666, so Plex's non-root uid needs no render
+# group.
 _: {
   den.aspects.kubernetes.generic-device-plugin.k8s-manifests =
     { charts, cluster, ... }:
@@ -36,7 +38,7 @@ _: {
                     count = 2;
                     paths = [
                       {
-                        path = "/dev/dri/i915-render";
+                        path = "/dev/dri/by-path/pci-0000:00:02.0-render";
                         mountPath = "/dev/dri/renderD128";
                       }
                     ];

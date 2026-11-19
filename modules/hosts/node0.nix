@@ -92,6 +92,10 @@ in
 
       boot.loader.efi.canTouchEfiVariables = true;
       hardware.cpu.intel.updateMicrocode = true;
+      # The iGPU's DMC, GuC and HuC blobs (linux-firmware). Mainline i915's
+      # default on Alder Lake-S (enable_guc=2) loads HuC through GuC, which
+      # the media engine needs for low-power encode; no kernel parameter.
+      hardware.enableRedistributableFirmware = true;
 
       # No UART on this board (pikvm uses HDMI): srvos's ttyS0 console
       # leaves a serial getty failing and restarting every 10s.
@@ -291,7 +295,6 @@ in
     den.aspects.disk.zfs
     den.aspects.impermanence
     den.aspects.incus
-    den.aspects.i915-sriov.host
     den.aspects.power-saving
   ];
 
