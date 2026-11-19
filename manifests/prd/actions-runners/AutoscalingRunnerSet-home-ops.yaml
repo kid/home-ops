@@ -13,6 +13,7 @@ metadata:
     app.kubernetes.io/instance: home-ops
     app.kubernetes.io/name: home-ops
     app.kubernetes.io/part-of: gha-rs
+    app.kubernetes.io/version: 0.15.1
   name: home-ops
   namespace: arc-runners
 spec:

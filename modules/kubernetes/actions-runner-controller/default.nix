@@ -44,7 +44,13 @@ let
 in
 {
   den.aspects.kubernetes.actions-runner-controller.k8s-manifests =
-    { charts, cluster, ... }:
+    {
+      charts,
+      cluster,
+      config,
+      lib,
+      ...
+    }:
     {
       # The controller, and the listener pods it creates for each scale set.
       applications.actions-runner-controller = {
@@ -204,6 +210,24 @@ in
               ];
             };
           };
+
+          # The controller deletes a runner set whose app.kubernetes.io/version
+          # isn't its own, so that label survives the default transformer.
+          transformer =
+            manifests:
+            let
+              version =
+                (lib.findFirst (m: m.kind == "AutoscalingRunnerSet") null manifests)
+                .metadata.labels."app.kubernetes.io/version";
+            in
+            config.nixidy.defaults.helm.transformer manifests
+            |> map (
+              m:
+              if m.kind == "AutoscalingRunnerSet" then
+                lib.recursiveUpdate m { metadata.labels."app.kubernetes.io/version" = version; }
+              else
+                m
+            );
         };
       };
     };
