@@ -1,6 +1,6 @@
-# Frigate, the NVR for the two Reolink cameras: decodes on node0's iGPU
+# Frigate, the NVR for the two Reolink cameras: decodes on k3s-prd-0's iGPU
 # (VA-API) and detects with OpenVINO on it, sharing it with Plex.
-# Recordings and snapshots go to a node0 NVMe dataset (the nfs-exports
+# Recordings and snapshots go to a k3s-prd-0 NVMe dataset (the nfs-exports
 # quirk), mounted from the host; its database and config sit on the
 # kopiur-backed volume.
 # The ConfigMap's config.yml is copied over /config/config.yml on every start,
@@ -196,8 +196,8 @@ in
     }
   ];
 
-  # Its recordings and snapshots: a node0 dataset, mounted from the host.
-  # sanoid's dailies are what node0's syncoid copies to tank; Frigate keeps
+  # Its recordings and snapshots: a k3s-prd-0 dataset, mounted from the host.
+  # sanoid's dailies are what k3s-prd-0's syncoid copies to tank; Frigate keeps
   # its own 14 days, so three are enough for an incremental base (they count
   # against the quota, at ~0.3G of churn a day).
   den.aspects.kubernetes.home-assistant.frigate.nfs-exports = { cluster, ... }: [
@@ -391,7 +391,7 @@ in
                       };
                       limits = {
                         memory = "4Gi";
-                        # Its share of the iGPU, which also pins it to node0.
+                        # Its share of the iGPU, which also pins it to k3s-prd-0.
                         "devic.es/intel-gpu" = 1;
                       };
                     };

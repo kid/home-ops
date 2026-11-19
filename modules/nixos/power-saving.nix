@@ -14,7 +14,7 @@
       default = "power";
       description = ''
         CPU energy/performance preference (HWP/CPPC). `power` holds an i3-12100
-        at ~1.2 GHz even when fully busy: too slow for a host whose VMs keep it
+        at ~1.2 GHz even when fully busy: too slow for a host whose pods keep it
         loaded.
       '';
     };

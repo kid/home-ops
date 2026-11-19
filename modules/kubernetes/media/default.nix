@@ -1,6 +1,6 @@
 # The shape every media app here shares: one Deployment on a kopiur-backed
 # config volume, its Service and HTTPRoute on the apps Gateway, behind Kanidm
-# and public through the tunnel, host mounts of node0's tank pool, and its
+# and public through the tunnel, host mounts of k3s-prd-0's tank pool, and its
 # Cilium policy. Returns the k8s-manifests content: the nixidy application,
 # plus its tunnel route in envoy-gateway.
 { lib, ... }:
@@ -39,7 +39,7 @@ let
       # generated once into the <name>-api-key Secret, which the other apps
       # read too.
       apiKeyEnv ? if servarr then "${lib.toUpper app}__AUTH__APIKEY" else null,
-      # A share of node0's iGPU at /dev/dri/renderD128
+      # A share of k3s-prd-0's iGPU at /dev/dri/renderD128
       # (generic-device-plugin), which also pins the pod to that node.
       gpu ? false,
       # The Kanidm group let through Envoy's OIDC on its route, which then

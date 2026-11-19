@@ -38,6 +38,12 @@ spec:
         - ports:
             - port: "22"
               protocol: TCP
+    - fromCIDR:
+        - 10.0.20.0/24
+      toPorts:
+        - ports:
+            - port: "2049"
+              protocol: TCP
     - fromEntities:
         - remote-node
       toPorts:

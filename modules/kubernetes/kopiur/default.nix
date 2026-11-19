@@ -4,7 +4,7 @@ let
   # backup whatever its owner, CHOWN/FOWNER/FSETID to give each restored file
   # its recorded owner back. Movers in a namespace whose app declares one get
   # the namespace's privileged-movers opt-in (the k8s-manifests below). On
-  # node0's root_squash export, a root mover's NFS requests still land as
+  # k3s-prd-0's root_squash export, a root mover's NFS requests still land as
   # 65534, the owner of every file of the local repository.
   rootMover = {
     securityContext = {
@@ -127,7 +127,7 @@ let
               username = full;
               hostname = full;
             };
-            # node0 keeps 14 daily ZFS snapshots of the repository on top.
+            # k3s-prd-0 keeps 14 daily ZFS snapshots of the repository on top.
             retention = {
               keepDaily = 7;
               keepWeekly = 4;
@@ -191,10 +191,10 @@ in
 {
   den.clusterMethods.mkKopiurBackup = mkKopiurBackup;
 
-  # The on-site full backup repository (`local` below), on node0's NVMe pool.
+  # The on-site full backup repository (`local` below), on k3s-prd-0's NVMe pool.
   # Daily ZFS snapshots keep a bad maintenance run or a deleted snapshot
-  # recoverable; node0 also replicates them to tank (modules/hosts/node0.nix).
-  # Only the cluster with kopiur.local writes it: node0 exports it read-write
+  # recoverable; k3s-prd-0 also replicates them to tank (modules/hosts/k3s-prd-0.nix).
+  # Only the cluster with kopiur.local writes it: k3s-prd-0 exports it read-write
   # to that cluster's nodes only, read-only to every other Storage client.
   den.aspects.kubernetes.kopiur.nfs-exports =
     { cluster, ... }:
@@ -250,7 +250,7 @@ in
           throw "kopiur: cluster ${cluster.name} restores from local, but environment ${cluster.environment} has ${toString (lib.length writers)} clusters with kopiur.local instead of one";
       # Exported with root_squash and owned nobody:nogroup, and kopia writes
       # its files 0600: the repository's own movers run as 65534, and a root
-      # mover's requests reach node0 as 65534 too.
+      # mover's requests reach k3s-prd-0 as 65534 too.
       localBackend.filesystem = {
         path = "/repo";
         volume.nfs = {
@@ -454,7 +454,7 @@ in
         # daily, nothing ignored, VMSingle and VLSingle included. Written and
         # maintained by its kopiur.local cluster only; any other cluster of
         # the environment that restores from it opens it ReadOnly, over an
-        # export node0 serves it read-only anyway. Same password as r2.
+        # export k3s-prd-0 serves it read-only anyway. Same password as r2.
         resources.clusterRepositories.local = lib.mkIf (local || restoresLocal) {
           spec = {
             allowedNamespaces.all = true;

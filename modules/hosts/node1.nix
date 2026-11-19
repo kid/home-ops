@@ -13,7 +13,7 @@
 
   den.devices = {
     node1 = {
-      # One NIC: K3sDev native, Storage tagged for NFS to node0 (same L2,
+      # One NIC: K3sDev native, Storage tagged for NFS to k3s-prd-0 (same L2,
       # no router hop).
       interfaces = [
         {

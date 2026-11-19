@@ -56,13 +56,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixos-anywhere.url = "github:nix-community/nixos-anywhere";
-    nixos-images = {
-      url = "github:nix-community/nixos-images";
-      inputs = {
-        nixos-stable.follows = "nixpkgs";
-        nixos-unstable.follows = "nixpkgs";
-      };
-    };
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     sops-nix = {
       url = "github:Mic92/sops-nix";

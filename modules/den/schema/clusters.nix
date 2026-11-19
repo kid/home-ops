@@ -203,7 +203,7 @@
               local = lib.mkOption {
                 type = lib.types.bool;
                 default = false;
-                description = "Whether this cluster writes full backups to its own on-site `local` kopiur repository (modules/kubernetes/kopiur), a node0 NFS export: a daily root `<name>-full` SnapshotPolicy per backed-up claim, ignore rules and all, plus VMSingle's and VLSingle's claims. At most one cluster per environment: the others open it ReadOnly when restoreFrom is \"local\".";
+                description = "Whether this cluster writes full backups to its own on-site `local` kopiur repository (modules/kubernetes/kopiur), a k3s-prd-0 NFS export: a daily root `<name>-full` SnapshotPolicy per backed-up claim, ignore rules and all, plus VMSingle's and VLSingle's claims. At most one cluster per environment: the others open it ReadOnly when restoreFrom is \"local\".";
               };
               restoreFrom = lib.mkOption {
                 type = lib.types.enum [

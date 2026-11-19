@@ -1,6 +1,6 @@
 # Advertises host devices as extended resources (devic.es/<name>), so a pod
 # asks for one in resources.limits instead of a hostPath and lands on a node
-# that has it. intel-gpu: node0's UHD 730 render node, by udev's PCI-path
+# that has it. intel-gpu: k3s-prd-0's UHD 730 render node, by udev's PCI-path
 # link to it, mounted where VA-API and Plex look first. The render node is
 # all VA-API, OpenVINO's GPU plugin and Frigate's intel_gpu_top open;
 # systemd's udev rules make it 0666, so Plex's non-root uid needs no render

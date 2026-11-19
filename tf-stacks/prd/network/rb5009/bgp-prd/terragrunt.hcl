@@ -31,9 +31,6 @@ inputs = {
     k3s-prd-0 = {
       ip_address = "10.0.40.40"
     }
-    k3s-prd-1 = {
-      ip_address = "10.0.40.41"
-    }
   }
   op_item_routeros   = "RB5009 - user - kid"
   op_vault           = "home-ops"

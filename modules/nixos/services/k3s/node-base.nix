@@ -7,7 +7,7 @@
   den.aspects.k3s.node-base.nixos =
     { pkgs, ... }:
     let
-      # Seconds; the Incus host's own timeout for the VMs must exceed it.
+      # Seconds.
       shutdownGracePeriod = 180;
     in
     {

@@ -128,7 +128,7 @@ in
               untagged = networks.Management.vlanId;
             };
             ether16 = {
-              comment = "node0-kvm";
+              comment = "k3s-prd-0-kvm";
               untagged = networks.Management.vlanId;
             };
             ether17 = {
