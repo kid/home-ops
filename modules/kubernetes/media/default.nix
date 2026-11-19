@@ -3,7 +3,12 @@
 # and public through the tunnel, NFS mounts from node0's tank pool, and its
 # Cilium policy. Returns the k8s-manifests content: the nixidy application,
 # plus its tunnel route in envoy-gateway.
-{ config, lib, ... }:
+{
+  config,
+  den,
+  lib,
+  ...
+}:
 let
   # The nodes reach node0 on the Storage VLAN, not through the router.
   nfsServer =
@@ -12,7 +17,7 @@ let
     |> (i: i.address);
 
   mkMediaApp =
-    methods:
+    cluster:
     {
       name,
       # The image's app: animarr is a second sonarr.
@@ -51,12 +56,15 @@ let
       # (generic-device-plugin), which also pins the pod to that node.
       gpu ? false,
       # The Kanidm group let through Envoy's OIDC on its route, which then
-      # also goes public through the tunnel. null: no OIDC, LAN only.
+      # also goes public through the tunnel. null, or a cluster without
+      # Kanidm: no OIDC, LAN only.
       oidcGroup ? "media",
       # Passed on to the app by the image's entrypoint.
       args ? [ ],
     }:
     let
+      inherit (cluster) methods;
+      oidc = oidcGroup != null && cluster.includesAspect den.aspects.kubernetes.kanidm;
       labels."app.kubernetes.io/name" = name;
       namespace = "media";
       hostname = methods.mkAppHostname name;
@@ -85,7 +93,7 @@ let
         # The API key's Password generator and ExternalSecret.
         ++ lib.optional (apiKeyEnv != null) "external-secrets-config";
 
-        imports = lib.optional (oidcGroup != null) (
+        imports = lib.optional oidc (
           methods.mkOidcAuth {
             inherit name hostname;
             httpRouteName = name;
@@ -282,12 +290,12 @@ let
       applications = {
         ${name} = application;
       }
-      // lib.optionalAttrs (oidcGroup != null) {
+      // lib.optionalAttrs oidc {
         envoy-gateway.resources.httpRoutes."${name}-public" = methods.mkGatewayTunnelRoute hostname;
       };
     };
 in
 {
-  den.clusterMethods.mkMediaApp = cluster: mkMediaApp cluster.methods;
+  den.clusterMethods.mkMediaApp = mkMediaApp;
   den.clusterMethods.mediaNfsServer = _: nfsServer;
 }

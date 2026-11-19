@@ -33,13 +33,13 @@ spec:
             - name: RUST_LOG
               value: info
             - name: KOPIUR_LOG_FORMAT
-              value: text
+              value: json
             - name: KOPIUR_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: KOPIUR_MOVER_IMAGE
-              value: ghcr.io/home-operations/kopiur-mover@sha256:35365c85e3a0076d42f23e9eb7eff0d8a4e8d7f778d1b1f71236aa5185e77822
+              value: ghcr.io/home-operations/kopiur-mover@sha256:b5323b2e49661c767ee6f8e7c592e3e3aa3e48bfadccb4f99161a3965a3704fa
             - name: KOPIUR_MOVER_PULL_POLICY
               value: IfNotPresent
             - name: KOPIUR_MOVER_SERVICE_ACCOUNT
@@ -70,7 +70,7 @@ spec:
               value: kopiur-validating
             - name: KOPIUR_WEBHOOK_MUTATING_CONFIG
               value: kopiur-mutating
-          image: ghcr.io/home-operations/kopiur-controller@sha256:bb2c8960f1692b0d102c44c6feeb9033e65387f927bec66beca50aea8efa14e3
+          image: ghcr.io/home-operations/kopiur-controller@sha256:59cc75d6b562a14e957efa9c007577557e0d5221c2d3b00af226ace4dd4b7b4f
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
