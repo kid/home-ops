@@ -1,0 +1,19 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: recyclarr
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: animarr
+    - name: radarr
+    - name: sonarr
+  interval: 10m
+  path: ./manifests/prd/recyclarr
+  prune: true
+  retryInterval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  timeout: 5m
+  wait: true
