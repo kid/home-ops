@@ -63,6 +63,13 @@ in
       ...
     }:
     {
+      # The controller and listeners run with the chart's unhardened
+      # defaults; a runner mounts the node's Nix store and daemon socket.
+      podSecurity.namespaces = {
+        ${controllerNamespace} = "baseline";
+        ${runnerNamespace} = "privileged";
+      };
+
       # The controller, and the listener pods it creates for each scale set.
       applications.actions-runner-controller = {
         namespace = controllerNamespace;

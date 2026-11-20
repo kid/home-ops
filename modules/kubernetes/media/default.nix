@@ -272,6 +272,9 @@ let
       };
     in
     {
+      # tank's datasets are hostPath volumes.
+      podSecurity.namespaces.${namespace} = lib.mkIf (hostPaths != { }) "privileged";
+
       applications = {
         ${name} = application;
       }

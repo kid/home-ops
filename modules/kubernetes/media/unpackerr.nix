@@ -31,6 +31,9 @@ in
   den.aspects.kubernetes.media.unpackerr.k8s-manifests =
     { cluster, ... }:
     {
+      # The downloads are a hostPath volume.
+      podSecurity.namespaces.media = "privileged";
+
       applications.unpackerr = {
         namespace = "media";
         # The apps create the <instance>-api-key Secrets it reads.

@@ -40,6 +40,25 @@ let
           |> lib.filter (ns: !(builtins.elem ns systemNamespaces))
           |> lib.unique;
 
+        # Pod Security Standards, least restrictive last: a namespace with
+        # several definitions gets the loosest one its pods need.
+        podSecurityLevels = [
+          "restricted"
+          "baseline"
+          "privileged"
+        ];
+        podSecurityLevel = lib.mkOptionType {
+          name = "podSecurityLevel";
+          description = "one of ${lib.concatStringsSep ", " podSecurityLevels}";
+          check = level: builtins.elem level podSecurityLevels;
+          merge =
+            _loc: defs:
+            let
+              levels = map (def: def.value) defs;
+            in
+            lib.findFirst (level: builtins.elem level levels) null (lib.reverseList podSecurityLevels);
+        };
+
         helmLabels = [
           "app.kubernetes.io/managed-by"
           "app.kubernetes.io/version"
@@ -118,14 +137,39 @@ let
           default = [ ];
         };
 
+        options.podSecurity.namespaces = lib.mkOption {
+          type = lib.types.attrsOf podSecurityLevel;
+          default = { };
+          description = ''
+            The Pod Security Standards level an app's namespace needs,
+            enforced through Pod Security Admission labels on the Namespace
+            (restricted when unset). An app whose pods need more sets it next
+            to them: hostPath, host namespaces or added capabilities beyond
+            baseline's need privileged; root or an NFS volume need baseline.
+          '';
+        };
+
         config.applications.${appsName} = {
           resources = {
             # nixidy always renders an Argo CD Application per app here.
             applications = lib.mkForce { };
 
-            namespaces = lib.genAttrs namespacesToCreate (_: {
-              metadata.annotations."kustomize.toolkit.fluxcd.io/prune" = "disabled";
-            });
+            namespaces = lib.genAttrs namespacesToCreate (
+              namespace:
+              let
+                level = config.podSecurity.namespaces.${namespace} or "restricted";
+              in
+              {
+                metadata.annotations."kustomize.toolkit.fluxcd.io/prune" = "disabled";
+                # A looser namespace still warns on whatever restricted would refuse.
+                metadata.labels = {
+                  "pod-security.kubernetes.io/enforce" = level;
+                }
+                // lib.optionalAttrs (level != "restricted") {
+                  "pod-security.kubernetes.io/warn" = "restricted";
+                };
+              }
+            );
 
             kustomizations = lib.genAttrs childApps (
               name:
@@ -163,13 +207,22 @@ let
             );
           };
 
-          assertions = lib.concatMap (
-            name:
-            map (dep: {
-              assertion = builtins.elem dep childApps;
-              message = "flux.dependsOn of ${name} names ${dep}, which is not an application";
-            }) config.applications.${name}.flux.dependsOn
-          ) childApps;
+          assertions =
+            lib.concatMap (
+              name:
+              map (dep: {
+                assertion = builtins.elem dep childApps;
+                message = "flux.dependsOn of ${name} names ${dep}, which is not an application";
+              }) config.applications.${name}.flux.dependsOn
+            ) childApps
+            ++ (
+              config.podSecurity.namespaces
+              |> lib.attrNames
+              |> map (namespace: {
+                assertion = builtins.elem namespace namespacesToCreate;
+                message = "podSecurity.namespaces sets ${namespace}, which is not a namespace the apps create";
+              })
+            );
         };
 
         config.nixidy = {
