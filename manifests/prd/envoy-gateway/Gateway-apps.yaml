@@ -5,6 +5,9 @@ metadata:
   namespace: envoy-gateway-system
 spec:
   gatewayClassName: envoy
+  infrastructure:
+    annotations:
+      lbipam.cilium.io/ips: 10.0.42.2
   listeners:
     - allowedRoutes:
         namespaces:

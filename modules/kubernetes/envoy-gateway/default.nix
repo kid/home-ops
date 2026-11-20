@@ -59,6 +59,12 @@ _: {
           "code.line.number" = "%#";
         };
       };
+
+      # The apps Gateway's pinned LoadBalancer IP, if any. Envoy Gateway turns
+      # Gateway spec.addresses into externalIPs, not a LoadBalancer IP, but
+      # copies spec.infrastructure.annotations onto the resources it generates,
+      # its Service included (the others ignore the annotation).
+      appsInfrastructureAnnotations = cluster.methods.lbIpamAnnotations "apps-gateway";
     in
     {
       nixidy.applicationImports = [
@@ -251,6 +257,9 @@ _: {
 
         resources.gateways.apps.spec = {
           gatewayClassName = "envoy";
+          infrastructure = lib.mkIf (appsInfrastructureAnnotations != { }) {
+            annotations = appsInfrastructureAnnotations;
+          };
           listeners = [
             {
               name = "https";
