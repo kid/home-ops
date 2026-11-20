@@ -24,12 +24,17 @@ variable "repositories" {
   type = list(string)
 }
 
-# Repositories whose CI schedules a run through /webhook/v1/schedule.
-variable "dispatch_repositories" {
-  type = list(string)
+# Repository -> the repositories whose run a push to it schedules.
+variable "push_schedules" {
+  type = map(list(string))
 }
 
 variable "webhook_url" {
+  type = string
+}
+
+# Without the project query parameter, which each push webhook adds.
+variable "schedule_url" {
   type = string
 }
 
@@ -88,10 +93,24 @@ resource "github_repository_webhook" "renovate" {
   events = ["issues", "pull_request"]
 }
 
-# Bearer token for /webhook/v1/schedule.
-resource "github_actions_secret" "webhook_token" {
-  for_each    = toset(var.dispatch_repositories)
-  repository  = each.key
-  secret_name = "RENOVATE_WEBHOOK_TOKEN"
-  value       = random_password.token.result
+# /webhook/v1/schedule takes the same HMAC signature as /webhook/v1/github, so
+# GitHub can call it directly: one webhook per pushed repository and the
+# repository it schedules.
+resource "github_repository_webhook" "push_schedule" {
+  for_each = merge([
+    for source, targets in var.push_schedules : {
+      for target in targets : "${source}/${target}" => { source = source, target = target }
+    }
+  ]...)
+  repository = each.value.source
+
+  configuration {
+    url          = "${var.schedule_url}&project=${urlencode("${var.github_owner}/${each.value.target}")}"
+    content_type = "json"
+    secret       = random_password.token.result
+    insecure_ssl = false
+  }
+
+  active = true
+  events = ["push"]
 }

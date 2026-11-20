@@ -7,17 +7,22 @@ terraform {
 }
 
 inputs = {
-  dispatch_repositories = [
-    "nixfiles",
-    "neovim",
-  ]
   github_owner = "kid"
+  push_schedules = {
+    neovim = [
+      "nixfiles",
+    ]
+    nixfiles = [
+      "nixfiles-work",
+    ]
+  }
   repositories = [
     "home-ops",
     "nixfiles",
     "nixfiles-work",
     "neovim",
   ]
-  token_item  = "renovate-webhook"
-  webhook_url = "https://renovate-webhook.kidibox.net/webhook/v1/github?namespace=renovate&job=renovate"
+  schedule_url = "https://renovate-webhook.kidibox.net/webhook/v1/schedule?namespace=renovate&job=renovate"
+  token_item   = "renovate-webhook"
+  webhook_url  = "https://renovate-webhook.kidibox.net/webhook/v1/github?namespace=renovate&job=renovate"
 }
