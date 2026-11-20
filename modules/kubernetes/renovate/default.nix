@@ -4,9 +4,9 @@
 # shared config is this repo's .renovate/org-inherited-config.json5, inherited
 # ahead of each repo's own. The UI is internal, behind Kanidm; the webhook
 # server is public through the Cloudflare tunnel, so the repositories' GitHub
-# webhooks (dashboard and PR checkboxes) and other repos' CI
-# (`/webhook/v1/schedule`) start runs straight away. The webhooks and their
-# token come from the renovate-webhook Terragrunt stack
+# webhooks start runs straight away: their dashboard and PR checkboxes, and a
+# push to a repository another one pins (`/webhook/v1/schedule`). The webhooks
+# and their token come from the renovate-webhook Terragrunt stack
 # (tf-catalog/modules/renovate-webhook).
 _:
 let
@@ -19,18 +19,20 @@ let
   appItem = "github-renovate-app";
   # Must match tf-catalog/modules/renovate-webhook's token_item.
   webhookItem = "renovate-webhook";
-  # Repositories whose GitHub webhook schedules a run, and the ones whose CI
-  # schedules another repository's run with the webhook token.
+  # Repositories whose GitHub webhook schedules a run.
   repositories = [
     "home-ops"
     "nixfiles"
     "nixfiles-work"
     "neovim"
   ];
-  dispatchRepositories = [
-    "nixfiles"
-    "neovim"
-  ];
+  # A push to a key repository moves the rev each listed repository pins
+  # (kid/nixfiles-work's modules/den.nix, kid/nixfiles' flake-file.nix), so it
+  # schedules their runs. GitHub sends a webhook for a push to any branch.
+  pushSchedules = {
+    nixfiles = [ "nixfiles-work" ];
+    neovim = [ "nixfiles" ];
+  };
 
   uiHost = cluster: cluster.methods.mkAppHostname "renovate";
   webhookHost = cluster: cluster.methods.mkAppHostname "renovate-webhook";
@@ -303,8 +305,9 @@ in
         inputs = {
           github_owner = githubOwner cluster;
           inherit repositories;
-          dispatch_repositories = dispatchRepositories;
+          push_schedules = pushSchedules;
           webhook_url = "https://${webhookHost cluster}/webhook/v1/github?namespace=${namespace}&job=${jobName}";
+          schedule_url = "https://${webhookHost cluster}/webhook/v1/schedule?namespace=${namespace}&job=${jobName}";
           token_item = webhookItem;
         };
       };
