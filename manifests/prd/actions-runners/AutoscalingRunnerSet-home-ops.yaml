@@ -5,7 +5,7 @@ metadata:
     actions.github.com/cleanup-manager-role-binding: home-ops-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: home-ops-gha-rs-manager
     actions.github.com/cleanup-no-permission-service-account-name: home-ops-gha-rs-no-permission
-    actions.github.com/values-hash: 9930021e3653eca87bebfa2ced32dd3ad33810514f6f6f6dc2d64861bb241aa
+    actions.github.com/values-hash: 4e59c8d5eb7d77c85dbd374df6983a377dc0d11066de921259e0941e24ee364
   labels:
     actions.github.com/scale-set-name: home-ops
     actions.github.com/scale-set-namespace: arc-runners
@@ -23,6 +23,21 @@ spec:
     scaler:
       burst: 100
       qps: 50
+  listenerTemplate:
+    spec:
+      containers:
+        - name: listener
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
   maxRunners: 1
   minRunners: 0
   runnerScaleSetName: home-ops

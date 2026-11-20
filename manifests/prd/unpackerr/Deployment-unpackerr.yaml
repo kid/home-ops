@@ -87,9 +87,8 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       volumes:
-        - hostPath:
-            path: /tank/downloads/sabnzbd
-            type: Directory
-          name: downloads
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: unpackerr-downloads
         - emptyDir: {}
           name: tmp

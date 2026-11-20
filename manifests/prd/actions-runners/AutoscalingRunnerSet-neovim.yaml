@@ -5,7 +5,7 @@ metadata:
     actions.github.com/cleanup-manager-role-binding: neovim-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: neovim-gha-rs-manager
     actions.github.com/cleanup-no-permission-service-account-name: neovim-gha-rs-no-permission
-    actions.github.com/values-hash: 6b628cb41536aecdabe25ae4fafa55924f3f0fa18133321fd7296948003c3a3
+    actions.github.com/values-hash: 392624080aa82383e062d5ac6ab2837ba66a77981b86b43baa36f33bd0ce671
   labels:
     actions.github.com/scale-set-name: neovim
     actions.github.com/scale-set-namespace: arc-runners
@@ -23,6 +23,21 @@ spec:
     scaler:
       burst: 100
       qps: 50
+  listenerTemplate:
+    spec:
+      containers:
+        - name: listener
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
   maxRunners: 1
   minRunners: 0
   runnerScaleSetName: neovim
