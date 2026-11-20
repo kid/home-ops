@@ -128,6 +128,31 @@ in
       # datasets must never carry snapshots of their own.
       services.zfs.autoSnapshot.enable = false;
 
+      # kid/nixfiles' CI builds its hosts on the in-cluster runner, which this
+      # daemon doesn't trust: it may only add substituters listed here, and
+      # their paths only verify against keys this daemon trusts. The caches
+      # kid/nixfiles' hosts substitute from beyond the base ones; keep in sync.
+      nix.settings = {
+        trusted-substituters = [
+          "https://nix-community.cachix.org"
+          "https://devenv.cachix.org"
+          "https://nix-gaming.cachix.org"
+          "https://nix-cache.tokidoki.dev/tokidoki"
+          "https://umbriel.cachix.org"
+          "https://noctalia.cachix.org"
+          "https://cache.numtide.com"
+        ];
+        extra-trusted-public-keys = [
+          "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+          "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
+          "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="
+          "tokidoki:MD4VWt3kK8Fmz3jkiGoNRJIW31/QAm7l1Dcgz2Xa4hk="
+          "umbriel.cachix.org-1:JfNq/2yg2S6D6z4Z2dVSZrZlDPQTKtexB6GAVLD98nw="
+          "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
+          "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+        ];
+      };
+
       # The ARC would otherwise grow to nearly all of the 31 GiB the pods
       # share: before the move the two VMs peaked at ~17 GiB used together
       # (guest kernels and k3s included), the pods' working sets at ~11 GiB,
