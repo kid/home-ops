@@ -2,6 +2,10 @@
 # pve1's CT 150, whose config was imported once into the kopiur-backed
 # volume.
 _: {
+  den.aspects.kubernetes.media.sabnzbd.generated-secrets = { cluster, ... }: [
+    (cluster.methods.mkMediaApiKey "sabnzbd")
+  ];
+
   den.aspects.kubernetes.media.sabnzbd.k8s-manifests =
     { cluster, ... }:
     cluster.methods.mkMediaApp {
