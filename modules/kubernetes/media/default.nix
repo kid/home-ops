@@ -43,6 +43,21 @@ let
       };
     };
 
+  # An app's API key, generated once by the generated-secrets stack into the
+  # <name>-api-key 1Password item and Secret, which the other apps read too:
+  # the aspect of an app with an apiKeyEnv emits it as its generated-secrets
+  # (`cluster.methods.mkMediaApiKey <name>`). The format of the External
+  # Secrets Password generators that made them first: 32 lowercase letters
+  # and digits, 10 of them digits.
+  mkMediaApiKey = name: {
+    item = "${name}-api-key";
+    field = "api-key";
+    length = 32;
+    upper = false;
+    special = false;
+    min_numeric = 10;
+  };
+
   mkMediaApp =
     methods:
     {
@@ -74,9 +89,8 @@ let
       backupIgnore ? [ ],
       # The HTTPRoute's request timeout; Envoy's own default is 15s.
       requestTimeout ? null,
-      # The env var the app reads its API key from; null for none. The key is
-      # generated once into the <name>-api-key Secret, which the other apps
-      # read too.
+      # The env var the app reads its API key from; null for none. Its aspect
+      # then emits the key as its generated-secrets (mkMediaApiKey above).
       apiKeyEnv ? if servarr then "${lib.toUpper app}__AUTH__APIKEY" else null,
       # A share of k3s-prd-0's iGPU at /dev/dri/renderD128
       # (generic-device-plugin), which also pins the pod to that node.
@@ -106,14 +120,15 @@ let
           }
         ];
       };
-      apiKeySecret = "${name}-api-key";
+      apiKey = mkMediaApiKey name;
+      apiKeySecret = apiKey.item;
       application = {
         inherit namespace;
         flux.dependsOn = [
           # The kopiur webhook admits the backup objects.
           "kopiur-config"
         ]
-        # The API key's Password generator and ExternalSecret.
+        # The onepassword store, for its API key.
         ++ lib.optional (apiKeyEnv != null) "external-secrets-config";
 
         imports =
@@ -149,28 +164,7 @@ let
             ++ backupIgnore;
           }
           // lib.optionalAttrs (apiKeyEnv != null) {
-            # Generated once: the other apps keep it in their own settings.
-            passwords.${apiKeySecret}.spec = {
-              length = 32;
-              digits = 10;
-              symbols = 0;
-              noUpper = true;
-              allowRepeat = true;
-              secretKeys = [ "api-key" ];
-            };
-            externalSecrets.${apiKeySecret}.spec = {
-              refreshPolicy = "CreatedOnce";
-              target.name = apiKeySecret;
-              dataFrom = [
-                {
-                  sourceRef.generatorRef = {
-                    apiVersion = "generators.external-secrets.io/v1alpha1";
-                    kind = "Password";
-                    name = apiKeySecret;
-                  };
-                }
-              ];
-            };
+            externalSecrets.${apiKeySecret}.spec = methods.mkGeneratedSecret apiKey;
           }
           // {
             ciliumNetworkPolicies.${name} =
@@ -229,7 +223,7 @@ let
                       // lib.optionalAttrs (apiKeyEnv != null) {
                         ${apiKeyEnv}.valueFrom.secretKeyRef = {
                           name = apiKeySecret;
-                          key = "api-key";
+                          key = apiKey.field;
                         };
                       };
                     ports.http.containerPort = port;
@@ -325,6 +319,7 @@ in
 {
   den.clusterMethods = {
     mkMediaApp = cluster: mkMediaApp cluster.methods;
+    mkMediaApiKey = _: mkMediaApiKey;
     mkHostPathClaim = _: mkHostPathClaim;
   };
 }

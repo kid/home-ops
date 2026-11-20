@@ -1,6 +1,10 @@
 # animarr, the Sonarr instance for anime, moved from pve1's CT 140, whose
 # config was imported once into the kopiur-backed volume.
 _: {
+  den.aspects.kubernetes.media.animarr.generated-secrets = { cluster, ... }: [
+    (cluster.methods.mkMediaApiKey "animarr")
+  ];
+
   den.aspects.kubernetes.media.animarr.k8s-manifests =
     { cluster, ... }:
     cluster.methods.mkMediaApp {

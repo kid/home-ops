@@ -123,14 +123,24 @@ in
     ];
 
   # A cluster with terragrunt.enable = false renders no stacks of its own.
+  # `generated-secrets` is the quirk its own app aspects emit
+  # (modules/den/quirks/generated-secrets.nix), threaded into `specialArgs`
+  # for the same reason as `firewall` above.
   den.policies.cluster-to-terragrunt =
-    { cluster, ... }:
+    {
+      cluster,
+      generated-secrets ? [ ],
+      ...
+    }:
     lib.optionals cluster.terragrunt.enable [
       (den.lib.policy.instantiate {
         name = "${cluster.name}-terragrunt";
         class = "terragrunt-stacks";
         instantiate =
-          { modules, ... }: instantiateStacks "cluster ${cluster.name}" modules { inherit cluster hcl; };
+          { modules, ... }:
+          instantiateStacks "cluster ${cluster.name}" modules {
+            inherit cluster hcl generated-secrets;
+          };
         intoAttr = [
           "terragruntStacks"
           "k3s"

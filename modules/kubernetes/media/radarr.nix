@@ -1,6 +1,10 @@
 # Radarr, moved from pve1's CT 120, whose config was imported once into the
 # kopiur-backed volume.
 _: {
+  den.aspects.kubernetes.media.radarr.generated-secrets = { cluster, ... }: [
+    (cluster.methods.mkMediaApiKey "radarr")
+  ];
+
   den.aspects.kubernetes.media.radarr.k8s-manifests =
     { cluster, ... }:
     cluster.methods.mkMediaApp {
