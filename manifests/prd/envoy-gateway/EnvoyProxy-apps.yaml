@@ -1,0 +1,13 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: apps
+  namespace: envoy-gateway-system
+spec:
+  mergeType: StrategicMerge
+  provider:
+    kubernetes:
+      envoyService:
+        annotations:
+          lbipam.cilium.io/ips: 10.0.42.2
+    type: Kubernetes

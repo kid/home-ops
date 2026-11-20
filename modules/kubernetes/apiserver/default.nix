@@ -40,7 +40,10 @@ in
 
         resources.services.${name} = {
           # external-dns 0.23 dropped the legacy external-dns.alpha.kubernetes.io/ prefix.
-          metadata.annotations."external-dns.kubernetes.io/hostname" = hostname;
+          metadata.annotations = {
+            "external-dns.kubernetes.io/hostname" = hostname;
+          }
+          // cluster.methods.lbIpamAnnotations name;
           spec = {
             type = "LoadBalancer";
             externalTrafficPolicy = "Local";

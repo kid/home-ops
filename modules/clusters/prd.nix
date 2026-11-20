@@ -76,6 +76,13 @@ in
       loadBalancer = {
         cidr = lbCidr;
         description = "Cilium BGP-advertised LoadBalancer IP pool";
+        # Pinned so a rebuilt cluster hands out the same addresses (DNS records,
+        # kubeconfigs and the k3s servers' /etc/hosts entry point at them).
+        # Anything else in the pool is allocated dynamically.
+        assignments = {
+          kube-api = "10.0.42.1";
+          apps-gateway = "10.0.42.2";
+        };
       };
     };
 

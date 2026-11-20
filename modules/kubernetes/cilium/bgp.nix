@@ -9,7 +9,21 @@
 # modules/kubernetes/cilium/default.nix's bgpControlPlane.enabled Helm
 # value and modules/routeros/bgp.nix (the RouterOS side of this
 # same peering) for BGP sessions to actually come up.
-_: {
+{ lib, ... }:
+{
+  # The Service annotation that pins a LoadBalancer to its
+  # den.clusters.<name>.networks.loadBalancer.assignments.<name> address
+  # through Cilium's LB-IPAM. Empty without an assignment: the Service gets
+  # the next free address in the pool.
+  den.clusterMethods.lbIpamAnnotations =
+    cluster: name:
+    let
+      assignments = cluster.networks.loadBalancer.assignments or { };
+    in
+    lib.optionalAttrs (assignments ? ${name}) {
+      "lbipam.cilium.io/ips" = assignments.${name};
+    };
+
   # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
   # quirks/bgp.nix), collected onto every RouterOS device by modules/den/
   # policies/pipes.nix's routeros-device-collect-bgp and consumed by
