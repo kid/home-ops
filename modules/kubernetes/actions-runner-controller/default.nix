@@ -63,12 +63,8 @@ in
       ...
     }:
     {
-      # The controller and listeners run with the chart's unhardened
-      # defaults; a runner mounts the node's Nix store and daemon socket.
-      podSecurity.namespaces = {
-        ${controllerNamespace} = "baseline";
-        ${runnerNamespace} = "privileged";
-      };
+      # A runner mounts the node's Nix store and daemon socket.
+      podSecurity.namespaces.${runnerNamespace} = "privileged";
 
       # The controller, and the listener pods it creates for each scale set.
       applications.actions-runner-controller = {
@@ -90,6 +86,16 @@ in
             flags = {
               logLevel = "info";
               logFormat = "json";
+            };
+            podSecurityContext = {
+              # The image's user, 65532.
+              runAsNonRoot = true;
+              seccompProfile.type = "RuntimeDefault";
+            };
+            securityContext = {
+              allowPrivilegeEscalation = false;
+              readOnlyRootFilesystem = true;
+              capabilities.drop = [ "ALL" ];
             };
             resources = {
               requests = {
@@ -157,6 +163,27 @@ in
             controllerServiceAccount = {
               namespace = controllerNamespace;
               name = controllerName;
+            };
+            # The listener pod the controller runs in its own namespace, from
+            # the controller's image. A template replaces the pod's security
+            # context and termination grace period, so the latter keeps the
+            # controller's own 60s.
+            listenerTemplate.spec = {
+              securityContext = {
+                runAsNonRoot = true;
+                seccompProfile.type = "RuntimeDefault";
+              };
+              terminationGracePeriodSeconds = 60;
+              containers = [
+                {
+                  name = "listener";
+                  securityContext = {
+                    allowPrivilegeEscalation = false;
+                    readOnlyRootFilesystem = true;
+                    capabilities.drop = [ "ALL" ];
+                  };
+                }
+              ];
             };
             template.spec = {
               containers = [

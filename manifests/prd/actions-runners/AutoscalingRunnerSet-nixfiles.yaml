@@ -5,7 +5,7 @@ metadata:
     actions.github.com/cleanup-manager-role-binding: nixfiles-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: nixfiles-gha-rs-manager
     actions.github.com/cleanup-no-permission-service-account-name: nixfiles-gha-rs-no-permission
-    actions.github.com/values-hash: 1483f7cad94a3ea2455b79d0d46629f86353281cc460c838873fe47fd99a9c2
+    actions.github.com/values-hash: 9ceac3ae4bece3c502d2bd54c449d675fc0632212d8e45e13c478bdc8aafbab
   labels:
     actions.github.com/scale-set-name: nixfiles
     actions.github.com/scale-set-namespace: arc-runners
@@ -23,6 +23,21 @@ spec:
     scaler:
       burst: 100
       qps: 50
+  listenerTemplate:
+    spec:
+      containers:
+        - name: listener
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
   maxRunners: 1
   minRunners: 0
   runnerScaleSetName: nixfiles

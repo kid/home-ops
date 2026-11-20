@@ -25,9 +25,6 @@ in
   den.aspects.kubernetes.external-dns.k8s-manifests =
     { charts, cluster, ... }:
     {
-      # The chart's MikroTik webhook sidecar runs unhardened.
-      podSecurity.namespaces.external-dns = "baseline";
-
       applications.external-dns = {
         namespace = "external-dns";
         flux.dependsOn = [ "external-secrets-config" ];
@@ -92,6 +89,12 @@ in
                     memory = "64Mi";
                   };
                   limits.memory = "128Mi";
+                };
+                # As the chart's own container; runs as the pod's non-root user.
+                securityContext = {
+                  allowPrivilegeEscalation = false;
+                  readOnlyRootFilesystem = true;
+                  capabilities.drop = [ "ALL" ];
                 };
                 env = [
                   {
