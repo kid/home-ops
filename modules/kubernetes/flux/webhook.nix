@@ -30,8 +30,8 @@ in
               owner = "fluxcd";
               repo = "notification-controller";
               # renovate: datasource=github-releases depName=fluxcd/notification-controller
-              rev = "v1.10.0";
-              hash = "sha256-ARMVKx4nUx84DfLFj8mzovbcCJYLwzggbemXSLDKIEQ=";
+              rev = "v1.10.1";
+              hash = "sha256-ctrOmEpStwfOkOb9uMaKvBZawTaT9GMsRZEKUYuJ0OI=";
             };
             crdFiles = [ "config/crd/bases/notification.toolkit.fluxcd.io_receivers.yaml" ];
             kindFilter = [ "Receiver" ];
