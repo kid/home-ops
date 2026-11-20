@@ -15,7 +15,7 @@ spec:
   metadata:
     labels:
       app.kubernetes.io/name: renovate
-  parallelism: 1
+  parallelism: 3
   provider:
     name: github
   renovateConfig:
