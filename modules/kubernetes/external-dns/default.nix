@@ -90,12 +90,6 @@ in
                   };
                   limits.memory = "128Mi";
                 };
-                # As the chart's own container; runs as the pod's non-root user.
-                securityContext = {
-                  allowPrivilegeEscalation = false;
-                  readOnlyRootFilesystem = true;
-                  capabilities.drop = [ "ALL" ];
-                };
                 env = [
                   {
                     name = "MIKROTIK_DEFAULT_TTL";
