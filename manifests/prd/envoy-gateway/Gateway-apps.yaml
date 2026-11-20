@@ -6,10 +6,8 @@ metadata:
 spec:
   gatewayClassName: envoy
   infrastructure:
-    parametersRef:
-      group: gateway.envoyproxy.io
-      kind: EnvoyProxy
-      name: apps
+    annotations:
+      lbipam.cilium.io/ips: 10.0.42.2
   listeners:
     - allowedRoutes:
         namespaces:

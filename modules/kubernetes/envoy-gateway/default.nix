@@ -61,9 +61,10 @@ _: {
       };
 
       # The apps Gateway's pinned LoadBalancer IP, if any. Envoy Gateway turns
-      # Gateway spec.addresses into externalIPs, not a LoadBalancer IP, so it
-      # goes on the generated Service through a Gateway-level EnvoyProxy.
-      appsServiceAnnotations = cluster.methods.lbIpamAnnotations "apps-gateway";
+      # Gateway spec.addresses into externalIPs, not a LoadBalancer IP, but
+      # copies spec.infrastructure.annotations onto the resources it generates,
+      # its Service included (the others ignore the annotation).
+      appsInfrastructureAnnotations = cluster.methods.lbIpamAnnotations "apps-gateway";
     in
     {
       nixidy.applicationImports = [
@@ -74,7 +75,6 @@ _: {
             "ClientTrafficPolicy"
             "SecurityPolicy"
             "HTTPRouteFilter"
-            "EnvoyProxy"
           ];
         })
       ];
@@ -255,26 +255,10 @@ _: {
           http3 = { };
         };
 
-        # Merged over the chart's default EnvoyProxy spec above (StrategicMerge),
-        # instead of replacing it.
-        resources.envoyProxies = lib.mkIf (appsServiceAnnotations != { }) {
-          apps.spec = {
-            mergeType = "StrategicMerge";
-            provider = {
-              type = "Kubernetes";
-              kubernetes.envoyService.annotations = appsServiceAnnotations;
-            };
-          };
-        };
-
         resources.gateways.apps.spec = {
           gatewayClassName = "envoy";
-          infrastructure = lib.mkIf (appsServiceAnnotations != { }) {
-            parametersRef = {
-              group = "gateway.envoyproxy.io";
-              kind = "EnvoyProxy";
-              name = "apps";
-            };
+          infrastructure = lib.mkIf (appsInfrastructureAnnotations != { }) {
+            annotations = appsInfrastructureAnnotations;
           };
           listeners = [
             {
