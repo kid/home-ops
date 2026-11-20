@@ -188,8 +188,8 @@ let
                 owner = "fluxcd";
                 repo = "kustomize-controller";
                 # renovate: datasource=github-releases depName=fluxcd/kustomize-controller
-                rev = "v1.10.1";
-                hash = "sha256-blN5b1ENSwEIC+jF8nVYZu4Dyi82y1E5Z28OR4mfhKs=";
+                rev = "v1.10.2";
+                hash = "sha256-YTFo+P+WVJz2rwvoRfx0bnzfbRgBWVPQQrEse+bt2J8=";
               };
               crdFiles = [ "config/crd/bases/kustomize.toolkit.fluxcd.io_kustomizations.yaml" ];
             })
