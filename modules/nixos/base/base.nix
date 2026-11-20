@@ -35,5 +35,13 @@
         dates = "weekly";
         options = "--delete-older-than 14d";
       };
+
+      # kid's public Cachix cache, which nixfiles' and neovim's CI push to.
+      # On k3s-prd-0 it also serves the in-cluster CI runner, which can't add
+      # a substituter itself: the daemon doesn't trust it.
+      nix.settings = {
+        extra-substituters = [ "https://kidibox.cachix.org" ];
+        extra-trusted-public-keys = [ "kidibox.cachix.org-1:BN875x9JUW61souPxjf7eA5Uh2k3A1OSA1JIb/axGGE=" ];
+      };
     };
 }

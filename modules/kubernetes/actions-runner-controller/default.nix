@@ -1,20 +1,28 @@
-# GitHub Actions runners for the cluster's own repository (`runs-on:
-# home-ops`): actions-runner-controller's scale-set mode, one ephemeral
-# runner pod per job, none while idle. The runner uses the node's Nix daemon
-# (its socket, store and system profiles mounted from the host), so builds run
-# in the host's sandbox and land in its store, which stays warm between jobs.
-# The profiles give the nix binary, and the system the workflow diffs a pull
-# request's k3s-prd-0 toplevel against: a symlink resolves there, unlike a
+# GitHub Actions runners for the cluster repo's owner's repositories, one
+# scale set per repository named after it (`runs-on: <repo>`): GitHub registers
+# a personal account's runners per repository. actions-runner-controller's
+# scale-set mode, one ephemeral runner pod per job, none while idle. The runner
+# uses the node's Nix daemon (its socket, store and system profiles mounted from
+# the host), so builds run in the host's sandbox and land in its store, which
+# stays warm between jobs. The daemon doesn't trust the runner, so it only
+# substitutes from the host's own substituters (modules/nixos/base/base.nix).
+# The profiles give the nix binary, and the system home-ops' workflow diffs a
+# pull request's k3s-prd-0 toplevel against: a symlink resolves there, unlike a
 # hostPath of /run/current-system, which mounts its target directory.
 # The daemon runs fixed-output derivations in the host's network namespace,
 # outside this namespace's policy: only same-repository pull requests may run
-# here (the workflow's job condition), never forks.
+# here (each workflow's job condition or runner choice), never forks.
 _:
 let
   controllerNamespace = "arc-system";
   controllerName = "arc";
   runnerNamespace = "arc-runners";
-  scaleSetName = "home-ops";
+  # The GitHub App must be installed on each of them.
+  repositories = [
+    "home-ops"
+    "nixfiles"
+    "neovim"
+  ];
   githubSecret = "arc-github-app";
   # 1Password item, in the cluster's vault (section `credentials`), holding
   # the GitHub App; the private key is base64, a PEM is multi-line.
@@ -126,14 +134,17 @@ in
           ];
         };
 
-        helm.releases.actions-runners = {
+        helm.releases = lib.genAttrs repositories (repo: {
           chart = charts.actions.gha-runner-scale-set;
           values = {
-            githubConfigUrl = cluster.nixidy.repository |> builtins.match "(.*)\\.git" |> builtins.head;
+            githubConfigUrl = "https://github.com/${
+              cluster.nixidy.repository |> builtins.match "https://github\\.com/([^/]+)/.*" |> builtins.head
+            }/${repo}";
             githubConfigSecret = githubSecret;
-            runnerScaleSetName = scaleSetName;
+            runnerScaleSetName = repo;
             minRunners = 0;
-            # Every job builds on the same node's daemon.
+            # Every job builds on the same node's daemon: one at a time per
+            # repository.
             maxRunners = 1;
             # The chart would look the controller up in the live cluster.
             controllerServiceAccount = {
@@ -231,7 +242,7 @@ in
               else
                 m
             );
-        };
+        });
       };
     };
 }
