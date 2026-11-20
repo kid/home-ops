@@ -11,6 +11,15 @@
   // A jump over several majors becomes one PR per major, so each step's
   // breaking changes land (and get reviewed) on their own.
   separateMultipleMajor: true,
+  // A merge is a prd deploy (Flux), and `checks` only proves the change
+  // renders and builds: auto-merges (packageRules below) land on weekday
+  // working hours. Renovate merges itself on its 3-hourly run, since GitHub's
+  // native auto-merge, enabled at PR creation, ignores automergeSchedule. The
+  // presets' :automergeBranch would push to main, which the ruleset rejects:
+  // every change goes through a PR.
+  automergeType: "pr",
+  platformAutomerge: false,
+  automergeSchedule: ["* 8-17 * * 1-5"],
   flux: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
@@ -181,6 +190,55 @@
         fileFilters: ["**/*.nix", "manifests/**"],
         executionMode: "update",
       },
+    },
+    {
+      // Auto-merge patch and digest updates once the release is 3 days old,
+      // so a yanked or quickly re-patched one never lands. Digest pins
+      // (git-refs) carry no release timestamp and would otherwise never update.
+      matchUpdateTypes: ["patch", "digest"],
+      automerge: true,
+      minimumReleaseAge: "3 days",
+      minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["minor"],
+      automerge: true,
+      minimumReleaseAge: "3 days",
+      minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      // The *arr apps also take minors unattended.
+      matchDatasources: ["docker"],
+      matchDepNames: [
+        "ghcr.io/home-operations/sonarr",
+        "ghcr.io/home-operations/radarr",
+        "ghcr.io/home-operations/prowlarr",
+        "ghcr.io/home-operations/sabnzbd",
+        "ghcr.io/recyclarr/recyclarr",
+        "ghcr.io/unpackerr/unpackerr",
+      ],
+      matchUpdateTypes: ["minor"],
+      automerge: true,
+      minimumReleaseAge: "3 days",
+      minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      // Never unattended: Home Assistant and its stack, and the charts the
+      // cluster itself runs on (CRDs, CNI, GitOps, ingress, identity).
+      matchFileNames: ["modules/kubernetes/home-assistant/**"],
+      automerge: false,
+    },
+    {
+      matchDepNames: [
+        "cilium",
+        "cilium/cilium",
+        "docker.io/kanidm/server",
+        "ghcr.io/pando85/helm-charts/kaniop",
+        "ghcr.io/controlplaneio-fluxcd/charts/flux-operator",
+        "docker.io/envoyproxy/gateway-helm",
+      ],
+      automerge: false,
     },
   ],
 }
