@@ -99,14 +99,12 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: sonarr
-        - hostPath:
-            path: /tank/downloads/sabnzbd
-            type: Directory
-          name: downloads
-        - hostPath:
-            path: /tank/library/series
-            type: Directory
-          name: library
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: sonarr-downloads
+        - name: library
+          persistentVolumeClaim:
+            claimName: sonarr-library
         - emptyDir: {}
           name: logs
         - emptyDir: {}

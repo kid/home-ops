@@ -1,10 +1,48 @@
 # The shape every media app here shares: one Deployment on a kopiur-backed
 # config volume, its Service and HTTPRoute on the apps Gateway, behind Kanidm
-# and public through the tunnel, host mounts of k3s-prd-0's tank pool, and its
+# and public through the tunnel, claims on k3s-prd-0's tank pool, and its
 # Cilium policy. Returns the k8s-manifests content: the nixidy application,
 # plus its tunnel route in envoy-gateway.
 { lib, ... }:
 let
+  # A directory on the node as the claim `name`: a hostPath PersistentVolume
+  # bound to it both ways. The pod mounts a claim, which Pod Security
+  # Admission allows where it refuses a hostPath volume, and only Flux picks
+  # the host paths. type Directory: never created, a missing path means the
+  # wrong node or an unmounted dataset. The kubelet doesn't apply fsGroup to
+  # a hostPath volume, so the dataset's ownership stays as it is.
+  mkHostPathClaim =
+    {
+      namespace,
+      name,
+      path,
+    }:
+    let
+      volumeName = "${namespace}-${name}";
+      accessModes = [ "ReadWriteOnce" ];
+      # Required, and not enforced on a hostPath volume.
+      storage = "1Gi";
+    in
+    {
+      persistentVolumes.${volumeName}.spec = {
+        inherit accessModes;
+        capacity = { inherit storage; };
+        persistentVolumeReclaimPolicy = "Retain";
+        # Not the default class's: bound by name only.
+        storageClassName = "";
+        claimRef = { inherit namespace name; };
+        hostPath = {
+          inherit path;
+          type = "Directory";
+        };
+      };
+      persistentVolumeClaims.${name}.spec = {
+        inherit accessModes volumeName;
+        storageClassName = "";
+        resources.requests = { inherit storage; };
+      };
+    };
+
   mkMediaApp =
     methods:
     {
@@ -22,7 +60,8 @@ let
       uid,
       supplementalGroups ? [ ],
       # <volume> = { path = <directory on the node>; mountPath = <in the pod>;
-      # readOnly ? false; }: tank's datasets, on the node that holds them.
+      # readOnly ? false; }: tank's datasets, on the node that holds them,
+      # each the claim <name>-<volume>.
       hostPaths ? { },
       storage ? "1Gi",
       # Out to the world (indexers, metadata, Usenet servers).
@@ -77,13 +116,21 @@ let
         # The API key's Password generator and ExternalSecret.
         ++ lib.optional (apiKeyEnv != null) "external-secrets-config";
 
-        imports = lib.optional (oidcGroup != null) (
-          methods.mkOidcAuth {
-            inherit name hostname;
-            httpRouteName = name;
-            group = oidcGroup;
-          }
-        );
+        imports =
+          lib.optional (oidcGroup != null) (
+            methods.mkOidcAuth {
+              inherit name hostname;
+              httpRouteName = name;
+              group = oidcGroup;
+            }
+          )
+          ++ lib.mapAttrsToList (volume: v: {
+            resources = methods.mkHostPathClaim {
+              inherit namespace;
+              name = "${name}-${volume}";
+              inherit (v) path;
+            };
+          }) hostPaths;
 
         resources =
           methods.mkKopiurBackup {
@@ -228,13 +275,8 @@ let
                     logs.emptyDir = { };
                     tmp.emptyDir = { };
                   }
-                  // lib.mapAttrs (_: v: {
-                    hostPath = {
-                      inherit (v) path;
-                      # Never created: a missing path means the wrong node or
-                      # an unmounted dataset.
-                      type = "Directory";
-                    };
+                  // lib.mapAttrs (volume: _: {
+                    persistentVolumeClaim.claimName = "${name}-${volume}";
                   }) hostPaths;
                 };
               };
@@ -272,9 +314,6 @@ let
       };
     in
     {
-      # tank's datasets are hostPath volumes.
-      podSecurity.namespaces.${namespace} = lib.mkIf (hostPaths != { }) "privileged";
-
       applications = {
         ${name} = application;
       }
@@ -284,5 +323,8 @@ let
     };
 in
 {
-  den.clusterMethods.mkMediaApp = cluster: mkMediaApp cluster.methods;
+  den.clusterMethods = {
+    mkMediaApp = cluster: mkMediaApp cluster.methods;
+    mkHostPathClaim = _: mkHostPathClaim;
+  };
 }
