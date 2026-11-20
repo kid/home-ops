@@ -174,7 +174,8 @@ in
 
           resources.renovateJobs.${jobName}.spec = {
             schedule = "0 */3 * * *";
-            parallelism = 1;
+            # A checkbox tick shouldn't wait behind other repositories' runs.
+            parallelism = 3;
             provider.name = "github";
             discoveryFilters = [ "${githubOwner cluster}/*" ];
             image = images.renovate;
