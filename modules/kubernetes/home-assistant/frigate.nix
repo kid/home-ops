@@ -240,6 +240,9 @@ in
       );
     in
     {
+      # The recordings' hostPath volume and PERFMON.
+      podSecurity.namespaces.${namespace} = "privileged";
+
       # Public through the tunnel, still behind the Envoy OIDC below.
       applications.envoy-gateway.resources.httpRoutes."${name}-public" =
         cluster.methods.mkGatewayTunnelRoute hostname;

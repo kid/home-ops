@@ -166,6 +166,9 @@ in
   den.aspects.kubernetes.opentelemetry-collector.k8s-manifests =
     { charts, cluster, ... }:
     {
+      # The agent reads the node's pod logs through hostPath volumes.
+      podSecurity.namespaces.monitoring = "privileged";
+
       applications.opentelemetry-collector = {
         namespace = "monitoring";
 

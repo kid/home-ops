@@ -304,6 +304,12 @@ in
         metadata.annotations."kopiur.home-operations.com/privileged-movers" = "true";
       });
 
+      # Root movers, and the local repository's NFS volume (bootstrap and
+      # maintenance run in kopiur-system), are past restricted.
+      podSecurity.namespaces =
+        lib.genAttrs privilegedNamespaces (_: "baseline")
+        // lib.optionalAttrs (local || restoresLocal) { kopiur-system = "baseline"; };
+
       applications.kopiur = {
         namespace = "kopiur-system";
 

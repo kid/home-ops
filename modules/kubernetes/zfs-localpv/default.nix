@@ -30,6 +30,9 @@ in
         })
       ];
 
+      # The node plugin is privileged, on the host network and its root.
+      podSecurity.namespaces.zfs-localpv = "privileged";
+
       applications.zfs-localpv = {
         namespace = "zfs-localpv";
 

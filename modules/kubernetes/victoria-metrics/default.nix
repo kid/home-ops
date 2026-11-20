@@ -210,6 +210,9 @@
         };
       };
 
+      # node-exporter runs in the host's network and PID namespaces.
+      podSecurity.namespaces.monitoring = "privileged";
+
       applications.victoria-metrics = {
         namespace = "monitoring";
         # The operator webhook's certificate.
