@@ -164,38 +164,16 @@
       },
     },
     {
-      // Image pins in Nix: regenerate manifests/ so the PR passes
-      // checks.manifests. Also replaces the inherited refresh-nix-hash for
-      // custom.kaniop-kanidm, which has no hash to refresh.
+      // Every other pin in Nix: rehash it, then regenerate manifests/ so the
+      // PR passes checks.manifests. rehash-changed-pins rehashes every bumped
+      // pin, not just this update's: Renovate applies a group's bumps at once,
+      // so a sibling's stale hash would fail this update's write-manifests.
+      // Replaces the inherited refresh-nix-hash, which only knows its own pin.
       matchManagers: ["custom.regex"],
-      matchDatasources: ["docker", "custom.kaniop-kanidm"],
-      matchFileNames: ["modules/**"],
-      postUpgradeTasks: {
-        commands: ["nix run .#write-manifests -- --skip-secrets"],
-        fileFilters: ["manifests/**"],
-        executionMode: "update",
-      },
-    },
-    {
-      // Overrides the inherited hash refresh to also regenerate manifests/
-      // so the PR passes checks.manifests.
-      matchManagers: ["custom.regex"],
-      matchDatasources: ["github-releases"],
+      matchDatasources: ["docker", "helm", "github-releases", "custom.kaniop-kanidm"],
       postUpgradeTasks: {
         commands: [
-          "refresh-nix-hash {{{packageFile}}} {{{depName}}} {{{newValue}}}",
-          "nix run .#write-manifests -- --skip-secrets",
-        ],
-        fileFilters: ["**/*.nix", "manifests/**"],
-        executionMode: "update",
-      },
-    },
-    {
-      matchManagers: ["custom.regex"],
-      matchFileNames: ["charts/**"],
-      postUpgradeTasks: {
-        commands: [
-          "nix run .#rehash-chart -- {{{packageFile}}}",
+          "nix run .#rehash-changed-pins",
           "nix run .#write-manifests -- --skip-secrets",
         ],
         fileFilters: ["**/*.nix", "manifests/**"],

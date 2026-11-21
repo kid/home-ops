@@ -21,6 +21,6 @@ After bumping, run `nix run .#write-manifests` and commit both the
 `charts/` change and the regenerated `manifests/prd/` output together —
 `checks.manifests` fails otherwise. Renovate does this on its own: the
 in-cluster renovate-operator (`modules/kubernetes/renovate`) bumps each pin's `version`, then
-`postUpgradeTasks` (`.renovaterc.json5`) runs `rehash-chart` (which calls
-`helmupdater rehash`) and `write-manifests`,
+`postUpgradeTasks` (`.renovaterc.json5`) runs `rehash-changed-pins` (which
+calls `rehash-chart`, i.e. `helmupdater rehash`, for every bumped chart) and `write-manifests`,
 and opens a PR with the changelog.
