@@ -5259,6 +5259,22 @@ spec:
                         Defaults to `kanidm/tools:<version>` matching the Kanidm server image version.
                       nullable: true
                       type: string
+                    logLevel:
+                      description: |-
+                        Optional log level for the mail sender process (sets RUST_LOG).
+                        One of trace, debug, info, warn, error, off.
+                        If omitted, no RUST_LOG override is set and the mail sender keeps its default.
+                        Changing this field triggers a rollout of the mail sender Deployment.
+                      enum:
+                        - trace
+                        - debug
+                        - info
+                        - warn
+                        - error
+                        - "off"
+                        - null
+                      nullable: true
+                      type: string
                     nodeSelector:
                       additionalProperties:
                         type: string

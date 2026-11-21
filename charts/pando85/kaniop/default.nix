@@ -1,6 +1,6 @@
 {
   repo = "oci://ghcr.io/pando85/helm-charts";
   chart = "kaniop";
-  version = "0.23.0";
-  chartHash = "sha256-70o5Up8BwAuVciKGZl5EVfvosMAj+vvMLLcBVUdtq8w=";
+  version = "0.24.1";
+  chartHash = "sha256-1I7xo/GGMnI4vAFa71Q4vxIAA1RTOHdNtBqsJ+ZwPqw=";
 }
