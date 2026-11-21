@@ -112,6 +112,17 @@
       },
     },
     {
+      // The Flux controllers' CRD source pins (nixidy-defaults.nix,
+      // flux/webhook.nix) come out of one Flux release, so bump them in one
+      // PR. The running controllers follow the flux-operator chart instead.
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["fluxcd/*"],
+      groupName: "fluxcd",
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+    },
+    {
       // Kanidm follows kaniop (custom.kaniop-kanidm above), so both land in
       // one PR. kaniop releases step Kanidm one minor at a time, the only
       // upgrade Kanidm supports.
