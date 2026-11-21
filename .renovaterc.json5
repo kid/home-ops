@@ -12,14 +12,14 @@
   // breaking changes land (and get reviewed) on their own.
   separateMultipleMajor: true,
   // A merge is a prd deploy (Flux), and `checks` only proves the change
-  // renders and builds: auto-merges (packageRules below) land on weekday
-  // working hours. Renovate merges itself on its 3-hourly run, since GitHub's
-  // native auto-merge, enabled at PR creation, ignores automergeSchedule. The
-  // presets' :automergeBranch would push to main, which the ruleset rejects:
-  // every change goes through a PR.
+  // renders and builds: auto-merges (packageRules below) land on weekend
+  // daytime, when the homelab gets worked on. Renovate merges itself on its
+  // 3-hourly run, since GitHub's native auto-merge, enabled at PR creation,
+  // ignores automergeSchedule. The presets' :automergeBranch would push to
+  // main, which the ruleset rejects: every change goes through a PR.
   automergeType: "pr",
   platformAutomerge: false,
-  automergeSchedule: ["* 8-17 * * 1-5"],
+  automergeSchedule: ["* 8-17 * * 0,6"],
   flux: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
