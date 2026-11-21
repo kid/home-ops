@@ -17,6 +17,8 @@ let
   controllerNamespace = "arc-system";
   controllerName = "arc";
   runnerNamespace = "arc-runners";
+  # renovate: datasource=docker depName=ghcr.io/actions/actions-runner
+  runnerTag = "2.338.2@sha256:6d0b2d80d80f143f77dcb676e50920100bbb547e39e883454d57f45ab8c31300";
   # The GitHub App must be installed on each of them.
   repositories = [
     "home-ops"
@@ -189,8 +191,7 @@ in
               containers = [
                 {
                   name = "runner";
-                  # renovate: datasource=docker depName=ghcr.io/actions/actions-runner
-                  image = "ghcr.io/actions/actions-runner:2.338.2@sha256:6d0b2d80d80f143f77dcb676e50920100bbb547e39e883454d57f45ab8c31300";
+                  image = "ghcr.io/actions/actions-runner:${runnerTag}";
                   command = [ "/home/runner/run.sh" ];
                   env = [
                     {
