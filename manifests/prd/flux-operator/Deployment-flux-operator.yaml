@@ -46,7 +46,7 @@ spec:
               value: 5m
             - name: WEB_SERVER_PORT
               value: "9080"
-          image: ghcr.io/controlplaneio-fluxcd/flux-operator:v0.62.1
+          image: ghcr.io/controlplaneio-fluxcd/flux-operator:v0.63.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
