@@ -67,7 +67,7 @@ spec:
                   fieldPath: status.hostIP
             - name: GOMEMLIMIT
               value: 153MiB
-          image: otel/opentelemetry-collector-k8s:0.163.2
+          image: otel/opentelemetry-collector-k8s:0.164.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
