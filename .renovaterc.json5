@@ -204,8 +204,9 @@
     },
     {
       // Auto-merge patch and digest updates once the release is 3 days old,
-      // so a yanked or quickly re-patched one never lands. Digest pins
-      // (git-refs) carry no release timestamp and would otherwise never update.
+      // so a yanked or quickly re-patched one never lands. timestamp-optional:
+      // an update with no release timestamp merges without the wait, with a
+      // warning, instead of never (the known ones skip the wait below).
       matchUpdateTypes: ["patch", "digest"],
       automerge: true,
       minimumReleaseAge: "3 days",
@@ -233,6 +234,19 @@
       automerge: true,
       minimumReleaseAge: "3 days",
       minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      // No release timestamp to age against: git-refs digests (the flake
+      // inputs pinned by rev in modules/, and the nix manager's, whose updates
+      // are disabled above) and ghcr.io OCI charts (no created date in a Helm
+      // chart's config). Without this each run warns about them.
+      matchDatasources: ["git-refs"],
+      minimumReleaseAge: null,
+    },
+    {
+      matchFileNames: ["charts/**"],
+      matchDepNames: ["ghcr.io/**"],
+      minimumReleaseAge: null,
     },
     {
       // Never unattended: Home Assistant and its stack, and the charts the
