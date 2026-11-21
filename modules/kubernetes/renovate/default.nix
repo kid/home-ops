@@ -64,7 +64,7 @@ in
           executionTimeout = 30;
           allowedCommands = [
             "^refresh-nix-hash [\\w./-]+ [\\w./-]+ [\\w.-]+$"
-            "^nix run \\.#rehash-chart -- [\\w./-]+$"
+            "^nix run \\.#rehash-changed-pins$"
             "^nix run \\.#write-manifests -- --skip-secrets$"
             "^nix run \\.#write-flake$"
             "^nix flake lock$"
