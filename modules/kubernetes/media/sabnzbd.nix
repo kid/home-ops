@@ -37,6 +37,8 @@ _: {
         443
         563
       ];
+      cpuRequest = "200m";
+      memoryRequest = "1280Mi";
       # Its 1G article cache, plus par2 repair and unpacking.
       memoryLimit = "3Gi";
       # SABnzbd's own network gate lets everything through: Kanidm is the

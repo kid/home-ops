@@ -30,5 +30,6 @@ _: {
       };
       # Room for its database and cover art.
       storage = "2Gi";
+      memoryRequest = "512Mi";
     };
 }

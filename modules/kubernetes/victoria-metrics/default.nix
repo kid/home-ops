@@ -413,8 +413,8 @@
                 // restoredFrom "vmsingle-victoria-metrics";
                 resources = {
                   requests = {
-                    cpu = "100m";
-                    memory = "1280Mi";
+                    cpu = "200m";
+                    memory = "1536Mi";
                   };
                   limits.memory = "2Gi";
                 };

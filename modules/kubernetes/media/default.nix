@@ -84,6 +84,8 @@ let
         80
         443
       ],
+      cpuRequest ? "50m",
+      memoryRequest ? "256Mi",
       memoryLimit ? "1Gi",
       # More paths the app rebuilds, kept out of the snapshots.
       backupIgnore ? [ ],
@@ -241,8 +243,8 @@ let
                     };
                     resources = {
                       requests = {
-                        cpu = "50m";
-                        memory = "256Mi";
+                        cpu = cpuRequest;
+                        memory = memoryRequest;
                       };
                       limits = {
                         memory = memoryLimit;

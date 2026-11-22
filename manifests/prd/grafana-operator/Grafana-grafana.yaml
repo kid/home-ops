@@ -50,7 +50,7 @@ spec:
                   memory: 768Mi
                 requests:
                   cpu: 50m
-                  memory: 384Mi
+                  memory: 640Mi
           securityContext:
             fsGroup: 10001
             fsGroupChangePolicy: OnRootMismatch

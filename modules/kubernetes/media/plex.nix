@@ -57,6 +57,8 @@ in
       };
       # Its databases plus ~15G of artwork and chapter images.
       storage = "40Gi";
+      cpuRequest = "1";
+      memoryRequest = "384Mi";
       memoryLimit = "4Gi";
       gpu = true;
       # Its clients log in through plex.tv and can't follow an OIDC
