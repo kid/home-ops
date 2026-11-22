@@ -12,6 +12,7 @@ spec:
   origin: https://metrics.kidibox.net
   redirectUrl:
     - https://metrics.kidibox.net/oauth2/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: admins
       scopes:

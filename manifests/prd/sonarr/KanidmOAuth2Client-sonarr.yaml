@@ -12,6 +12,7 @@ spec:
   origin: https://sonarr.kidibox.net
   redirectUrl:
     - https://sonarr.kidibox.net/oauth2/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: media
       scopes:

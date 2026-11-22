@@ -12,6 +12,7 @@ spec:
   origin: https://prowlarr.kidibox.net
   redirectUrl:
     - https://prowlarr.kidibox.net/oauth2/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: media
       scopes:

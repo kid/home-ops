@@ -12,6 +12,7 @@ spec:
   origin: https://radarr.kidibox.net
   redirectUrl:
     - https://radarr.kidibox.net/oauth2/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: media
       scopes:

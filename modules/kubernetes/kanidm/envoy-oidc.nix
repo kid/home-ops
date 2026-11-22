@@ -35,6 +35,12 @@ let
         redirectUrl = [ "${origin}/oauth2/callback" ];
         scopeMap = [ { inherit group scopes; } ];
         disableConsentPrompt = true;
+        # Kanidm's 16h default ends a login after a night without a request, and
+        # Envoy then redirects to Kanidm. 7 days matches idm_all_accounts'
+        # auth-expiry (kanidm/default.nix), which still ends every OAuth2 session
+        # with the browser session it came from, until Kanidm supports
+        # offline_access (https://github.com/kanidm/kanidm/issues/4034).
+        refreshTokenExpiry = 7 * 24 * 3600;
         # The key Envoy Gateway reads the client secret from.
         secretKeyAliases.clientSecret = [ "client-secret" ];
       };
@@ -62,6 +68,19 @@ let
           redirectURL = "${origin}/oauth2/callback";
           # Only clears Envoy's cookies: Kanidm has no end-session endpoint.
           logoutPath = "/oauth2/logout";
+          # Only a page navigation can follow the redirect to Kanidm. Every
+          # redirect sets two per-flow cookies that live 10 minutes, so a
+          # polling SPA with an expired session (renovate) piled them past
+          # Firefox's 180-cookie limit for kidibox.net, which then evicted
+          # Kanidm's session cookie and other apps' OIDC cookies. A fetch,
+          # subresource or websocket gets a 401 instead.
+          denyRedirect.headers = [
+            {
+              name = "Sec-Fetch-Mode";
+              type = "RegularExpression";
+              value = "cors|no-cors|same-origin|websocket";
+            }
+          ];
         };
       };
     };

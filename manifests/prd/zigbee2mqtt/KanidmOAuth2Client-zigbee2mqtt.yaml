@@ -12,6 +12,7 @@ spec:
   origin: https://zigbee2mqtt.kidibox.net
   redirectUrl:
     - https://zigbee2mqtt.kidibox.net/oauth2/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: admins
       scopes:
