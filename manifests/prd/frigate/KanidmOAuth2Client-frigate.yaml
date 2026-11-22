@@ -12,6 +12,7 @@ spec:
   origin: https://frigate.kidibox.net
   redirectUrl:
     - https://frigate.kidibox.net/oauth2/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: home
       scopes:
