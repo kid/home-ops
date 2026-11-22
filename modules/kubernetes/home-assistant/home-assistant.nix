@@ -268,7 +268,7 @@ in
                       requests = {
                         # Also its CPU share when the node is contended.
                         cpu = "500m";
-                        memory = "512Mi";
+                        memory = "1Gi";
                       };
                       limits.memory = "2Gi";
                     };

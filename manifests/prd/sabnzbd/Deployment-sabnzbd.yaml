@@ -51,8 +51,8 @@ spec:
             limits:
               memory: 3Gi
             requests:
-              cpu: 50m
-              memory: 256Mi
+              cpu: 200m
+              memory: 1280Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
