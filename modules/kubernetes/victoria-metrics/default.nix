@@ -425,7 +425,6 @@
               spec = {
                 logFormat = "json";
                 configReloaderExtraArgs.loggerFormat = "json";
-                extraArgs."external.url" = "https://${cluster.methods.mkAppHostname "vmalert"}";
                 resources = {
                   requests = {
                     cpu = "10m";

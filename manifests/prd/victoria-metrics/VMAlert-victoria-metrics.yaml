@@ -17,7 +17,7 @@ spec:
   externalLabels: {}
   extraArgs:
     external.alert.source: explore?left={"datasource":"VictoriaMetrics","queries":[{"expr":{{ .Expr|jsonEscape|queryEscape }},"refId":"A"}],"range":{"from":"{{ .ActiveAt.UnixMilli }}","to":"now"}}
-    external.url: https://vmalert.kidibox.net
+    external.url: https://grafana.kidibox.net
     http.pathPrefix: /
     remoteWrite.disablePathAppend: "true"
   image:
