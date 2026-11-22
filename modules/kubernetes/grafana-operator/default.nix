@@ -118,7 +118,7 @@ _: {
               resources = {
                 requests = {
                   cpu = "50m";
-                  memory = "384Mi";
+                  memory = "640Mi";
                 };
                 limits.memory = "768Mi";
               };

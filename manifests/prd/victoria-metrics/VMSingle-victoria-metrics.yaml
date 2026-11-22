@@ -19,8 +19,8 @@ spec:
     limits:
       memory: 2Gi
     requests:
-      cpu: 100m
-      memory: 1280Mi
+      cpu: 200m
+      memory: 1536Mi
   retentionPeriod: 30d
   storage:
     accessModes:

@@ -61,7 +61,7 @@ spec:
               memory: 4Gi
             requests:
               cpu: 500m
-              memory: 1Gi
+              memory: 2Gi
           securityContext:
             capabilities:
               add:
