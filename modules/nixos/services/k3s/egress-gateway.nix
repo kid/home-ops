@@ -12,10 +12,10 @@ let
   clusters = config.den.clusters or { };
 in
 {
-  den.aspects.k3s-egress-gateway.nixos =
+  den.aspects.k3s.egress-gateway.nixos =
     { host, lib, ... }:
     let
-      clusterName = host.k3s.clusterName or "prd";
+      inherit (host.settings.k3s) clusterName;
       cluster = clusters.${clusterName};
     in
     {
@@ -35,5 +35,5 @@ in
         |> map (address: "${address}/32");
     };
 
-  den.aspects.k3s-cilium.includes = [ den.aspects.k3s-egress-gateway ];
+  den.aspects.k3s.cilium.includes = [ den.aspects.k3s.egress-gateway ];
 }

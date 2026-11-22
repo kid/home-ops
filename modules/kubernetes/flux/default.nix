@@ -7,15 +7,19 @@
 # applies this app once on a new cluster; from then on Flux manages it too.
 #
 # The operator also serves the Flux web UI, which logs in through Kanidm and
-# acts as the user's own name and groups. Its config, with the client secret
-# Flux substitutes in at apply time, lives in the flux-web app's Secret.
-_: {
+# acts as the user's own name in a single read-only group: no actions, and
+# none of the user's own RBAC. Its config, with the client secret Flux
+# substitutes in at apply time, lives in the flux-web app's Secret. A cluster
+# without Kanidm runs no web UI.
+{ den, ... }:
+{
   den.aspects.kubernetes.flux.k8s-manifests =
     {
       charts,
       generators,
       cluster,
       config,
+      lib,
       ...
     }:
     let
@@ -24,7 +28,15 @@ _: {
       origin = "https://${hostname}";
       clientId = "flux-web";
       configSecret = "flux-web-config";
+      # The only group the UI acts as, bound to the operator's read-only flux-web-user role.
+      readOnlyGroup = "flux-web-readonly";
       inherit (cluster.methods) kanidm kubeLogin;
+      webUi = cluster.includesAspect den.aspects.kubernetes.kanidm;
+      # The operator owns its namespace (kustomize.toolkit.fluxcd.io/ssa:
+      # Ignore), so the apps sync skips the Namespace nixidy-defaults.nix
+      # renders: its Pod Security labels reach it through a patch below.
+      podSecurityLabels =
+        config.applications.${config.nixidy.appOfApps.name}.resources.namespaces.flux-system.metadata.labels;
     in
     {
       nixidy.applicationImports = [
@@ -83,12 +95,23 @@ _: {
         helm.releases.flux-operator = {
           chart = charts.controlplaneio-fluxcd.flux-operator;
           values = {
+            # One replica, no leader election (lease renewals were most of
+            # etcd's writes). Recreate keeps an update from running two at once.
+            extraArgs = [ "--enable-leader-election=false" ];
+            strategy.type = "Recreate";
             web = {
               # The CiliumNetworkPolicy above replaces it.
               networkPolicy.create = false;
-              # Watched, so the operator picks it up once the flux-web app creates it.
-              configSecretName = configSecret;
-            };
+            }
+            // (
+              if webUi then
+                {
+                  # Watched, so the operator picks it up once the flux-web app creates it.
+                  configSecretName = configSecret;
+                }
+              else
+                { enabled = false; }
+            );
             resources = {
               requests = {
                 cpu = "10m";
@@ -117,6 +140,42 @@ _: {
             # Upstream's NetworkPolicies would widen the CiliumNetworkPolicies above.
             networkPolicy = false;
           };
+          # The same for the controllers. The flag comes after the manifests'
+          # own --enable-leader-election; source-controller is already Recreate.
+          kustomize.patches = [
+            {
+              target = {
+                kind = "Deployment";
+                name = "(source-controller|kustomize-controller|notification-controller)";
+              };
+              patch = builtins.toJSON [
+                {
+                  op = "add";
+                  path = "/spec/template/spec/containers/0/args/-";
+                  value = "--enable-leader-election=false";
+                }
+                {
+                  op = "replace";
+                  path = "/spec/strategy";
+                  value.type = "Recreate";
+                }
+              ];
+            }
+            {
+              target = {
+                kind = "Namespace";
+                name = "flux-system";
+              };
+              patch = builtins.toJSON {
+                apiVersion = "v1";
+                kind = "Namespace";
+                metadata = {
+                  name = "flux-system";
+                  labels = podSecurityLabels;
+                };
+              };
+            }
+          ];
           sync = with config.nixidy.target; {
             kind = "GitRepository";
             url = repository;
@@ -127,7 +186,7 @@ _: {
       };
 
       # The UI's Kanidm client, separate so flux-web can wait for its credentials Secret.
-      applications.flux-web-client = {
+      applications.flux-web-client = lib.mkIf webUi {
         namespace = "flux-system";
         flux.dependsOn = [ "kaniop" ];
 
@@ -137,9 +196,9 @@ _: {
           inherit origin;
           redirectUrl = [ "${origin}/oauth2/callback" ];
           preferShortUsername = true;
-          # The group kubectl's OIDC login is bound to cluster-admin through
-          # (apiserver/default.nix). The UI impersonates it, so it is the
-          # UI's RBAC as well.
+          # Only the group kubectl's OIDC login is bound to cluster-admin
+          # through (apiserver/default.nix) may log in. The UI doesn't act as
+          # it: see readOnlyGroup.
           scopeMap = [
             {
               inherit (kubeLogin) group;
@@ -147,7 +206,6 @@ _: {
                 "openid"
                 "profile"
                 "email"
-                "groups_name"
               ];
             }
           ];
@@ -155,7 +213,7 @@ _: {
       };
 
       # Separate from flux-operator so the operator never waits on Kanidm.
-      applications.flux-web = {
+      applications.flux-web = lib.mkIf webUi {
         namespace = "flux-system";
         flux.dependsOn = [ "flux-web-client" ];
         # kaniop's credentials Secret for the client above.
@@ -173,23 +231,37 @@ _: {
                 clientID = clientId;
                 clientSecret = "\${CLIENT_SECRET}";
                 issuerURL = kanidm.issuer clientId;
-                # groups_name puts plain group names in the groups claim.
                 scopes = [
                   "openid"
                   "profile"
                   "email"
-                  "groups_name"
                 ];
                 autoLogin = true;
                 impersonation = {
                   username = "claims.preferred_username";
-                  groups = "claims.groups";
+                  groups = "['${readOnlyGroup}']";
                 };
               };
             };
             # No metrics-server here: collection only logs errors.
             metrics.disabled = true;
           };
+        };
+
+        # Read-only on everything: the UI's action buttons are refused.
+        resources.clusterRoleBindings.${readOnlyGroup} = {
+          roleRef = {
+            apiGroup = "rbac.authorization.k8s.io";
+            kind = "ClusterRole";
+            name = "flux-web-user";
+          };
+          subjects = [
+            {
+              apiGroup = "rbac.authorization.k8s.io";
+              kind = "Group";
+              name = readOnlyGroup;
+            }
+          ];
         };
 
         resources.httpRoutes.flux-web.spec = {
@@ -225,6 +297,11 @@ _: {
             }
           ];
         };
+      };
+
+      # Public through the tunnel: the UI and its MCP server keep their own Kanidm logins.
+      applications.envoy-gateway = lib.mkIf webUi {
+        resources.httpRoutes.flux-web-public = cluster.methods.mkGatewayTunnelRoute hostname;
       };
     };
 }

@@ -7,6 +7,7 @@
   inputs,
   lib,
   config,
+  den,
   ...
 }:
 let
@@ -18,13 +19,12 @@ let
     name:
     let
       host = allHosts.${name};
-      k3s = host.k3s or { };
     in
     [ "env-${host.environment}" ]
-    ++ lib.optionals (k3s ? clusterName) [
+    ++ lib.optionals (host.hasAspect den.aspects.k3s.node-base) [
       "k3s"
-      "k3s-${k3s.clusterName}"
-      (if k3s ? serverHost then "k3s-agent" else "k3s-server")
+      "k3s-${host.settings.k3s.clusterName}"
+      (if host.hasAspect den.aspects.k3s.agent then "k3s-agent" else "k3s-server")
     ];
 in
 {

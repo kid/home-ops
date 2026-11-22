@@ -1,4 +1,7 @@
-# k3s server aspect. Which server starts embedded etcd (clusterInit):
+# k3s server aspect. den.clusters.<name>.k3s.datastore = "sqlite": the
+# cluster's only server runs on k3s's default SQLite datastore (no
+# clusterInit, no etcd flags), and a second server is an evaluation error.
+# Otherwise, which server starts embedded etcd (clusterInit):
 #
 # - den.clusters.<name>.k3s.initServer set: that server, and every other one
 #   joins it. All servers can be declared and started together, so the
@@ -11,12 +14,14 @@
 #
 # A server that already has a datastore ignores both settings. CIDRs come
 # from the host's own cluster
-# (config.den.clusters.<name>, cross-referenced via the freeform
-# host.k3s.clusterName field), matching the cluster entity as the single
+# (config.den.clusters.<name>, named by its `settings.k3s.clusterName`,
+# see settings.nix), matching the cluster entity as the single
 # source of truth pattern already used throughout this repo's
-# network/device fleet.
+# network/device fleet. A cluster that includes den.aspects.kubernetes.apiserver
+# gets its API server's Kanidm login (kubectl through kubelogin), from its
+# methods.kubeLogin.
 #
-# Emits the `k3s-nodes` quirk ({hostname; address;}), collected onto
+# Emits the `k3s-nodes` quirk ({hostname; address; role; cluster;}), collected onto
 # rb5009 by modules/den/policies/pipes.nix's
 # routeros-device-collect-k3s-nodes (consumed by modules/routeros/
 # ros-bgp.nix, to build its per-node BGP connections) — `address` is this
@@ -33,9 +38,9 @@ let
 
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
-  # A cluster's servers: its member hosts that are not agents
-  # (k3s.serverHost) and have a real address. test-vm has none, so it is no
-  # one's peer and stays a standalone server.
+  # A cluster's servers: its k3s nodes that are not agents and have a real
+  # address. test-vm has none, so it is no one's peer and stays a
+  # standalone server.
   serversOf =
     clusterName:
     allHosts
@@ -43,16 +48,20 @@ let
     |> lib.sort lib.lessThan
     |> lib.filter (
       name:
-      (allHosts.${name}.k3s.clusterName or null) == clusterName
-      && !(allHosts.${name}.k3s ? serverHost)
+      let
+        host = allHosts.${name};
+      in
+      host.hasAspect den.aspects.k3s.node-base
+      && !(host.hasAspect den.aspects.k3s.agent)
+      && host.settings.k3s.clusterName == clusterName
       && config.den.devices ? ${name}
     );
 in
 {
-  den.aspects.k3s-server = {
+  den.aspects.k3s.server = {
     includes = [
-      den.aspects.k3s-containerd
-      den.aspects.k3s-node-base
+      den.aspects.k3s.containerd
+      den.aspects.k3s.node-base
     ];
 
     k3s-nodes =
@@ -65,6 +74,7 @@ in
         # out rather than feeding a bogus peer IP to RouterOS.
         address = (config.den.devices.${host.name} or { }).address or null;
         role = "server";
+        cluster = host.settings.k3s.clusterName;
       };
 
     persist.directories = [
@@ -80,16 +90,21 @@ in
         ...
       }:
       let
-        clusterName = host.k3s.clusterName or "prd";
+        inherit (host.settings.k3s) clusterName;
         cluster = clusters.${clusterName};
         podCIDR = cluster.networks.pods.cidr;
         serviceCIDR = cluster.networks.services.cidr;
         nodeIp = (config.den.devices.${host.name} or { }).address or null;
+        login =
+          if cluster.includesAspect den.aspects.kubernetes.apiserver then cluster.methods.kubeLogin else null;
+        etcd = cluster.k3s.datastore == "etcd";
+        # The apps Gateway's pinned LoadBalancer IP, which serves Kanidm.
+        appsGatewayIp = cluster.networks.loadBalancer.assignments.apps-gateway or null;
 
         servers = serversOf clusterName;
         peers = lib.optionals (lib.elem host.name servers) (lib.remove host.name servers);
         initServer = if lib.elem cluster.k3s.initServer peers then cluster.k3s.initServer else null;
-        shouldInit = peers == [ ] || cluster.k3s.initServer == host.name;
+        shouldInit = etcd && (peers == [ ] || cluster.k3s.initServer == host.name);
         joinServer = if initServer != null then initServer else lib.head peers;
       in
       {
@@ -98,15 +113,31 @@ in
             assertion = cluster.k3s.initServer == null || lib.elem cluster.k3s.initServer servers;
             message = "den.clusters.${clusterName}.k3s.initServer (${toString cluster.k3s.initServer}) is not one of the cluster's servers: ${lib.concatStringsSep ", " servers}";
           }
+          {
+            # A host with no den.devices entry (test-vm) is standalone, not
+            # one of the cluster's servers.
+            assertion = etcd || (lib.length servers <= 1 && cluster.k3s.initServer == null);
+            message = "den.clusters.${clusterName}.k3s.datastore is sqlite, which allows one server and no initServer; servers: ${lib.concatStringsSep ", " servers}";
+          }
         ];
+
+        # The API server fetches its OIDC issuer's discovery document from Kanidm at startup: a
+        # rebuilt cluster's DNS record for it can be missing or stale until external-dns runs.
+        networking.hosts =
+          lib.mkIf (cluster.includesAspect den.aspects.kubernetes.kanidm && appsGatewayIp != null)
+            {
+              ${appsGatewayIp} = [ cluster.methods.kanidm.domain ];
+            };
 
         services.k3s = {
           enable = true;
           role = "server";
           clusterInit = shouldInit;
-          serverAddr = lib.mkIf (!shouldInit) "https://${config.den.devices.${joinServer}.address}:6443";
+          serverAddr =
+            lib.mkIf (etcd && !shouldInit)
+              "https://${config.den.devices.${joinServer}.address}:6443";
           # CNI-agnostic disables only — CNI-dependent flags live in the
-          # sibling den.aspects.k3s-cilium aspect instead. A plain list, not
+          # sibling den.aspects.k3s.cilium aspect instead. A plain list, not
           # a concatStringsSep string: extraFlags accepts `listOf str`, and
           # multiple aspects setting it concatenate automatically.
           extraFlags = [
@@ -124,11 +155,34 @@ in
             # back, losing per-container metrics. The kubelet normalizes
             # the bare path for CRI itself.
             "--container-runtime-endpoint=/run/containerd/containerd.sock"
-            "--etcd-expose-metrics"
+          ]
+          ++ lib.optional etcd "--etcd-expose-metrics"
+          ++ [
             "--kube-scheduler-arg=bind-address=0.0.0.0"
             "--kube-controller-manager-arg=bind-address=0.0.0.0"
           ]
-          ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}";
+          ++ lib.optional (nodeIp != null) "--node-ip=${nodeIp}"
+          # A cluster's only server runs the only copy of each: their lease
+          # renewals (every 2s each) were most of etcd's writes. A second
+          # declared server turns leader election back on.
+          ++ lib.optionals (servers == [ host.name ]) [
+            "--kube-controller-manager-arg=leader-elect=false"
+            "--kube-scheduler-arg=leader-elect=false"
+            "--kube-cloud-controller-manager-arg=leader-elect=false"
+          ]
+          ++ lib.optionals (login != null) [
+            # Adds the load balancer name from kubernetes/apiserver/default.nix to the serving certificate.
+            "--tls-san=${login.server}"
+            "--kube-apiserver-arg=oidc-issuer-url=${login.issuerUrl}"
+            "--kube-apiserver-arg=oidc-client-id=${login.clientId}"
+            "--kube-apiserver-arg=oidc-groups-claim=groups"
+            # Without these the username is "<issuer>#<sub>", an opaque UUID. The prefix keeps OIDC
+            # names apart from built-in ones (system:*); RBAC binds the group, not the user.
+            "--kube-apiserver-arg=oidc-username-claim=preferred_username"
+            "--kube-apiserver-arg=oidc-username-prefix=oidc:"
+            # Kanidm signs ID tokens with ES256; kube-apiserver only accepts RS256 by default.
+            "--kube-apiserver-arg=oidc-signing-algs=ES256"
+          ];
         };
       };
   };

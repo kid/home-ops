@@ -20,14 +20,19 @@ spec:
       scopes: openid profile email groups_name
       token_url: https://idm.kidibox.net/oauth2/token
       use_pkce: "true"
+    log.console:
+      format: json
     plugins:
       allow_loading_unsigned_plugins: victoriametrics-metrics-datasource,victoriametrics-logs-datasource
+      preinstall_auto_update: "false"
     security:
       disable_gravatar: "true"
     server:
       root_url: https://grafana.kidibox.net
   deployment:
     spec:
+      strategy:
+        type: Recreate
       template:
         spec:
           containers:
@@ -46,6 +51,13 @@ spec:
                 requests:
                   cpu: 50m
                   memory: 384Mi
+          securityContext:
+            fsGroup: 10001
+            fsGroupChangePolicy: OnRootMismatch
+          volumes:
+            - name: grafana-data
+              persistentVolumeClaim:
+                claimName: grafana
   httpRoute:
     spec:
       hostnames:

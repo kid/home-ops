@@ -31,7 +31,7 @@
       "type": "http",
       "url": "https://ha.kidibox.net/api/mcp",
       "headers": {
-        "Authorization": "!t=$(op read 'op://home-ops/Home Assistant - mcp/token') && [ -n \"$t\" ] && printf 'Bearer %s' \"$t\""
+        "Authorization": "!t=$(secretspec get --profile mcp --reason 'Home Assistant MCP server' HOME_ASSISTANT_MCP_TOKEN) && [ -n \"$t\" ] && printf 'Bearer %s' \"$t\""
       }
     }
   }

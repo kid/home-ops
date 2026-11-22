@@ -1,9 +1,9 @@
 # k3s bootstrap: oneshot systemd services applying manifests baked into the image via `self`.
-# Wave order: namespaces, CRDs, cilium, coredns, cert-manager, flux.
+# Wave order: namespaces, CRDs, cilium, coredns, cert-manager (also after cluster-ca.nix's seed), flux.
 # Cilium's operator registers its own CRDs at runtime — not shipped in the chart.
 { self, den, ... }:
 {
-  den.aspects.k3s-bootstrap = {
+  den.aspects.k3s.bootstrap = {
     nixos =
       {
         host,
@@ -11,7 +11,7 @@
         ...
       }:
       let
-        clusterName = host.k3s.clusterName or "prd";
+        inherit (host.settings.k3s) clusterName;
         manifestPath =
           name:
           builtins.path {
@@ -28,7 +28,7 @@
           path = self + "/manifests/${clusterName}";
           name = "k3s-${clusterName}-all";
         };
-        hasCilium = host.hasAspect den.aspects.k3s-cilium;
+        hasCilium = host.hasAspect den.aspects.k3s.cilium;
         waitForApi = ''
           echo "Waiting for k3s API server..."
           until kubectl get nodes >/dev/null 2>&1; do
@@ -163,7 +163,7 @@
               ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" (
                 if !hasCilium then
                   ''
-                    echo "This host has no den.aspects.k3s-cilium — Cilium isn't its CNI, skipping bootstrap."
+                    echo "This host has no den.aspects.k3s.cilium — Cilium isn't its CNI, skipping bootstrap."
                   ''
                 else
                   ''
@@ -253,13 +253,17 @@
 
           k3s-bootstrap-cert-manager = {
             description = "Bootstrap cert-manager and the cluster CA";
+            # The seed (cluster-ca.nix) makes the cluster-ca Secret that the
+            # cluster-ca ClusterIssuer below signs Hubble's certificates with.
             after = [
               "k3s.service"
               "k3s-bootstrap-coredns.service"
+              "k3s-cluster-ca-seed.service"
             ];
             requires = [
               "k3s.service"
               "k3s-bootstrap-coredns.service"
+              "k3s-cluster-ca-seed.service"
             ];
             path = [
               pkgs.kubectl
@@ -287,16 +291,16 @@
                 kubectl rollout status -n cert-manager deployment/cert-manager-webhook --timeout=120s
                 kubectl rollout status -n cert-manager deployment/cert-manager-cainjector --timeout=120s
 
-                echo "Applying cluster CA issuer chain..."
+                echo "Applying the cluster issuers..."
                 declare -a issuer_files
                 while IFS= read -r f; do issuer_files+=("-f" "$f"); done < <(
-                  find ${certManagerConfigDir} -name "ClusterIssuer-*.yaml" -o -name "Certificate-*.yaml" | sort
+                  find ${certManagerConfigDir} -name "ClusterIssuer-*.yaml" | sort
                 )
                 [[ ''${#issuer_files[@]} -gt 0 ]] && \
                   kubectl apply --server-side --force-conflicts --field-manager=kustomize-controller "''${issuer_files[@]}"
 
-                echo "Waiting for the cluster CA to be signed..."
-                kubectl wait --for=condition=Ready certificate/cluster-ca -n cert-manager --timeout=60s
+                echo "Waiting for the cluster CA issuer..."
+                kubectl wait --for=condition=Ready clusterissuer/cluster-ca --timeout=60s
 
                 echo "cert-manager bootstrap complete."
               '';

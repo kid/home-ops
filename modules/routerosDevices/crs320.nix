@@ -85,11 +85,8 @@ in
             };
             "sfp-sfpplus3" = {
               comment = "node1";
-              untagged = networks.Servers.vlanId;
-              tagged = lib.sort (a: b: a < b) [
-                networks.Storage.vlanId
-                networks.K3s.vlanId
-              ];
+              untagged = networks.K3sDev.vlanId;
+              tagged = [ networks.Storage.vlanId ];
             };
             "sfp-sfpplus4" = {
               comment = "spare";
@@ -131,7 +128,7 @@ in
               untagged = networks.Management.vlanId;
             };
             ether16 = {
-              comment = "node0-kvm";
+              comment = "k3s-prd-0-kvm";
               untagged = networks.Management.vlanId;
             };
             ether17 = {

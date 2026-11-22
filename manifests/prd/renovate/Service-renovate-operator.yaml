@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: renovate-operator
+  name: renovate-operator
+  namespace: renovate
+spec:
+  ports:
+    - name: http
+      port: 8081
+      protocol: TCP
+      targetPort: http
+    - name: webhook
+      port: 8082
+      protocol: TCP
+      targetPort: webhook
+    - name: metrics
+      port: 8080
+      protocol: TCP
+      targetPort: metrics
+  selector:
+    app: renovate-operator

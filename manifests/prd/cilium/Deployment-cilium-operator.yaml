@@ -15,14 +15,11 @@ spec:
       io.cilium/app: operator
       name: cilium-operator
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 100%
-    type: RollingUpdate
+    type: Recreate
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: b524d8f7531f564567ccbbd7d4ba9ea7b2a9c70dc3baf1f1be8c55ccb4be330d
+        cilium.io/cilium-configmap-checksum: 37175883008d605e2ee8832fddef9c1a4dc674a696665ff81acdb3b09c76325c
       labels:
         app.kubernetes.io/name: cilium-operator
         app.kubernetes.io/part-of: cilium
@@ -41,6 +38,9 @@ spec:
         - args:
             - --config-dir=/tmp/cilium/config-map
             - --debug=$(CILIUM_DEBUG)
+            - --leader-election-lease-duration=180s
+            - --leader-election-renew-deadline=120s
+            - --leader-election-retry-period=60s
           command:
             - cilium-operator-generic
           env:
@@ -64,7 +64,7 @@ spec:
               value: 127.0.0.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/operator-generic:v1.20.4@sha256:7a7a3489dc66ad67e420d285c8a8d2e169b0957ad15e120f593d27081bf38d82
+          image: quay.io/cilium/operator-generic:v1.20.5@sha256:c6e7de6665aa9701db86c4fe46828a75a0d167afe084a9ffb5bce34b2c4fa8c4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -124,6 +124,8 @@ spec:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
         - key: node-role.kubernetes.io/master
+          operator: Exists
+        - key: node-role.kubernetes.io/etcd
           operator: Exists
         - key: node.kubernetes.io/not-ready
           operator: Exists

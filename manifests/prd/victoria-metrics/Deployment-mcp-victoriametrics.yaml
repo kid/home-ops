@@ -20,6 +20,8 @@ spec:
               value: export,flags,metric_relabel_debug,downsampling_filters_debug,retention_filters_debug,test_rules,documentation
             - name: MCP_LISTEN_ADDR
               value: :8080
+            - name: MCP_LOG_FORMAT
+              value: json
             - name: MCP_SERVER_MODE
               value: http
             - name: VM_INSTANCE_ENTRYPOINT

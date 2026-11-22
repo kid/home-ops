@@ -11,6 +11,8 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: flux-operator
       app.kubernetes.io/name: flux-operator
+  strategy:
+    type: Recreate
   template:
     metadata:
       annotations:
@@ -34,6 +36,7 @@ spec:
         - args:
             - --log-level=info
             - --web-config-secret-name=flux-web-config
+            - --enable-leader-election=false
           env:
             - name: RUNTIME_NAMESPACE
               valueFrom:
@@ -43,7 +46,7 @@ spec:
               value: 5m
             - name: WEB_SERVER_PORT
               value: "9080"
-          image: ghcr.io/controlplaneio-fluxcd/flux-operator:v0.62.1
+          image: ghcr.io/controlplaneio-fluxcd/flux-operator:v0.63.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:

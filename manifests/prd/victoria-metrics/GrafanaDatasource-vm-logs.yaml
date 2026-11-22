@@ -1,0 +1,29 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: vm-logs
+  namespace: monitoring
+spec:
+  datasource:
+    access: proxy
+    jsonData:
+      derivedFields:
+        - matcherRegex: k8s.pod.name
+          matcherType: label
+          name: Pod metrics
+          url: /explore?schemaVersion=1&orgId=1&panes=%7B%22pod%22%3A%7B%22datasource%22%3A%22VictoriaMetrics%22%2C%22queries%22%3A%5B%7B%22datasource%22%3A%7B%22type%22%3A%22prometheus%22%2C%22uid%22%3A%22VictoriaMetrics%22%7D%2C%22expr%22%3A%22sum%20by%20%28container%29%20%28rate%28container_cpu_usage_seconds_total%7Bpod%3D%5C%22${__value.raw}%5C%22%2Ccontainer%21%3D%5C%22%5C%22%7D%5B5m%5D%29%29%22%2C%22refId%22%3A%22cpu%22%7D%2C%7B%22datasource%22%3A%7B%22type%22%3A%22prometheus%22%2C%22uid%22%3A%22VictoriaMetrics%22%7D%2C%22expr%22%3A%22sum%20by%20%28container%29%20%28container_memory_working_set_bytes%7Bpod%3D%5C%22${__value.raw}%5C%22%2Ccontainer%21%3D%5C%22%5C%22%7D%29%22%2C%22refId%22%3A%22memory%22%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D
+          urlDisplayLabel: Pod CPU and memory
+      otelPreset:
+        detection:
+          severity:
+            field: severity_text
+            source: manual
+            valueCase: string
+        enabled: true
+    name: VictoriaLogs
+    type: victoriametrics-logs-datasource
+    url: http://vlsingle-victoria-metrics.monitoring.svc:9428
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  uid: vm-logs

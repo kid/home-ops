@@ -28,14 +28,14 @@ spec:
             - name: RUST_LOG
               value: info
             - name: KOPIUR_LOG_FORMAT
-              value: text
+              value: json
             - name: KOPIUR_WEBHOOK_ADDR
               value: '[::]:8443'
             - name: KOPIUR_WEBHOOK_TLS_CERT
               value: /tls/tls.crt
             - name: KOPIUR_WEBHOOK_TLS_KEY
               value: /tls/tls.key
-          image: ghcr.io/home-operations/kopiur-webhook@sha256:918ba0f365e73878e914f99fd58dd9473b6cf7998abc8ebb848cd7793fe87401
+          image: ghcr.io/home-operations/kopiur-webhook@sha256:418c869d13c305d65f88bc890edea94947b27aeb348e652ad648357c4623ea41
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:

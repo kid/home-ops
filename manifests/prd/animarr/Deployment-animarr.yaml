@@ -4,6 +4,7 @@ metadata:
   name: animarr
   namespace: media
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: animarr
@@ -26,6 +27,8 @@ spec:
               value: External
             - name: SONARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: SONARR__LOG__CONSOLEFORMAT
+              value: Clef
             - name: SONARR__LOG__DBENABLED
               value: "false"
             - name: SONARR__LOG__LEVEL
@@ -97,13 +100,11 @@ spec:
           persistentVolumeClaim:
             claimName: animarr
         - name: downloads
-          nfs:
-            path: /tank/downloads/sabnzbd
-            server: 10.0.20.10
+          persistentVolumeClaim:
+            claimName: animarr-downloads
         - name: library
-          nfs:
-            path: /tank/library/animes
-            server: 10.0.20.10
+          persistentVolumeClaim:
+            claimName: animarr-library
         - emptyDir: {}
           name: logs
         - emptyDir: {}

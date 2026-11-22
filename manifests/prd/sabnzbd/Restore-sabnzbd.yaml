@@ -6,11 +6,21 @@ metadata:
 spec:
   credentialProjection:
     enabled: true
+  mover:
+    privilegedMode: true
+    securityContext:
+      runAsGroup: 0
+      runAsNonRoot: false
+      runAsUser: 0
   policy:
     onMissingSnapshot: Continue
+  repository:
+    kind: ClusterRepository
+    name: local
   source:
-    fromPolicy:
-      name: sabnzbd
-      offset: 0
+    identity:
+      hostname: sabnzbd-full
+      sourcePath: /pvc/sabnzbd
+      username: sabnzbd-full
   target:
     populator: {}

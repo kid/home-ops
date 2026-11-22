@@ -1,0 +1,26 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Restore
+metadata:
+  name: frigate
+  namespace: home-assistant
+spec:
+  credentialProjection:
+    enabled: true
+  mover:
+    privilegedMode: true
+    securityContext:
+      runAsGroup: 0
+      runAsNonRoot: false
+      runAsUser: 0
+  policy:
+    onMissingSnapshot: Continue
+  repository:
+    kind: ClusterRepository
+    name: local
+  source:
+    identity:
+      hostname: frigate-full
+      sourcePath: /pvc/frigate
+      username: frigate-full
+  target:
+    populator: {}

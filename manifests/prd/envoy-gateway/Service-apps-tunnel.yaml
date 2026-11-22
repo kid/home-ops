@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apps-tunnel
+  namespace: envoy-gateway-system
+spec:
+  ports:
+    - appProtocol: kubernetes.io/wss
+      name: https
+      port: 443
+      protocol: TCP
+      targetPort: 10443
+  selector:
+    app.kubernetes.io/name: envoy
+    gateway.envoyproxy.io/owning-gateway-name: apps
+    gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system

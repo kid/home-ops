@@ -1,0 +1,87 @@
+apiVersion: actions.github.com/v1alpha1
+kind: AutoscalingRunnerSet
+metadata:
+  annotations:
+    actions.github.com/cleanup-manager-role-binding: nixfiles-gha-rs-manager
+    actions.github.com/cleanup-manager-role-name: nixfiles-gha-rs-manager
+    actions.github.com/cleanup-no-permission-service-account-name: nixfiles-gha-rs-no-permission
+    actions.github.com/values-hash: 9ceac3ae4bece3c502d2bd54c449d675fc0632212d8e45e13c478bdc8aafbab
+  labels:
+    actions.github.com/scale-set-name: nixfiles
+    actions.github.com/scale-set-namespace: arc-runners
+    app.kubernetes.io/component: autoscaling-runner-set
+    app.kubernetes.io/instance: nixfiles
+    app.kubernetes.io/name: nixfiles
+    app.kubernetes.io/part-of: gha-rs
+    app.kubernetes.io/version: 0.15.1
+  name: nixfiles
+  namespace: arc-runners
+spec:
+  githubConfigSecret: arc-github-app
+  githubConfigUrl: https://github.com/kid/nixfiles
+  listenerConfig:
+    scaler:
+      burst: 100
+      qps: 50
+  listenerTemplate:
+    spec:
+      containers:
+        - name: listener
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 60
+  maxRunners: 1
+  minRunners: 0
+  runnerScaleSetName: nixfiles
+  template:
+    spec:
+      containers:
+        - command:
+            - /home/runner/run.sh
+          env:
+            - name: PATH
+              value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/nix/var/nix/profiles/system/sw/bin
+            - name: NIX_REMOTE
+              value: daemon
+            - name: NIX_CONFIG
+              value: experimental-features = nix-command flakes pipe-operators
+          image: ghcr.io/actions/actions-runner:2.338.2@sha256:6d0b2d80d80f143f77dcb676e50920100bbb547e39e883454d57f45ab8c31300
+          name: runner
+          resources:
+            limits:
+              memory: 8Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /nix/store
+              name: nix-store
+              readOnly: true
+            - mountPath: /nix/var/nix/daemon-socket
+              name: nix-daemon-socket
+            - mountPath: /nix/var/nix/profiles
+              name: nix-profiles
+              readOnly: true
+      restartPolicy: Never
+      serviceAccountName: nixfiles-gha-rs-no-permission
+      volumes:
+        - hostPath:
+            path: /nix/store
+            type: Directory
+          name: nix-store
+        - hostPath:
+            path: /nix/var/nix/daemon-socket
+            type: Directory
+          name: nix-daemon-socket
+        - hostPath:
+            path: /nix/var/nix/profiles
+            type: Directory
+          name: nix-profiles

@@ -1,0 +1,12 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: sonarr-full
+  namespace: media
+spec:
+  policyRef:
+    name: sonarr-full
+  schedule:
+    cron: H 1 * * *
+    jitter: 30m
+    runOnCreate: false

@@ -14,7 +14,6 @@
 {
   den,
   config,
-  lib,
   ...
 }:
 let
@@ -31,106 +30,6 @@ let
   # modules/kubernetes/cilium/bgp.nix) and the firewall forward-rule
   # below, so the two can't drift apart.
   lbCidr = "10.0.42.0/24";
-
-  macOf =
-    host: network:
-    (lib.findFirst (i: i.network == network) null config.den.devices.${host}.interfaces).mac;
-
-  # Provisions the Incus VLANs + k3s VMs node0 and node1 run this cluster on.
-  # Not owned by any single Kubernetes app, so it lives here rather than under
-  # modules/kubernetes/ — a small local aspect object appended to includes
-  # below, the same shape as nixidy-defaults.nix's nixidyDefaultsAspect.
-  # VLANs, MACs and addresses come from den.networks/den.devices; the
-  # physical NIC names and the VM sizing have no Nix source and stay literal.
-  # node0's bridges are its own (den.devices vmBridges, no parent here): its
-  # single NIC can't have a second VLAN 20 next to its Storage address.
-  incusTerragruntAspect = {
-    name = "prd/incus";
-    "terragrunt-stacks" = { cluster, ... }: {
-      stack = "incus";
-      localModule = "incus-k3s";
-      generate = {
-        label = "incus_provider";
-        path = "incus_provider.tf";
-        ifExists = "overwrite_terragrunt";
-        contents = ''
-          provider "incus" {
-            default_remote = "node1"
-
-            remote {
-              name    = "node0"
-              address = "https://${config.den.devices.node0.address}:8443"
-            }
-
-            remote {
-              name    = "node1"
-              address = "https://${config.den.devices.node1.address}:8443"
-            }
-
-            remote {
-              name     = "images"
-              address  = "https://images.linuxcontainers.org"
-              protocol = "simplestreams"
-            }
-          }
-        '';
-      };
-      inputs = {
-        remotes = {
-          node0 = { };
-          node1.parent = "enp36s0f1";
-        };
-        networks.k3s = {
-          name = "k3s-${cluster.name}";
-          vlan_id = config.den.networks.K3s.vlanId;
-        };
-        networks.storage = {
-          name = "storage-${cluster.name}";
-          vlan_id = config.den.networks.Storage.vlanId;
-          inherit (config.den.networks.Storage) mtu;
-        };
-        nodes = {
-          # 40G root LV (den.aspects.incus-vm), the rest for miroir.
-          "k3s-${cluster.name}-0" = {
-            remote = "node1";
-            nixos_attr = "k3s-${cluster.name}-0";
-            cpu = 8;
-            memory = "8GiB";
-            disk_size = "128GiB";
-            mac = macOf "k3s-${cluster.name}-0" "K3s";
-            inherit (config.den.devices."k3s-${cluster.name}-0") address;
-            extra_nics.storage.mac = macOf "k3s-${cluster.name}-0" "Storage";
-          };
-          "k3s-${cluster.name}-1" = {
-            remote = "node1";
-            nixos_attr = "k3s-${cluster.name}-1";
-            cpu = 8;
-            memory = "8GiB";
-            disk_size = "128GiB";
-            mac = macOf "k3s-${cluster.name}-1" "K3s";
-            inherit (config.den.devices."k3s-${cluster.name}-1") address;
-            extra_nics.storage.mac = macOf "k3s-${cluster.name}-1" "Storage";
-          };
-          "k3s-${cluster.name}-2" = {
-            remote = "node0";
-            nixos_attr = "k3s-${cluster.name}-2";
-            cpu = 8;
-            memory = "8GiB";
-            disk_size = "128GiB";
-            mac = macOf "k3s-${cluster.name}-2" "K3s";
-            inherit (config.den.devices."k3s-${cluster.name}-2") address;
-            extra_nics.storage.mac = macOf "k3s-${cluster.name}-2" "Storage";
-          };
-        };
-        storage_pool = "default";
-        ssh_authorized_keys =
-          config.den.users.registry
-          |> lib.attrValues
-          |> lib.concatMap (u: u.sshKeys)
-          |> lib.unique;
-      };
-    };
-  };
 in
 {
   den.networks.K3s = {
@@ -142,11 +41,17 @@ in
 
   den.clusters.prd = {
     environment = "prd";
-    system-access-groups = [ "admins" ];
+    system-access-groups = [
+      "admins"
+      "home"
+    ];
     network = "K3s";
     domain = "kidibox.net";
 
     secrets.onepasswordVault = "home-ops-prd";
+
+    # One bare-metal server (k3s-prd-0) and no agents.
+    k3s.datastore = "sqlite";
 
     cloudflare = {
       accountId = "fadfc390b1e5fb0ce019b9f7a8917d42";
@@ -162,11 +67,22 @@ in
       services = {
         cidr = "172.42.0.0/16";
         description = "k3s service overlay network";
-        assignments.coredns = "172.42.0.10";
+        assignments = {
+          coredns = "172.42.0.10";
+          # VLSingle's journald endpoint for the k3s nodes' journal uploads.
+          vlsingle-journald = "172.42.0.11";
+        };
       };
       loadBalancer = {
         cidr = lbCidr;
         description = "Cilium BGP-advertised LoadBalancer IP pool";
+        # Pinned so a rebuilt cluster hands out the same addresses (DNS records,
+        # kubeconfigs and the k3s servers' /etc/hosts entry point at them).
+        # Anything else in the pool is allocated dynamically.
+        assignments = {
+          kube-api = "10.0.42.1";
+          apps-gateway = "10.0.42.2";
+        };
       };
     };
 
@@ -181,6 +97,20 @@ in
       ];
     };
 
+    # OpenEBS LocalPV-ZFS on k3s-prd-0's zroot/k8s.
+    storage = {
+      replicatedClass = "zfs";
+      localClass = "zfs";
+    };
+
+    # Full on-site backups next to r2's, and the claims restore from them:
+    # the cluster moved from the Incus VMs onto k3s-prd-0 by restoring every
+    # claim from its last `-full` snapshot. Rebuilding without k3s-prd-0's
+    # disks means restoreFrom = "r2" (and kopiur.backups = false until the
+    # restored apps are verified).
+    kopiur.local = true;
+    kopiur.restoreFrom = "local";
+
     nixidy = {
       repository = "https://github.com/kid/home-ops.git";
       branch = "main";
@@ -192,68 +122,50 @@ in
   # wildcard cert (modules/kubernetes/cert-manager/default.nix) — Helm's own cert
   # generation isn't idempotent across renders. external-secrets provides
   # Kubernetes secrets (modules/kubernetes/external-secrets/default.nix).
-  den.aspects.prd.includes =
-    (with den.aspects.kubernetes; [
-      gateway-api-crds
-      cilium
-      cilium-bgp
-      cilium-host-firewall
-      cilium-network-policy
-      envoy-gateway
-      cert-manager
-      trust-manager
-      coredns
-      flux
-      flux-mcp
-      flux-webhook
-      apiserver
-      snapshot-controller
-      miroir
-      external-dns
-      external-secrets
-      kopiur
-      kanidm
-      prometheus-operator-crds
-      victoria-metrics
-      blackbox-exporter
-      prometheus-adapter
-      victoria-metrics-mcp
-      grafana-operator
-      grafana-oidc
-      cloudflared
-      external-dns-cloudflare
-      home-assistant.home-assistant
-      home-assistant.mosquitto
-      home-assistant.zigbee2mqtt
-      media.prowlarr
-      media.animarr
-      media.sonarr
-      media.radarr
-      media.sabnzbd
-      media.plex
-      media.unpackerr
-    ])
-    ++ [ incusTerragruntAspect ];
-
-  # Cluster-level BGP instance parameters (den.quirks.bgp, modules/den/
-  # quirks/bgp.nix), collected onto rb5009 by modules/den/policies/
-  # pipes.nix's routeros-device-collect-bgp and consumed by
-  # modules/routeros/bgp.nix. Parallels den.aspects.prd.firewall
-  # just below: a cluster contributes a small data fragment, the RouterOS
-  # side merges fragments from however many clusters/networks apply.
-  den.aspects.prd.bgp =
-    { cluster, ... }:
-    [
-      {
-        inherit (cluster) name;
-        inherit (cluster.bgp)
-          localAsn
-          peers
-          holdTimeSeconds
-          keepAliveTimeSeconds
-          ;
-      }
-    ];
+  den.aspects.prd.includes = with den.aspects.kubernetes; [
+    gateway-api-crds
+    cilium
+    cilium-bgp
+    cilium-host-firewall
+    cilium-network-policy
+    envoy-gateway
+    cert-manager
+    trust-manager
+    coredns
+    flux
+    flux-mcp
+    flux-webhook
+    apiserver
+    snapshot-controller
+    generic-device-plugin
+    zfs-localpv
+    external-dns
+    external-secrets
+    kopiur
+    kanidm
+    prometheus-operator-crds
+    victoria-metrics
+    victoria-metrics-mcp
+    opentelemetry-collector
+    grafana-operator
+    grafana-oidc
+    cloudflared
+    external-dns-cloudflare
+    home-assistant.home-assistant
+    home-assistant.mosquitto
+    home-assistant.zigbee2mqtt
+    home-assistant.frigate
+    media.prowlarr
+    media.animarr
+    media.sonarr
+    media.radarr
+    media.sabnzbd
+    media.plex
+    media.unpackerr
+    media.recyclarr
+    actions-runner-controller
+    renovate
+  ];
 
   # Rules with no single-app owner: mikrotik-exporter isn't its own aspect here, and the LB CIDR rule is cluster-wide.
   den.aspects.prd.firewall = { cluster, ... }: [

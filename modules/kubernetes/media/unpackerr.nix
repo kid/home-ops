@@ -36,8 +36,17 @@ in
         # The apps create the <instance>-api-key Secrets it reads.
         flux.dependsOn = apps |> lib.mapAttrsToList (_: a: a.instance);
 
-        resources = cluster.methods.mkNfsScaler { inherit name; } // {
+        imports = [
+          {
+            resources = cluster.methods.mkHostPathClaim {
+              namespace = "media";
+              name = "${name}-downloads";
+              path = "/tank/downloads/sabnzbd";
+            };
+          }
+        ];
 
+        resources = {
           ciliumNetworkPolicies.${name} =
             with cluster.methods.netpol;
             mkPolicy labels {
@@ -47,6 +56,7 @@ in
             };
 
           deployments.${name}.spec = {
+            replicas = 1;
             strategy.type = "Recreate";
             selector.matchLabels = labels;
             template = {
@@ -104,10 +114,7 @@ in
                   };
                 };
                 volumes = {
-                  downloads.nfs = {
-                    server = cluster.methods.mediaNfsServer;
-                    path = "/tank/downloads/sabnzbd";
-                  };
+                  downloads.persistentVolumeClaim.claimName = "${name}-downloads";
                   tmp.emptyDir = { };
                 };
               };

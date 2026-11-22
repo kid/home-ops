@@ -1,0 +1,85 @@
+apiVersion: v1
+data:
+  recyclarr.yml: |
+    %YAML 1.1
+    ---
+    radarr:
+      radarr:
+        api_key: !env_var RADARR_API_KEY
+        base_url: http://radarr.media.svc.cluster.local:7878
+        custom_format_groups:
+          add:
+          - trash_id: 1616617ab3a14397a2b2321bcbda44d1
+          - trash_id: b29413a7487478fe98228ce79e5689e4
+          - select:
+            - f700d29429c023a5734505e77daeaea7
+            trash_id: 9337080378236ce4c0b183e35790d2a7
+          - select_all: true
+            trash_id: f4f1474b963b24cf983455743aa9906c
+        delete_old_custom_formats: true
+        media_management:
+          propers_and_repacks: do_not_prefer
+        media_naming:
+          folder: plex-tmdb
+          movie:
+            rename: true
+            standard: plex-tmdb
+        quality_definition:
+          type: movie
+        quality_profiles:
+        - reset_unmatched_scores:
+            enabled: true
+          trash_id: d1d310673359205736b4b84acd5ea8c8
+    sonarr:
+      animarr:
+        api_key: !env_var ANIMARR_API_KEY
+        base_url: http://animarr.media.svc.cluster.local:8989
+        delete_old_custom_formats: true
+        media_management:
+          propers_and_repacks: do_not_prefer
+        media_naming:
+          episodes:
+            anime: default
+            daily: default
+            rename: true
+            standard: default
+          season: default
+          series: plex-tvdb
+        quality_definition:
+          type: anime
+        quality_profiles:
+        - reset_unmatched_scores:
+            enabled: true
+          trash_id: 20e0fc959f1f1704bed501f23bdae76f
+      sonarr:
+        api_key: !env_var SONARR_API_KEY
+        base_url: http://sonarr.media.svc.cluster.local:8989
+        custom_format_groups:
+          add:
+          - trash_id: e9a1944a254e6f8a9da63083f7ae15cb
+          - trash_id: e0b2774083df4265f25c9e5bc6c80940
+          - trash_id: 7d366c213e5c23a052b157356fac1921
+          - select:
+            - ef4963043b0987f8485bc9106f16db38
+            trash_id: f4a0410a1df109a66d6e47dcadcce014
+        delete_old_custom_formats: true
+        media_management:
+          propers_and_repacks: do_not_prefer
+        media_naming:
+          episodes:
+            anime: default
+            daily: default
+            rename: true
+            standard: default
+          season: default
+          series: plex-tvdb
+        quality_definition:
+          type: series
+        quality_profiles:
+        - reset_unmatched_scores:
+            enabled: true
+          trash_id: 911df0e05a395c19d8b3efc76a7467c1
+kind: ConfigMap
+metadata:
+  name: recyclarr
+  namespace: media

@@ -13,10 +13,7 @@ spec:
       app.kubernetes.io/instance: victoria-metrics
       app.kubernetes.io/name: victoria-metrics-operator
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
+    type: Recreate
   template:
     metadata:
       labels:
@@ -30,6 +27,7 @@ spec:
             - --leader-elect
             - --health-probe-bind-address=:8081
             - --webhook.enable=true
+            - --leader-elect=false
           env:
             - name: VM_ANOMALY_VERSION
               value: v1.32.0

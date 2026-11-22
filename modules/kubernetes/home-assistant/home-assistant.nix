@@ -46,17 +46,11 @@ let
   ];
 in
 {
-  # Its egress IPs, one per node: see den.clusters.<name>.egressGateways.
-  # Outside the K3s DHCP pool (10.0.40.200-254).
-  den.clusters.prd.egressGateways.${name} =
-    let
-      inherit (config.den.environments.prd.networks.K3s.methods) host;
-    in
-    {
-      k3s-prd-0 = host 20;
-      k3s-prd-1 = host 21;
-      k3s-prd-2 = host 22;
-    };
+  # Its egress IP on the cluster's only node: see den.clusters.<name>.egressGateways.
+  # Each node gets a block of ten host numbers on K3s: its own address (x0),
+  # then its egress IPs (x1 on), so k3s-prd-0 (.40) leaves through .41.
+  den.clusters.prd.egressGateways.${name}.k3s-prd-0 =
+    config.den.environments.prd.networks.K3s.methods.host 41;
 
   # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
   den.aspects.kubernetes.home-assistant.home-assistant.firewall =
@@ -187,6 +181,11 @@ in
                 ];
                 egress = [
                   (toPods { "app.kubernetes.io/name" = "mosquitto"; } [ 8883 ])
+                  # Frigate's integration: its API and RTSP restream.
+                  (toPods { "app.kubernetes.io/name" = "frigate"; } [
+                    5000
+                    8554
+                  ])
                   # In-cluster apps by their hostname: Plex at plex.kidibox.net.
                   gatewayEgress
                   # Its devices, on whatever ports their integrations use.
@@ -267,7 +266,8 @@ in
                     };
                     resources = {
                       requests = {
-                        cpu = "100m";
+                        # Also its CPU share when the node is contended.
+                        cpu = "500m";
                         memory = "512Mi";
                       };
                       limits.memory = "2Gi";

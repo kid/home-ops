@@ -1,35 +1,38 @@
-_: {
+{ den, lib, ... }:
+{
   # Host ports vmagent scrapes: node-exporter on every node, and the
   # control-plane components of the static scrapes below.
-  den.aspects.kubernetes.victoria-metrics.firewall-ports = _: [
-    {
-      port = 9100;
-      protocol = "TCP";
-      description = "node-exporter";
-      from = [ "cluster" ];
-    }
-    {
-      port = 10259;
-      protocol = "TCP";
-      description = "kube-scheduler metrics";
-      from = [ "cluster" ];
-      controlPlane = true;
-    }
-    {
-      port = 10257;
-      protocol = "TCP";
-      description = "kube-controller-manager metrics";
-      from = [ "cluster" ];
-      controlPlane = true;
-    }
-    {
+  den.aspects.kubernetes.victoria-metrics.firewall-ports =
+    { cluster, ... }:
+    [
+      {
+        port = 9100;
+        protocol = "TCP";
+        description = "node-exporter";
+        from = [ "cluster" ];
+      }
+      {
+        port = 10259;
+        protocol = "TCP";
+        description = "kube-scheduler metrics";
+        from = [ "cluster" ];
+        controlPlane = true;
+      }
+      {
+        port = 10257;
+        protocol = "TCP";
+        description = "kube-controller-manager metrics";
+        from = [ "cluster" ];
+        controlPlane = true;
+      }
+    ]
+    ++ lib.optional (cluster.k3s.datastore == "etcd") {
       port = 2381;
       protocol = "TCP";
       description = "etcd metrics";
       from = [ "cluster" ];
       controlPlane = true;
-    }
-  ];
+    };
 
   den.aspects.kubernetes.victoria-metrics.k8s-manifests =
     {
@@ -42,6 +45,39 @@ _: {
       ...
     }:
     let
+      # The claims the operator makes from spec.storage, named after the
+      # VMSingle and VLSingle: spec.storage is their whole PVC spec, a
+      # dataSourceRef included, read only when the claim is created.
+      kopiurBackups =
+        if cluster.includesAspect den.aspects.kubernetes.kopiur then
+          [
+            "vmsingle-victoria-metrics"
+            "vlsingle-victoria-metrics"
+          ]
+          |> map (
+            claim:
+            cluster.methods.mkKopiurBackup {
+              name = claim;
+              existingClaim = claim;
+              r2 = false;
+            }
+          )
+          |> lib.foldl' lib.recursiveUpdate { }
+        else
+          {
+            snapshotPolicies = { };
+            restores = { };
+          };
+      restoredFrom =
+        claim:
+        lib.optionalAttrs (kopiurBackups.restores ? ${claim}) {
+          dataSourceRef = {
+            apiGroup = "kopiur.home-operations.com";
+            kind = "Restore";
+            name = claim;
+          };
+        };
+
       # Control-plane ports only exist on servers.
       k3sNodeAddresses =
         k3s-nodes |> lib.filter (n: n.address != null && n.role == "server") |> map (n: n.address);
@@ -79,18 +115,77 @@ _: {
           ];
         };
 
+      parentRefs = [
+        {
+          group = "gateway.networking.k8s.io";
+          kind = "Gateway";
+          name = "apps";
+          namespace = "envoy-gateway-system";
+          sectionName = "https";
+        }
+      ];
       mkRoute = hostname: {
         enabled = true;
-        parentRefs = [
-          {
-            group = "gateway.networking.k8s.io";
-            kind = "Gateway";
-            name = "apps";
-            namespace = "envoy-gateway-system";
-            sectionName = "https";
-          }
-        ];
+        inherit parentRefs;
         hostnames = [ hostname ];
+      };
+
+      # Routes declared here instead of by the chart, so the MCP servers
+      # (mcp.nix) can add their rules to them. They keep the chart's
+      # <component>-victoria-metrics names. OIDC covers only their `app` rule.
+      ownRoutes = {
+        vmsingle = {
+          host = "metrics";
+          port = 8428;
+        };
+        vlsingle = {
+          host = "logs";
+          port = 9428;
+        };
+      };
+      appRule = "app";
+
+      # Logs → metrics: the line's pod's CPU and memory in Explore.
+      # Grafana substitutes ${__value.raw} after escaping; pod names are URL-safe.
+      podMetricsLink = {
+        name = "Pod metrics";
+        matcherType = "label";
+        matcherRegex = "k8s.pod.name";
+        urlDisplayLabel = "Pod CPU and memory";
+        url =
+          "/explore?schemaVersion=1&orgId=1&panes="
+          + (
+            {
+              pod = {
+                datasource = "VictoriaMetrics";
+                range = {
+                  from = "now-1h";
+                  to = "now";
+                };
+                queries = [
+                  {
+                    refId = "cpu";
+                    datasource = {
+                      type = "prometheus";
+                      uid = "VictoriaMetrics";
+                    };
+                    expr = ''sum by (container) (rate(container_cpu_usage_seconds_total{pod="__POD__",container!=""}[5m]))'';
+                  }
+                  {
+                    refId = "memory";
+                    datasource = {
+                      type = "prometheus";
+                      uid = "VictoriaMetrics";
+                    };
+                    expr = ''sum by (container) (container_memory_working_set_bytes{pod="__POD__",container!=""})'';
+                  }
+                ];
+              };
+            }
+            |> builtins.toJSON
+            |> lib.escapeURL
+            |> builtins.replaceStrings [ "__POD__" ] [ "\${__value.raw}" ]
+          );
       };
     in
     {
@@ -104,6 +199,19 @@ _: {
           ];
         })
       ];
+
+      # Full backups of both claims to kopiur's local repository only (too
+      # big and too easily rebuilt for r2), and restores from it.
+      imports = lib.optional (kopiurBackups.snapshotPolicies != { } || kopiurBackups.restores != { }) {
+        applications.victoria-metrics = {
+          # The kopiur webhook admits the backup objects.
+          flux.dependsOn = [ "kopiur-config" ];
+          resources = kopiurBackups;
+        };
+      };
+
+      # node-exporter runs in the host's network and PID namespaces.
+      podSecurity.namespaces.monitoring = "privileged";
 
       applications.victoria-metrics = {
         namespace = "monitoring";
@@ -135,7 +243,6 @@ _: {
               ];
             };
             vmagent = mkPolicy (app "vmagent") { egress = [ clusterEgress ]; };
-            vlagent = mkPolicy (app "vlagent") { egress = [ apiserverEgress ]; };
             # Queried by the MCP servers (mcp.nix).
             vmsingle = mkPolicy (app "vmsingle") {
               ingress = [
@@ -147,6 +254,12 @@ _: {
               ingress = [
                 (gatewayIngress 9428)
                 (fromPods (app "mcp-victorialogs") [ 9428 ])
+                # The other nodes' journal uploads (k3s/journald-upload.nix);
+                # the default-deny policy already admits the local host's.
+                {
+                  fromEntities = [ "remote-node" ];
+                  toPorts = tcp [ 9428 ];
+                }
               ];
             };
             vmalert = mkPolicy (app "vmalert") { ingress = [ (gatewayIngress 8080) ]; };
@@ -164,6 +277,14 @@ _: {
 
             victoria-metrics-operator = {
               admissionWebhooks.certManager.enabled = true;
+              # One replica, no leader election (lease renewals were most of
+              # etcd's writes): comes after the chart's own --leader-elect.
+              # Recreate keeps an update from running two at once.
+              extraArgs.leader-elect = "false";
+              strategy = {
+                type = "Recreate";
+                rollingUpdate = null;
+              };
               resources = {
                 requests = {
                   cpu = "10m";
@@ -215,12 +336,24 @@ _: {
               limits.memory = "128Mi";
             };
 
-            prometheus-node-exporter.resources = {
-              requests = {
-                cpu = "10m";
-                memory = "32Mi";
+            prometheus-node-exporter = {
+              resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "32Mi";
+                };
+                limits.memory = "64Mi";
               };
-              limits.memory = "64Mi";
+              # A list replaces the chart's, so its two args are restated. The
+              # textfile directory is the host's /run/node-exporter
+              # (nixos/services/k3s/disk-power-mode.nix), through the chart's
+              # host-root mount.
+              extraArgs = [
+                "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
+                "--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs)$"
+                "--collector.textfile.directory=/host/root/run/node-exporter"
+                "--log.format=json"
+              ];
             };
 
             defaultDashboards = {
@@ -229,7 +362,6 @@ _: {
                 grafana-overview.enabled = true;
                 victorialogs-cluster.enabled = true;
                 victorialogs-single-node.enabled = true;
-                victorialogs-vlagent.enabled = true;
               };
             };
 
@@ -253,7 +385,7 @@ _: {
               vmScrape = null;
             };
             kubeEtcd = {
-              enabled = true;
+              enabled = cluster.k3s.datastore == "etcd";
               vmScrape = null;
             };
 
@@ -270,13 +402,15 @@ _: {
 
             vmsingle = {
               spec = {
+                logFormat = "json";
                 retentionPeriod = "30d";
                 # 15 days of data filled 5Gi and put the storage in read-only mode.
                 storage = {
-                  storageClassName = "miroir-replicated";
+                  storageClassName = cluster.storage.replicatedClass;
                   accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "10Gi";
-                };
+                }
+                // restoredFrom "vmsingle-victoria-metrics";
                 resources = {
                   requests = {
                     cpu = "100m";
@@ -285,11 +419,12 @@ _: {
                   limits.memory = "2Gi";
                 };
               };
-              route = mkRoute (cluster.methods.mkAppHostname "metrics");
             };
 
             vmalert = {
               spec = {
+                logFormat = "json";
+                configReloaderExtraArgs.loggerFormat = "json";
                 extraArgs."external.url" = "https://${cluster.methods.mkAppHostname "vmalert"}";
                 resources = {
                   requests = {
@@ -305,12 +440,14 @@ _: {
             vlsingle = {
               enabled = true;
               spec = {
+                logFormat = "json";
                 retentionPeriod = "30d";
                 storage = {
-                  storageClassName = "miroir-replicated";
+                  storageClassName = cluster.storage.replicatedClass;
                   accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "5Gi";
-                };
+                }
+                // restoredFrom "vlsingle-victoria-metrics";
                 resources = {
                   requests = {
                     cpu = "10m";
@@ -319,44 +456,45 @@ _: {
                   limits.memory = "512Mi";
                 };
               };
-              route = mkRoute (cluster.methods.mkAppHostname "logs");
             };
 
-            vlagent = {
-              enabled = true;
-              spec.resources = {
+            # No CPU limit: the operator's default 200m throttled vmagent
+            # in ~30% of CFS periods at 60m average use.
+            vmagent.spec = {
+              logFormat = "json";
+              # The CR's logFormat doesn't reach the config reloader.
+              configReloaderExtraArgs.loggerFormat = "json";
+              resources = {
+                requests = {
+                  cpu = "100m";
+                  memory = "128Mi";
+                };
+                limits.memory = "384Mi";
+              };
+            };
+
+            internal.vmauth.spec = {
+              logFormat = "json";
+              configReloaderExtraArgs.loggerFormat = "json";
+              resources = {
+                requests = {
+                  cpu = "10m";
+                  memory = "32Mi";
+                };
+                limits.memory = "64Mi";
+              };
+            };
+
+            alertmanager.spec = {
+              logFormat = "json";
+              configReloaderExtraArgs.loggerFormat = "json";
+              resources = {
                 requests = {
                   cpu = "10m";
                   memory = "64Mi";
                 };
                 limits.memory = "128Mi";
               };
-            };
-
-            # No CPU limit: the operator's default 200m throttled vmagent
-            # in ~30% of CFS periods at 60m average use.
-            vmagent.spec.resources = {
-              requests = {
-                cpu = "100m";
-                memory = "128Mi";
-              };
-              limits.memory = "384Mi";
-            };
-
-            internal.vmauth.spec.resources = {
-              requests = {
-                cpu = "10m";
-                memory = "32Mi";
-              };
-              limits.memory = "64Mi";
-            };
-
-            alertmanager.spec.resources = {
-              requests = {
-                cpu = "10m";
-                memory = "64Mi";
-              };
-              limits.memory = "128Mi";
             };
           };
 
@@ -393,12 +531,12 @@ _: {
             port = 10257;
             keep = "workqueue|node_collector|garbagecollector|pv_collector|[a-z_]+_controller|root_ca_cert_publisher";
           })
-          # --etcd-expose-metrics serves plain HTTP on 2381; 2379 wants a client cert.
-          {
-            targets = map (address: "${address}:2381") k3sNodeAddresses;
-            labels.job = "kube-etcd";
-          }
-        ];
+        ]
+        # --etcd-expose-metrics serves plain HTTP on 2381; 2379 wants a client cert.
+        ++ lib.optional (cluster.k3s.datastore == "etcd") {
+          targets = map (address: "${address}:2381") k3sNodeAddresses;
+          labels.job = "kube-etcd";
+        };
 
         # The sync job, a post-install/upgrade Helm hook rendered as a plain
         # Job, creates the chart's dashboards and rules from this ConfigMap.
@@ -413,25 +551,73 @@ _: {
           in
           configMap.data |> builtins.toJSON |> builtins.hashString "sha256";
 
-        # The chart names each route <component>-victoria-metrics.
-        imports =
-          lib.mapAttrsToList
-            (
-              name: host:
-              cluster.methods.mkOidcAuth {
-                inherit name;
-                httpRouteName = "${name}-victoria-metrics";
-                hostname = cluster.methods.mkAppHostname host;
-                group = "admins";
-              }
-            )
-            {
-              vmsingle = "metrics";
-              vlsingle = "logs";
-              vmalert = "vmalert";
+        # The k3s nodes' journal uploads, at a fixed IP: the hosts don't
+        # resolve cluster DNS.
+        resources.services = lib.optionalAttrs (cluster.networks.services.assignments ? vlsingle-journald) {
+          vlsingle-journald.spec = {
+            clusterIP = cluster.networks.services.assignments.vlsingle-journald;
+            selector = {
+              "app.kubernetes.io/name" = "vlsingle";
+              "app.kubernetes.io/instance" = "victoria-metrics";
             };
+            ports = [
+              {
+                name = "http";
+                port = 9428;
+                targetPort = 9428;
+              }
+            ];
+          };
+        };
 
-        resources.grafanaDatasources.victoria-metrics.spec = {
+        resources.httpRoutes = lib.mapAttrs' (
+          name:
+          { host, port }:
+          lib.nameValuePair "${name}-victoria-metrics" {
+            spec = {
+              inherit parentRefs;
+              hostnames = [ (cluster.methods.mkAppHostname host) ];
+              rules = [
+                {
+                  name = appRule;
+                  matches = [
+                    {
+                      path = {
+                        type = "PathPrefix";
+                        value = "/";
+                      };
+                    }
+                  ];
+                  backendRefs = [
+                    {
+                      group = "";
+                      kind = "Service";
+                      name = "${name}-victoria-metrics";
+                      inherit port;
+                      weight = 1;
+                    }
+                  ];
+                }
+              ];
+            };
+          }
+        ) ownRoutes;
+
+        # Every route is named <component>-victoria-metrics.
+        imports = lib.mapAttrsToList (
+          name: host:
+          cluster.methods.mkOidcAuth {
+            inherit name;
+            httpRouteName = "${name}-victoria-metrics";
+            sectionName = if ownRoutes ? ${name} then appRule else null;
+            hostname = cluster.methods.mkAppHostname host;
+            group = "admins";
+          }
+        ) (lib.mapAttrs (_: route: route.host) ownRoutes // { vmalert = "vmalert"; });
+
+        # Fixed uids, so links into them survive a datasource's recreation.
+        resources.grafanaDatasources.vm-metrics.spec = {
+          uid = "vm-metrics";
           instanceSelector.matchLabels.dashboards = "grafana";
           datasource = {
             name = "VictoriaMetrics";
@@ -442,13 +628,26 @@ _: {
           };
         };
 
-        resources.grafanaDatasources.victoria-logs.spec = {
+        resources.grafanaDatasources.vm-logs.spec = {
+          uid = "vm-logs";
           instanceSelector.matchLabels.dashboards = "grafana";
           datasource = {
             name = "VictoriaLogs";
             type = "victoriametrics-logs-datasource";
             access = "proxy";
             url = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
+            jsonData = {
+              # The OTel collector's field names (opentelemetry-collector/default.nix).
+              otelPreset = {
+                enabled = true;
+                detection.severity = {
+                  field = "severity_text";
+                  valueCase = "string";
+                  source = "manual";
+                };
+              };
+              derivedFields = [ podMetricsLink ];
+            };
           };
         };
 

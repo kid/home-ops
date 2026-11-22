@@ -1,15 +1,15 @@
 # MCP servers in streamable HTTP mode, behind an Envoy JWT check for tokens
 # Kanidm issued to the public `mcp` client (declared in victoria-metrics/mcp.nix).
 # Clients discover it from the RFC 9728 metadata each host serves without auth.
-# mkAuth takes { <Service name> = { hostname; port; }; } and returns an
-# application module, for that application's `imports`. The server shares the
-# host of the app it serves: Envoy merges its /mcp and metadata routes with
-# the app's own, where the longer path wins.
-{ config, lib, ... }:
+# mkAuth takes { <Service name> = { hostname; port; route; }; } and returns an
+# application module, for the application declaring HTTPRoute `route`. The
+# server shares the host of the app it serves, and its /mcp and metadata rules
+# join that app's route: one route per host, so one external-dns owner.
+# The JWT check covers only the `mcp` rule. An app policy on the same route
+# must target its own rule as well, or it also covers the metadata rules.
+{ lib, ... }:
 let
-  inherit (config.den.clusters.prd.methods) kanidm;
   clientId = "mcp";
-  issuer = kanidm.issuer clientId;
   # Matches callbackPort in .mcp.json.
   callbackPort = 33418;
   scopes = [
@@ -18,17 +18,10 @@ let
     "email"
   ];
   mcpPath = "/mcp";
-  parentRefs = [
-    {
-      group = "gateway.networking.k8s.io";
-      kind = "Gateway";
-      name = "apps";
-      namespace = "envoy-gateway-system";
-      sectionName = "https";
-    }
-  ];
+  # The route's rule the JWT check attaches to.
+  mcpRule = "mcp";
 
-  # Both well-known URIs MCP clients probe. nixidy keys HTTPRoute rules by name, so they need one.
+  # Both well-known URIs MCP clients probe.
   metadataPath = "/.well-known/oauth-protected-resource";
   metadataDocuments = hostname: {
     root = {
@@ -43,70 +36,68 @@ let
   metadataFilter = name: rule: "${name}-metadata-${rule}";
 
   mkAuth =
-    servers:
+    kanidm: servers:
     let
+      issuer = kanidm.issuer clientId;
       perServer = f: lib.concatMapAttrs f servers;
     in
     {
       resources = {
         httpRoutes = perServer (
           name:
-          { hostname, port }:
           {
-            ${name}.spec = {
-              inherit parentRefs;
-              hostnames = [ hostname ];
-              rules = [
-                {
+            hostname,
+            port,
+            route,
+          }:
+          {
+            ${route}.spec.rules = [
+              {
+                name = mcpRule;
+                matches = [
+                  {
+                    path = {
+                      type = "PathPrefix";
+                      value = mcpPath;
+                    };
+                  }
+                ];
+                backendRefs = [
+                  {
+                    group = "";
+                    kind = "Service";
+                    inherit name port;
+                    weight = 1;
+                  }
+                ];
+              }
+            ]
+            ++ (
+              metadataDocuments hostname
+              |> lib.mapAttrsToList (
+                rule: document: {
+                  name = "mcp-metadata-${rule}";
                   matches = [
                     {
                       path = {
-                        type = "PathPrefix";
-                        value = mcpPath;
+                        type = "Exact";
+                        value = document.path;
                       };
                     }
                   ];
-                  backendRefs = [
+                  filters = [
                     {
-                      group = "";
-                      kind = "Service";
-                      inherit name port;
-                      weight = 1;
+                      type = "ExtensionRef";
+                      extensionRef = {
+                        group = "gateway.envoyproxy.io";
+                        kind = "HTTPRouteFilter";
+                        name = metadataFilter name rule;
+                      };
                     }
                   ];
                 }
-              ];
-            };
-            # A route of its own, so the SecurityPolicy below leaves it open.
-            "${name}-metadata".spec = {
-              inherit parentRefs;
-              hostnames = [ hostname ];
-              rules =
-                metadataDocuments hostname
-                |> lib.mapAttrsToList (
-                  rule: document: {
-                    name = rule;
-                    matches = [
-                      {
-                        path = {
-                          type = "Exact";
-                          value = document.path;
-                        };
-                      }
-                    ];
-                    filters = [
-                      {
-                        type = "ExtensionRef";
-                        extensionRef = {
-                          group = "gateway.envoyproxy.io";
-                          kind = "HTTPRouteFilter";
-                          name = metadataFilter name rule;
-                        };
-                      }
-                    ];
-                  }
-                );
-            };
+              )
+            );
           }
         );
 
@@ -136,10 +127,11 @@ let
 
         # Kanidm sets `aud` to the client name.
         securityPolicies.mcp.spec = {
-          targetRefs = lib.mapAttrsToList (name: _: {
+          targetRefs = lib.mapAttrsToList (_: server: {
             group = "gateway.networking.k8s.io";
             kind = "HTTPRoute";
-            inherit name;
+            name = server.route;
+            sectionName = mcpRule;
           }) servers;
           jwt.providers = [
             {
@@ -154,12 +146,12 @@ let
     };
 in
 {
-  den.clusters.prd.methods.mcp = {
+  den.clusterMethods.mcp = cluster: {
     inherit
       clientId
       scopes
       callbackPort
-      mkAuth
       ;
+    mkAuth = mkAuth cluster.methods.kanidm;
   };
 }

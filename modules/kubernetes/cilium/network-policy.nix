@@ -90,7 +90,7 @@ let
   };
 in
 {
-  den.clusters.prd.methods.netpol = netpol;
+  den.clusterMethods.netpol = _: netpol;
 
   den.aspects.kubernetes.cilium-network-policy.k8s-manifests =
     { generators, pkgs, ... }:
@@ -102,8 +102,8 @@ in
             owner = "cilium";
             repo = "cilium";
             # renovate: datasource=github-releases depName=cilium/cilium
-            rev = "v1.20.4";
-            hash = "sha256-VA9b7KuLlyVsI1gON6oXm0s/JTKED9wHGGJ1cMeOVJI=";
+            rev = "v1.20.5";
+            hash = "sha256-b6iM3b0wcadFOKzfi8kbliQbOk31YoHp/CFgYu0ycL4=";
           };
           crdFiles = [
             "pkg/k8s/apis/cilium.io/client/crds/v2/ciliumnetworkpolicies.yaml"

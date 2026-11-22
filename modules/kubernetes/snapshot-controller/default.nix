@@ -1,6 +1,6 @@
 # Installs the snapshot.storage.k8s.io CRDs and the snapshot-controller that
 # k3s doesn't ship. kopiur's default copyMethod: Snapshot needs both, plus a
-# VolumeSnapshotClass (miroir/default.nix, next to its StorageClass).
+# VolumeSnapshotClass (zfs-localpv/default.nix, next to its StorageClass).
 _: {
   den.aspects.kubernetes.snapshot-controller.k8s-manifests =
     { charts, cluster, ... }:
@@ -19,6 +19,13 @@ _: {
           chart = charts.home-operations.snapshot-controller;
           values = {
             monitoring.serviceMonitor.enabled = true;
+            # One replica, no leader election (lease renewals were most of
+            # etcd's writes). The chart's maxSurge 0 already stops an update
+            # from running two. /healthz/leader-election only exists with it on.
+            controller.leaderElection.enabled = false;
+            controller.extraArgs = [ "--logging-format=json" ];
+            livenessProbe.httpGet.path = "/metrics";
+            readinessProbe.httpGet.path = "/metrics";
             resources = {
               requests = {
                 cpu = "10m";

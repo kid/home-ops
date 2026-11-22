@@ -22,3 +22,10 @@ spec:
         - ports:
             - port: "8883"
               protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: frigate
+      toPorts:
+        - ports:
+            - port: "8883"
+              protocol: TCP

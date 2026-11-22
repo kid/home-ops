@@ -8,10 +8,13 @@ metadata:
   name: victoria-metrics
   namespace: monitoring
 spec:
+  configReloaderExtraArgs:
+    loggerFormat: json
   configSecret: vmalertmanager-victoria-metrics
   externalURL: ""
   image:
     tag: v0.34.2
+  logFormat: json
   port: "9093"
   replicaCount: 1
   resources:

@@ -1,10 +1,6 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  labels:
-    app.kubernetes.io/component: vmsingle
-    app.kubernetes.io/instance: victoria-metrics
-    app.kubernetes.io/name: victoria-metrics-k8s-stack
   name: vmsingle-victoria-metrics
   namespace: monitoring
 spec:
@@ -27,3 +23,37 @@ spec:
         - path:
             type: PathPrefix
             value: /
+      name: app
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: mcp-victoriametrics
+          port: 8080
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /mcp
+      name: mcp
+    - filters:
+        - extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: mcp-victoriametrics-metadata-mcp
+          type: ExtensionRef
+      matches:
+        - path:
+            type: Exact
+            value: /.well-known/oauth-protected-resource/mcp
+      name: mcp-metadata-mcp
+    - filters:
+        - extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: mcp-victoriametrics-metadata-root
+          type: ExtensionRef
+      matches:
+        - path:
+            type: Exact
+            value: /.well-known/oauth-protected-resource
+      name: mcp-metadata-root

@@ -25,11 +25,11 @@ in
   ];
 
   # Collects the `k3s-nodes` quirk (emitted per-host by
-  # modules/nixos/services/k3s/k3s.nix, {hostname; address;}) onto
-  # every RouterOS device, exposed as the `k3s-nodes` list arg to
-  # modules/routeros/bgp.nix (to build its per-node BGP
-  # connections). `host` is the entity kind — a bare `_: true` predicate
-  # would match nothing, see routeros-device-collect-firewall above.
+  # modules/nixos/services/k3s/{k3s,agent}.nix, {hostname; address; role;
+  # cluster;}) onto every RouterOS device, exposed as the `k3s-nodes` list
+  # arg to modules/routeros/bgp.nix, which groups it by `cluster` into one
+  # BGP stack per cluster. `host` is the entity kind — a bare `_: true`
+  # predicate would match nothing, see routeros-device-collect-firewall above.
   den.policies.routeros-device-collect-k3s-nodes = _: [
     (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
@@ -48,22 +48,45 @@ in
     den.policies.routeros-device-collect-bgp
   ];
 
-  # Collects the `miroir-nodes` quirk (emitted per-host by
-  # modules/nixos/services/k3s/miroir.nix, {hostname; address;}) onto
-  # the cluster entity, exposed as the `miroir-nodes` list arg to
-  # modules/kubernetes/miroir/default.nix's k8s-manifests
-  # content. `host` is the entity kind — a bare `_: true` predicate would
-  # match nothing, see routeros-device-collect-firewall above.
-  den.policies.cluster-collect-miroir-nodes = _: [
-    (pipe.from "miroir-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
+  # Collects the `k3s-nodes` quirk onto the cluster the host belongs to,
+  # exposed as the `k3s-nodes` list arg to its k8s-manifests content
+  # (modules/kubernetes/cilium/host-firewall.nix,
+  # modules/kubernetes/victoria-metrics/default.nix). `host` is the entity
+  # kind — a bare `_: true` predicate would match nothing, see
+  # routeros-device-collect-firewall above. The cluster match is a filter on
+  # the collected values rather than in the predicate: a host's
+  # settings.k3s.clusterName has no default, so reading it on a non-k3s host
+  # throws.
+  den.policies.cluster-collect-k3s-nodes =
+    { cluster, ... }:
+    [
+      (pipe.from "k3s-nodes" [
+        (pipe.collectAll ({ host, ... }: host != null))
+        (pipe.filter (n: n.cluster == cluster.name))
+      ])
+    ];
+
+  # Collects the `nfs-exports` quirk (modules/den/quirks/nfs-exports.nix,
+  # emitted by cluster-scoped app aspects) onto every host, exposed as the
+  # `nfs-exports` list arg to NixOS content; only k3s-prd-0 reads it. `cluster` is the
+  # entity kind, see routeros-device-collect-firewall above.
+  den.policies.host-collect-nfs-exports = _: [
+    (pipe.from "nfs-exports" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
   ];
 
-  den.policies.cluster-collect-k3s-nodes = _: [
+  # Same for the `k3s-nodes` quirk: k3s-prd-0 exports a cluster's writable
+  # datasets (an nfs-exports fragment's `writer`) read-write only to that
+  # cluster's nodes. `host` is the entity kind, as above.
+  den.policies.host-collect-k3s-nodes = _: [
     (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
 
+  den.schema.host.includes = [
+    den.policies.host-collect-nfs-exports
+    den.policies.host-collect-k3s-nodes
+  ];
+
   den.schema.cluster.includes = [
-    den.policies.cluster-collect-miroir-nodes
     den.policies.cluster-collect-k3s-nodes
   ];
 }

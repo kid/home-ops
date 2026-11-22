@@ -4,6 +4,7 @@ metadata:
   name: sonarr
   namespace: media
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: sonarr
@@ -26,6 +27,8 @@ spec:
               value: External
             - name: SONARR__AUTH__REQUIRED
               value: DisabledForLocalAddresses
+            - name: SONARR__LOG__CONSOLEFORMAT
+              value: Clef
             - name: SONARR__LOG__DBENABLED
               value: "false"
             - name: SONARR__LOG__LEVEL
@@ -97,13 +100,11 @@ spec:
           persistentVolumeClaim:
             claimName: sonarr
         - name: downloads
-          nfs:
-            path: /tank/downloads/sabnzbd
-            server: 10.0.20.10
+          persistentVolumeClaim:
+            claimName: sonarr-downloads
         - name: library
-          nfs:
-            path: /tank/library/series
-            server: 10.0.20.10
+          persistentVolumeClaim:
+            claimName: sonarr-library
         - emptyDir: {}
           name: logs
         - emptyDir: {}

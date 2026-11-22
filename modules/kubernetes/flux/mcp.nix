@@ -9,16 +9,20 @@ _: {
       port = 9090;
     in
     {
+      # Its rules join the web UI's route (flux/default.nix), so they live in
+      # that route's application.
+      applications.flux-web.imports = [
+        (cluster.methods.mcp.mkAuth {
+          ${name} = {
+            hostname = cluster.methods.mkAppHostname "flux";
+            inherit port;
+            route = "flux-web";
+          };
+        })
+      ];
+
       applications.${name} = {
         namespace = "flux-system";
-        imports = [
-          (cluster.methods.mcp.mkAuth {
-            ${name} = {
-              hostname = cluster.methods.mkAppHostname "flux";
-              inherit port;
-            };
-          })
-        ];
 
         helm.releases.${name} = {
           chart = charts.controlplaneio-fluxcd.flux-operator-mcp;

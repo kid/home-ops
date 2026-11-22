@@ -1,7 +1,8 @@
 # Cilium CNI, configured for kube-proxy replacement + native routing to
 # match modules/nixos/services/k3s/k3s.nix's k3s flags
 # (--flannel-backend=none --disable-network-policy --disable-kube-proxy).
-_: {
+{ den, ... }:
+{
   # cilium-agent health (9879) and Hubble gRPC (4244) bind on the host itself.
   den.aspects.kubernetes.cilium.firewall-ports = _: [
     {
@@ -45,38 +46,44 @@ _: {
   ];
 
   den.aspects.kubernetes.cilium.k8s-manifests =
-    { charts, cluster, ... }:
+    {
+      charts,
+      cluster,
+      lib,
+      ...
+    }:
     {
       applications.cilium = {
         namespace = "kube-system";
         # Hubble's certificates.
         flux.dependsOn = [ "cert-manager" ];
 
-        resources.httpRoutes.hubble-ui.spec = {
-          parentRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = "apps";
-              namespace = "envoy-gateway-system";
-              sectionName = "https";
-            }
-          ];
-          hostnames = [ (cluster.methods.mkAppHostname "hubble") ];
-          rules = [
-            {
-              backendRefs = [
+        # Hubble UI has no login of its own: published only behind Kanidm.
+        imports = lib.optionals (cluster.includesAspect den.aspects.kubernetes.kanidm) [
+          {
+            resources.httpRoutes.hubble-ui.spec = {
+              parentRefs = [
                 {
-                  name = "hubble-ui";
-                  port = 80;
+                  group = "gateway.networking.k8s.io";
+                  kind = "Gateway";
+                  name = "apps";
+                  namespace = "envoy-gateway-system";
+                  sectionName = "https";
                 }
               ];
-            }
-          ];
-        };
-
-        # Hubble UI has no login of its own.
-        imports = [
+              hostnames = [ (cluster.methods.mkAppHostname "hubble") ];
+              rules = [
+                {
+                  backendRefs = [
+                    {
+                      name = "hubble-ui";
+                      port = 80;
+                    }
+                  ];
+                }
+              ];
+            };
+          }
           (cluster.methods.mkOidcAuth {
             name = "hubble-ui";
             httpRouteName = "hubble-ui";
@@ -113,6 +120,8 @@ _: {
             kubeProxyReplacement = true;
             k8sServiceHost = "127.0.0.1";
             k8sServicePort = 6443;
+            # json drops the time; the collector maps subsys to logger.name.
+            logOptions.format = "json-ts";
 
             routingMode = "native";
             autoDirectNodeRoutes = true;
@@ -158,6 +167,18 @@ _: {
               # It registers the CRDs of enabled features (egressGateway's
               # CiliumEgressGatewayPolicy) at start: restart it on config changes.
               rollOutPods = true;
+              # cilium-operator can't run without leader election: renew every
+              # 60s instead of 2s (lease renewals were most of etcd's writes).
+              # Recreate keeps an update from running two copies at once.
+              extraArgs = [
+                "--leader-election-lease-duration=180s"
+                "--leader-election-renew-deadline=120s"
+                "--leader-election-retry-period=60s"
+              ];
+              updateStrategy = {
+                type = "Recreate";
+                rollingUpdate = null;
+              };
               prometheus.serviceMonitor.enabled = true;
               resources = {
                 requests = {
@@ -182,6 +203,7 @@ _: {
             hubble = {
               relay = {
                 enabled = true;
+                logOptions.format = "json-ts";
                 resources = {
                   requests = {
                     cpu = "10m";

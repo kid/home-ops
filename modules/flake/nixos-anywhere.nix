@@ -7,7 +7,7 @@
 # modules/flake/provision-host-key.nix), then injects it via --extra-files
 # so the host has its real, final identity from first boot. The payload
 # lands at persist/etc/ssh/, not etc/ssh/ — nix-community/impermanence
-# (modules/nixos/impermanence/persist-collector.nix) bind-mounts
+# (modules/nixos/impermanence/collect.nix) bind-mounts
 # /etc/ssh/ssh_host_ed25519_key FROM /persist/etc/ssh/ssh_host_ed25519_key,
 # so that's the real storage location extra-files needs to land on;
 # /etc/ssh/... itself is just the bind-mount target, reset on every boot.

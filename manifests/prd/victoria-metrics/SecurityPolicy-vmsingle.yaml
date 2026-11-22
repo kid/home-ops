@@ -8,6 +8,11 @@ spec:
     clientID: vmsingle
     clientSecret:
       name: vmsingle-kanidm-oauth2-credentials
+    denyRedirect:
+      headers:
+        - name: Sec-Fetch-Mode
+          type: RegularExpression
+          value: cors|no-cors|same-origin|websocket
     logoutPath: /oauth2/logout
     provider:
       authorizationEndpoint: https://idm.kidibox.net/ui/oauth2
@@ -22,3 +27,4 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       name: vmsingle-victoria-metrics
+      sectionName: app

@@ -27,4 +27,4 @@ spec:
     - pvc:
         name: zigbee2mqtt
   staging:
-    storageClassName: miroir
+    storageClassName: zfs

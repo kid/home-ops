@@ -3,12 +3,13 @@
 {
   den.aspects.kubernetes.cilium-host-firewall.k8s-manifests =
     {
+      cluster,
       firewall-ports ? [ ],
       k3s-nodes ? [ ],
       ...
     }:
     let
-      # Declared here, not ssh.nix/k3s.nix: a host-scope quirk can't reach this cluster-scope consumer.
+      # Every k3s node's own daemons, so declared once here rather than by each host.
       hostPorts = [
         {
           port = 22;
@@ -40,13 +41,16 @@
       # A port with `controlPlane = true` is only opened on control-plane nodes.
       isControlPlane = p: p.controlPlane or false;
 
-      mkIngress =
-        ports:
+      # One rule per peer set: Cilium rejects a rule combining fromEntities
+      # and fromCIDR. A fromCIDR peer is outside the cluster (world).
+      mkRules =
+        field: key: ports:
         ports
-        |> lib.groupBy (p: p.from |> lib.sort lib.lessThan |> lib.concatStringsSep ",")
+        |> lib.filter (p: p.${key} or [ ] != [ ])
+        |> lib.groupBy (p: p.${key} |> lib.sort lib.lessThan |> lib.concatStringsSep ",")
         |> lib.mapAttrsToList (
           _: group: {
-            fromEntities = (builtins.head group).from;
+            ${field} = (builtins.head group).${key};
             toPorts = [
               {
                 ports = map (
@@ -61,6 +65,7 @@
             ];
           }
         );
+      mkIngress = ports: mkRules "fromEntities" "from" ports ++ mkRules "fromCIDR" "fromCIDR" ports;
 
       # nodeSelector, not podSelector/endpointSelector — the shape Cilium's host firewall uses.
       # It matches the host endpoint's labels, not the Node object's: Cilium's
@@ -95,7 +100,7 @@
       # On every node, not only control-plane ones: an agent turning server keeps
       # its Cilium, which loses the API (127.0.0.1:6443 is now its own, down
       # until etcd joins) before it can see the control-plane label.
-      etcdIngress = lib.optionals (servers != [ ]) [
+      etcdIngress = lib.optionals (cluster.k3s.datastore == "etcd" && servers != [ ]) [
         {
           fromEntities = [ "remote-node" ];
           toPorts = etcdPorts;

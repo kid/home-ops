@@ -8,11 +8,14 @@ metadata:
   name: victoria-metrics
   namespace: monitoring
 spec:
+  configReloaderExtraArgs:
+    loggerFormat: json
   externalLabels: {}
   extraArgs:
     promscrape.streamParse: "true"
   image:
     tag: v1.156.0
+  logFormat: json
   port: "8429"
   remoteWrite:
     - url: http://vmsingle-victoria-metrics.monitoring.svc.cluster.local.:8428/api/v1/write

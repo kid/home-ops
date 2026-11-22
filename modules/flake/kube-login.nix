@@ -1,8 +1,8 @@
 # kube-login <cluster> — adds a kubectl context for a den.clusters entry that logs in through
 # Kanidm with kubelogin (public client, PKCE), using the server name, issuer and client ID from
 # the cluster's methods.kubeLogin (modules/kubernetes/apiserver/default.nix). The
-# API server CA comes from the cluster's first node over SSH. A cluster without kubeLogin is
-# not offered.
+# API server CA comes from the cluster's first node over SSH. Only clusters that include
+# den.aspects.kubernetes.apiserver are offered.
 #
 # - The context runs `kubectl oidc-login` at use time: needs `kubectl-oidc_login` (package
 #   kubelogin-oidc, in the devshell) on PATH.
@@ -12,22 +12,29 @@
 # - If Kanidm is down, use the admin kubeconfig on the node: /etc/rancher/k3s/k3s.yaml.
 {
   config,
+  den,
   lib,
   ...
 }:
 let
-  clusters = lib.filterAttrs (_: cluster: cluster.methods ? kubeLogin) config.den.clusters;
+  clusters = lib.filterAttrs (
+    _: cluster: cluster.includesAspect den.aspects.kubernetes.apiserver
+  ) config.den.clusters;
 
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } config.systems;
 
-  # The first host of the cluster (host.k3s.clusterName), at its address on the cluster network.
+  # The first k3s node of the cluster, at its address on the cluster network.
   nodeAddress =
     name:
     let
       members =
         allHosts
         |> builtins.attrNames
-        |> builtins.filter (host: (allHosts.${host}.k3s.clusterName or null) == name);
+        |> builtins.filter (
+          host:
+          allHosts.${host}.hasAspect den.aspects.k3s.node-base
+          && allHosts.${host}.settings.k3s.clusterName == name
+        );
     in
     config.den.devices.${builtins.head members}.address;
 

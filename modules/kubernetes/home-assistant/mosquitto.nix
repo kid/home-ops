@@ -1,9 +1,9 @@
 # Mosquitto, replacing HAOS's core_mosquitto add-on: the broker between
 # Zigbee2MQTT and Home Assistant. TLS only, with a server certificate from the
 # cluster CA (clients trust the cluster-ca ConfigMap trust-manager puts in
-# every namespace), and one generated password per client. No persistence:
-# Zigbee2MQTT republishes its discovery messages when Home Assistant comes
-# online.
+# every namespace), and one password per client from the generated-secrets
+# stack. No persistence: Zigbee2MQTT republishes its discovery messages when
+# Home Assistant comes online.
 { lib, ... }:
 let
   name = "mosquitto";
@@ -13,16 +13,28 @@ let
   # The image's mosquitto user.
   uid = 1883;
   # renovate: datasource=docker depName=docker.io/library/eclipse-mosquitto
-  tag = "2.1.2-alpine@sha256:75d6662dee52c947dc9dd9c29f1d8d7ffef78ddaf38001caa09755681e8bbc98";
+  tag = "2.1.4-alpine@sha256:fa12172a051310efe5bcb7a6a11b77bd5faacb82cbacd7742aa758bf024fd8e4";
   image = "docker.io/library/eclipse-mosquitto:${tag}";
   tlsSecret = "${name}-tls";
-  # Usernames; each client's password is generated once into the
-  # mosquitto-<client> Secret, which the client reads too.
+  # Usernames; each client's password is generated once (generated-secrets)
+  # into the mosquitto-<client> 1Password item and Secret, which the client
+  # reads too.
   clients = [
     "home-assistant"
     "zigbee2mqtt"
+    "frigate"
   ];
   passwordSecret = client: "${name}-${client}";
+  # The format of the External Secrets Password generators that made them
+  # first: 32 lowercase letters and digits, 10 of them digits.
+  passwordSecrets = map (client: {
+    item = passwordSecret client;
+    field = "password";
+    length = 32;
+    upper = false;
+    special = false;
+    min_numeric = 10;
+  }) clients;
   passwordFile = "/mosquitto/auth/passwords";
 
   securityContext = {
@@ -32,6 +44,8 @@ let
   };
 in
 {
+  den.aspects.kubernetes.home-assistant.mosquitto.generated-secrets = _: passwordSecrets;
+
   den.aspects.kubernetes.home-assistant.mosquitto.k8s-manifests =
     { cluster, ... }:
     {
@@ -40,7 +54,7 @@ in
         flux.dependsOn = [
           # Its server certificate.
           "cert-manager"
-          # The client passwords' Password generators and ExternalSecrets.
+          # The onepassword store, for the client passwords.
           "external-secrets-config"
         ];
 
@@ -64,32 +78,11 @@ in
             };
           };
 
-          # Generated once: the clients keep it in their own settings.
-          passwords = lib.genAttrs (map passwordSecret clients) (_: {
-            spec = {
-              length = 32;
-              digits = 10;
-              symbols = 0;
-              noUpper = true;
-              allowRepeat = true;
-              secretKeys = [ "password" ];
-            };
-          });
-          externalSecrets = lib.genAttrs (map passwordSecret clients) (secret: {
-            spec = {
-              refreshPolicy = "CreatedOnce";
-              target.name = secret;
-              dataFrom = [
-                {
-                  sourceRef.generatorRef = {
-                    apiVersion = "generators.external-secrets.io/v1alpha1";
-                    kind = "Password";
-                    name = secret;
-                  };
-                }
-              ];
-            };
-          });
+          # Kept across rebuilds: the clients keep them in their own settings.
+          externalSecrets =
+            passwordSecrets
+            |> map (s: lib.nameValuePair s.item { spec = cluster.methods.mkGeneratedSecret s; })
+            |> lib.listToAttrs;
 
           configMaps.${name}.data."mosquitto.conf" = ''
             allow_anonymous false
@@ -156,7 +149,8 @@ in
                     # container anyway.
                     resources = {
                       requests = {
-                        cpu = "10m";
+                        # Also its CPU share when the node is contended.
+                        cpu = "100m";
                         memory = "16Mi";
                       };
                       limits.memory = "128Mi";

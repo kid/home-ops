@@ -44,6 +44,11 @@ inputs = {
       name    = "K3s"
       vlan_id = 40
     }
+    K3sDev = {
+      address = "10.0.41.1"
+      name    = "K3sDev"
+      vlan_id = 41
+    }
     Management = {
       address = "10.99.0.1"
       name    = "Management"
@@ -110,73 +115,25 @@ inputs = {
         action        = "accept"
         comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on IotLocal"
         out_interface = "IotLocal"
-        src_address   = "10.0.40.20"
-      },
-      {
-        action        = "accept"
-        comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on IotLocal"
-        out_interface = "IotLocal"
-        src_address   = "10.0.40.21"
-      },
-      {
-        action        = "accept"
-        comment       = "Allow HomeAssistant on K3s (k3s-prd-2) to reach its devices on IotLocal"
-        out_interface = "IotLocal"
-        src_address   = "10.0.40.22"
+        src_address   = "10.0.40.41"
       },
       {
         action        = "accept"
         comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on IotInternet"
         out_interface = "IotInternet"
-        src_address   = "10.0.40.20"
-      },
-      {
-        action        = "accept"
-        comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on IotInternet"
-        out_interface = "IotInternet"
-        src_address   = "10.0.40.21"
-      },
-      {
-        action        = "accept"
-        comment       = "Allow HomeAssistant on K3s (k3s-prd-2) to reach its devices on IotInternet"
-        out_interface = "IotInternet"
-        src_address   = "10.0.40.22"
+        src_address   = "10.0.40.41"
       },
       {
         action        = "accept"
         comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on Trusted"
         out_interface = "Trusted"
-        src_address   = "10.0.40.20"
-      },
-      {
-        action        = "accept"
-        comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on Trusted"
-        out_interface = "Trusted"
-        src_address   = "10.0.40.21"
-      },
-      {
-        action        = "accept"
-        comment       = "Allow HomeAssistant on K3s (k3s-prd-2) to reach its devices on Trusted"
-        out_interface = "Trusted"
-        src_address   = "10.0.40.22"
+        src_address   = "10.0.40.41"
       },
       {
         action        = "accept"
         comment       = "Allow HomeAssistant on K3s (k3s-prd-0) to reach its devices on Guest"
         out_interface = "Guest"
-        src_address   = "10.0.40.20"
-      },
-      {
-        action        = "accept"
-        comment       = "Allow HomeAssistant on K3s (k3s-prd-1) to reach its devices on Guest"
-        out_interface = "Guest"
-        src_address   = "10.0.40.21"
-      },
-      {
-        action        = "accept"
-        comment       = "Allow HomeAssistant on K3s (k3s-prd-2) to reach its devices on Guest"
-        out_interface = "Guest"
-        src_address   = "10.0.40.22"
+        src_address   = "10.0.40.41"
       },
       {
         action      = "accept"
@@ -184,6 +141,41 @@ inputs = {
         dst_address = "10.0.50.40"
         dst_port    = 6638
         protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Frigate on K3s to reach the doorbell camera on 80"
+        dst_address = "10.0.50.10"
+        dst_port    = 80
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Frigate on K3s to reach the doorbell camera on 554"
+        dst_address = "10.0.50.10"
+        dst_port    = 554
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Frigate on K3s to reach the litters camera on 80"
+        dst_address = "10.0.50.11"
+        dst_port    = 80
+        protocol    = "tcp"
+      },
+      {
+        action      = "accept"
+        comment     = "Allow Frigate on K3s to reach the litters camera on 554"
+        dst_address = "10.0.50.11"
+        dst_port    = 554
+        protocol    = "tcp"
+      },
+    ]
+    K3sDev = [
+      {
+        action             = "accept"
+        comment            = "Allow WAN"
+        out_interface_list = "WAN"
       },
     ]
     Management = [

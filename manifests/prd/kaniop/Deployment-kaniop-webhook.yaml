@@ -31,12 +31,12 @@ spec:
             - name: LOG_FILTER
               value: info
             - name: LOG_FORMAT
-              value: text
+              value: json
             - name: TLS_CERT
               value: /etc/webhook/certs/tls.crt
             - name: TLS_KEY
               value: /etc/webhook/certs/tls.key
-          image: ghcr.io/pando85/kaniop-webhook:0.22.1
+          image: ghcr.io/pando85/kaniop-webhook:0.23.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3

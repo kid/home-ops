@@ -52,6 +52,7 @@ in
           values = {
             fullnameOverride = "external-dns-mikrotik";
             replicaCount = 1;
+            logFormat = "json";
             sources = [
               "gateway-httproute"
               "gateway-tlsroute"
@@ -97,6 +98,10 @@ in
                   {
                     name = "MIKROTIK_DEFAULT_COMMENT";
                     value = "Managed by ExternalDNS";
+                  }
+                  {
+                    name = "LOG_FORMAT";
+                    value = "json";
                   }
                   {
                     name = "MIKROTIK_BASEURL";

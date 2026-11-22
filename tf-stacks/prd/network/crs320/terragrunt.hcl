@@ -53,7 +53,7 @@ inputs = {
       untagged = 99
     }
     ether16 = {
-      comment  = "node0-kvm"
+      comment  = "k3s-prd-0-kvm"
       untagged = 99
     }
     ether17 = {
@@ -73,6 +73,7 @@ inputs = {
         10,
         20,
         40,
+        41,
         50,
         51,
         99,
@@ -86,6 +87,7 @@ inputs = {
         10,
         20,
         40,
+        41,
         50,
         51,
         99,
@@ -99,6 +101,7 @@ inputs = {
         10,
         20,
         40,
+        41,
         50,
         51,
         99,
@@ -110,9 +113,8 @@ inputs = {
       comment = "node1"
       tagged = [
         20,
-        40,
       ]
-      untagged = 10
+      untagged = 41
     }
     sfp-sfpplus4 = {
       comment = "spare"
@@ -120,6 +122,7 @@ inputs = {
         10,
         20,
         40,
+        41,
         50,
         51,
         99,

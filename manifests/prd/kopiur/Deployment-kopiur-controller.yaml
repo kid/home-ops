@@ -15,6 +15,8 @@ spec:
       app.kubernetes.io/component: controller
       app.kubernetes.io/instance: kopiur
       app.kubernetes.io/name: kopiur
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -25,21 +27,19 @@ spec:
       automountServiceAccountToken: true
       containers:
         - args:
-            - --leader-elect=true
+            - --leader-elect=false
             - --cluster-scope
           env:
             - name: RUST_LOG
               value: info
             - name: KOPIUR_LOG_FORMAT
-              value: text
+              value: json
             - name: KOPIUR_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: KOPIUR_LEASE_NAME
-              value: kopiur
             - name: KOPIUR_MOVER_IMAGE
-              value: ghcr.io/home-operations/kopiur-mover@sha256:8a727876168de3e5ac96aca08e89f557330b22d889a16254ba711f0ea023a6f0
+              value: ghcr.io/home-operations/kopiur-mover@sha256:5a9abc325ca661ebe89fe53efeb63b6afb31ddbc1c394cd168c36b8f6382cbf4
             - name: KOPIUR_MOVER_PULL_POLICY
               value: IfNotPresent
             - name: KOPIUR_MOVER_SERVICE_ACCOUNT
@@ -70,7 +70,7 @@ spec:
               value: kopiur-validating
             - name: KOPIUR_WEBHOOK_MUTATING_CONFIG
               value: kopiur-mutating
-          image: ghcr.io/home-operations/kopiur-controller@sha256:8d34368ecf62608c1e86ff07525976bb3385465f1f4308c829b68ea40e8d34e3
+          image: ghcr.io/home-operations/kopiur-controller@sha256:b01c6fecb9fddf0ab419d7a419b3c74fade5a3f7be98e3f54730c12566283ce9
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:

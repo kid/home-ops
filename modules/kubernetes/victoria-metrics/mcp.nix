@@ -32,7 +32,7 @@ _: {
         mcp-victorialogs = {
           host = "logs";
           # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victorialogs
-          tag = "1.9.0@sha256:753bb4fbe402ca1a782842f44636830f9895736f11d7fe783b924f8a0daf083d";
+          tag = "v1.10.0@sha256:e4b1f38f708a5c99606395ba2de514eab6730ec67440f929c6e3b6f261945d4b";
           env = {
             VL_INSTANCE_ENTRYPOINT = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
             # No default list upstream. Also skips the docs resources, whose
@@ -51,6 +51,17 @@ _: {
       perServer = f: lib.concatMapAttrs f servers;
     in
     {
+      # Public through the tunnel, for the MCP servers off the LAN: the whole
+      # host goes, its UI still behind the Envoy OIDC (default.nix) and /mcp
+      # behind the JWT check.
+      applications.envoy-gateway.resources.httpRoutes = perServer (
+        _: server: {
+          "${server.host}-public" = cluster.methods.mkGatewayTunnelRoute (
+            cluster.methods.mkAppHostname server.host
+          );
+        }
+      );
+
       applications.victoria-metrics = {
         # kaniop's webhook admits the MCP client.
         flux.dependsOn = [ "kaniop" ];
@@ -61,6 +72,8 @@ _: {
               _: server: {
                 hostname = cluster.methods.mkAppHostname server.host;
                 inherit port;
+                # Declared in default.nix.
+                route = "${server.backend.name}-victoria-metrics";
               }
             )
             |> mcp.mkAuth
@@ -100,6 +113,7 @@ _: {
                         server.env
                         // {
                           MCP_SERVER_MODE = "http";
+                          MCP_LOG_FORMAT = "json";
                           MCP_LISTEN_ADDR = ":${toString port}";
                         }
                       );

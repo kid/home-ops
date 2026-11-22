@@ -52,18 +52,6 @@ _: {
             ipmitool
           ]
           ++ [
-            config.packages.nixos-anywhere-install
-            config.packages.provision-host-key
-            config.packages.kube-login
-            config.packages.provision-k3s-token
-            config.packages.write-manifests
-            config.packages.write-terragrunt
-            config.packages.rehash-chart
-            config.packages.write-sops-config
-            config.packages.write-flake
-            config.packages.write-lock
-            config.packages.write-inputs
-
             inputs'.nixhelm.packages.helmupdater
             inputs'.colmena.packages.colmena
           ];

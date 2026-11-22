@@ -23,3 +23,36 @@ spec:
         - path:
             type: PathPrefix
             value: /
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: flux-operator-mcp
+          port: 9090
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /mcp
+      name: mcp
+    - filters:
+        - extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: flux-operator-mcp-metadata-mcp
+          type: ExtensionRef
+      matches:
+        - path:
+            type: Exact
+            value: /.well-known/oauth-protected-resource/mcp
+      name: mcp-metadata-mcp
+    - filters:
+        - extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: flux-operator-mcp-metadata-root
+          type: ExtensionRef
+      matches:
+        - path:
+            type: Exact
+            value: /.well-known/oauth-protected-resource
+      name: mcp-metadata-root

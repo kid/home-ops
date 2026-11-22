@@ -3,7 +3,7 @@
   ...
 }:
 {
-  den.aspects.k3s-external-secrets = {
+  den.aspects.k3s.external-secrets = {
     nixos =
       {
         host,
@@ -12,7 +12,7 @@
         ...
       }:
       let
-        clusterName = host.k3s.clusterName or "prd";
+        inherit (host.settings.k3s) clusterName;
       in
       {
         imports = [ inputs.sops-nix.nixosModules.sops ];

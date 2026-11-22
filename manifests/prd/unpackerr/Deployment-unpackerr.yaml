@@ -4,6 +4,7 @@ metadata:
   name: unpackerr
   namespace: media
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: unpackerr
@@ -87,8 +88,7 @@ spec:
           type: RuntimeDefault
       volumes:
         - name: downloads
-          nfs:
-            path: /tank/downloads/sabnzbd
-            server: 10.0.20.10
+          persistentVolumeClaim:
+            claimName: unpackerr-downloads
         - emptyDir: {}
           name: tmp

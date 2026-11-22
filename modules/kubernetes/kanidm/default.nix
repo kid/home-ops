@@ -9,20 +9,22 @@
 # `*NamespaceSelector`s below); other aspects point them at
 # cluster.methods.kanidm.ref.
 { acl, config, ... }:
-let
-  domain = config.den.clusters.prd.methods.mkAppHostname "idm";
-  origin = "https://${domain}";
-in
 {
-  den.clusters.prd.methods.kanidm = {
-    inherit domain origin;
-    ref = {
-      name = "idm";
-      namespace = "kanidm";
+  den.clusterMethods.kanidm =
+    cluster:
+    let
+      domain = cluster.methods.mkAppHostname "idm";
+      origin = "https://${domain}";
+    in
+    {
+      inherit domain origin;
+      ref = {
+        name = "idm";
+        namespace = "kanidm";
+      };
+      # Kanidm gives each OAuth2 client its own issuer.
+      issuer = clientId: "${origin}/oauth2/openid/${clientId}";
     };
-    # Kanidm gives each OAuth2 client its own issuer.
-    issuer = clientId: "${origin}/oauth2/openid/${clientId}";
-  };
 
   den.aspects.kubernetes.kanidm.k8s-manifests =
     {
@@ -33,12 +35,16 @@ in
       ...
     }:
     let
-      inherit (cluster.methods.kanidm) ref;
+      inherit (cluster.methods.kanidm) ref domain origin;
       inherit (ref) namespace;
       # The image's own kanidm user. The kopiur mover reads the volume as this same uid.
       appId = 389;
-      # renovate: datasource=docker depName=docker.io/kanidm/server
-      serverTag = "1.11.2@sha256:e45f00bd354c1fc1c06a4be484b4e87b094c431e78280f1d19e911815e63efb5";
+      # The Kanidm release kaniop's latest release is built against (its
+      # kanidm_client crate), so Renovate bumps it in the same PR as the kaniop
+      # chart. A plain tag: the custom datasource has no digests, and a stale
+      # digest next to a new tag would keep running the old image.
+      # renovate: datasource=custom.kaniop-kanidm depName=docker.io/kanidm/server
+      serverTag = "1.12.1";
       tlsSecretName = "${ref.name}-tls";
       serviceHostname = "${ref.name}.${namespace}.svc.cluster.local";
       # kaniop names the StatefulSet <Kanidm>-<replica group> and its
@@ -67,6 +73,10 @@ in
         |> lib.mapAttrs (_: u: u // { allGroups = acl.closure u.groups; });
     in
     {
+      # Public through the tunnel, so OAuth2 logins work from outside.
+      applications.envoy-gateway.resources.httpRoutes.kanidm-public =
+        cluster.methods.mkGatewayTunnelRoute domain;
+
       nixidy.applicationImports = [
         (generators.fromChartCRDModule {
           name = "kaniop";
@@ -91,6 +101,7 @@ in
             # A Helm pre-install hook; the chart's crds/ are rendered with the
             # rest.
             crdApply.enabled = false;
+            logging.format = "json";
 
             metrics = {
               enabled = true;
@@ -110,6 +121,7 @@ in
             # cert-manager, not from the chart's random-cert Job.
             webhook = {
               enabled = true;
+              logging.format = "json";
               certManager = {
                 enabled = true;
                 # The chart's schema takes no group.
@@ -224,7 +236,7 @@ in
                 ];
 
                 storage.volumeClaimTemplate.spec = {
-                  storageClassName = "miroir-replicated";
+                  storageClassName = cluster.storage.replicatedClass;
                   accessModes = [ "ReadWriteOncePod" ];
                   resources.requests.storage = "1Gi";
                   dataSourceRef = {

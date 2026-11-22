@@ -20,11 +20,13 @@ spec:
               value: documentation
             - name: MCP_LISTEN_ADDR
               value: :8080
+            - name: MCP_LOG_FORMAT
+              value: json
             - name: MCP_SERVER_MODE
               value: http
             - name: VL_INSTANCE_ENTRYPOINT
               value: http://vlsingle-victoria-metrics.monitoring.svc:9428
-          image: ghcr.io/victoriametrics/mcp-victorialogs:1.9.0@sha256:753bb4fbe402ca1a782842f44636830f9895736f11d7fe783b924f8a0daf083d
+          image: ghcr.io/victoriametrics/mcp-victorialogs:v1.10.0@sha256:e4b1f38f708a5c99606395ba2de514eab6730ec67440f929c6e3b6f261945d4b
           livenessProbe:
             httpGet:
               path: /health/liveness

@@ -1,8 +1,8 @@
-# Split out of k3s-server (modules/nixos/services/k3s/k3s.nix): k3s
+# Split out of k3s.server (modules/nixos/services/k3s/k3s.nix): k3s
 # flags and firewall settings that only make sense when Cilium is the
 # host's CNI. Only hosts that actually run Cilium should include this.
 _: {
-  den.aspects.k3s-cilium.nixos =
+  den.aspects.k3s.cilium.nixos =
     {
       config,
       lib,

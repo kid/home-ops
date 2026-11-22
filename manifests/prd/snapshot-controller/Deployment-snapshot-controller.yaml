@@ -27,10 +27,10 @@ spec:
       containers:
         - args:
             - --v=2
-            - --leader-election=true
-            - --leader-election-namespace=$(NAMESPACE)
+            - --leader-election=false
             - --http-endpoint=:8080
             - --feature-gates=CSIVolumeGroupSnapshot=true
+            - --logging-format=json
           env:
             - name: NAMESPACE
               valueFrom:
@@ -40,7 +40,7 @@ spec:
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
-              path: /healthz/leader-election
+              path: /metrics
               port: metrics
             initialDelaySeconds: 10
             periodSeconds: 20
@@ -51,7 +51,7 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: /healthz/leader-election
+              path: /metrics
               port: metrics
             initialDelaySeconds: 5
             periodSeconds: 10

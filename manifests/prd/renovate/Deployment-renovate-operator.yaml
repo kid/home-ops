@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: renovate-operator
+  namespace: renovate
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: renovate-operator
+  template:
+    metadata:
+      labels:
+        app: renovate-operator
+    spec:
+      containers:
+        - args:
+            - --zap-log-level=info
+            - --zap-encoder=json
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: JOB_TIMEOUT_SECONDS
+              value: "3600"
+            - name: JOB_BACKOFF_LIMIT
+              value: "1"
+            - name: DELETE_SUCCESSFUL_JOBS
+              value: "false"
+            - name: JOB_TTL_SECONDS_AFTER_FINISHED
+              value: "604800"
+            - name: IMAGE_PULL_SECRETS
+              value: '[]'
+            - name: SERVER_PORT
+              value: "8081"
+            - name: HEALTH_PROBE_PORT
+              value: "8083"
+            - name: WEBHOOK_SERVER_PORT
+              value: "8082"
+            - name: WEBHOOK_SERVER_ENABLED
+              value: "true"
+            - name: WEBHOOK_SERVER_UNIFIED_HOST
+              value: "false"
+            - name: WEBHOOK_BASE_URL
+              value: https://renovate-webhook.kidibox.net
+            - name: LEADER_ELECTION_ID
+              value: renovate-operator-leader
+            - name: SESSION_STORE
+              value: cookie
+            - name: SESSION_DURATION
+              value: 24h
+            - name: VALKEY_FORWARD_CACHE_TO_JOBS
+              value: "true"
+            - name: POLICY_ENABLED
+              value: "false"
+            - name: POLICY_ALLOWED_HOSTS
+              value: api.github.com,github.com,gitlab.com,api.bitbucket.org,bitbucket.org,gitea.com,codeberg.org,renovate-webhook.kidibox.net
+            - name: POLICY_REQUIRE_SECRET_REF_OPT_IN
+              value: "true"
+            - name: POLICY_ALLOWED_SERVICE_ACCOUNTS
+              value: ""
+            - name: POLICY_ALLOW_ROOT_USER
+              value: "false"
+            - name: POLICY_ALLOWED_IMAGES
+              value: renovate/renovate,docker.io/renovate/renovate,ghcr.io/renovatebot/renovate
+            - name: AUTHORIZATION_ENABLED
+              value: "true"
+            - name: AUTHORIZATION_SUSPEND_FROM_UI
+              value: "false"
+            - name: AUTHORIZATION_DEFAULT_ANONYMOUS_READ
+              value: "false"
+            - name: AUTHORIZATION_DEFAULT_ANONYMOUS_READ_LOGS
+              value: "false"
+            - name: GLOBAL_PARALLELISM_LIMIT
+              value: "0"
+            - name: POD_LABEL_TEMPLATES
+              value: '{}'
+            - name: LOG_STORE_MODE
+              value: disabled
+          image: ghcr.io/mogenius/renovate-operator:6.10.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: probes
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+          name: renovate-operator
+          ports:
+            - containerPort: 8081
+              name: http
+              protocol: TCP
+            - containerPort: 8080
+              name: metrics
+              protocol: TCP
+            - containerPort: 8083
+              name: probes
+              protocol: TCP
+            - containerPort: 8082
+              name: webhook
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: probes
+            timeoutSeconds: 5
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 10m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: renovate-operator

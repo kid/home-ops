@@ -1,6 +1,6 @@
 # nix run .#provision-k3s-token <cluster> — generates a random k3s join
 # token and sops-encrypts it into secrets/clusters/<cluster>/k3s-token.sops,
-# for den.aspects.k3s-token. Only for a cluster that has not started yet: a
+# for den.aspects.k3s.token. Only for a cluster that has not started yet: a
 # running server refuses any token but the one it was bootstrapped with.
 {
   perSystem =
