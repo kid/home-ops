@@ -62,6 +62,19 @@ let
           redirectURL = "${origin}/oauth2/callback";
           # Only clears Envoy's cookies: Kanidm has no end-session endpoint.
           logoutPath = "/oauth2/logout";
+          # Only a page navigation can follow the redirect to Kanidm. Every
+          # redirect sets two per-flow cookies that live 10 minutes, so a
+          # polling SPA with an expired session (renovate) piled them past
+          # Firefox's 180-cookie limit for kidibox.net, which then evicted
+          # Kanidm's session cookie and other apps' OIDC cookies. A fetch,
+          # subresource or websocket gets a 401 instead.
+          denyRedirect.headers = [
+            {
+              name = "Sec-Fetch-Mode";
+              type = "RegularExpression";
+              value = "cors|no-cors|same-origin|websocket";
+            }
+          ];
         };
       };
     };
