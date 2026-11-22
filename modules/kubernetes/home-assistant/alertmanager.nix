@@ -29,7 +29,10 @@ let
     trigger = "webhook";
     webhook_id = secretTag key;
     allowed_methods = [ "POST" ];
-    local_only = true;
+    # HA's "local" is RFC 1918 and the pod CIDR (172.40.0.0/16) is outside it,
+    # so local_only would reject Alertmanager. The random 32-character ID is
+    # the webhook's only guard (HA is public through the tunnel).
+    local_only = false;
   };
   # One notification per alert group; the resolved one replaces the firing
   # one (Android's tag, iOS's collapse id).
