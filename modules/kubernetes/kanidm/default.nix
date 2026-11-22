@@ -200,10 +200,7 @@
                         cpu = "50m";
                         memory = "128Mi";
                       };
-                      # Raised from 512Mi after a kaniop reconcile loop
-                      # (2026-11-09) bloated the replication changelog,
-                      # which Kanidm keeps for 7 days. Lower again after.
-                      limits.memory = "1536Mi";
+                      limits.memory = "512Mi";
                     };
                   }
                 ];

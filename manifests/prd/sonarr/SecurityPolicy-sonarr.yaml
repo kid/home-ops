@@ -8,6 +8,11 @@ spec:
     clientID: sonarr
     clientSecret:
       name: sonarr-kanidm-oauth2-credentials
+    denyRedirect:
+      headers:
+        - name: Sec-Fetch-Mode
+          type: RegularExpression
+          value: cors|no-cors|same-origin|websocket
     logoutPath: /oauth2/logout
     provider:
       authorizationEndpoint: https://idm.kidibox.net/ui/oauth2

@@ -1,6 +1,10 @@
 # Sonarr, moved from pve1's CT 130, whose config was imported once into the
 # kopiur-backed volume.
 _: {
+  den.aspects.kubernetes.media.sonarr.generated-secrets = { cluster, ... }: [
+    (cluster.methods.mkMediaApiKey "sonarr")
+  ];
+
   den.aspects.kubernetes.media.sonarr.k8s-manifests =
     { cluster, ... }:
     cluster.methods.mkMediaApp {

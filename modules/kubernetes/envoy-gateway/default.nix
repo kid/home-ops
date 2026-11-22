@@ -2,8 +2,24 @@
 # Cilium's own, see cilium/default.nix's envoy.enabled = false) and the
 # shared "apps" Gateway cluster.domain apps attach HTTPRoutes to — one
 # aspect, since neither is useful without the other in this repo.
-_: {
+_:
+let
+  # The Secret Envoy Gateway reads its OIDC filters' HMAC key from (certgen's
+  # name and key). The format of the External Secrets Password generator
+  # that made it first: 32 characters, 8 of them digits and 8 symbols.
+  hmacSecret = {
+    item = "envoy-oidc-hmac";
+    field = "hmac-secret";
+    length = 32;
+    min_numeric = 8;
+    min_special = 8;
+    override_special = "~!@#$%^&*()_+`-={}|[]\\:\"<>?,./";
+  };
+in
+{
   den.clusterMethods.mkAppHostname = cluster: appName: "${appName}.${cluster.domain}";
+
+  den.aspects.kubernetes.envoy-gateway.generated-secrets = _: [ hmacSecret ];
 
   den.aspects.kubernetes.envoy-gateway.k8s-manifests =
     {
@@ -59,6 +75,12 @@ _: {
           "code.line.number" = "%#";
         };
       };
+
+      # The apps Gateway's pinned LoadBalancer IP, if any. Envoy Gateway turns
+      # Gateway spec.addresses into externalIPs, not a LoadBalancer IP, but
+      # copies spec.infrastructure.annotations onto the resources it generates,
+      # its Service included (the others ignore the annotation).
+      appsInfrastructureAnnotations = cluster.methods.lbIpamAnnotations "apps-gateway";
     in
     {
       nixidy.applicationImports = [
@@ -75,7 +97,9 @@ _: {
 
       applications.envoy-gateway = {
         inherit namespace;
-        # The control plane's certificates, and the OIDC HMAC's Password generator.
+        # The control plane's certificates, and the ExternalSecret CRD for the
+        # OIDC HMAC. Not the onepassword store: the Gateway shouldn't wait on
+        # 1Password, only the OIDC routes need that Secret.
         flux.dependsOn = [
           "cert-manager"
           "external-secrets"
@@ -207,28 +231,10 @@ _: {
           issuerRef = caIssuerRef;
         };
 
-        # The key SecurityPolicy's OIDC filters sign their cookies with.
-        # Generated once: a new one would log every user out.
-        resources.passwords.envoy-oidc-hmac.spec = {
-          length = 32;
-          allowRepeat = true;
-          noUpper = false;
-          secretKeys = [ "hmac-secret" ];
-        };
-
-        resources.externalSecrets.envoy-oidc-hmac.spec = {
-          refreshPolicy = "CreatedOnce";
-          target.name = "envoy-oidc-hmac";
-          dataFrom = [
-            {
-              sourceRef.generatorRef = {
-                apiVersion = "generators.external-secrets.io/v1alpha1";
-                kind = "Password";
-                name = "envoy-oidc-hmac";
-              };
-            }
-          ];
-        };
+        # The key SecurityPolicy's OIDC filters sign their cookies with, from
+        # the generated-secrets stack. Kept across rebuilds: a new one would
+        # log every user out.
+        resources.externalSecrets.${hmacSecret.item}.spec = cluster.methods.mkGeneratedSecret hmacSecret;
 
         resources.gatewayClasses.envoy.spec.controllerName =
           "gateway.envoyproxy.io/gatewayclass-controller";
@@ -251,6 +257,9 @@ _: {
 
         resources.gateways.apps.spec = {
           gatewayClassName = "envoy";
+          infrastructure = lib.mkIf (appsInfrastructureAnnotations != { }) {
+            annotations = appsInfrastructureAnnotations;
+          };
           listeners = [
             {
               name = "https";

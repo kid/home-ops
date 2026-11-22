@@ -1,0 +1,34 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  credentialProjection:
+    enabled: true
+  files:
+    ignoreRules:
+      - /lost+found
+      - /plugins
+  identity:
+    hostname: grafana
+    username: grafana
+  mover:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+    securityContext:
+      runAsGroup: 10001
+      runAsUser: 10001
+  repository:
+    kind: ClusterRepository
+    name: r2
+  retention:
+    keepDaily: 14
+    keepWeekly: 4
+  sources:
+    - pvc:
+        name: grafana
+  staging:
+    storageClassName: zfs

@@ -12,6 +12,7 @@ spec:
   origin: https://hubble.kidibox.net
   redirectUrl:
     - https://hubble.kidibox.net/oauth2/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: admins
       scopes:

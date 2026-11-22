@@ -12,6 +12,7 @@ spec:
   origin: https://animarr.kidibox.net
   redirectUrl:
     - https://animarr.kidibox.net/oauth2/callback
+  refreshTokenExpiry: 604800
   scopeMap:
     - group: media
       scopes:

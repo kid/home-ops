@@ -99,14 +99,12 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: radarr
-        - hostPath:
-            path: /tank/downloads/sabnzbd
-            type: Directory
-          name: downloads
-        - hostPath:
-            path: /tank/library/movies
-            type: Directory
-          name: library
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: radarr-downloads
+        - name: library
+          persistentVolumeClaim:
+            claimName: radarr-library
         - emptyDir: {}
           name: logs
         - emptyDir: {}

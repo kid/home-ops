@@ -5,6 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
+    - name: kopiur-config
     - name: kaniop
   interval: 10m
   path: ./manifests/prd/grafana-operator

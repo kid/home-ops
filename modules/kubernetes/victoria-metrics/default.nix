@@ -210,6 +210,9 @@
         };
       };
 
+      # node-exporter runs in the host's network and PID namespaces.
+      podSecurity.namespaces.monitoring = "privileged";
+
       applications.victoria-metrics = {
         namespace = "monitoring";
         # The operator webhook's certificate.
@@ -341,10 +344,14 @@
                 };
                 limits.memory = "64Mi";
               };
-              # A list replaces the chart's, so its two args are restated.
+              # A list replaces the chart's, so its two args are restated. The
+              # textfile directory is the host's /run/node-exporter
+              # (nixos/services/k3s/disk-power-mode.nix), through the chart's
+              # host-root mount.
               extraArgs = [
                 "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)"
                 "--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs)$"
+                "--collector.textfile.directory=/host/root/run/node-exporter"
                 "--log.format=json"
               ];
             };
@@ -378,7 +385,7 @@
               vmScrape = null;
             };
             kubeEtcd = {
-              enabled = true;
+              enabled = cluster.k3s.datastore == "etcd";
               vmScrape = null;
             };
 

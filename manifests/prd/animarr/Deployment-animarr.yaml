@@ -99,14 +99,12 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: animarr
-        - hostPath:
-            path: /tank/downloads/sabnzbd
-            type: Directory
-          name: downloads
-        - hostPath:
-            path: /tank/library/animes
-            type: Directory
-          name: library
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: animarr-downloads
+        - name: library
+          persistentVolumeClaim:
+            claimName: animarr-library
         - emptyDir: {}
           name: logs
         - emptyDir: {}

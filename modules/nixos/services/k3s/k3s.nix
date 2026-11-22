@@ -98,6 +98,8 @@ in
         login =
           if cluster.includesAspect den.aspects.kubernetes.apiserver then cluster.methods.kubeLogin else null;
         etcd = cluster.k3s.datastore == "etcd";
+        # The apps Gateway's pinned LoadBalancer IP, which serves Kanidm.
+        appsGatewayIp = cluster.networks.loadBalancer.assignments.apps-gateway or null;
 
         servers = serversOf clusterName;
         peers = lib.optionals (lib.elem host.name servers) (lib.remove host.name servers);
@@ -118,6 +120,14 @@ in
             message = "den.clusters.${clusterName}.k3s.datastore is sqlite, which allows one server and no initServer; servers: ${lib.concatStringsSep ", " servers}";
           }
         ];
+
+        # The API server fetches its OIDC issuer's discovery document from Kanidm at startup: a
+        # rebuilt cluster's DNS record for it can be missing or stale until external-dns runs.
+        networking.hosts =
+          lib.mkIf (cluster.includesAspect den.aspects.kubernetes.kanidm && appsGatewayIp != null)
+            {
+              ${appsGatewayIp} = [ cluster.methods.kanidm.domain ];
+            };
 
         services.k3s = {
           enable = true;

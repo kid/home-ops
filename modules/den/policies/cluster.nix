@@ -19,7 +19,7 @@
 }:
 {
   flake-file.inputs.nixidy = {
-    url = "github:arnarg/nixidy/9b10af554a7b45a71ed100a71f6958a1ccb13c95";
+    url = "github:arnarg/nixidy/2745f55873909a4ee2cc1ab87594a5909f14da49";
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -48,10 +48,12 @@
         instantiate =
           { modules, ... }:
           withSystem system (
-            { pkgs, ... }:
+            { pkgs, config, ... }:
             inputs.nixidy.lib.mkEnv {
               inherit pkgs modules;
               charts = self.chartsDerivations.${system};
+              # modules/flake/images.nix
+              extraSpecialArgs.images = config.legacyPackages.imageRefs;
             }
           );
       }

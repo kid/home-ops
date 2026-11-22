@@ -5,8 +5,8 @@
 # ClusterIssuer/Certificate aren't core Kubernetes types, so nixidy has no
 # built-in typed options for them — generators.fromChartCRDModule (a module
 # arg nixidy's mkEnv auto-injects) generates them live from the chart's own
-# CRDs, no committed file needed, so the self-signed CA + ClusterIssuer
-# chain below is real Nix, not embedded YAML. extraOpts is required: the
+# CRDs, no committed file needed, so the issuers and certificates below are real Nix,
+# not embedded YAML. extraOpts is required: the
 # chart gates its CRDs behind crds.enabled (default false, same as the
 # Helm release's own values below), and kindFilter matches nothing if the
 # chart is templated without it.
@@ -144,35 +144,13 @@ _: {
           "external-secrets-config"
         ];
 
-        # Standard cert-manager self-signed-root bootstrap: a selfSigned
-        # ClusterIssuer signs the cluster CA Certificate, then the cluster-ca
-        # ClusterIssuer signs every in-cluster certificate (Hubble mTLS via
-        # modules/kubernetes/cilium/default.nix, backend TLS for
-        # Envoy) off that CA's secret. trust-manager publishes the CA as the
-        # cluster-ca ConfigMap. Certificate's namespace defaults to this
-        # application's own namespace (cert-manager).
-        resources.clusterIssuers.selfsigned-issuer.spec.selfSigned = { };
-
-        # 10-year CA: cert-manager's 90d default would rotate the key mid-life
-        # of the leaf certs it signs. rotationPolicy Never keeps the key on
-        # renewal, so leaves signed before it still verify.
-        resources.certificates.cluster-ca.spec = {
-          isCA = true;
-          commonName = "cluster-ca";
-          secretName = "cluster-ca";
-          duration = "87600h";
-          privateKey = {
-            algorithm = "ECDSA";
-            size = 256;
-            rotationPolicy = "Never";
-          };
-          issuerRef = {
-            name = "selfsigned-issuer";
-            kind = "ClusterIssuer";
-            group = "cert-manager.io";
-          };
-        };
-
+        # The cluster-ca ClusterIssuer signs every in-cluster certificate
+        # (Hubble mTLS via modules/kubernetes/cilium/default.nix, backend TLS
+        # for Envoy) off the cluster-ca Secret, which isn't cert-manager's: the
+        # k3s node seeds it from secrets/clusters/<cluster>/cluster-ca.sops
+        # (modules/nixos/services/k3s/cluster-ca.nix), so a rebuilt cluster
+        # keeps the CA its clients pin. trust-manager publishes it as the
+        # cluster-ca ConfigMap.
         resources.clusterIssuers.cluster-ca.spec.ca.secretName = "cluster-ca";
 
         resources.clusterIssuers.${issuerName}.spec.acme = {

@@ -39,7 +39,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: KOPIUR_MOVER_IMAGE
-              value: ghcr.io/home-operations/kopiur-mover@sha256:b5323b2e49661c767ee6f8e7c592e3e3aa3e48bfadccb4f99161a3965a3704fa
+              value: ghcr.io/home-operations/kopiur-mover@sha256:5a9abc325ca661ebe89fe53efeb63b6afb31ddbc1c394cd168c36b8f6382cbf4
             - name: KOPIUR_MOVER_PULL_POLICY
               value: IfNotPresent
             - name: KOPIUR_MOVER_SERVICE_ACCOUNT
@@ -70,7 +70,7 @@ spec:
               value: kopiur-validating
             - name: KOPIUR_WEBHOOK_MUTATING_CONFIG
               value: kopiur-mutating
-          image: ghcr.io/home-operations/kopiur-controller@sha256:59cc75d6b562a14e957efa9c007577557e0d5221c2d3b00af226ace4dd4b7b4f
+          image: ghcr.io/home-operations/kopiur-controller@sha256:b01c6fecb9fddf0ab419d7a419b3c74fade5a3f7be98e3f54730c12566283ce9
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:

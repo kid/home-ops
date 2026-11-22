@@ -36,6 +36,16 @@ in
         # The apps create the <instance>-api-key Secrets it reads.
         flux.dependsOn = apps |> lib.mapAttrsToList (_: a: a.instance);
 
+        imports = [
+          {
+            resources = cluster.methods.mkHostPathClaim {
+              namespace = "media";
+              name = "${name}-downloads";
+              path = "/tank/downloads/sabnzbd";
+            };
+          }
+        ];
+
         resources = {
           ciliumNetworkPolicies.${name} =
             with cluster.methods.netpol;
@@ -104,10 +114,7 @@ in
                   };
                 };
                 volumes = {
-                  downloads.hostPath = {
-                    path = "/tank/downloads/sabnzbd";
-                    type = "Directory";
-                  };
+                  downloads.persistentVolumeClaim.claimName = "${name}-downloads";
                   tmp.emptyDir = { };
                 };
               };

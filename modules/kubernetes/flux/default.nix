@@ -32,6 +32,11 @@
       readOnlyGroup = "flux-web-readonly";
       inherit (cluster.methods) kanidm kubeLogin;
       webUi = cluster.includesAspect den.aspects.kubernetes.kanidm;
+      # The operator owns its namespace (kustomize.toolkit.fluxcd.io/ssa:
+      # Ignore), so the apps sync skips the Namespace nixidy-defaults.nix
+      # renders: its Pod Security labels reach it through a patch below.
+      podSecurityLabels =
+        config.applications.${config.nixidy.appOfApps.name}.resources.namespaces.flux-system.metadata.labels;
     in
     {
       nixidy.applicationImports = [
@@ -155,6 +160,20 @@
                   value.type = "Recreate";
                 }
               ];
+            }
+            {
+              target = {
+                kind = "Namespace";
+                name = "flux-system";
+              };
+              patch = builtins.toJSON {
+                apiVersion = "v1";
+                kind = "Namespace";
+                metadata = {
+                  name = "flux-system";
+                  labels = podSecurityLabels;
+                };
+              };
             }
           ];
           sync = with config.nixidy.target; {

@@ -1,5 +1,6 @@
 // Base config (presets, the `# renovate:` comment manager, the Nix hash
-// refresh) is inherited from kid/renovate-config, which also runs Renovate.
+// refresh) is .renovate/org-inherited-config.json5, inherited by every repo
+// the renovate-operator of modules/kubernetes/renovate runs.
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   ignorePaths: [
@@ -10,6 +11,15 @@
   // A jump over several majors becomes one PR per major, so each step's
   // breaking changes land (and get reviewed) on their own.
   separateMultipleMajor: true,
+  // A merge is a prd deploy (Flux), and `checks` only proves the change
+  // renders and builds: auto-merges (packageRules below) land on weekend
+  // daytime, when the homelab gets worked on. Renovate merges itself on its
+  // 3-hourly run, since GitHub's native auto-merge, enabled at PR creation,
+  // ignores automergeSchedule. The presets' :automergeBranch would push to
+  // main, which the ruleset rejects: every change goes through a PR.
+  automergeType: "pr",
+  platformAutomerge: false,
+  automergeSchedule: ["* 8-17 * * 0,6"],
   flux: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
@@ -80,9 +90,16 @@
       semanticCommitScope: "terraform",
     },
     {
+      // A nixpkgs bump changes the Renovate image, and with it the
+      // RenovateJob's image tag (modules/kubernetes/renovate).
       matchManagers: ["nix"],
       matchUpdateTypes: ["lockFileMaintenance"],
       semanticCommitScope: "nix",
+      postUpgradeTasks: {
+        commands: ["nix run .#write-manifests -- --skip-secrets"],
+        fileFilters: ["manifests/**"],
+        executionMode: "update",
+      },
     },
     {
       // The chart and the CRD source pin (cilium/network-policy.nix) share a
@@ -90,6 +107,17 @@
       matchDatasources: ["helm", "github-releases"],
       matchDepNames: ["cilium", "cilium/cilium"],
       groupName: "cilium",
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+    },
+    {
+      // The Flux controllers' CRD source pins (nixidy-defaults.nix,
+      // flux/webhook.nix) come out of one Flux release, so bump them in one
+      // PR. The running controllers follow the flux-operator chart instead.
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["fluxcd/*"],
+      groupName: "fluxcd",
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
@@ -118,9 +146,9 @@
     {
       // Moves every input not pinned by rev (nixpkgs, the other flake
       // inputs, transitive ones) together in the weekly lockFileMaintenance
-      // PR. Manifests must not change with it: pin anything a chart derives
-      // from Helm's own version (e.g. .Capabilities.KubeVersion) in the
-      // chart values instead.
+      // PR. Manifests must not change with it, the Renovate image's tag
+      // excepted: pin anything a chart derives from Helm's own version (e.g.
+      // .Capabilities.KubeVersion) in the chart values instead.
       matchManagers: ["nix"],
       matchUpdateTypes: ["major", "minor", "patch", "digest", "pin", "pinDigest", "bump"],
       enabled: false,
@@ -136,26 +164,16 @@
       },
     },
     {
-      // Image pins in Nix: regenerate manifests/ so the PR passes
-      // checks.manifests. Also replaces the inherited refresh-nix-hash for
-      // custom.kaniop-kanidm, which has no hash to refresh.
+      // Every other pin in Nix: rehash it, then regenerate manifests/ so the
+      // PR passes checks.manifests. rehash-changed-pins rehashes every bumped
+      // pin, not just this update's: Renovate applies a group's bumps at once,
+      // so a sibling's stale hash would fail this update's write-manifests.
+      // Replaces the inherited refresh-nix-hash, which only knows its own pin.
       matchManagers: ["custom.regex"],
-      matchDatasources: ["docker", "custom.kaniop-kanidm"],
-      matchFileNames: ["modules/**"],
-      postUpgradeTasks: {
-        commands: ["nix run .#write-manifests -- --skip-secrets"],
-        fileFilters: ["manifests/**"],
-        executionMode: "update",
-      },
-    },
-    {
-      // Overrides the inherited hash refresh to also regenerate manifests/
-      // so the PR passes checks.manifests.
-      matchManagers: ["custom.regex"],
-      matchDatasources: ["github-releases"],
+      matchDatasources: ["docker", "helm", "github-releases", "custom.kaniop-kanidm"],
       postUpgradeTasks: {
         commands: [
-          "refresh-nix-hash {{{packageFile}}} {{{depName}}} {{{newValue}}}",
+          "nix run .#rehash-changed-pins",
           "nix run .#write-manifests -- --skip-secrets",
         ],
         fileFilters: ["**/*.nix", "manifests/**"],
@@ -163,16 +181,76 @@
       },
     },
     {
-      matchManagers: ["custom.regex"],
+      // Auto-merge patch and digest updates once the release is 3 days old,
+      // so a yanked or quickly re-patched one never lands. timestamp-optional:
+      // an update with no release timestamp merges without the wait, with a
+      // warning, instead of never (the known ones skip the wait below).
+      matchUpdateTypes: ["patch", "digest"],
+      automerge: true,
+      minimumReleaseAge: "3 days",
+      minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["minor"],
+      automerge: true,
+      minimumReleaseAge: "3 days",
+      minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      // The *arr apps also take minors unattended.
+      matchDatasources: ["docker"],
+      matchDepNames: [
+        "ghcr.io/home-operations/sonarr",
+        "ghcr.io/home-operations/radarr",
+        "ghcr.io/home-operations/prowlarr",
+        "ghcr.io/home-operations/sabnzbd",
+        "ghcr.io/recyclarr/recyclarr",
+        "ghcr.io/unpackerr/unpackerr",
+      ],
+      matchUpdateTypes: ["minor"],
+      automerge: true,
+      minimumReleaseAge: "3 days",
+      minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      // No release timestamp to age against: git-refs digests (the flake
+      // inputs pinned by rev in modules/, and the nix manager's, whose updates
+      // are disabled above) and ghcr.io OCI charts (no created date in a Helm
+      // chart's config). Without this each run warns about them.
+      matchDatasources: ["git-refs"],
+      minimumReleaseAge: null,
+    },
+    {
       matchFileNames: ["charts/**"],
-      postUpgradeTasks: {
-        commands: [
-          "nix run .#rehash-chart -- {{{packageFile}}}",
-          "nix run .#write-manifests -- --skip-secrets",
-        ],
-        fileFilters: ["**/*.nix", "manifests/**"],
-        executionMode: "update",
-      },
+      matchDepNames: ["ghcr.io/**"],
+      minimumReleaseAge: null,
+    },
+    {
+      // Never unattended: Home Assistant and its stack, and the charts the
+      // cluster itself runs on (CRDs, CNI, GitOps, ingress, identity).
+      matchFileNames: ["modules/kubernetes/home-assistant/**"],
+      automerge: false,
+    },
+    {
+      matchDepNames: [
+        "cilium",
+        "cilium/cilium",
+        "docker.io/kanidm/server",
+        "ghcr.io/pando85/helm-charts/kaniop",
+        "ghcr.io/controlplaneio-fluxcd/charts/flux-operator",
+        "docker.io/envoyproxy/gateway-helm",
+      ],
+      automerge: false,
+    },
+    {
+      // Labels every update the rules above leave auto-merging. Must stay
+      // last: matchJsonata sees the config earlier rules built, and
+      // `automerge` is no template variable, so a templated label can't do
+      // it. A group gets the label if any member has it, but auto-merges
+      // only when all do: keep auto-merging deps out of mixed groups.
+      matchJsonata: ["automerge = true"],
+      addLabels: ["automerge"],
     },
   ],
 }

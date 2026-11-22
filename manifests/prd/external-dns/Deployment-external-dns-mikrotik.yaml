@@ -40,7 +40,7 @@ spec:
             - --managed-record-types=CNAME
             - --managed-record-types=TXT
             - --label-filter=!home-ops.dev/public-dns
-          image: registry.k8s.io/external-dns/external-dns:v0.23.0
+          image: registry.k8s.io/external-dns/external-dns:v0.24.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 2
@@ -133,6 +133,13 @@ spec:
             requests:
               cpu: 10m
               memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
       securityContext:
         fsGroup: 65534
         runAsNonRoot: true

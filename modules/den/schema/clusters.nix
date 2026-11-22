@@ -56,7 +56,7 @@
                     assignments = lib.mkOption {
                       type = lib.types.attrsOf lib.types.str;
                       default = { };
-                      description = "Fixed IPs pinned within this overlay (e.g. coredns clusterIP)";
+                      description = "Fixed IPs pinned within this network, keyed by what holds them (a Service clusterIP such as coredns's, or a LoadBalancer IP)";
                     };
                   };
                 }

@@ -1,10 +1,63 @@
 # The shape every media app here shares: one Deployment on a kopiur-backed
 # config volume, its Service and HTTPRoute on the apps Gateway, behind Kanidm
-# and public through the tunnel, host mounts of k3s-prd-0's tank pool, and its
+# and public through the tunnel, claims on k3s-prd-0's tank pool, and its
 # Cilium policy. Returns the k8s-manifests content: the nixidy application,
 # plus its tunnel route in envoy-gateway.
 { lib, ... }:
 let
+  # A directory on the node as the claim `name`: a hostPath PersistentVolume
+  # bound to it both ways. The pod mounts a claim, which Pod Security
+  # Admission allows where it refuses a hostPath volume, and only Flux picks
+  # the host paths. type Directory: never created, a missing path means the
+  # wrong node or an unmounted dataset. The kubelet doesn't apply fsGroup to
+  # a hostPath volume, so the dataset's ownership stays as it is.
+  mkHostPathClaim =
+    {
+      namespace,
+      name,
+      path,
+    }:
+    let
+      volumeName = "${namespace}-${name}";
+      accessModes = [ "ReadWriteOnce" ];
+      # Required, and not enforced on a hostPath volume.
+      storage = "1Gi";
+    in
+    {
+      persistentVolumes.${volumeName}.spec = {
+        inherit accessModes;
+        capacity = { inherit storage; };
+        persistentVolumeReclaimPolicy = "Retain";
+        # Not the default class's: bound by name only.
+        storageClassName = "";
+        claimRef = { inherit namespace name; };
+        hostPath = {
+          inherit path;
+          type = "Directory";
+        };
+      };
+      persistentVolumeClaims.${name}.spec = {
+        inherit accessModes volumeName;
+        storageClassName = "";
+        resources.requests = { inherit storage; };
+      };
+    };
+
+  # An app's API key, generated once by the generated-secrets stack into the
+  # <name>-api-key 1Password item and Secret, which the other apps read too:
+  # the aspect of an app with an apiKeyEnv emits it as its generated-secrets
+  # (`cluster.methods.mkMediaApiKey <name>`). The format of the External
+  # Secrets Password generators that made them first: 32 lowercase letters
+  # and digits, 10 of them digits.
+  mkMediaApiKey = name: {
+    item = "${name}-api-key";
+    field = "api-key";
+    length = 32;
+    upper = false;
+    special = false;
+    min_numeric = 10;
+  };
+
   mkMediaApp =
     methods:
     {
@@ -22,7 +75,8 @@ let
       uid,
       supplementalGroups ? [ ],
       # <volume> = { path = <directory on the node>; mountPath = <in the pod>;
-      # readOnly ? false; }: tank's datasets, on the node that holds them.
+      # readOnly ? false; }: tank's datasets, on the node that holds them,
+      # each the claim <name>-<volume>.
       hostPaths ? { },
       storage ? "1Gi",
       # Out to the world (indexers, metadata, Usenet servers).
@@ -35,9 +89,8 @@ let
       backupIgnore ? [ ],
       # The HTTPRoute's request timeout; Envoy's own default is 15s.
       requestTimeout ? null,
-      # The env var the app reads its API key from; null for none. The key is
-      # generated once into the <name>-api-key Secret, which the other apps
-      # read too.
+      # The env var the app reads its API key from; null for none. Its aspect
+      # then emits the key as its generated-secrets (mkMediaApiKey above).
       apiKeyEnv ? if servarr then "${lib.toUpper app}__AUTH__APIKEY" else null,
       # A share of k3s-prd-0's iGPU at /dev/dri/renderD128
       # (generic-device-plugin), which also pins the pod to that node.
@@ -67,23 +120,32 @@ let
           }
         ];
       };
-      apiKeySecret = "${name}-api-key";
+      apiKey = mkMediaApiKey name;
+      apiKeySecret = apiKey.item;
       application = {
         inherit namespace;
         flux.dependsOn = [
           # The kopiur webhook admits the backup objects.
           "kopiur-config"
         ]
-        # The API key's Password generator and ExternalSecret.
+        # The onepassword store, for its API key.
         ++ lib.optional (apiKeyEnv != null) "external-secrets-config";
 
-        imports = lib.optional (oidcGroup != null) (
-          methods.mkOidcAuth {
-            inherit name hostname;
-            httpRouteName = name;
-            group = oidcGroup;
-          }
-        );
+        imports =
+          lib.optional (oidcGroup != null) (
+            methods.mkOidcAuth {
+              inherit name hostname;
+              httpRouteName = name;
+              group = oidcGroup;
+            }
+          )
+          ++ lib.mapAttrsToList (volume: v: {
+            resources = methods.mkHostPathClaim {
+              inherit namespace;
+              name = "${name}-${volume}";
+              inherit (v) path;
+            };
+          }) hostPaths;
 
         resources =
           methods.mkKopiurBackup {
@@ -102,28 +164,7 @@ let
             ++ backupIgnore;
           }
           // lib.optionalAttrs (apiKeyEnv != null) {
-            # Generated once: the other apps keep it in their own settings.
-            passwords.${apiKeySecret}.spec = {
-              length = 32;
-              digits = 10;
-              symbols = 0;
-              noUpper = true;
-              allowRepeat = true;
-              secretKeys = [ "api-key" ];
-            };
-            externalSecrets.${apiKeySecret}.spec = {
-              refreshPolicy = "CreatedOnce";
-              target.name = apiKeySecret;
-              dataFrom = [
-                {
-                  sourceRef.generatorRef = {
-                    apiVersion = "generators.external-secrets.io/v1alpha1";
-                    kind = "Password";
-                    name = apiKeySecret;
-                  };
-                }
-              ];
-            };
+            externalSecrets.${apiKeySecret}.spec = methods.mkGeneratedSecret apiKey;
           }
           // {
             ciliumNetworkPolicies.${name} =
@@ -182,7 +223,7 @@ let
                       // lib.optionalAttrs (apiKeyEnv != null) {
                         ${apiKeyEnv}.valueFrom.secretKeyRef = {
                           name = apiKeySecret;
-                          key = "api-key";
+                          key = apiKey.field;
                         };
                       };
                     ports.http.containerPort = port;
@@ -228,13 +269,8 @@ let
                     logs.emptyDir = { };
                     tmp.emptyDir = { };
                   }
-                  // lib.mapAttrs (_: v: {
-                    hostPath = {
-                      inherit (v) path;
-                      # Never created: a missing path means the wrong node or
-                      # an unmounted dataset.
-                      type = "Directory";
-                    };
+                  // lib.mapAttrs (volume: _: {
+                    persistentVolumeClaim.claimName = "${name}-${volume}";
                   }) hostPaths;
                 };
               };
@@ -281,5 +317,9 @@ let
     };
 in
 {
-  den.clusterMethods.mkMediaApp = cluster: mkMediaApp cluster.methods;
+  den.clusterMethods = {
+    mkMediaApp = cluster: mkMediaApp cluster.methods;
+    mkMediaApiKey = _: mkMediaApiKey;
+    mkHostPathClaim = _: mkHostPathClaim;
+  };
 }
