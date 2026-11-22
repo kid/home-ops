@@ -8,6 +8,16 @@ terraform {
 
 inputs = {
   items = {
+    alertmanager-ha-alerts-webhook = {
+      field   = "webhook-id"
+      length  = 32
+      special = false
+    }
+    alertmanager-ha-watchdog-webhook = {
+      field   = "webhook-id"
+      length  = 32
+      special = false
+    }
     animarr-api-key = {
       field       = "api-key"
       length      = 32
