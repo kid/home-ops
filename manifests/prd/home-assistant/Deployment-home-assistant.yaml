@@ -11,6 +11,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/alertmanager-package: e221de91e529221e298300b88b2e289faea1e711b829cbe67f5633dcba3d088a
       labels:
         app.kubernetes.io/name: home-assistant
     spec:
@@ -46,6 +48,9 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: config
+            - mountPath: /config/packages
+              name: packages
+              readOnly: true
             - mountPath: /tmp
               name: tmp
       securityContext:
@@ -61,5 +66,12 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: home-assistant
+        - name: packages
+          projected:
+            sources:
+              - configMap:
+                  name: alertmanager-homeassistant
+              - secret:
+                  name: alertmanager-homeassistant
         - emptyDir: {}
           name: tmp
