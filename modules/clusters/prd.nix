@@ -155,6 +155,7 @@ in
     home-assistant.mosquitto
     home-assistant.zigbee2mqtt
     home-assistant.frigate
+    home-assistant.alertmanager
     media.prowlarr
     media.animarr
     media.sonarr
