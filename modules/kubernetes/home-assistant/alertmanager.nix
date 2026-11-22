@@ -38,7 +38,13 @@ let
   # one (Android's tag, iOS's collapse id).
   groupTag = "{{ (trigger.json.commonLabels.alertname ~ '-' ~ (trigger.json.commonLabels.namespace | default(''))) [:64] }}";
 
-  package = {
+  # Tapping a notification opens `url` (iOS) or `clickAction` (Android).
+  openUrl = url: {
+    inherit url;
+    clickAction = url;
+  };
+
+  mkPackage = vmalertUrl: {
     timer.alertmanager_watchdog = {
       name = "Alertmanager watchdog";
       duration = "00:15:00";
@@ -76,7 +82,10 @@ let
             data = {
               title = "Alertmanager heartbeat lost";
               message = "No Watchdog from Alertmanager for 15 minutes.";
-              data.push.interruption-level = "time-sensitive";
+              data = {
+                push.interruption-level = "time-sensitive";
+              }
+              // openUrl "${vmalertUrl}/vmalert/alerts";
             };
           }
         ];
@@ -93,11 +102,13 @@ let
             data = {
               title = "[{{ trigger.json.status | upper }}] {{ trigger.json.commonLabels.alertname }} ({{ trigger.json.alerts | length }})";
               message = "{{ trigger.json.commonAnnotations.summary | default(trigger.json.commonAnnotations.description, true) | default(trigger.json.commonLabels.namespace, true) | default('', true) }}";
+              # The first alert's Grafana Explore link (vmalert's alert source).
               data = {
                 tag = groupTag;
                 apns_headers.apns-collapse-id = groupTag;
                 push.interruption-level = "{{ 'time-sensitive' if trigger.json.status == 'firing' and trigger.json.commonLabels.severity == 'critical' else 'active' }}";
-              };
+              }
+              // openUrl "{{ trigger.json.alerts[0].generatorURL }}";
             };
           }
         ];
@@ -107,7 +118,8 @@ let
 
   # JSON is YAML; the tags go in unquoted.
   packageYaml =
-    package
+    vmalertUrl:
+    mkPackage vmalertUrl
     |> builtins.toJSON
     |> builtins.replaceStrings (map (k: ''"${secretTag k}"'') webhookKeys) (map secretTag webhookKeys);
 in
@@ -134,6 +146,7 @@ in
         };
         data = lib.mapAttrsToList (key: g: builtins.head g.data // { secretKey = key; }) generated;
       };
+      package = packageYaml "https://${cluster.methods.mkAppHostname "vmalert"}";
     in
     {
       applications.home-assistant = {
@@ -141,7 +154,7 @@ in
         flux.dependsOn = [ "external-secrets-config" ];
 
         resources = {
-          configMaps.${secret}.data."alertmanager.yaml" = packageYaml;
+          configMaps.${secret}.data."alertmanager.yaml" = package;
           externalSecrets.${secret}.spec = mkExternalSecret {
             "secrets.yaml" =
               webhookKeys
@@ -152,7 +165,7 @@ in
 
           deployments.home-assistant.spec.template = {
             # HA reads the package only when it starts.
-            metadata.annotations."checksum/alertmanager-package" = builtins.hashString "sha256" packageYaml;
+            metadata.annotations."checksum/alertmanager-package" = builtins.hashString "sha256" package;
             spec = {
               containers.home-assistant.volumeMounts."/config/packages" = {
                 name = "packages";
