@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: ff04ab769a72fb91968d06027818e7b5b2270adb0ce0b0706f1129efdcded85e
+        checksum/config: c666a885bfb7adf11f133da03f97bdfddf02a8b1e1e898c94f23d87cd214a2ba
       labels:
         app.kubernetes.io/component: syncJob
         app.kubernetes.io/instance: victoria-metrics
