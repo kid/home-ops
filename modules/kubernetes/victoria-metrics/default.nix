@@ -385,7 +385,7 @@
               vmScrape = null;
             };
             kubeEtcd = {
-              enabled = true;
+              enabled = cluster.k3s.datastore == "etcd";
               vmScrape = null;
             };
 
