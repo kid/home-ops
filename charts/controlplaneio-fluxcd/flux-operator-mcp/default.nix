@@ -1,6 +1,6 @@
 {
   repo = "oci://ghcr.io/controlplaneio-fluxcd/charts";
   chart = "flux-operator-mcp";
-  version = "0.62.1";
-  chartHash = "sha256-CuG9y3n2U8CcARkMc+vkXaaeNgNUJEQMHsrdAo2jtTc=";
+  version = "0.63.0";
+  chartHash = "sha256-Ii0nbDfn7xngI5/dC5RSLj0CxynFGnbd/geTrKtKimQ=";
 }
