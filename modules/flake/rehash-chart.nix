@@ -8,7 +8,6 @@
 _: {
   perSystem =
     {
-      config,
       pkgs,
       inputs',
       ...
@@ -37,11 +36,6 @@ _: {
           helmupdater rehash "$pin"
           echo "$file: rehashed $pin"
         '';
-      };
-
-      apps.rehash-chart = {
-        type = "app";
-        program = "${config.packages.rehash-chart}/bin/rehash-chart";
       };
     };
 }

@@ -4,7 +4,7 @@
 # running server refuses any token but the one it was bootstrapped with.
 {
   perSystem =
-    { pkgs, config, ... }:
+    { pkgs, ... }:
     {
       packages.provision-k3s-token = pkgs.writeShellApplication {
         name = "provision-k3s-token";
@@ -29,11 +29,6 @@
 
           echo "==> Committed: $sops_file"
         '';
-      };
-
-      apps.provision-k3s-token = {
-        type = "app";
-        program = "${config.packages.provision-k3s-token}/bin/provision-k3s-token";
       };
     };
 }

@@ -6,7 +6,7 @@
 # so this skips a cluster that already has one.
 {
   perSystem =
-    { pkgs, config, ... }:
+    { pkgs, ... }:
     {
       packages.provision-cluster-ca = pkgs.writeShellApplication {
         name = "provision-cluster-ca";
@@ -40,11 +40,6 @@
 
           echo "==> Wrote $sops_file: commit it before deploying the cluster's server."
         '';
-      };
-
-      apps.provision-cluster-ca = {
-        type = "app";
-        program = "${config.packages.provision-cluster-ca}/bin/provision-cluster-ca";
       };
     };
 }
