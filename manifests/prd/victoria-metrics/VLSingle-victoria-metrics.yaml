@@ -17,10 +17,10 @@ spec:
   replicaCount: 1
   resources:
     limits:
-      memory: 512Mi
+      memory: 1Gi
     requests:
       cpu: 10m
-      memory: 128Mi
+      memory: 512Mi
   retentionPeriod: 30d
   storage:
     accessModes:

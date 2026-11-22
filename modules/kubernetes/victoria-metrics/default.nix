@@ -451,9 +451,9 @@
                 resources = {
                   requests = {
                     cpu = "10m";
-                    memory = "128Mi";
+                    memory = "512Mi";
                   };
-                  limits.memory = "512Mi";
+                  limits.memory = "1Gi";
                 };
               };
             };
@@ -467,9 +467,9 @@
               resources = {
                 requests = {
                   cpu = "100m";
-                  memory = "128Mi";
+                  memory = "384Mi";
                 };
-                limits.memory = "384Mi";
+                limits.memory = "512Mi";
               };
             };
 

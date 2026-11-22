@@ -163,6 +163,25 @@
             }
             {
               target = {
+                kind = "Deployment";
+                name = "kustomize-controller";
+              };
+              patch = builtins.toJSON [
+                {
+                  op = "replace";
+                  path = "/spec/template/spec/containers/0/resources";
+                  value = {
+                    requests = {
+                      cpu = "200m";
+                      memory = "384Mi";
+                    };
+                    limits.memory = "512Mi";
+                  };
+                }
+              ];
+            }
+            {
+              target = {
                 kind = "Namespace";
                 name = "flux-system";
               };
