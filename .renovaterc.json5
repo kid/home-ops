@@ -243,5 +243,14 @@
       ],
       automerge: false,
     },
+    {
+      // Labels every update the rules above leave auto-merging. Must stay
+      // last: matchJsonata sees the config earlier rules built, and
+      // `automerge` is no template variable, so a templated label can't do
+      // it. A group gets the label if any member has it, but auto-merges
+      // only when all do: keep auto-merging deps out of mixed groups.
+      matchJsonata: ["automerge = true"],
+      addLabels: ["automerge"],
+    },
   ],
 }
