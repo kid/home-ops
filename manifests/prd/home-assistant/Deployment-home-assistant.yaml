@@ -12,7 +12,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/alertmanager-package: e221de91e529221e298300b88b2e289faea1e711b829cbe67f5633dcba3d088a
+        checksum/alertmanager-package: 76e5595dea406c9bf767c6b80c81121176feef8e41c387ea3f2e93519194eb05
       labels:
         app.kubernetes.io/name: home-assistant
     spec:
