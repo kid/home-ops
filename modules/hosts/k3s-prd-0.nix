@@ -9,6 +9,7 @@
 }:
 let
   storageCidr = config.den.environments.prd.networks.Storage.cidr;
+  trustedCidr = config.den.environments.prd.networks.Trusted.cidr;
 in
 {
   den.hosts.x86_64-linux.k3s-prd-0 = {
@@ -38,10 +39,11 @@ in
     }
   ];
 
-  # NFS for the Storage VLAN (the exports below), through Cilium's host
-  # firewall (modules/kubernetes/cilium/host-firewall.nix), which replaces
-  # the NixOS one on a k3s node. NFSv4 only: nothing but 2049. Its own
-  # pods' mounts come from this host itself and never reach the firewall.
+  # NFS for the Storage VLAN (the exports below) and IPP for the Trusted one
+  # (the printer below), through Cilium's host firewall
+  # (modules/kubernetes/cilium/host-firewall.nix), which replaces the NixOS
+  # one on a k3s node. NFSv4 only: nothing but 2049. Its own pods' mounts
+  # come from this host itself and never reach the firewall.
   den.aspects.k3s-prd-0.firewall-ports =
     { host, ... }:
     [
@@ -50,6 +52,13 @@ in
         protocol = "TCP";
         description = "NFS";
         fromCIDR = [ storageCidr ];
+        cluster = host.settings.k3s.clusterName;
+      }
+      {
+        port = 631;
+        protocol = "TCP";
+        description = "IPP";
+        fromCIDR = [ trustedCidr ];
         cluster = host.settings.k3s.clusterName;
       }
     ];
@@ -183,6 +192,37 @@ in
         "zroot/incus"
         "zroot/incus/*"
       ];
+
+      # The Brother HL-2030 on USB, shared with the Trusted VLAN as
+      # ipp://k3s-prd-0.k3s.home.kidibox.net/printers/HL-2030. mDNS doesn't
+      # cross VLANs: clients add it by that URL (IPP Everywhere, the server
+      # renders for brlaser). Stateless: the queue below is recreated on every
+      # start, so nothing to persist; a reboot drops pending jobs. Started at
+      # boot, not on the first connection: cups' postStart creates the queue,
+      # and a socket-activated start answers that client before it exists.
+      services.printing = {
+        enable = true;
+        startWhenNeeded = false;
+        stateless = true;
+        drivers = [ pkgs.brlaser ];
+        listenAddresses = [ "*:631" ];
+        allowFrom = [
+          "localhost"
+          trustedCidr
+        ];
+        defaultShared = true;
+      };
+      hardware.printers = {
+        ensureDefaultPrinter = "HL-2030";
+        ensurePrinters = [
+          {
+            name = "HL-2030";
+            deviceUri = "usb://Brother/HL-2030%20series?serial=H0J141728";
+            model = "drv:///brlaser.drv/br2030.ppd";
+            ppdOptions.PageSize = "A4";
+          }
+        ];
+      };
 
       services.nfs.server = {
         enable = true;

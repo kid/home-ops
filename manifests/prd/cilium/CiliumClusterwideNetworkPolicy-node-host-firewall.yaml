@@ -34,9 +34,24 @@ spec:
             - port: "22"
               protocol: TCP
     - fromCIDR:
+        - 10.0.100.0/24
+      toPorts:
+        - ports:
+            - port: "631"
+              protocol: TCP
+    - fromCIDR:
         - 10.0.20.0/24
       toPorts:
         - ports:
             - port: "2049"
               protocol: TCP
+    - fromEntities:
+        - cluster
+        - world
+      icmps:
+        - fields:
+            - family: IPv4
+              type: EchoRequest
+            - family: IPv6
+              type: EchoRequest
   nodeSelector: {}
