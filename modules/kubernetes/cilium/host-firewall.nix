@@ -111,9 +111,33 @@
         }
       ];
 
+      # Ping (echo request) from anywhere, both families.
+      icmpIngress = [
+        {
+          fromEntities = [
+            "cluster"
+            "world"
+          ];
+          icmps = [
+            {
+              fields = [
+                {
+                  family = "IPv4";
+                  type = "EchoRequest";
+                }
+                {
+                  family = "IPv6";
+                  type = "EchoRequest";
+                }
+              ];
+            }
+          ];
+        }
+      ];
+
       policies = [
         (mkPolicy "node-host-firewall" { } (
-          mkIngress (lib.filter (p: !isControlPlane p) ports) ++ etcdIngress
+          mkIngress (lib.filter (p: !isControlPlane p) ports) ++ etcdIngress ++ icmpIngress
         ))
         (mkPolicy "node-host-firewall-control-plane" {
           matchLabels."node-role.kubernetes.io/control-plane" = "true";
