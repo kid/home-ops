@@ -132,6 +132,13 @@ inputs = {
     }
   }
   dhcp_static_leases = {
+    Guest = [
+      {
+        address = "10.0.101.50"
+        mac     = "ae:60:59:b8:1a:a9"
+        name    = "mbp"
+      },
+    ]
     IotInternet = [
       {
         address = "10.0.51.31"
@@ -157,7 +164,7 @@ inputs = {
       },
       {
         address = "10.0.50.21"
-        mac     = "00:06:78:40:24:0a"
+        mac     = "8c:a9:6f:33:3e:2c"
         name    = "denon"
       },
       {

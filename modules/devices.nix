@@ -119,7 +119,7 @@
         {
           network = "IotLocal";
           hostNum = 21;
-          mac = "00:06:78:40:24:0a";
+          mac = "8c:a9:6f:33:3e:2c";
         }
       ];
     };
@@ -149,6 +149,17 @@
           network = "IotInternet";
           hostNum = 31;
           mac = "70:c9:32:4e:21:7d";
+        }
+      ];
+    };
+
+    # Guest
+    mbp = {
+      interfaces = [
+        {
+          network = "Guest";
+          hostNum = 50;
+          mac = "ae:60:59:b8:1a:a9";
         }
       ];
     };
