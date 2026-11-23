@@ -110,6 +110,12 @@
             };
           };
         };
+      }
+      # The image layers and container clones are the snapshotter's:
+      # disko-zfs would list each one as a dataset to destroy. Only where
+      # den.aspects.disk.zfs imports disko (not the k3s test fixtures).
+      // lib.optionalAttrs (host.hasAspect den.aspects.disk.zfs) {
+        disko.zfs.settings.ignoredDatasets = [ "zroot/local/containerd/snapshotter/*" ];
       };
   };
 }
