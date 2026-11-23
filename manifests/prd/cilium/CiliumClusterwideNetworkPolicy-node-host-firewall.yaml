@@ -34,6 +34,12 @@ spec:
             - port: "22"
               protocol: TCP
     - fromCIDR:
+        - 10.0.100.0/24
+      toPorts:
+        - ports:
+            - port: "631"
+              protocol: TCP
+    - fromCIDR:
         - 10.0.20.0/24
       toPorts:
         - ports:
