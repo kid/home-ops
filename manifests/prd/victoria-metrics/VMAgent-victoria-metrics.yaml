@@ -14,7 +14,7 @@ spec:
   extraArgs:
     promscrape.streamParse: "true"
   image:
-    tag: v1.156.0
+    tag: v1.157.0
   logFormat: json
   port: "8429"
   remoteWrite:
