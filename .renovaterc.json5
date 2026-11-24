@@ -12,14 +12,14 @@
   // breaking changes land (and get reviewed) on their own.
   separateMultipleMajor: true,
   // A merge is a prd deploy (Flux), and `checks` only proves the change
-  // renders and builds: auto-merges (packageRules below) land on weekend
-  // daytime, when the homelab gets worked on. Renovate merges itself on its
-  // 3-hourly run, since GitHub's native auto-merge, enabled at PR creation,
-  // ignores automergeSchedule. The presets' :automergeBranch would push to
-  // main, which the ruleset rejects: every change goes through a PR.
+  // renders and builds: auto-merges (packageRules below) land in daytime,
+  // when someone is around to notice a broken deploy. Renovate merges itself
+  // on its 3-hourly run, since GitHub's native auto-merge, enabled at PR
+  // creation, ignores automergeSchedule. The presets' :automergeBranch would
+  // push to main, which the ruleset rejects: every change goes through a PR.
   automergeType: "pr",
   platformAutomerge: false,
-  automergeSchedule: ["* 8-17 * * 0,6"],
+  automergeSchedule: ["* 8-17 * * *"],
   flux: {
     managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
   },
@@ -227,19 +227,15 @@
       minimumReleaseAge: null,
     },
     {
-      // Never unattended: Home Assistant and its stack, and the charts the
-      // cluster itself runs on (CRDs, CNI, GitOps, ingress, identity).
+      // Never unattended: Home Assistant and its stack, and Kanidm, which
+      // only upgrades one minor at a time and gates every login.
       matchFileNames: ["modules/kubernetes/home-assistant/**"],
       automerge: false,
     },
     {
       matchDepNames: [
-        "cilium",
-        "cilium/cilium",
         "docker.io/kanidm/server",
         "ghcr.io/pando85/helm-charts/kaniop",
-        "ghcr.io/controlplaneio-fluxcd/charts/flux-operator",
-        "docker.io/envoyproxy/gateway-helm",
       ],
       automerge: false,
     },
