@@ -32,7 +32,7 @@ _: {
         mcp-victorialogs = {
           host = "logs";
           # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victorialogs
-          tag = "v1.10.0@sha256:e4b1f38f708a5c99606395ba2de514eab6730ec67440f929c6e3b6f261945d4b";
+          tag = "v1.11.0@sha256:0b3acd058159adc196ace66b2168895d4fbe6cb2ed75bbad49799863ac4dc56e";
           env = {
             VL_INSTANCE_ENTRYPOINT = "http://vlsingle-victoria-metrics.monitoring.svc:9428";
             # No default list upstream. Also skips the docs resources, whose
