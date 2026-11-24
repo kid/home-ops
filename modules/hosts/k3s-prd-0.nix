@@ -205,12 +205,17 @@ in
         startWhenNeeded = false;
         stateless = true;
         drivers = [ pkgs.brlaser ];
-        listenAddresses = [ "*:631" ];
+        # IPv4 only: on `*:631` (a dual-stack socket) IPv4 clients arrive as
+        # ::ffff:a.b.c.d, which cupsd's IPv4 Allow rules never match (403).
+        listenAddresses = [ "0.0.0.0:631" ];
         allowFrom = [
           "localhost"
           trustedCidr
         ];
         defaultShared = true;
+        # cupsd answers 400 to a Host it doesn't know as its own: by
+        # default only its hostname and addresses.
+        extraConf = "ServerAlias k3s-prd-0.${den.networks.K3s.domain}";
       };
       hardware.printers = {
         ensureDefaultPrinter = "HL-2030";
