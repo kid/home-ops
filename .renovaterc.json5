@@ -181,12 +181,34 @@
       },
     },
     {
-      // Auto-merge minor, patch and digest updates once the release is 3 days
-      // old, so a yanked or quickly re-patched one never lands.
-      // timestamp-optional: an update with no release timestamp merges
-      // without the wait, with a warning, instead of never (the known ones
-      // skip the wait below).
-      matchUpdateTypes: ["minor", "patch", "digest"],
+      // Auto-merge patch and digest updates once the release is 3 days old,
+      // so a yanked or quickly re-patched one never lands. timestamp-optional:
+      // an update with no release timestamp merges without the wait, with a
+      // warning, instead of never (the known ones skip the wait below).
+      matchUpdateTypes: ["patch", "digest"],
+      automerge: true,
+      minimumReleaseAge: "3 days",
+      minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["minor"],
+      automerge: true,
+      minimumReleaseAge: "3 days",
+      minimumReleaseAgeBehaviour: "timestamp-optional",
+    },
+    {
+      // The *arr apps also take minors unattended.
+      matchDatasources: ["docker"],
+      matchDepNames: [
+        "ghcr.io/home-operations/sonarr",
+        "ghcr.io/home-operations/radarr",
+        "ghcr.io/home-operations/prowlarr",
+        "ghcr.io/home-operations/sabnzbd",
+        "ghcr.io/recyclarr/recyclarr",
+        "ghcr.io/unpackerr/unpackerr",
+      ],
+      matchUpdateTypes: ["minor"],
       automerge: true,
       minimumReleaseAge: "3 days",
       minimumReleaseAgeBehaviour: "timestamp-optional",
@@ -206,14 +228,12 @@
     },
     {
       // Never unattended: Home Assistant and its stack, and the charts the
-      // cluster itself runs on (CNI, ingress, identity).
+      // cluster's identity and ingress run on.
       matchFileNames: ["modules/kubernetes/home-assistant/**"],
       automerge: false,
     },
     {
       matchDepNames: [
-        "cilium",
-        "cilium/cilium",
         "docker.io/kanidm/server",
         "ghcr.io/pando85/helm-charts/kaniop",
         "docker.io/envoyproxy/gateway-helm",
