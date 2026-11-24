@@ -10,7 +10,7 @@ _: {
     cluster.methods.mkMediaApp {
       name = "radarr";
       # renovate: datasource=docker depName=ghcr.io/home-operations/radarr
-      tag = "7.0.3.10918@sha256:55d3cf8a4c4c531bb8b5c1ba88eb270d4435e01e228fbdb16cdfc910a17e3b06";
+      tag = "7.1.0.10948@sha256:d259bde2be6b1997c1832cf981d50017f919b305ed3dc9ce445c4661956553f3";
       port = 7878;
       # The CT's uid 352 behind the unprivileged-CT offset: what owns its
       # files on tank. 100330 is sabnzbd's, which owns the downloads.
