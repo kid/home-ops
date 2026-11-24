@@ -18,7 +18,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: ghcr.io/home-operations/home-assistant:2026.8.2@sha256:84f5b1b26e1597a3d5a19a7b6e2ed085ec8e3fffcbe46049acf62f9e25ea400e
+        - image: ghcr.io/home-operations/home-assistant:2026.11.3@sha256:96c244d8aa3586026bb8d4fdc0dcf9b34f348874a1ea5060942356cf181177bc
           livenessProbe:
             httpGet:
               path: /manifest.json
