@@ -5,7 +5,7 @@
 # addresses stay as reservations, for installers.
 # The MTU goes in the .network file, not a .link one: a matching .link
 # replaces 99-default.link and with it the predictable interface name.
-{ config, den, ... }:
+{ config, ... }:
 {
   den.aspects.host-network.nixos =
     { host, lib, ... }:
@@ -81,6 +81,4 @@
         )
       );
     };
-
-  den.aspects.base.includes = [ den.aspects.host-network ];
 }
