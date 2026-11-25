@@ -1,7 +1,8 @@
-# Impermanent root: every boot starts from an empty root dataset
-# (rollback-zfs.nix), and only what aspects declare through the `persist`
-# and `cache` quirks (collect.nix) is bind-mounted back from /persist or
-# /cache. /home is its own dataset and is kept.
+# Impermanent root: every boot starts from an empty root, rolled back by the
+# host's disk layout (rollback-zfs.nix for disk.zfs, rollback-btrfs.nix for
+# disk.btrfs), and only what aspects declare through the `persist` and
+# `cache` quirks (collect.nix) is bind-mounted back from /persist or /cache.
+# /home is its own dataset or subvolume and is kept.
 {
   den,
   inputs,
@@ -15,6 +16,7 @@
     includes = [
       den.aspects.impermanence.collect
       den.aspects.impermanence.rollback-zfs
+      den.aspects.impermanence.rollback-btrfs
     ];
 
     # sshd's host key — without this, wipeRootOnBoot regenerates it every
