@@ -137,7 +137,7 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
     1. runs `nix flake check`
     2. pushes any missing images with skopeo
     3. posts a closure diff for `k3s-prd-0` as a sticky PR comment (informational only)
-- **Flake checks:** `treefmt`, `manifests`, `terragrunt`, `sops-config`, `pre-commit`, and `nixos-<host>` (a toplevel build for each host).
+- **Flake checks:** `treefmt`, `manifests`, `terragrunt`, `sops-config`, `check-flake-file`, `pre-commit`, and `nixos-<host>` (a toplevel build for each host).
 - **There is no** kubeconform, `terraform validate` or `tofu test`. Manifests are validated only by diffing them against the nixidy build.
 - **Integration tests** boot real VMs, take minutes, and are **not** part of `flake check`. Run them by hand when you touch k3s, disk or impermanence:
 
@@ -151,4 +151,4 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
     3. Take each node's module from `config.den.hosts.x86_64-linux.<name>.mainModule`.
     4. Generate any secrets with a throwaway age key at build time. Never commit keys.
     5. Register the file with `// import ../../tests/integration/<topic>.nix args` in `modules/flake/integration-tests.nix`.
-- **Minimum before a PR:** run `nix fmt`, the relevant `write-*`, and `nix flake check`. Also run the relevant integration test when changing host or k3s modules.
+- **Minimum before a PR:** `nix flake check`. It fails on unformatted code and on every stale generated file; fix those with `nix fmt` or the `write-*` named in the error. Also run the relevant integration test when changing host or k3s modules.
