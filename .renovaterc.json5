@@ -64,6 +64,16 @@
     },
   ],
   customDatasources: {
+    // Build list of the ksa-archive.net mirror that
+    // pkgs/kitten-space-agency fetches from. Only builds named
+    // ksa_linux_v<version>.tar.gz match the package's URL template; older
+    // Linux builds used other names.
+    "kitten-space-agency": {
+      defaultRegistryUrlTemplate: "https://ksa-archive.net/builds.json",
+      transformTemplates: [
+        '{"releases": $[$contains(linuxFile, /^ksa_linux_v[0-9.]+\\.tar\\.gz$/)].{"version": $match(linuxFile, /v([0-9.]+)\\.tar\\.gz$/).groups[0], "releaseTimestamp": date}}',
+      ],
+    },
     // The Kanidm release kaniop's latest release is built against: the
     // kanidm_client crate in its Cargo.toml. jsDelivr's @latest resolves to
     // the newest release tag (kaniop's master can carry a bump that a release

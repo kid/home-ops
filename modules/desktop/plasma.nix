@@ -1,0 +1,76 @@
+# KDE Plasma 6 session, configured per user through plasma-manager.
+{
+  inputs,
+  lib,
+  den,
+  ...
+}:
+{
+  flake-file.inputs.plasma-manager = {
+    url = "github:nix-community/plasma-manager/trunk";
+    inputs.nixpkgs.follows = "nixpkgs";
+    inputs.home-manager.follows = "home-manager";
+  };
+
+  den.aspects.desktop.plasma = {
+    includes = [ den.aspects.desktop.wayland ];
+
+    nixos = {
+      services = {
+        desktopManager.plasma6 = {
+          enable = true;
+          enableQt5Integration = false;
+        };
+      };
+    };
+
+    homeManager =
+      { ... }:
+      {
+        imports = [ inputs.plasma-manager.homeModules.plasma-manager ];
+
+        programs.plasma = {
+          enable = true;
+          overrideConfig = true;
+          fonts.general = {
+            family = "JetBrains Mono";
+            pointSize = 12;
+          };
+          panels = [
+            {
+              location = "top";
+              widgets = [
+                {
+                  name = "org.kde.plasma.kickoff";
+                  config.General.icon = "nix-snowflake-white";
+                }
+                {
+                  name = "org.kde.plasma.icontasks";
+                  config.General.launchers = [ "applications:steam.desktop" ];
+                }
+                "org.kde.plasma.panelspacer"
+                "org.kde.plasma.marginsseparator"
+                "org.kde.plasma.systemtray"
+                "org.kde.plasma.digitalclock"
+                "org.kde.plasma.marginsseparator"
+              ];
+            }
+          ];
+          configFile = {
+            kwinrc.ModifierOnlyShortcuts.Meta = "";
+            # kde-baloo.service's ExecCondition skips the indexer when this is false
+            baloofilerc."Basic Settings"."Indexing-Enabled" = false;
+          };
+          session = {
+            general.askForConfirmationOnLogout = false;
+            sessionRestore.restoreOpenApplicationsOnLogin = "startWithEmptySession";
+          };
+          shortcuts.plasmashell."activate application launcher" = [ "Alt+F1" ];
+          krunner.shortcuts.launch = "Meta+Space";
+        };
+
+        # TODO: should this be dependend on den.aspects.desktop.plasma or even move there?
+        qt.platformTheme.name = lib.mkForce "kde";
+      };
+  };
+}
