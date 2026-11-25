@@ -79,7 +79,7 @@ spec:
               value: '{}'
             - name: LOG_STORE_MODE
               value: disabled
-          image: ghcr.io/mogenius/renovate-operator:6.10.0
+          image: ghcr.io/mogenius/renovate-operator:7.0.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
