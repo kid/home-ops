@@ -22,7 +22,6 @@ let
   # The GitHub App must be installed on each of them.
   repositories = [
     "home-ops"
-    "nixfiles"
     "neovim"
   ];
   githubSecret = "arc-github-app";

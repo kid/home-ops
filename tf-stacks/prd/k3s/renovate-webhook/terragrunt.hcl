@@ -10,15 +10,11 @@ inputs = {
   github_owner = "kid"
   push_schedules = {
     neovim = [
-      "nixfiles",
-    ]
-    nixfiles = [
-      "nixfiles-work",
+      "home-ops",
     ]
   }
   repositories = [
     "home-ops",
-    "nixfiles",
     "nixfiles-work",
     "neovim",
   ]

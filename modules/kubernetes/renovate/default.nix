@@ -22,16 +22,14 @@ let
   # Repositories whose GitHub webhook schedules a run.
   repositories = [
     "home-ops"
-    "nixfiles"
     "nixfiles-work"
     "neovim"
   ];
   # A push to a key repository moves the rev each listed repository pins
-  # (kid/nixfiles-work's modules/den.nix, kid/nixfiles' flake-file.nix), so it
-  # schedules their runs. GitHub sends a webhook for a push to any branch.
+  # (home-ops' modules/apps/neovim.nix), so it schedules their runs. GitHub
+  # sends a webhook for a push to any branch.
   pushSchedules = {
-    nixfiles = [ "nixfiles-work" ];
-    neovim = [ "nixfiles" ];
+    neovim = [ "home-ops" ];
   };
 
   uiHost = cluster: cluster.methods.mkAppHostname "renovate";
