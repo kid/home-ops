@@ -4,6 +4,6 @@
   den.aspects.profiles.workstation.includes = with den.aspects; [
     base
     workstation
-    hm-defaults
+    users.hm-defaults
   ];
 }

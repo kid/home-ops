@@ -7,14 +7,14 @@
 # this repo's pinned den rev — this is one less unverified API to depend on.
 { acl, lib, ... }:
 {
-  den.aspects.define-user.includes = [
+  den.aspects.users.define.includes = [
     (
       { host, user }:
       let
         posixGroups = user.groups |> acl.closure |> acl.labelled "posix";
       in
       {
-        name = "define-user/${user.userName}@${host.name}";
+        name = "users.define/${user.userName}@${host.name}";
         nixos = {
           users.users.${user.userName} = {
             isNormalUser = true;
