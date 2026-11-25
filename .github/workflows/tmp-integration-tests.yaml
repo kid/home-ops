@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: KVM
-        run: ls -l /dev/kvm || echo "no /dev/kvm: qemu falls back to TCG"
+        run: ls -l /dev/kvm || echo "no /dev/kvm, qemu falls back to TCG"
 
       - name: impermanence-zfs-rollback
         run: nix build -L .#integration-tests.impermanence-zfs-rollback
