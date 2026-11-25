@@ -46,6 +46,8 @@ jobs:
       - uses: cachix/install-nix-action@382a9ed9481c7c1f94f68b72ef105b3417c73877 # v32.1.0
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          # home-ops writes its pipelines with |>.
+          extra_nix_config: extra-experimental-features = pipe-operators
 
       # `nix flake check` doesn't evaluate darwinConfigurations: it passes with
       # an undefined option in a host's config. Each toplevel's drvPath does.
