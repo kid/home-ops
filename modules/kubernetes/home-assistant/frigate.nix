@@ -1,6 +1,6 @@
 # Frigate, the NVR for the two Reolink cameras: decodes on k3s-prd-0's iGPU
 # (VA-API) and detects with OpenVINO on it, sharing it with Plex.
-# Recordings and snapshots go to a k3s-prd-0 NVMe dataset (the nfs-exports
+# Recordings and snapshots go to a k3s-prd-0 NVMe dataset (the app-datasets
 # quirk), mounted from the host; its database and config sit on the
 # kopiur-backed volume.
 # The ConfigMap's config.yml is copied over /config/config.yml on every start,
@@ -196,13 +196,14 @@ in
     }
   ];
 
-  # Its recordings and snapshots: a k3s-prd-0 dataset, mounted from the host.
+  # Its recordings and snapshots: a k3s-prd-0 dataset, mounted from the host
+  # (not exported over NFS: nothing else reads it).
   # sanoid's dailies are what k3s-prd-0's syncoid copies to tank; Frigate keeps
   # its own 14 days, so three are enough for an incremental base (they count
   # against the quota, at ~0.3G of churn a day).
-  den.aspects.kubernetes.home-assistant.frigate.nfs-exports = { cluster, ... }: [
+  den.aspects.kubernetes.home-assistant.frigate.app-datasets = { cluster, ... }: [
     (
-      cluster.methods.nfsExport name
+      cluster.methods.appDataset name
       // {
         properties = {
           recordsize = "1M";
@@ -410,7 +411,7 @@ in
                     config.persistentVolumeClaim.claimName = name;
                     frigate-config.configMap.name = name;
                     media.hostPath = {
-                      inherit (cluster.methods.nfsExport name) path;
+                      inherit (cluster.methods.appDataset name) path;
                       type = "Directory";
                     };
                     cluster-ca.configMap.name = "cluster-ca";

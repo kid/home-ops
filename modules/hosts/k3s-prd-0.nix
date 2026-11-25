@@ -67,12 +67,12 @@ in
     {
       pkgs,
       lib,
-      nfs-exports ? [ ],
+      app-datasets ? [ ],
       k3s-nodes ? [ ],
       ...
     }:
     let
-      # An export with a `writer` cluster (the nfs-exports quirk) is
+      # An export with a `writer` cluster (the app-datasets quirk) is
       # read-write only for its nodes' Storage addresses and read-only for the
       # rest of the VLAN. Linux NFS picks a single host's entry over a
       # network's, whatever their order on the line.
@@ -99,10 +99,12 @@ in
         config.den.devices.${hostname}.interfaces
         |> lib.filter (i: i.network == "Storage")
         |> map (i: i.address);
-      # Where syncoid keeps a copy of a snapshotted export: the same path on
+      # The app datasets k3s-prd-0 also exports over NFS (their `nfs`).
+      exported = lib.filter (e: e.nfs or false) app-datasets;
+      # Where syncoid keeps a copy of a snapshotted dataset: the same path on
       # tank, under tank/backups.
       backupOf = dataset: "tank/backups/${lib.removePrefix "zroot/" dataset}";
-      snapshotted = lib.filter (e: e ? sanoid) nfs-exports;
+      snapshotted = lib.filter (e: e ? sanoid) app-datasets;
       # A dataset's ancestors below zroot, down to its parent.
       ancestorsOf =
         dataset:
@@ -239,30 +241,30 @@ in
             "/tank/library/series"
             "/tank/downloads/sabnzbd"
           ]
-          ++ nfs-exports
+          ++ exported
           |> map exportOf
           |> builtins.concatStringsSep "";
       };
 
-      # The apps' own datasets (the nfs-exports quirk), on the NVMe pool, not
+      # The apps' own datasets (the app-datasets quirk), on the NVMe pool, not
       # tank, whose disks spin down. zroot/clusters sets the mountpoint and the
-      # rest inherit it, so `zfs create` mounts each at its export path; the
-      # levels in between don't mount.
+      # rest inherit it, so `zfs create` mounts each at its path; the levels
+      # in between don't mount.
       disko.zfs.settings.datasets =
         let
-          inherited = nfs-exports |> lib.concatMap (e: ancestorsOf e.dataset) |> lib.unique;
+          inherited = app-datasets |> lib.concatMap (e: ancestorsOf e.dataset) |> lib.unique;
         in
         lib.genAttrs inherited (_: {
           properties.canmount = "off";
         })
-        // lib.optionalAttrs (nfs-exports != [ ]) {
+        // lib.optionalAttrs (app-datasets != [ ]) {
           "zroot/clusters".properties = {
             mountpoint = "/srv/clusters";
             canmount = "off";
           };
         }
         // (
-          nfs-exports
+          app-datasets
           |> map (
             e:
             lib.nameValuePair e.dataset {
@@ -279,25 +281,27 @@ in
           assertion =
             lib.hasPrefix "zroot/clusters/" e.dataset
             && e.path == "/srv/${lib.removePrefix "zroot/" e.dataset}";
-          message = "nfs-exports: ${e.dataset} must sit under zroot/clusters and be exported at its inherited mountpoint, not ${e.path}";
-        }) nfs-exports
+          message = "app-datasets: ${e.dataset} must sit under zroot/clusters and be mounted at its inherited mountpoint, not ${e.path}";
+        }) app-datasets
         ++ (
-          nfs-exports
+          app-datasets
           |> lib.filter (e: e ? writer)
           |> map (e: {
             assertion =
-              writersOf e != [ ] && lib.all (hostname: lib.length (storageAddresses hostname) == 1) (writersOf e);
-            message = "nfs-exports: ${e.dataset} is writable by cluster ${e.writer}, which needs k3s nodes with exactly one Storage interface each in den.devices";
+              (e.nfs or false)
+              && writersOf e != [ ]
+              && lib.all (hostname: lib.length (storageAddresses hostname) == 1) (writersOf e);
+            message = "app-datasets: ${e.dataset} is writable by cluster ${e.writer}, which needs `nfs = true` and k3s nodes with exactly one Storage interface each in den.devices";
           })
         );
       # Exported with root_squash: the apps run as root, so the server sees
       # nobody. At boot tmpfiles sets this once zfs-mount has run; on the
       # switch that creates a dataset, `zfs create` mounts it inside
       # disko-zfs, so disko-zfs sets it there too.
-      systemd.tmpfiles.rules = map (e: "d ${e.path} 0750 nobody nogroup -") nfs-exports;
-      systemd.services.disko-zfs.serviceConfig.ExecStartPost = lib.mkIf (nfs-exports != [ ]) (
+      systemd.tmpfiles.rules = map (e: "d ${e.path} 0750 nobody nogroup -") exported;
+      systemd.services.disko-zfs.serviceConfig.ExecStartPost = lib.mkIf (exported != [ ]) (
         pkgs.writeShellScript "nfs-exports-owner" (
-          nfs-exports
+          exported
           |> map (e: ''
             if ${pkgs.util-linux}/bin/mountpoint -q ${e.path}; then
               chown nobody:nogroup ${e.path}
@@ -307,7 +311,7 @@ in
           |> lib.concatStrings
         )
       );
-      # Snapshots only the exports that ask for them (their `sanoid` entry), so
+      # Snapshots only the app datasets that ask for them (their `sanoid` entry), so
       # autoSnapshot stays off for tank. sanoid's cache needs no persistence.
       services.sanoid = lib.mkIf (snapshotted != [ ]) {
         enable = true;
@@ -320,7 +324,9 @@ in
       # it creates as needed. No state to persist: a local syncoid keeps none.
       services.syncoid = lib.mkIf (snapshotted != [ ]) {
         enable = true;
-        interval = "*-*-* 06:00:00";
+        # In the evening, when Plex usually has tank's disks spinning anyway.
+        # The host runs on UTC; the timer follows local time across DST.
+        interval = "*-*-* 21:00:00 Europe/Brussels";
         commonArgs = [
           "--no-sync-snap"
           "--delete-target-snapshots"
