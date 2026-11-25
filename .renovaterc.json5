@@ -1,11 +1,11 @@
 // Base config (presets, the `# renovate:` comment manager, the Nix hash
 // refresh) is .renovate/org-inherited-config.json5, inherited by every repo
-// the renovate-operator of modules/kubernetes/renovate runs.
+// the renovate-operator of modules/aspects/kubernetes/renovate runs.
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   ignorePaths: [
     '**/resources/**',
-    // nixidy-generated, regenerated from modules/kubernetes/**/*.nix via `nix run .#write-manifests`
+    // nixidy-generated, regenerated from modules/aspects/kubernetes/**/*.nix via `nix run .#write-manifests`
     'manifests/**',
   ],
   // A jump over several majors becomes one PR per major, so each step's
@@ -101,7 +101,7 @@
     },
     {
       // A nixpkgs bump changes the Renovate image, and with it the
-      // RenovateJob's image tag (modules/kubernetes/renovate).
+      // RenovateJob's image tag (modules/aspects/kubernetes/renovate).
       matchManagers: ["nix"],
       matchUpdateTypes: ["lockFileMaintenance"],
       semanticCommitScope: "nix",
@@ -239,7 +239,7 @@
     {
       // Never unattended: Home Assistant and its stack, and Kanidm, which
       // only upgrades one minor at a time and gates every login.
-      matchFileNames: ["modules/kubernetes/home-assistant/**"],
+      matchFileNames: ["modules/aspects/kubernetes/home-assistant/**"],
       automerge: false,
     },
     {

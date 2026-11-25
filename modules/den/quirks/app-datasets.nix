@@ -1,7 +1,7 @@
 # ZFS datasets k3s-prd-0 creates on zroot (its NVMe pool, not tank, whose
 # disks spin down) for cluster-scoped Kubernetes app aspects, collected onto
 # every host (modules/den/policies/pipes.nix's host-collect-app-datasets);
-# only k3s-prd-0 consumes them (modules/hosts/k3s-prd-0.nix).
+# only k3s-prd-0 consumes them (modules/fleet/hosts/k3s-prd-0.nix).
 # Fragment shape: `cluster.methods.appDataset <app> // { properties ? { }; sanoid ? { }; nfs ? false; writer ? <cluster>; }`:
 # `dataset` zroot/clusters/<cluster>/apps/<app>, mounted (inherited ZFS
 # mountpoint) at `path` /srv/clusters/<cluster>/apps/<app>, which the app's

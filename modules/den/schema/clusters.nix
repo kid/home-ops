@@ -113,7 +113,7 @@
             # the RouterOS side (terragrunt-infra-catalog's talos-bgp
             # module's bgp_hold_time/bgp_keepalive_time) and Cilium's own
             # CiliumBGPPeerConfig.spec.timers — see
-            # modules/routeros/bgp.nix and modules/kubernetes/cilium/bgp.nix.
+            # modules/aspects/routeros/bgp.nix and modules/aspects/kubernetes/cilium/bgp.nix.
             bgp.holdTimeSeconds = lib.mkOption {
               type = lib.types.int;
               default = 90;
@@ -129,7 +129,7 @@
             k3s.initServer = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
               default = null;
-              description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/nixos/services/k3s/k3s.nix). Only for datastore = \"etcd\".";
+              description = "The server (den.hosts name) that creates this cluster's etcd datastore; the other servers join it, so all of them can be declared and started together. null: only a cluster's single declared server creates it (see modules/aspects/services/k3s/k3s.nix). Only for datastore = \"etcd\".";
             };
 
             k3s.datastore = lib.mkOption {
@@ -154,24 +154,24 @@
                 k3s-prd-0 = "10.0.40.41";
                 k3s-prd-1 = "10.0.40.51";
               };
-              description = "Dedicated egress IPs on the cluster's network (outside its DHCP pool), keyed by the app that leaves through them, then by k3s node (den.hosts name). Each is added as a /32 on its node (modules/nixos/services/k3s/egress-gateway.nix, which also asserts every node has one) and used by a CiliumEgressGatewayPolicy for the app's pods on that node, so its traffic leaves from the node it runs on and RouterOS rules can match that app alone. Open-source Cilium has no gateway failover, hence one per node.";
+              description = "Dedicated egress IPs on the cluster's network (outside its DHCP pool), keyed by the app that leaves through them, then by k3s node (den.hosts name). Each is added as a /32 on its node (modules/aspects/services/k3s/egress-gateway.nix, which also asserts every node has one) and used by a CiliumEgressGatewayPolicy for the app's pods on that node, so its traffic leaves from the node it runs on and RouterOS rules can match that app alone. Open-source Cilium has no gateway failover, hence one per node.";
             };
 
             letsencrypt.staging = lib.mkOption {
               type = lib.types.bool;
               default = false;
-              description = "Use Let's Encrypt's staging ACME server instead of production (modules/kubernetes/cert-manager)";
+              description = "Use Let's Encrypt's staging ACME server instead of production (modules/aspects/kubernetes/cert-manager)";
             };
 
             secrets.onepasswordVault = lib.mkOption {
               type = lib.types.str;
-              description = "1Password vault name this cluster's ExternalSecrets read from (modules/kubernetes/external-secrets)";
+              description = "1Password vault name this cluster's ExternalSecrets read from (modules/aspects/kubernetes/external-secrets)";
             };
 
             cloudflare = {
               accountId = lib.mkOption {
                 type = lib.types.str;
-                description = "Cloudflare account ID holding this cluster's R2 bucket (modules/kubernetes/kopiur)";
+                description = "Cloudflare account ID holding this cluster's R2 bucket (modules/aspects/kubernetes/kopiur)";
               };
               zoneId = lib.mkOption {
                 type = lib.types.str;
@@ -179,7 +179,7 @@
               };
               tunnelId = lib.mkOption {
                 type = lib.types.str;
-                description = "Cloudflare Tunnel ID for this cluster's public ingress (modules/kubernetes/cloudflared) — hand-copied once from the cloudflared terragrunt stack's `tunnel_id` output after its bootstrap apply. Not sensitive on its own: it ends up published in public DNS CNAMEs anyway.";
+                description = "Cloudflare Tunnel ID for this cluster's public ingress (modules/aspects/kubernetes/cloudflared) — hand-copied once from the cloudflared terragrunt stack's `tunnel_id` output after its bootstrap apply. Not sensitive on its own: it ends up published in public DNS CNAMEs anyway.";
               };
             };
 
@@ -198,12 +198,12 @@
               backups = lib.mkOption {
                 type = lib.types.bool;
                 default = true;
-                description = "Whether this cluster backs up to and maintains kopiur's r2 repository (modules/kubernetes/kopiur), and its `local` one with kopiur.local: SnapshotSchedules, repository creation and maintenance. Off for a cluster that shares another one's repository, or to stop every new snapshot for a while (a restore being verified): its r2 ClusterRepository, and its local one, are ReadOnly and it only restores, since two clusters must never write to or maintain the same repository.";
+                description = "Whether this cluster backs up to and maintains kopiur's r2 repository (modules/aspects/kubernetes/kopiur), and its `local` one with kopiur.local: SnapshotSchedules, repository creation and maintenance. Off for a cluster that shares another one's repository, or to stop every new snapshot for a while (a restore being verified): its r2 ClusterRepository, and its local one, are ReadOnly and it only restores, since two clusters must never write to or maintain the same repository.";
               };
               local = lib.mkOption {
                 type = lib.types.bool;
                 default = false;
-                description = "Whether this cluster writes full backups to its own on-site `local` kopiur repository (modules/kubernetes/kopiur), a k3s-prd-0 NFS export: a daily root `<name>-full` SnapshotPolicy per backed-up claim, ignore rules and all, plus VMSingle's and VLSingle's claims, scheduled only with kopiur.backups. At most one cluster per environment: the others open it ReadOnly when restoreFrom is \"local\".";
+                description = "Whether this cluster writes full backups to its own on-site `local` kopiur repository (modules/aspects/kubernetes/kopiur), a k3s-prd-0 NFS export: a daily root `<name>-full` SnapshotPolicy per backed-up claim, ignore rules and all, plus VMSingle's and VLSingle's claims, scheduled only with kopiur.backups. At most one cluster per environment: the others open it ReadOnly when restoreFrom is \"local\".";
               };
               restoreFrom = lib.mkOption {
                 type = lib.types.enum [

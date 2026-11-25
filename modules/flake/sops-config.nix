@@ -53,7 +53,7 @@ let
 
   # A cluster's k3s nodes (settings.k3s.clusterName == cluster) that have
   # their own committed key, in provisioned-host key order — sops-nix
-  # (modules/nixos/services/k3s/external-secrets.nix) decrypts
+  # (modules/aspects/services/k3s/external-secrets.nix) decrypts
   # cluster-scoped secrets (e.g. the 1Password service account token) on
   # each such host, using that host's own persisted SSH key as its
   # decryption identity, so this file needs each member host's key as a

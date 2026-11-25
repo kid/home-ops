@@ -8,7 +8,7 @@ in
   # emitted by network/cluster/etc. aspects, see modules/den/quirks/
   # firewall.nix) onto every RouterOS device, exposed as the `firewall` list
   # arg to any terragrunt-stacks module that names it (currently only
-  # modules/routeros/firewall.nix, on rb5009).
+  # modules/aspects/routeros/firewall.nix, on rb5009).
   den.policies.routeros-device-collect-firewall = _: [
     (pipe.from "firewall" [
       # Predicate arg names double as the entity-kind filter (den's
@@ -25,9 +25,9 @@ in
   ];
 
   # Collects the `k3s-nodes` quirk (emitted per-host by
-  # modules/nixos/services/k3s/{k3s,agent}.nix, {hostname; address; role;
+  # modules/aspects/services/k3s/{k3s,agent}.nix, {hostname; address; role;
   # cluster;}) onto every RouterOS device, exposed as the `k3s-nodes` list
-  # arg to modules/routeros/bgp.nix, which groups it by `cluster` into one
+  # arg to modules/aspects/routeros/bgp.nix, which groups it by `cluster` into one
   # BGP stack per cluster. `host` is the entity kind — a bare `_: true`
   # predicate would match nothing, see routeros-device-collect-firewall above.
   den.policies.routeros-device-collect-k3s-nodes = _: [
@@ -36,7 +36,7 @@ in
 
   # Collects the `bgp` quirk (den.quirks.bgp — cluster-level BGP instance
   # parameters, see modules/den/quirks/bgp.nix) onto every RouterOS
-  # device, exposed as the `bgp` list arg to modules/routeros/
+  # device, exposed as the `bgp` list arg to modules/aspects/routeros/
   # ros-bgp.nix.
   den.policies.routeros-device-collect-bgp = _: [
     (pipe.from "bgp" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
@@ -50,8 +50,8 @@ in
 
   # Collects the `k3s-nodes` quirk onto the cluster the host belongs to,
   # exposed as the `k3s-nodes` list arg to its k8s-manifests content
-  # (modules/kubernetes/cilium/host-firewall.nix,
-  # modules/kubernetes/victoria-metrics/default.nix). `host` is the entity
+  # (modules/aspects/kubernetes/cilium/host-firewall.nix,
+  # modules/aspects/kubernetes/victoria-metrics/default.nix). `host` is the entity
   # kind — a bare `_: true` predicate would match nothing, see
   # routeros-device-collect-firewall above. The cluster match is a filter on
   # the collected values rather than in the predicate: a host's

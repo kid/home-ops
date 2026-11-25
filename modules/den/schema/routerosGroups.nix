@@ -1,5 +1,5 @@
 # RouterOS group registry — data-only, no isEntity, consumed directly by
-# modules/routeros/base.nix.
+# modules/aspects/routeros/base.nix.
 #
 # Holds the policies of *custom* RouterOS groups, keyed by the name of the
 # `routeros`-labelled den.accessGroups group users reach it through.

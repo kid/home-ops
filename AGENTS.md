@@ -27,9 +27,9 @@ flowchart LR
 - **Quirks.** Cross-aspect channels collect values from many aspects into one place. They are registered in `modules/den/quirks/`; the main ones are `persist`, `cache`, `datasets`, `firewall`, `firewall-ports`, `generated-secrets`, `app-datasets`, `k3s-nodes` and `bgp`. For example, `modules/den/policies/pipes.nix` gathers firewall, k3s-node and BGP data onto the RouterOS devices.
 - **Aspect classes.** An aspect's content keys say what it produces: `nixos`, `k8s-manifests` or `terragrunt-stacks`.
 - **Shared data.** These files are the single source of truth, so reuse them instead of hardcoding values:
-    - `modules/networks.nix`: VLANs, written as `den.networks.<PascalCase>`. The CIDR is derived from `cidrBase`.
-    - `modules/devices.nix`: MAC/IP registry, which feeds DHCP leases, firewall rules and colmena targets.
-    - `modules/accessGroups.nix`: groups used for OAuth, POSIX and RouterOS.
+    - `modules/inventory/networks.nix`: VLANs, written as `den.networks.<PascalCase>`. The CIDR is derived from `cidrBase`.
+    - `modules/inventory/devices.nix`: MAC/IP registry, which feeds DHCP leases, firewall rules and colmena targets.
+    - `modules/inventory/accessGroups.nix`: groups used for OAuth, POSIX and RouterOS.
 - **Kubernetes defaults.** `modules/den/batteries/kubernetes/nixidy-defaults.nix` creates every Namespace (with Pod Security labels) and one Flux `Kustomization-<app>` per app. Apps can set `flux.dependsOn`, `flux.substituteFrom` and `podSecurity.namespaces`. The file also strips Helm labels and throws on non-install Helm hooks.
 - **Flux.** Flux syncs the git path `manifests/prd/apps` (see `manifests/prd/flux-operator/FluxInstance-flux.yaml`). Each `Kustomization-<app>` there points at `manifests/prd/<app>/`.
 - **App secrets.** Apps get secrets from external-secrets through `ClusterSecretStore` `onepassword` (1Password vault `home-ops-prd`). They are not stored in the repo.
@@ -40,12 +40,19 @@ flowchart LR
 |---|---|
 | `modules/flake/` | Flake outputs: devshell, formatter, checks, charts loader, `write-*` and `provision-*` apps, colmena, images, integration-test wiring |
 | `modules/den/` | den schema, policies, quirks, and the `batteries/` for kubernetes (nixidy) and terragrunt |
-| `modules/hosts/<host>.nix` | One file per NixOS host. `node1.nix` is the minimal example; `test-vm.nix` is a local VM |
-| `modules/nixos/` | NixOS aspects: `base`, `disk` (ZFS/disko), `impermanence`, `services/k3s`, `users` |
-| `modules/kubernetes/<app>/` | Cluster apps as `den.aspects.kubernetes.<app>.k8s-manifests` |
-| `modules/clusters/prd.nix` | Cluster definition. `den.aspects.prd.includes` lists the apps that are enabled |
-| `modules/routeros/*.nix`, `modules/routerosDevices/*.nix` | Shared RouterOS stack aspects, and one file per device with `terragruntInputs.<stack>` |
-| `modules/users/*.nix` | `den.users.registry` entries |
+| `modules/inventory/` | Plain data: `networks`, `devices`, `environments`, `accessGroups`, `routerosGroups` |
+| `modules/fleet/hosts/<host>.nix` | One file per host (a folder when it has helpers, e.g. `vulkan/`). `node1.nix` is the minimal server example; `test-vm.nix` is a local VM |
+| `modules/fleet/clusters/prd.nix` | Cluster definition. `den.aspects.prd.includes` lists the apps that are enabled |
+| `modules/fleet/routeros/*.nix` | One file per RouterOS device, with `terragruntInputs.<stack>` |
+| `modules/fleet/users/*.nix` | `den.users.registry` entries and each user's own aspect |
+| `modules/aspects/profiles/` | Include-only aspects composed by hosts and users: `server`, `desktop`, `workstation` (hosts), `cli` (users) |
+| `modules/aspects/system/` | OS aspects: `base`, `server`, `disk`, `impermanence`, `users`, `workstation`, `darwin`, `hardware` |
+| `modules/aspects/services/` | Service aspects, e.g. `k3s/` (`den.aspects.k3s.*`) |
+| `modules/aspects/home/` | User-environment aspects: `shell`, `apps`, `ai`, `stylix` |
+| `modules/aspects/desktop/` | Linux desktop aspects (`desktop.*`) |
+| `modules/aspects/games/`, `modules/aspects/dev/` | `games.*` and `dev.*` aspects |
+| `modules/aspects/kubernetes/<app>/` | Cluster apps as `den.aspects.kubernetes.<app>.k8s-manifests` |
+| `modules/aspects/routeros/*.nix` | Shared RouterOS stack aspects |
 | `charts/<org>/<chart>/default.nix` | Helm chart pins `{ repo; chart; version; chartHash; }`. The charts themselves are not vendored |
 | `manifests/prd/` | **Generated** nixidy output, written as `<app>/<Kind>-<name>.yaml` |
 | `tf-stacks/prd/{network,k3s}/**/terragrunt.hcl` | **Generated** Terragrunt units. `tf-stacks/root.hcl` keeps state in R2 |
@@ -87,20 +94,20 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 ## Code Conventions & Common Patterns
 
 - **Never hand-edit generated files.** These are `flake.nix`, `manifests/**`, `tf-stacks/prd/**/terragrunt.hcl`, `.sops.yaml` and `.pre-commit-config.yaml`. Edit the Nix source, run the matching `write-*`, and commit the source change together with its regenerated output. A check fails if they drift.
-- **Flake inputs** are declared next to the module that uses them, as `flake-file.inputs.<name>` (e.g. `modules/nixos/disk/zfs.nix`). Core inputs are in `modules/flake/inputs.nix`.
+- **Flake inputs** are declared next to the module that uses them, as `flake-file.inputs.<name>` (e.g. `modules/aspects/system/disk/zfs.nix`). Core inputs are in `modules/flake/inputs.nix`.
 - **Module shape.** A module that takes no arguments is written `_: { ... }`. Start each file with a comment explaining why the module exists. Use `lib.`-qualified calls, and `let` bindings for local constants such as pinned tags.
 - **Pipe operator.** Write every data pipeline of two or more stages with `|>`: `x |> f |> g a`, never `g a (f x)`. Single applications, `lib.types.*`, and `mkIf`/`optionals`-style wrappers stay plain calls.
-- **Aspect naming** follows the path, joined with dots: `den.aspects.k3s.server`, `den.aspects.disk.zfs`, `den.aspects.kubernetes.media.prowlarr`.
+- **Aspect naming** follows the path below `modules/aspects/`, joined with dots, except that `system/`, `services/` and `home/` only group: `system/disk/zfs.nix` is `den.aspects.disk.zfs`, `services/k3s/` holds `den.aspects.k3s.*`, `desktop/plasma.nix` is `den.aspects.desktop.plasma`, `kubernetes/media/prowlarr.nix` is `den.aspects.kubernetes.media.prowlarr`. Older aspects that predate this keep their names: the user aspects in `system/users/` (`define-user`, `ssh-keys`, ...), `host-network` (`system/base/network.nix`) and `network.internet-access` (`routeros/internet-access.nix`).
     - Settings are declared inside the aspect as `settings.<opt> = lib.mkOption`, and read back as `host.settings.<aspect>.<opt>`.
     - Gate optional behaviour with `host.hasAspect den.aspects.X`.
-- **New host.** Create `modules/hosts/<name>.nix` and set the following (`node1.nix` is the example to copy):
+- **New host.** Create `modules/fleet/hosts/<name>.nix` and set the following (`node1.nix` is the example to copy):
     - `den.hosts.x86_64-linux.<name>` with `environment`, `system-access-groups` and `settings.*`
     - `den.devices.<name>.interfaces`
     - `den.aspects.<name>.{nixos,includes}`
     - `fleet.colmena.deployment.<name>.targetHost`
 - **New Kubernetes app.**
-    1. Create `modules/kubernetes/<app>/default.nix` defining `den.aspects.kubernetes.<app>.k8s-manifests = { charts, cluster, images, ... }: { applications.<app> = { namespace; helm.releases.<r> = { chart = charts.<org>.<chart>; values; }; resources.*; }; }`. `modules/kubernetes/coredns/default.nix` is a good model.
-    2. Add the app to `den.aspects.prd.includes` in `modules/clusters/prd.nix`.
+    1. Create `modules/aspects/kubernetes/<app>/default.nix` defining `den.aspects.kubernetes.<app>.k8s-manifests = { charts, cluster, images, ... }: { applications.<app> = { namespace; helm.releases.<r> = { chart = charts.<org>.<chart>; values; }; resources.*; }; }`. `modules/aspects/kubernetes/coredns/default.nix` is a good model.
+    2. Add the app to `den.aspects.prd.includes` in `modules/fleet/clusters/prd.nix`.
     3. Run `write-manifests`.
 - **Cluster helpers** are available as `cluster.methods.*`: `netpol` (`mkPolicy`, `tcpUdp`, `scrapeIngress`, `apiserverEgress`), `mkAppHostname`, `mkGeneratedSecret`, `mkKopiurBackup`, `mkOidcAuth` and `mkMediaApp`. Add new ones as `den.clusterMethods.<name> = cluster: ...`.
     - Every app ships its own `ciliumNetworkPolicies`.
@@ -115,11 +122,11 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 
 ## Important Files
 
-- `flake.nix` (generated) and `modules/flake/core.nix`, which imports den and flake-file and supports only the `x86_64-linux` system.
+- `flake.nix` (generated) and `modules/flake/core.nix`, which imports den and flake-file and sets the systems: `x86_64-linux` for every NixOS host, `aarch64-darwin` for the work Mac.
 - `modules/flake/files.nix`: `write-manifests` and `checks.manifests`. It also merges `secrets/clusters/<cluster>/<ns>/<name>.sops.json` into `SopsSecret-*.yaml`.
 - `modules/flake/formatter.nix`, `git-hooks.nix`, `devshell.nix`, `charts.nix`, `colmena.nix`, `images.nix`, `integration-tests.nix`, `nixos-checks.nix`, `sops-config.nix`.
 - `modules/den/batteries/terragrunt/{terragrunt-stacks,devshell}.nix`: renders the Terragrunt stacks and defines `checks.terragrunt`. `write-terragrunt` does **not** delete stale leaves, so remove orphaned stack directories by hand.
-- `.renovaterc.json5` and `.renovate/org-inherited-config.json5`: automerge rules, groups, and `postUpgradeTasks`. Renovate runs in-cluster from `modules/kubernetes/renovate`.
+- `.renovaterc.json5` and `.renovate/org-inherited-config.json5`: automerge rules, groups, and `postUpgradeTasks`. Renovate runs in-cluster from `modules/aspects/kubernetes/renovate`.
 - `secretspec.toml`: credentials pulled from 1Password (`CLOUDFLARE_API_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`, MCP tokens).
 - `charts/README.md`: workflow for chart pins.
 

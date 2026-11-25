@@ -2,7 +2,7 @@
 # pin, never its `chartHash`. Left stale, the hash still matches the *old*
 # chart. Renovate runs this for every bumped chart through rehash-changed-pins
 # (./rehash-changed-pins.nix); other Nix pins are rehashed by refresh-nix-hash
-# (modules/kubernetes/renovate).
+# (modules/aspects/kubernetes/renovate).
 #
 #   nix run .#rehash-chart charts/<org>/<chart>/default.nix
 _: {

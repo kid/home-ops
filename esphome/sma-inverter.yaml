@@ -41,7 +41,7 @@ ethernet:
     pin: GPIO17
   phy_addr: 0
   power_pin: GPIO12
-  # rb5009 static record (modules/routerosDevices/rb5009.nix); mDNS doesn't cross VLANs.
+  # rb5009 static record (modules/fleet/routeros/rb5009.nix); mDNS doesn't cross VLANs.
   use_address: sma-inverter.iot-local.home.kidibox.net
 
 api:

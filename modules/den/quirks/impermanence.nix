@@ -1,5 +1,5 @@
 # Quirk metadata registration. Actual collection happens in
-# modules/nixos/impermanence/collect.nix, which reads the
+# modules/aspects/system/impermanence/collect.nix, which reads the
 # `persist`/`cache` args den auto-injects by walking a host's aspect-includes
 # chain for these quirk names.
 {

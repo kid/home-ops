@@ -1,5 +1,5 @@
 // Inherited by every repo the in-cluster renovate-operator runs
-// (modules/kubernetes/renovate), ahead of the repo's own config: repos only
+// (modules/aspects/kubernetes/renovate), ahead of the repo's own config: repos only
 // add what is specific to them.
 {
   // Renovate validates the inherited config without migrating it, so
@@ -139,7 +139,7 @@
     {
       // Every `# renovate:` pin in Nix has a content hash next to its
       // version, which Renovate cannot recompute. refresh-nix-hash is on the
-      // Renovate image's PATH (modules/kubernetes/renovate/_image.nix).
+      // Renovate image's PATH (modules/aspects/kubernetes/renovate/_image.nix).
       matchManagers: ["custom.regex"],
       matchFileNames: ["**/*.nix"],
       matchDatasources: ["github-releases", "github-tags", "/^custom\\./"],

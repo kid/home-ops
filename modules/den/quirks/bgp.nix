@@ -1,9 +1,9 @@
 # Cluster-level BGP instance parameters, contributed by every cluster that
-# includes den.aspects.kubernetes.cilium-bgp (modules/kubernetes/cilium/
+# includes den.aspects.kubernetes.cilium-bgp (modules/aspects/kubernetes/cilium/
 # bgp.nix) and collected onto every RouterOS device (modules/den/policies/
 # pipes.nix's routeros-device-collect-bgp). Fragment shape: { name; localAsn;
 # peers; holdTimeSeconds; keepAliveTimeSeconds; } — `peers` is
-# den.clusters.<name>.bgp.peers verbatim; modules/routeros/bgp.nix (the only
+# den.clusters.<name>.bgp.peers verbatim; modules/aspects/routeros/bgp.nix (the only
 # current consumer) matches `peers` entries against its own
 # routerosDevice.name and renders one stack, bgp-<name>, each.
 {
