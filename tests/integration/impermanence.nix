@@ -68,7 +68,8 @@ let
       machine.succeed("findmnt -no SOURCE / | grep -qF '[/@/root]'")
       machine.succeed("journalctl -b -u rollback-root.service | grep -q 'Finished'")
     '';
-    persistSource = "[/@/persist]";
+    # A bind mount's SOURCE carries its subdirectory: /dev/vda2[/@/persist/var/lib/kept].
+    persistSource = "[/@/persist/";
   };
 
   fixture =
