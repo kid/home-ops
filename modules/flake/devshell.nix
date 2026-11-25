@@ -46,6 +46,7 @@ _: {
             kubevirt
             nodejs
             kubelogin-oidc
+            nh
 
             nil
             nixd

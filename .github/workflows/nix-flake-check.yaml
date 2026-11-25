@@ -24,6 +24,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # The hosts' own caches: the daemon lets the runner use those listed in
+      # its trusted-substituters (modules/hosts/k3s-prd-0.nix), else they'd build.
+      - name: Configure substituters
+        run: |
+          mkdir -p ~/.config/nix
+          hosts=$(nix eval --raw .#nixosConfigurations --apply 'cs: toString (builtins.filter (n: cs.${n}.pkgs.stdenv.hostPlatform.system == "x86_64-linux") (builtins.attrNames cs))')
+          subs=$(for h in $hosts; do
+            nix eval --raw ".#nixosConfigurations.$h.config.nix.settings" --apply 's: toString ((s.substituters or [ ]) ++ (s.extra-substituters or [ ]))'
+            echo
+          done | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          echo "extra-substituters = $subs" >> ~/.config/nix/nix.conf
+
       - name: Run nix flake check
         run: nix flake check --print-build-logs
 
