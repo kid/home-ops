@@ -24,7 +24,7 @@ flowchart LR
 
 - **Entry point.** `flake.nix` calls `flake-parts.lib.mkFlake` with `import-tree ./modules`, so every `.nix` file under `modules/` is a module. Files whose names start with `_` (e.g. `_ros-lib.nix`) are helpers that other files import; they are not loaded as modules.
 - **Den topology.** Scopes nest as flake → fleet → environment → {network, routerosDevice, cluster, host} (`modules/den/policies/fleet.nix`). The entity schemas are in `modules/den/schema/`.
-- **Quirks.** Cross-aspect channels collect values from many aspects into one place. They are registered in `modules/den/quirks/`; the main ones are `persist`, `cache`, `datasets`, `firewall`, `firewall-ports`, `generated-secrets`, `nfs-exports`, `k3s-nodes` and `bgp`. For example, `modules/den/policies/pipes.nix` gathers firewall, k3s-node and BGP data onto the RouterOS devices.
+- **Quirks.** Cross-aspect channels collect values from many aspects into one place. They are registered in `modules/den/quirks/`; the main ones are `persist`, `cache`, `datasets`, `firewall`, `firewall-ports`, `generated-secrets`, `app-datasets`, `k3s-nodes` and `bgp`. For example, `modules/den/policies/pipes.nix` gathers firewall, k3s-node and BGP data onto the RouterOS devices.
 - **Aspect classes.** An aspect's content keys say what it produces: `nixos`, `k8s-manifests` or `terragrunt-stacks`.
 - **Shared data.** These files are the single source of truth, so reuse them instead of hardcoding values:
     - `modules/networks.nix`: VLANs, written as `den.networks.<PascalCase>`. The CIDR is derived from `cidrBase`.

@@ -66,23 +66,23 @@ in
       ])
     ];
 
-  # Collects the `nfs-exports` quirk (modules/den/quirks/nfs-exports.nix,
+  # Collects the `app-datasets` quirk (modules/den/quirks/app-datasets.nix,
   # emitted by cluster-scoped app aspects) onto every host, exposed as the
-  # `nfs-exports` list arg to NixOS content; only k3s-prd-0 reads it. `cluster` is the
+  # `app-datasets` list arg to NixOS content; only k3s-prd-0 reads it. `cluster` is the
   # entity kind, see routeros-device-collect-firewall above.
-  den.policies.host-collect-nfs-exports = _: [
-    (pipe.from "nfs-exports" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
+  den.policies.host-collect-app-datasets = _: [
+    (pipe.from "app-datasets" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
   ];
 
   # Same for the `k3s-nodes` quirk: k3s-prd-0 exports a cluster's writable
-  # datasets (an nfs-exports fragment's `writer`) read-write only to that
+  # datasets (an app-datasets fragment's `writer`) read-write only to that
   # cluster's nodes. `host` is the entity kind, as above.
   den.policies.host-collect-k3s-nodes = _: [
     (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
   ];
 
   den.schema.host.includes = [
-    den.policies.host-collect-nfs-exports
+    den.policies.host-collect-app-datasets
     den.policies.host-collect-k3s-nodes
   ];
 

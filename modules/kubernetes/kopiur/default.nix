@@ -201,11 +201,11 @@ in
   # recoverable; k3s-prd-0 also replicates them to tank (modules/hosts/k3s-prd-0.nix).
   # Only the cluster with kopiur.local writes it: k3s-prd-0 exports it read-write
   # to that cluster's nodes only, read-only to every other Storage client.
-  den.aspects.kubernetes.kopiur.nfs-exports =
+  den.aspects.kubernetes.kopiur.app-datasets =
     { cluster, ... }:
     lib.optionals cluster.kopiur.local [
       (
-        cluster.methods.nfsExport "kopiur-local"
+        cluster.methods.appDataset "kopiur-local"
         // {
           # kopia already compresses and encrypts its blobs.
           properties = {
@@ -220,6 +220,7 @@ in
             monthly = 0;
             yearly = 0;
           };
+          nfs = true;
           writer = cluster.name;
         }
       )
@@ -263,7 +264,7 @@ in
         path = "/repo";
         volume.nfs = {
           server = cluster.methods.nfsServer;
-          inherit (localWriter.methods.nfsExport "kopiur-local") path;
+          inherit (localWriter.methods.appDataset "kopiur-local") path;
         };
       };
       nobody = {
