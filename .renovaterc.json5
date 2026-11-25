@@ -240,13 +240,20 @@
       automerge: false,
     },
     {
-      // Labels every update the rules above leave auto-merging. Must stay
-      // last: matchJsonata sees the config earlier rules built, and
-      // `automerge` is no template variable, so a templated label can't do
-      // it. A group gets the label if any member has it, but auto-merges
-      // only when all do: keep auto-merging deps out of mixed groups.
+      // Labels every update by whether the rules above leave it
+      // auto-merging, so the PRs to merge by hand filter on `no-automerge`.
+      // Must stay last: matchJsonata sees the config earlier rules built,
+      // and `automerge` is no template variable, so a templated label can't
+      // do it. A group gets a label if any member has it, but auto-merges
+      // only when all do: a mixed group carries both labels and waits for a
+      // hand merge, so `no-automerge` stays exact where `automerge` is not.
       matchJsonata: ["automerge = true"],
       addLabels: ["automerge"],
+    },
+    {
+      // $not: an unset automerge compares false against anything.
+      matchJsonata: ["$not(automerge = true)"],
+      addLabels: ["no-automerge"],
     },
   ],
 }
