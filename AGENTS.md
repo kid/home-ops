@@ -88,7 +88,9 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 
 - **Never hand-edit generated files.** These are `flake.nix`, `manifests/**`, `tf-stacks/prd/**/terragrunt.hcl`, `.sops.yaml` and `.pre-commit-config.yaml`. Edit the Nix source, run the matching `write-*`, and commit the source change together with its regenerated output. A check fails if they drift.
 - **Flake inputs** are declared next to the module that uses them, as `flake-file.inputs.<name>` (e.g. `modules/nixos/disk/zfs.nix`). Core inputs are in `modules/flake/inputs.nix`.
-- **Module shape.** A module that takes no arguments is written `_: { ... }`. Start each file with a comment explaining why the module exists. Use `lib.`-qualified calls, the pipe operator `|>`, and `let` bindings for local constants such as pinned tags.
+- **Module shape.** A module that takes no arguments is written `_: { ... }`. Start each file with a comment explaining why the module exists. Use `lib.`-qualified calls, and `let` bindings for local constants such as pinned tags.
+- **Pipe operator.** Write every data pipeline of two or more stages with `|>`: `x |> f |> g a`, never `g a (f x)`. Single applications, `lib.types.*`, and `mkIf`/`optionals`-style wrappers stay plain calls.
+    - `|>` is the experimental `pipe-operators` feature, so nothing evaluates (devshell included) until `nix.conf` has `extra-experimental-features = pipe-operators`.
 - **Aspect naming** follows the path, joined with dots: `den.aspects.k3s.server`, `den.aspects.disk.zfs`, `den.aspects.kubernetes.media.prowlarr`.
     - Settings are declared inside the aspect as `settings.<opt> = lib.mkOption`, and read back as `host.settings.<aspect>.<opt>`.
     - Gate optional behaviour with `host.hasAspect den.aspects.X`.
