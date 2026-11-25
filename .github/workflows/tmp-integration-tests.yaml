@@ -1,0 +1,25 @@
+---
+# Throwaway: runs the impermanence VM tests for PR #848. Never merged.
+name: Integration tests (temporary)
+
+on:
+  pull_request:
+
+jobs:
+  vm-tests:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: home-ops
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: KVM
+        run: ls -l /dev/kvm || echo "no /dev/kvm: qemu falls back to TCG"
+
+      - name: impermanence-zfs-rollback
+        run: nix build -L .#integration-tests.impermanence-zfs-rollback
+
+      - name: impermanence-btrfs-rollback
+        if: ${{ !cancelled() }}
+        run: nix build -L .#integration-tests.impermanence-btrfs-rollback
