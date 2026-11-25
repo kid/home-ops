@@ -11,6 +11,10 @@
   };
 
   inputs = {
+    brew-src = {
+      url = "github:Homebrew/brew/7.0.16";
+      flake = false;
+    };
     colmena = {
       url = "github:nix-community/colmena";
       inputs = {
@@ -20,6 +24,10 @@
     };
     dagger = {
       url = "github:dagger/nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    darwin = {
+      url = "github:lnl7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     den.url = "github:denful/den";
@@ -53,6 +61,14 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    homebrew-cask = {
+      url = "github:homebrew/homebrew-cask";
+      flake = false;
+    };
+    homebrew-core = {
+      url = "github:homebrew/homebrew-core";
+      flake = false;
+    };
     impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
     lanzaboote = {
@@ -69,6 +85,7 @@
       url = "github:powerofthe69/nix-gaming-edge";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
     nix-kube-generators.url = "github:farcaller/nix-kube-generators/810dcf792081790648ba9ae705b9a2286115ace8";
     nixhelm = {
       url = "github:farcaller/nixhelm";
@@ -92,6 +109,10 @@
         home-manager.follows = "home-manager";
         nixpkgs.follows = "nixpkgs";
       };
+    };
+    private = {
+      url = "path:./private";
+      flake = false;
     };
     sops-nix = {
       url = "github:Mic92/sops-nix";
