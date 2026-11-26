@@ -4,7 +4,6 @@
 {
   den,
   config,
-  inputs,
   ...
 }:
 let
@@ -114,8 +113,6 @@ in
         lib.genList (i: parts |> lib.take (i + 2) |> lib.concatStringsSep "/") (lib.length parts - 2);
     in
     {
-      imports = [ inputs.srvos.nixosModules.mixins-latest-zfs-kernel ];
-
       boot.loader.efi.canTouchEfiVariables = true;
       hardware.cpu.intel.updateMicrocode = true;
       # The iGPU's DMC, GuC and HuC blobs (linux-firmware). Mainline i915's
