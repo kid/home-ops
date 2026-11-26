@@ -187,6 +187,44 @@
             |> builtins.replaceStrings [ "__POD__" ] [ "\${__value.raw}" ]
           );
       };
+
+      # vmalert's generatorURL (the link in HA's alert notifications): the rule's
+      # expression in Explore from when it went pending. Fully percent-encoded:
+      # the chart's default leaves `left={"datasource":…}` raw, and the iOS app
+      # re-encodes that, %22 included, into JSON Grafana rejects. The {{"{{"}}
+      # survive the chart's tpl; vmalert then fills .Expr and .ActiveAt.
+      alertSource =
+        "explore?schemaVersion=1&orgId=1&panes="
+        + (
+          {
+            alert = {
+              datasource = "vm-metrics";
+              queries = [
+                {
+                  refId = "A";
+                  datasource = {
+                    type = "victoriametrics-metrics-datasource";
+                    uid = "vm-metrics";
+                  };
+                  expr = "__EXPR__";
+                }
+              ];
+              range = {
+                from = "__FROM__";
+                to = "now";
+              };
+            };
+          }
+          |> builtins.toJSON
+          |> lib.escapeURL
+          |>
+            builtins.replaceStrings
+              [ "%22__EXPR__%22" "__FROM__" ]
+              [
+                ''{{"{{"}} .Expr|jsonEscape|queryEscape {{"}}"}}''
+                ''{{"{{"}} .ActiveAt.UnixMilli {{"}}"}}''
+              ]
+        );
     in
     {
       nixidy.applicationImports = [
@@ -365,10 +403,7 @@
               };
             };
 
-            external.grafana = {
-              host = "https://${cluster.methods.mkAppHostname "grafana"}";
-              datasource = "VictoriaMetrics";
-            };
+            external.grafana.host = "https://${cluster.methods.mkAppHostname "grafana"}";
 
             # CoreDNS is now scraped via its own chart's ServiceMonitor
             # (modules/kubernetes/coredns/default.nix).
@@ -424,6 +459,7 @@
             vmalert = {
               spec = {
                 logFormat = "json";
+                extraArgs."external.alert.source" = alertSource;
                 configReloaderExtraArgs.loggerFormat = "json";
                 resources = {
                   requests = {
