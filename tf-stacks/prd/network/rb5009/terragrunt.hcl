@@ -228,6 +228,11 @@ inputs = {
         mac     = "dc:a6:32:06:69:9a"
         name    = "pikvm"
       },
+      {
+        address = "10.99.0.20"
+        mac     = "10:ff:e0:8a:b8:cc"
+        name    = "vulkan"
+      },
     ]
     Storage = [
       {
@@ -256,6 +261,11 @@ inputs = {
         address = "10.0.100.212"
         mac     = "48:b0:2d:18:ec:cd"
         name    = "shield"
+      },
+      {
+        address = "10.0.100.20"
+        mac     = "10:ff:e0:8a:b8:cc"
+        name    = "vulkan"
       },
     ]
   }

@@ -34,6 +34,12 @@ inputs = {
     "sma-inverter.iot-local.home.kidibox.net" = {
       address = "10.0.50.41"
     }
+    "vulkan.lan.home.kidibox.net" = {
+      address = "10.0.100.20"
+    }
+    "vulkan.mgmt.home.kidibox.net" = {
+      address = "10.99.0.20"
+    }
   }
   dns_upstream_servers = [
     "9.9.9.9",

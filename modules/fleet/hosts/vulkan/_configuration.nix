@@ -13,57 +13,9 @@
     useNetworkd = true;
     nftables.enable = true;
 
-    interfaces = {
-      adm.useDHCP = true;
-      # lab-oob.useDHCP = true;
-      # lab-trusted = {
-      #   useDHCP = true;
-      #   ipv4.routes = [
-      #     {
-      #       address = "10.128.0.0";
-      #       prefixLength = 9;
-      #       via = "10.128.100.1";
-      #     }
-      #   ];
-      # };
-    };
-
-    vlans = {
-      adm = {
-        id = 99;
-        interface = "enp15s0";
-      };
-      # lab-oob = {
-      #   id = 1991;
-      #   interface = "enp15s0";
-      # };
-      # lab-trusted = {
-      #   id = 1100;
-      #   interface = "enp15s0";
-      # };
-    };
-
     firewall = {
       enable = false;
       allowedTCPPorts = [ 8443 ];
-    };
-  };
-
-  systemd = {
-    network.networks = {
-      "40-adm" = {
-        name = "adm";
-        dhcpV4Config.RouteMetric = 2048;
-      };
-      # "40-lab-oob" = {
-      #   name = "lab-oob";
-      #   dhcpV4Config.RouteMetric = 2048;
-      # };
-      # "40-lab-trusted" = {
-      #   name = "lab-trusted";
-      #   dhcpV4Config.RouteMetric = 2048;
-      #   domains = [ "~dev.kidibox.net." ];
-      # };
     };
   };
 
