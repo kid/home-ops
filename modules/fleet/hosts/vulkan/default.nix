@@ -23,12 +23,29 @@ in
     };
   };
 
+  # crs320's ether1: Trusted native, Management tagged. Statically addressed
+  # by den.aspects.base.network, which also matches the NIC by MAC.
+  den.devices.vulkan.interfaces = [
+    {
+      network = "Trusted";
+      hostNum = 20;
+      mac = "10:ff:e0:8a:b8:cc";
+    }
+    {
+      network = "Management";
+      hostNum = 20;
+      mac = "10:ff:e0:8a:b8:cc";
+      tagged = true;
+    }
+  ];
+
   den.aspects.vulkan = {
     includes = with den.aspects; [
       den.batteries.hostname
       profiles.desktop
       disk.btrfs
       impermanence
+      base.network
       dev.libvirt
       hardware.razer
       games.helldivers2

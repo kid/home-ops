@@ -35,7 +35,6 @@ inputs = {
     ether1 = {
       command = "vulkan"
       tagged = [
-        40,
         99,
       ]
       untagged = 100

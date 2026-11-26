@@ -98,10 +98,7 @@ in
               # — the module silently ignores it. Intentional, not a bug to fix.
               command = "vulkan";
               untagged = networks.Trusted.vlanId;
-              tagged = lib.sort (a: b: a < b) [
-                networks.Management.vlanId
-                networks.K3s.vlanId
-              ];
+              tagged = [ networks.Management.vlanId ];
             };
             ether2 = {
               comment = "rb5009";
