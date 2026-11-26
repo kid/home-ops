@@ -22,7 +22,7 @@
       # later release sets its own.
       system.stateVersion = lib.mkDefault "26.05";
 
-      # kid's public Cachix cache, which nixfiles' and neovim's CI push to.
+      # kid's public Cachix cache, which neovim's CI pushes to.
       # On k3s-prd-0 it also serves the in-cluster CI runner, which can't add
       # a substituter itself: the daemon doesn't trust it.
       nix.settings = {

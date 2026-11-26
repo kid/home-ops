@@ -139,10 +139,10 @@ in
       # datasets must never carry snapshots of their own.
       services.zfs.autoSnapshot.enable = false;
 
-      # kid/nixfiles' CI builds its hosts on the in-cluster runner, which this
-      # daemon doesn't trust: it may only add substituters listed here, and
-      # their paths only verify against keys this daemon trusts. The caches
-      # kid/nixfiles' hosts substitute from beyond the base ones; keep in sync.
+      # home-ops' CI builds the workstation hosts on the in-cluster runner,
+      # which this daemon doesn't trust: it may only add substituters listed
+      # here, and their paths only verify against keys this daemon trusts. The
+      # caches vulkan and fw13 substitute from beyond the base ones; keep in sync.
       nix.settings = {
         trusted-substituters = [
           "https://nix-community.cachix.org"
