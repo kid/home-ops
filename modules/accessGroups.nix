@@ -33,5 +33,10 @@
       labels = [ "routeros" ];
       members = [ "admins" ];
     };
+    # The work Mac's gate (kid/nixfiles-work). No labels, no members: the
+    # Kanidm, OAuth and RouterOS consumers ignore it, and admins aren't in it.
+    work = {
+      description = "Log in on work machines";
+    };
   };
 }

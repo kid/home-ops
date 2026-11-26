@@ -16,15 +16,18 @@ apply-all path: (tf-all path "apply")
 
 hostname := `hostname -s`
 nh := if os() == "macos" { "nh darwin" } else { "nh os" }
+# kid/nixfiles-work, swapped in for the stub at ./private when checked out.
+private_dir := env("NIXFILES_PRIVATE", home_directory() / "Code/kid/nixfiles-work")
+private := if path_exists(private_dir) == "true" { "--override-input private git+file://" + private_dir } else { "" }
 
 build host=hostname *args:
-    {{ nh }} build . --hostname {{ host }} {{ args }}
+    {{ nh }} build . --hostname {{ host }} {{ private }} {{ args }}
 
 test host=hostname *args:
-    {{ nh }} test . --hostname {{ host }} --ask {{ args }}
+    {{ nh }} test . --hostname {{ host }} {{ private }} --ask {{ args }}
 
 switch host=hostname *args:
-    {{ nh }} switch . --hostname {{ host }} --ask {{ args }}
+    {{ nh }} switch . --hostname {{ host }} {{ private }} --ask {{ args }}
 
 boot host=hostname *args:
-    {{ nh }} boot . --hostname {{ host }} --ask {{ args }}
+    {{ nh }} boot . --hostname {{ host }} {{ private }} --ask {{ args }}

@@ -48,12 +48,16 @@
         instantiate =
           { modules, ... }:
           withSystem system (
-            { pkgs, config, ... }:
+            { pkgs, ... }:
             inputs.nixidy.lib.mkEnv {
               inherit pkgs modules;
               charts = self.chartsDerivations.${system};
-              # modules/flake/images.nix
-              extraSpecialArgs.images = config.legacyPackages.imageRefs;
+              # modules/flake/images.nix. The cluster's own platform, not the
+              # rendering system's: every node is x86_64-linux, and an image's
+              # tag is its Nix hash, so a darwin render would name another tag.
+              extraSpecialArgs.images = withSystem "x86_64-linux" (
+                { config, ... }: config.legacyPackages.imageRefs
+              );
             }
           );
       }
