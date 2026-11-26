@@ -2,11 +2,11 @@
 # Writes directly to the real NixOS option path — no `.user`-class
 # auto-forwarding involved.
 _: {
-  den.aspects.ssh-keys.includes = [
+  den.aspects.users.ssh-keys.includes = [
     (
       { host, user }:
       {
-        name = "ssh-keys/${user.userName}@${host.name}";
+        name = "users.ssh-keys/${user.userName}@${host.name}";
         nixos.users.users.${user.userName}.openssh.authorizedKeys.keys = user.sshKeys;
       }
     )

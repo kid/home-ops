@@ -60,7 +60,7 @@ in
     |> lib.filter (acl.admits gates)
     |> map (user: resolve.to "user" { inherit user; });
 
-  # den.batteries.user-aspects: a user's content (define-user, ssh-keys
+  # den.batteries.user-aspects: a user's content (users.define, users.ssh-keys
   # below) reaches the host it resolves onto; den stops doing this by
   # default after 2027-01-01 (denful/den#694).
   config.den.schema.host.includes = [
@@ -75,7 +75,7 @@ in
   # resolved it) rather than into any one host's own includes list, mirrors
   # how modules/den/batteries/terragrunt/terragrunt-stacks.nix wires den.schema.routerosDevice.includes.
   config.den.schema.user.includes = [
-    den.aspects.define-user
-    den.aspects.ssh-keys
+    den.aspects.users.define
+    den.aspects.users.ssh-keys
   ];
 }

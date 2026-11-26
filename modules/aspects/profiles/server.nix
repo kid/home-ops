@@ -4,6 +4,6 @@
   den.aspects.profiles.server.includes = with den.aspects; [
     base
     server
-    host-network
+    base.network
   ];
 }

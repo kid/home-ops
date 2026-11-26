@@ -7,7 +7,7 @@
 # replaces 99-default.link and with it the predictable interface name.
 { config, ... }:
 {
-  den.aspects.host-network.nixos =
+  den.aspects.base.network.nixos =
     { host, lib, ... }:
     let
       inherit (config.den.devices.${host.name} or { interfaces = [ ]; }) interfaces;

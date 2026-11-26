@@ -19,8 +19,8 @@
   den.aspects.kid = {
     includes = [
       den.batteries.host-aspects
-      den.aspects.privileged-user
-      den.aspects.hm-defaults
+      den.aspects.users.privileged
+      den.aspects.users.hm-defaults
       den.aspects.profiles.cli
     ];
 

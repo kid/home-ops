@@ -2,11 +2,11 @@
 # it: they set users.privilegedGroups, kid includes this. Declares the option,
 # so only one user per host may include it.
 _: {
-  den.aspects.privileged-user.includes = [
+  den.aspects.users.privileged.includes = [
     (
       { host, user }:
       {
-        name = "privileged-user/${user.userName}@${host.name}";
+        name = "users.privileged/${user.userName}@${host.name}";
         nixos =
           { config, lib, ... }:
           {
