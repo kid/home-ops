@@ -35,6 +35,8 @@ spec:
       containers:
         - args:
             - --log-level=info
+            - --metrics-addr=:8080
+            - --health-addr=:8081
             - --web-config-secret-name=flux-web-config
             - --enable-leader-election=false
           env:
@@ -46,12 +48,12 @@ spec:
               value: 5m
             - name: WEB_SERVER_PORT
               value: "9080"
-          image: ghcr.io/controlplaneio-fluxcd/flux-operator:v0.63.1
+          image: ghcr.io/controlplaneio-fluxcd/flux-operator:v0.64.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8081
+              port: http
             initialDelaySeconds: 15
             periodSeconds: 20
           name: manager
@@ -68,7 +70,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /readyz
-              port: 8081
+              port: http
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
