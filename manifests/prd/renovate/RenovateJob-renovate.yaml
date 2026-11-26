@@ -11,7 +11,7 @@ spec:
     installationIdSecretKey: installation-id
     pemSecretKey: private-key
     secretName: renovate-github-app
-  image: ghcr.io/kid/home-ops-renovate:ys0wx7y6s5msncdc6pznas7jyq9pisz6
+  image: ghcr.io/kid/home-ops-renovate:g16b6anbhi3qin8id4af5h5l2rjrz7b0
   metadata:
     labels:
       app.kubernetes.io/name: renovate
