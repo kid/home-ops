@@ -14,7 +14,6 @@
     nftables.enable = true;
 
     interfaces = {
-      k8s.useDHCP = false;
       adm.useDHCP = true;
       # lab-oob.useDHCP = true;
       # lab-trusted = {
@@ -30,10 +29,6 @@
     };
 
     vlans = {
-      k8s = {
-        id = 40;
-        interface = "enp15s0";
-      };
       adm = {
         id = 99;
         interface = "enp15s0";
@@ -47,9 +42,6 @@
       #   interface = "enp15s0";
       # };
     };
-
-    bridges.br-k8s.interfaces = [ "k8s" ];
-    interfaces.br-k8s.useDHCP = false;
 
     firewall = {
       enable = false;
@@ -149,6 +141,5 @@
 
   virtualisation = {
     docker.enable = true;
-    libvirtd.allowedBridges = [ "br-k8s" ];
   };
 }
