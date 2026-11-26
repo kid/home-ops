@@ -1,0 +1,30 @@
+# Wayland session environment shared by the Plasma and Umbriel sessions.
+{ lib, ... }:
+{
+  den.aspects.desktop.wayland = {
+    nixos =
+      { pkgs, ... }:
+      {
+        environment = {
+          systemPackages = [ pkgs.wl-clipboard-rs ];
+
+          variables = {
+            NIXOS_OZONE_WL = "1";
+            GDK_BACKEND = "wayland,x11";
+            ANKI_WAYLAND = "1";
+            MOZ_ENABLE_WAYLAND = "1";
+            XDG_SESSION_TYPE = "wayland";
+            SDL_VIDEODRIVER = "wayland";
+            CLUTTER_BACKEND = "wayland";
+          };
+
+          sessionVariables = {
+            PROTON_ENABLE_WAYLAND = "1";
+            SDL_VIDEODRIVER = "wayland";
+          };
+        };
+
+        programs.gamescope.args = lib.mkAfter [ "--expose-wayland" ];
+      };
+  };
+}

@@ -1,0 +1,44 @@
+# WezTerm with smart-splits.nvim's WezTerm backend.
+{ inputs, ... }:
+{
+  den.aspects.apps.wezterm = {
+    homeManager =
+      { pkgs, ... }:
+      let
+        # WezTerm half of smart-splits.nvim's backend-wezterm, taken from the
+        # same package the Neovim half comes from so both stay in lockstep.
+        # This flake's own `inputs`, not the `inputs'` module arg: that one belongs
+        # to whichever flake evaluates this aspect.
+        smart-splits =
+          inputs.neovim-flake.packages.${pkgs.stdenv.hostPlatform.system}.smart-splits-backend-wezterm;
+      in
+      {
+        programs.wezterm = {
+          enable = true;
+          extraConfig = ''
+            -- Loaded from the store instead of wezterm.plugin.require, so the
+            -- plugin's own lookup through wezterm.plugin.list() finds nothing and
+            -- its sibling modules have to be put on package.path here.
+            package.path = package.path .. ';${smart-splits}/plugin/?.lua'
+            local smart_splits = dofile('${smart-splits}/plugin/init.lua')
+
+            -- Plain table: Home Manager merges whatever this returns into its own
+            -- config builder.
+            local config = {
+              use_fancy_tab_bar = false,
+              hide_tab_bar_if_only_one_tab = true,
+              command_palette_font_size = 11,
+              mux_enable_ssh_agent = false,
+              -- Wezterm only knows some X11 WMs as tiling; elsewhere it resizes the window on font
+              -- size changes, which leaves a gap in Umbriel's tiles.
+              adjust_window_size_when_changing_font_size = os.getenv('XDG_CURRENT_DESKTOP') ~= 'umbriel',
+            }
+
+            smart_splits.apply_to_config(config, { at_edge = 'split' })
+
+            return config
+          '';
+        };
+      };
+  };
+}
