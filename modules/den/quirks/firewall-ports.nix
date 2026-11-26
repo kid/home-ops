@@ -1,4 +1,4 @@
-# Ports a cluster's Cilium host firewall (modules/kubernetes/cilium/host-firewall.nix)
+# Ports a cluster's Cilium host firewall (modules/aspects/kubernetes/cilium/host-firewall.nix)
 # opens on its nodes. Fragment shape: { port; protocol; description; from ? [ <entity> ];
 # fromCIDR ? [ <cidr> ]; endPort ?; controlPlane ? false; }. Contributed by the
 # cluster's own app aspects, or by one of its k3s hosts for a service the host

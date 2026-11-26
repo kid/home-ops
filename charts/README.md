@@ -5,7 +5,7 @@ this repo — `{ repo; chart; version; chartHash; }` — instead of relying on
 nixhelm's own chart index. `modules/flake/charts.nix` loads this directory
 tree and fetches each entry into a chart derivation, exposed as
 `chartsDerivations.<system>.<org>.<chart>` and consumed by
-`modules/kubernetes/*/default.nix` as `charts.<org>.<chart>`.
+`modules/aspects/kubernetes/*/default.nix` as `charts.<org>.<chart>`.
 
 Add or update a pin with nixhelm's `helmupdater` CLI, available in the
 devshell:
@@ -20,7 +20,7 @@ helmupdater rehash "<org>/<chart-name>"               # recompute hash only
 After bumping, run `nix run .#write-manifests` and commit both the
 `charts/` change and the regenerated `manifests/prd/` output together —
 `checks.manifests` fails otherwise. Renovate does this on its own: the
-in-cluster renovate-operator (`modules/kubernetes/renovate`) bumps each pin's `version`, then
+in-cluster renovate-operator (`modules/aspects/kubernetes/renovate`) bumps each pin's `version`, then
 `postUpgradeTasks` (`.renovaterc.json5`) runs `rehash-changed-pins` (which
 calls `rehash-chart`, i.e. `helmupdater rehash`, for every bumped chart) and `write-manifests`,
 and opens a PR with the changelog.

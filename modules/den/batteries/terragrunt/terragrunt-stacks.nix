@@ -15,11 +15,11 @@
 # name) so a routerosDevice and a cluster can never collide on name.
 #
 # `terragruntInputs` is a reserved (non-class) aspect key: each routerosDevice's
-# own self-aspect (modules/routerosDevices/*.nix) precomputes its per-stack
+# own self-aspect (modules/fleet/routeros/*.nix) precomputes its per-stack
 # {dependsOn, inputs} data there (cidrhost() etc. need modules/den/batteries/terragrunt/
 # lib.nix's cidrLib, an ordinary module arg den's aspect-content functions
-# can't see — see modules/routerosDevices/rb5009.nix), and the thin, shared
-# ros-<stack> aspects (modules/routeros/*.nix) just look it up by
+# can't see — see modules/fleet/routeros/rb5009.nix), and the thin, shared
+# ros-<stack> aspects (modules/aspects/routeros/*.nix) just look it up by
 # stack name. Cluster-owned stacks need no arithmetic, so their content
 # functions read cluster.* directly instead — no reserved-key indirection.
 {
@@ -47,7 +47,7 @@ let
   # empirically); skip anything without one.
   #
   # A content returns one stack as `{ stack = <name>; ... }`, or several as
-  # `{ stacks = [ { stack = <name>; ... } ]; }` (modules/routeros/bgp.nix:
+  # `{ stacks = [ { stack = <name>; ... } ]; }` (modules/aspects/routeros/bgp.nix:
   # one per cluster). Two stacks of one entity with the same name fail
   # evaluation instead of one silently replacing the other.
   instantiateStacks =

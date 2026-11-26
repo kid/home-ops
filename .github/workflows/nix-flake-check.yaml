@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   checks:
-    # The in-cluster runner (modules/kubernetes/actions-runner-controller),
+    # The in-cluster runner (modules/aspects/kubernetes/actions-runner-controller),
     # building on the node's Nix daemon: never for pull requests from forks.
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: home-ops
@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The hosts' own caches: the daemon lets the runner use those listed in
-      # its trusted-substituters (modules/hosts/k3s-prd-0.nix), else they'd build.
+      # its trusted-substituters (modules/fleet/hosts/k3s-prd-0.nix), else they'd build.
       - name: Configure substituters
         run: |
           mkdir -p ~/.config/nix
