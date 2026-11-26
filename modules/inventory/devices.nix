@@ -134,6 +134,15 @@
     };
 
     # IotInternet
+    coreelec = {
+      interfaces = [
+        {
+          network = "IotInternet";
+          hostNum = 20;
+          mac = "40:fd:f3:6c:c0:ba";
+        }
+      ];
+    };
     roborock-vacuum-a38 = {
       interfaces = [
         {

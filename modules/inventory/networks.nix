@@ -56,11 +56,12 @@ in
       internetAccess = false;
     };
 
+    # Router DNS, not upstream: coreelec resolves plex.kidibox.net to the
+    # apps gateway through the router's external-dns records.
     IotInternet = {
       environment = "prd";
       vlanId = 51;
       domain = "iot-internet.${tld}";
-      dhcpDnsServers = dnsUpstreamServers;
       dhcpNtpServers = ntpUpstreamServers;
       internetAccess = true;
     };
