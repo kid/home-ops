@@ -55,7 +55,7 @@ let
 
       den.aspects.imp = {
         includes = [
-          den.aspects.base
+          den.aspects.profiles.server
           den.aspects.disk.zfs
           den.aspects.impermanence
         ];

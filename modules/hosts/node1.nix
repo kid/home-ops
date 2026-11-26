@@ -71,7 +71,7 @@
   };
 
   den.aspects.node1.includes = [
-    den.aspects.base
+    den.aspects.profiles.server
     den.aspects.disk.zfs
     den.aspects.impermanence
     den.aspects.power-saving

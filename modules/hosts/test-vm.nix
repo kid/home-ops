@@ -27,7 +27,7 @@
     };
 
   den.aspects.test-vm.includes = [
-    den.aspects.base
+    den.aspects.profiles.server
     den.aspects.disk.zfs
     den.aspects.impermanence
     den.aspects.k3s.server

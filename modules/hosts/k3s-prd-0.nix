@@ -389,7 +389,7 @@ in
   den.aspects.k3s-prd-0.persist.directories = [ "/var/lib/nfs" ];
 
   den.aspects.k3s-prd-0.includes = [
-    den.aspects.base
+    den.aspects.profiles.server
     den.aspects.disk.zfs
     den.aspects.impermanence
     den.aspects.power-saving
