@@ -40,7 +40,7 @@
       {
         stack = "firewall";
         moduleSource = "ros-firewall";
-        moduleVersion = "2.0.0";
+        moduleVersion = "2.1.0";
         inherit (stack) dependsOn;
         inputs = stack.inputs // {
           vlans_input_rules = mergeDir "input" stack.inputs.vlans_input_rules;

@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-firewall?ref=ros-firewall/v2.0.0"
+  source                   = "git::git@github.com:kid/terragrunt-infra-catalog//modules/ros-firewall?ref=ros-firewall/v2.1.0"
   copy_terraform_lock_file = false
 }
 
@@ -19,7 +19,15 @@ inputs = {
     "9.9.9.9",
     "149.112.112.112",
   ]
-  hostname            = "rb5009"
+  hostname = "rb5009"
+  input_rules = [
+    {
+      action   = "accept"
+      comment  = "Allow WireGuard"
+      dst_port = "51820"
+      protocol = "udp"
+    },
+  ]
   mgmt_interface_list = "MANAGEMENT"
   op_item_routeros    = "RB5009 - user - kid"
   op_vault            = "home-ops"
