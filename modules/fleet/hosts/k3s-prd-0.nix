@@ -171,9 +171,8 @@ in
         # Spin the tank disks down after 30 minutes idle. On these Exos drives
         # (EPC) this arms the volatile Standby_z timer, so it's reapplied every boot.
         ACTION=="add", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", ATTR{queue/rotational}=="1", RUN+="${pkgs.hdparm}/bin/hdparm -S 241 /dev/%k"
-        # r8169 clears L1 on the RTL8125 link at probe unless the firmware flags
-        # ASPM safe (it doesn't here); it disables it again by itself on a Tx timeout.
-        ACTION=="add|bind", SUBSYSTEM=="pci", DRIVER=="r8169", ATTR{link/l1_aspm}="1", ATTR{link/l1_1_aspm}="1", ATTR{link/l1_2_aspm}="1"
+        # No ASPM on the RTL8125 (r8169 leaves it off): with L1 forced on it
+        # missed ~4% of received packets, capping Usenet downloads at ~10 MB/s.
       '';
 
       # The data pool, moved from the TrueNAS VM. Never change its properties
