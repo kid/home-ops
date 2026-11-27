@@ -1,5 +1,5 @@
-# crs320's Terragrunt stack input. Single "base" stack, depends on rb5009's
-# base stack.
+# crs320's RouterOS stack inputs: a single "base" stack (tf-stacks/routeros/crs320).
+# rb5009 routes its management network, so apply rb5009's stack first.
 {
   lib,
   den,
@@ -7,7 +7,7 @@
   ...
 }:
 let
-  rosLib = import ../../den/batteries/terragrunt/_ros-lib.nix { inherit lib; };
+  rosLib = import ../../aspects/routeros/_lib.nix { inherit lib; };
   inherit (rosLib) toVlanInput sharedInputs;
 
   environment = config.den.environments.prd;
@@ -49,9 +49,8 @@ in
   den.aspects.crs320 = {
     includes = [ den.aspects.routeros.base ];
 
-    terragruntInputs = {
+    routerosInputs = {
       base = {
-        dependsOn = [ "rb5009" ];
         inputs = sharedInputs // {
           hostname = "crs320";
 

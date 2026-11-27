@@ -7,7 +7,7 @@ in
   # Collects the `firewall` quirk (den.quirks.firewall — rule fragments
   # emitted by network/cluster/etc. aspects, see modules/den/quirks/
   # firewall.nix) onto every RouterOS device, exposed as the `firewall` list
-  # arg to any terragrunt-stacks module that names it (currently only
+  # arg to any RouterOS `tofu` content that names it (currently only
   # modules/aspects/routeros/firewall.nix, on rb5009).
   den.policies.routeros-device-collect-firewall = _: [
     (pipe.from "firewall" [

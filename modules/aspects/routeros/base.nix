@@ -1,10 +1,8 @@
-# Shared "base" RouterOS stack aspect — thin: the actual per-device inputs
-# (ethernet_interfaces, ip_addresses, dhcp_servers, vlans, …) live on the
-# device's own self-aspect (den.aspects.<routerosDevice>.terragruntInputs.base,
-# see modules/fleet/routeros/rb5009.nix), precomputed there because
-# cidrhost()-style arithmetic needs modules/den/batteries/terragrunt/lib.nix's cidrLib, which
-# den's aspect content functions can't see (only entity-kind scope bindings
-# like `routerosDevice` are — see modules/den/batteries/terragrunt/terragrunt-stacks.nix).
+# A RouterOS device's base configuration (interfaces, VLANs, addresses, DHCP,
+# users): the catalog's ros-base module, called with the device's
+# routerosInputs.base, precomputed on its own self-aspect (see
+# modules/fleet/routeros/rb5009.nix) since they need cidrLib, which den's
+# aspect content functions can't see.
 #
 # routeros_users/routeros_groups are merged in here instead, derived from
 # the access-control model (modules/den/policies/users.nix): every registry
@@ -17,12 +15,15 @@
   lib,
   ...
 }:
+let
+  inherit (import ./_lib.nix { inherit lib; }) catalogModule;
+in
 {
   den.aspects.routeros.base = {
-    "terragrunt-stacks" =
+    tofu =
       { routerosDevice, ... }:
       let
-        stack = routerosDevice.aspect.terragruntInputs.base;
+        inherit (routerosDevice.aspect.routerosInputs.base) inputs;
 
         groupOf =
           username: u:
@@ -66,13 +67,61 @@
           |> lib.mapAttrs (_: g: { inherit (g) policies; });
       in
       {
-        stack = "base";
-        moduleSource = "ros-base";
-        moduleVersion = "2.2.0";
-        inherit (stack) dependsOn;
-        inputs = stack.inputs // {
-          inherit routeros_users routeros_groups;
+        # true for the first apply against a factory-reset device: the
+        # module then connects as admin with no password over plain HTTP
+        # (`just tofu routeros-<device> apply -var bootstrap=true -target=module.base`).
+        variable.bootstrap = {
+          type = "bool";
+          default = false;
         };
+
+        # The device's built-in admin user (routeros_users.admin above)
+        # already exists; ros-base can't import it itself, as OpenTofu only
+        # allows import blocks in a root module. A no-op once it's in state.
+        import = [
+          {
+            to = ''module.base.routeros_system_user.users["admin"]'';
+            id = "name=admin";
+          }
+        ];
+
+        module.base =
+          catalogModule {
+            name = "ros-base";
+            variables = [
+              "bridge_comment"
+              "bridge_mtu"
+              "bridge_name"
+              "certificate_alt_names"
+              "certificate_country"
+              "certificate_locality"
+              "certificate_organization"
+              "certificate_unit"
+              "dhcp_clients"
+              "dhcp_servers"
+              "dhcp_static_leases"
+              "ethernet_interfaces"
+              "hostname"
+              "ip_addresses"
+              "mgmt_interface_list"
+              "ntp_server_enabled"
+              "ntp_servers"
+              "op_item_routeros"
+              "op_vault"
+              "routeros_endpoint"
+              "routeros_groups"
+              "routeros_insecure"
+              "routeros_users"
+              "timezone"
+              "vlans"
+            ];
+            inputs = inputs // {
+              inherit routeros_users routeros_groups;
+            };
+          }
+          // {
+            bootstrap = "\${var.bootstrap}";
+          };
       };
   };
 }

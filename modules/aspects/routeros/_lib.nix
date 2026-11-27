@@ -1,8 +1,7 @@
-# Helpers shared between modules/fleet/routeros/{rb5009,crs320}.nix — previously
-# duplicated byte-for-byte in both files. Leading underscore: import-tree
-# (the mechanism that auto-imports everything under modules/ as a
-# flake-parts module) skips any path containing `/_` by design, so this is
-# an ordinary Nix file, imported directly, not a dendritic module.
+# Helpers shared by the RouterOS device files (modules/fleet/routeros/*.nix)
+# and the RouterOS stack aspects next to this file. Leading underscore:
+# import-tree skips any path containing `/_`, so this is an ordinary Nix file,
+# imported directly, not a dendritic module.
 { lib }:
 {
   allVlanIds =
@@ -52,10 +51,8 @@
     |> lib.groupBy (i: i.network)
     |> lib.mapAttrs (_: map (i: removeAttrs i [ "network" ]));
 
-  # tf-stacks/prd/network/base.hcl's `shared_inputs` — merged into every prd
-  # network leaf via root.hcl's `base_inputs`, not just ros/base's own
-  # variables (Terraform just warns and ignores values for variables a
-  # module doesn't declare).
+  # Inputs every RouterOS stack shares; catalogModule passes each module only
+  # the ones it declares.
   sharedInputs = {
     bridge_name = "bridge1";
     dns_upstream_servers = [
@@ -66,4 +63,20 @@
     wan_interface_list = "WAN";
     op_vault = "home-ops";
   };
+
+  # A `module` block calling the private kid/terragrunt-infra-catalog module
+  # `name`, with the `inputs` among its declared `variables`: a module argument
+  # the module doesn't declare fails tofu, unlike a Terragrunt input. Pinned
+  # to the catalog commit that lets a root module call the modules
+  # (kid/terragrunt-infra-catalog#61).
+  catalogModule =
+    {
+      name,
+      variables,
+      inputs,
+    }:
+    {
+      source = "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/${name}?ref=e90eda0241c748d5b0eb4d760fdebeda99539a32";
+    }
+    // lib.getAttrs (lib.intersectLists variables (builtins.attrNames inputs)) inputs;
 }

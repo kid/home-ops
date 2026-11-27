@@ -1,9 +1,9 @@
-# OpenTofu providers of the cluster tofu stacks, fetched from the OpenTofu
-# registry by tofunix. `hash` covers the registry's download metadata for the
-# version, so `nix run .#rehash-changed-pins` refreshes it after a Renovate
-# bump. Every provider is imported into every stack (tofunix generates its
-# typed options from each one's schema), so they all land in the stack's
-# required_providers.
+# OpenTofu providers of the tofu stacks, fetched from the OpenTofu registry by
+# tofunix. `hash` covers the registry's download metadata for the version, so
+# `nix run .#rehash-changed-pins` refreshes it after a Renovate bump. Every
+# typed provider is imported into every stack (tofunix generates its options
+# from each one's schema), so they all land in the stack's required_providers.
+# An `untyped` one is only installed, for a module a stack calls to use.
 {
   cloudflare = {
     owner = "cloudflare";
@@ -41,5 +41,21 @@
     # renovate: datasource=terraform-provider depName=terraform-routeros/routeros
     version = "1.99.1";
     hash = "sha256-JH34oqdFSq1l7fdBlITOuILzCipFPrmae2Mk56aDG1Q=";
+  };
+  # The catalog's ros-bgp module uses this one rather than
+  # terraform-routeros/routeros, whose BGP creates RouterOS rejects
+  # (terraform-routeros/terraform-provider-routeros#959). Not on the OpenTofu
+  # registry: `sha256` is its linux_amd64 release zip's, as
+  # registry.terraform.io publishes it. Untyped: its resource types share
+  # terraform-routeros's `routeros_` prefix, so the two can't both have
+  # tofunix options.
+  routeros-ebogdum = {
+    owner = "ebogdum";
+    repo = "routeros";
+    registry = "registry.terraform.io";
+    untyped = true;
+    # renovate: datasource=terraform-provider depName=ebogdum/routeros
+    version = "4.0.1";
+    sha256 = "7d9e4fc7dfdbe457bdb9ef884163748b923f52615a1b5d256268f26491368950";
   };
 }

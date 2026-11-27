@@ -5,8 +5,8 @@
 # so a future Talos/NixOS host migration into this repo doesn't collide with
 # it. den.routerosDevices.<name>.includes = [ ros-base ros-capsman ... ] (via
 # the .aspect field below, looked up from den.aspects.<name> — same
-# convention clusters.nix already uses) contributes `terragrunt-stacks`
-# class content, collected by modules/den/batteries/terragrunt/terragrunt-stacks.nix.
+# convention clusters.nix already uses) contributes `tofu` class content,
+# collected into the device's own stack by modules/den/batteries/tofu/tofu.nix.
 #
 # Not to be confused with `den.devices` (modules/den/schema/devices.nix) — a
 # separate, unrelated registry of network *client* devices (a Proxmox host, a
@@ -17,6 +17,9 @@
 { lib, den, ... }:
 {
   config.den.schema.routerosDevice.isEntity = true;
+  # The device's per-stack inputs (modules/fleet/routeros/*.nix), read by the
+  # modules/aspects/routeros/* aspects; not a content class.
+  config.den.reservedKeys = [ "routerosInputs" ];
 
   options.den.routerosDevices = lib.mkOption {
     type = lib.types.attrsOf (

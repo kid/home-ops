@@ -73,7 +73,7 @@ in
   # resolved user child-scope — not the host's own scope. Wiring them here
   # (schema-level, applies to every resolved user regardless of which host
   # resolved it) rather than into any one host's own includes list, mirrors
-  # how modules/den/batteries/terragrunt/terragrunt-stacks.nix wires den.schema.routerosDevice.includes.
+  # how modules/den/batteries/tofu/tofu.nix wires den.schema.routerosDevice.includes.
   config.den.schema.user.includes = [
     den.aspects.users.define
     den.aspects.users.ssh-keys

@@ -1,0 +1,67 @@
+{
+  "resource": {
+    "cloudflare_dns_record": [
+      {
+        "home_kidibox_net": {
+          "comment": "rb5009 public address (MikroTik IP Cloud)",
+          "content": "hcy083ckp76.sn.mynetname.net",
+          "name": "home.kidibox.net",
+          "proxied": false,
+          "ttl": 300,
+          "type": "CNAME",
+          "zone_id": "dba2b63221015f1957d718defbf6b871"
+        }
+      },
+      {
+        "vpn_home_kidibox_net": {
+          "comment": "WireGuard endpoint on rb5009",
+          "content": "home.kidibox.net",
+          "name": "vpn.home.kidibox.net",
+          "proxied": false,
+          "ttl": 300,
+          "type": "CNAME",
+          "zone_id": "dba2b63221015f1957d718defbf6b871"
+        }
+      }
+    ]
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "terragrunt",
+        "encrypt": true,
+        "key": "home-ops/fleet/tofu.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "required_providers": {
+      "cloudflare": {
+        "source": "cloudflare/cloudflare",
+        "version": "5.29.0"
+      },
+      "github": {
+        "source": "integrations/github",
+        "version": "6.13.0"
+      },
+      "onepassword": {
+        "source": "1password/onepassword",
+        "version": "3.4.1"
+      },
+      "random": {
+        "source": "hashicorp/random",
+        "version": "3.9.1"
+      },
+      "routeros": {
+        "source": "terraform-routeros/routeros",
+        "version": "1.99.1"
+      }
+    }
+  }
+}

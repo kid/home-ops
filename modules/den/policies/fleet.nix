@@ -19,7 +19,7 @@ in
 {
   # flake -> fleet: single fleet entity (fires at flake scope). It is a real
   # entity bound to den.aspects.fleet (isEntity below) so fleet-level aspects
-  # contribute content, e.g. its terragrunt stacks (modules/fleet/fleet.nix).
+  # contribute content, e.g. its tofu stack (modules/fleet/fleet.nix).
   den.policies.to-fleet = _: [
     (resolve.to "fleet" {
       fleet = {

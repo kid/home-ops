@@ -26,8 +26,8 @@
   # den.classes.k8s-manifests is registered in modules/den/batteries/kubernetes/k8s-manifests.nix.
 
   # Instantiate each cluster's collected k8s-manifests content into a real
-  # nixidy environment, per system (mirrors modules/den/batteries/terragrunt/terragrunt-stacks.nix's
-  # routeros-device-to-terragrunt: den.lib.policy.instantiate on a class, walking the
+  # nixidy environment, per system (mirrors modules/den/batteries/tofu/tofu.nix's
+  # stack policies: den.lib.policy.instantiate on a class, walking the
   # cluster's own aspect-includes chain). Unlike that pipeline, nixidy's own
   # module system expects the den-wrapped `{ imports = [...]; }` module list
   # verbatim — no unwrapping to plain data here.

@@ -1,7 +1,6 @@
-# Shared "firewall" RouterOS stack aspect — see ros-base.nix for why this is
-# thin, except this one also does real work: it's the integration point
-# between rb5009's own manual/local rules (routerosDevice.aspect.
-# terragruntInputs.firewall, see modules/fleet/routeros/rb5009.nix) and the
+# A RouterOS device's firewall: the catalog's ros-firewall module. Also the
+# integration point between rb5009's own manual/local rules (routerosDevice.aspect.
+# routerosInputs.firewall, see modules/fleet/routeros/rb5009.nix) and the
 # `firewall` quirk pool (den.quirks.firewall — network/cluster/etc.-emitted
 # rule fragments, collected here via modules/den/policies/pipes.nix's
 # routeros-device-collect-firewall). Quirk-derived rules are placed before
@@ -10,16 +9,19 @@
 # of) — the Terraform module keys each rendered resource as "<chain>-%03d"
 # by list position, so reordering would cause spurious destroy/recreate.
 { lib, ... }:
+let
+  inherit (import ./_lib.nix { inherit lib; }) catalogModule;
+in
 {
   den.aspects.routeros.firewall = {
-    "terragrunt-stacks" =
+    tofu =
       {
         routerosDevice,
         firewall ? [ ],
         ...
       }:
       let
-        stack = routerosDevice.aspect.terragruntInputs.firewall;
+        stack = routerosDevice.aspect.routerosInputs.firewall;
 
         byNetwork = lib.groupBy (f: f.network) firewall;
 
@@ -38,13 +40,23 @@
           |> lib.filterAttrs (_: rules: rules != [ ]);
       in
       {
-        stack = "firewall";
-        moduleSource = "ros-firewall";
-        moduleVersion = "2.1.0";
-        inherit (stack) dependsOn;
-        inputs = stack.inputs // {
-          vlans_input_rules = mergeDir "input" stack.inputs.vlans_input_rules;
-          vlans_forward_rules = mergeDir "forward" stack.inputs.vlans_forward_rules;
+        module.firewall = catalogModule {
+          name = "ros-firewall";
+          variables = [
+            "input_rules"
+            "mgmt_interface_list"
+            "op_item_routeros"
+            "op_vault"
+            "routeros_insecure"
+            "vlans"
+            "vlans_forward_rules"
+            "vlans_input_rules"
+            "wan_interface_list"
+          ];
+          inputs = stack.inputs // {
+            vlans_input_rules = mergeDir "input" stack.inputs.vlans_input_rules;
+            vlans_forward_rules = mergeDir "forward" stack.inputs.vlans_forward_rules;
+          };
         };
       };
   };

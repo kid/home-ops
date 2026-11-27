@@ -6,7 +6,7 @@
 
 - NixOS hosts, deployed with colmena
 - the k3s cluster `prd`, rendered to plain YAML by nixidy and applied by Flux
-- RouterOS devices and cloud resources, applied with Terragrunt/OpenTofu
+- RouterOS devices and cloud resources, applied with OpenTofu (one tofunix stack per cluster, RouterOS device and the fleet)
 - secrets (SOPS for bootstrap secrets, 1Password for everything else)
 
 Merging to `main` is a production deploy. Direct pushes to `main` are rejected, so every change goes through a PR.
@@ -18,8 +18,7 @@ flowchart LR
   M[modules/**/*.nix<br/>den aspects] --> N[nixosConfigurations] --> C[colmena apply] --> H[hosts]
   M --> X[nixidy env prd] --> W[nix run .#write-flake] --> MP[manifests/prd/] --> F[Flux on main] --> K[k3s]
   M --> W
-  W --> TS[tf-stacks/prd/network/**] --> J[just plan/apply] --> R[RouterOS / Cloudflare]
-  W --> TJ[tf-stacks/prd/k3s/main.tf.json] --> JT[just tofu prd-k3s plan/apply] --> CR[Cloudflare / 1Password / GitHub]
+  W --> TJ[tf-stacks/**/main.tf.json] --> JT[just tofu stack plan/apply] --> CR[RouterOS / Cloudflare / 1Password / GitHub]
   W --> SY[.sops.yaml]
   W --> FN[flake.nix]
 ```
@@ -27,7 +26,7 @@ flowchart LR
 - **Entry point.** `flake.nix` calls `flake-parts.lib.mkFlake` with `import-tree ./modules`, so every `.nix` file under `modules/` is a module. Files whose names start with `_` (e.g. `_ros-lib.nix`) are helpers that other files import; they are not loaded as modules.
 - **Den topology.** Scopes nest as flake → fleet → environment → {network, routerosDevice, cluster, host} (`modules/den/policies/fleet.nix`). The entity schemas are in `modules/den/schema/`.
 - **Quirks.** Cross-aspect channels collect values from many aspects into one place. They are registered in `modules/den/quirks/`; the main ones are `persist`, `cache`, `datasets`, `firewall`, `firewall-ports`, `generated-secrets`, `app-datasets`, `k3s-nodes` and `bgp`. For example, `modules/den/policies/pipes.nix` gathers firewall, k3s-node and BGP data onto the RouterOS devices.
-- **Aspect classes.** An aspect's content keys say what it produces: `nixos`, `k8s-manifests`, `tofu` (a cluster's cloud resources) or `terragrunt-stacks` (RouterOS).
+- **Aspect classes.** An aspect's content keys say what it produces: `nixos`, `k8s-manifests`, `tofu` (a cluster's or RouterOS device's tofu stack) or `fleet-tofu` (the fleet's).
 - **Shared data.** These files are the single source of truth, so reuse them instead of hardcoding values:
     - `modules/inventory/networks.nix`: VLANs, written as `den.networks.<PascalCase>`. The CIDR is derived from `cidrBase`.
     - `modules/inventory/devices.nix`: MAC/IP registry, which feeds DHCP leases, firewall rules and colmena targets.
@@ -41,11 +40,11 @@ flowchart LR
 | Path | Purpose |
 |---|---|
 | `modules/flake/` | Flake outputs: devshell, formatter, checks, charts loader, flake-file write hooks, `provision-*` apps, colmena, images, integration-test wiring |
-| `modules/den/` | den schema, policies, quirks, and the `batteries/` for kubernetes (nixidy), terragrunt and tofu |
+| `modules/den/` | den schema, policies, quirks, `lib/` (cidr arithmetic), and the `batteries/` for kubernetes (nixidy) and tofu |
 | `modules/inventory/` | Plain data: `networks`, `devices`, `environments`, `accessGroups`, `routerosGroups` |
 | `modules/fleet/hosts/<host>.nix` | One file per host (a folder when it has helpers, e.g. `vulkan/`). `node1.nix` is the minimal server example; `test-vm.nix` is a local VM |
 | `modules/fleet/clusters/prd.nix` | Cluster definition. `den.aspects.prd.includes` lists the apps that are enabled |
-| `modules/fleet/routeros/*.nix` | One file per RouterOS device, with `terragruntInputs.<stack>` |
+| `modules/fleet/routeros/*.nix` | One file per RouterOS device, with `routerosInputs.<stack>` |
 | `modules/fleet/users/*.nix` | `den.users.registry` entries and each user's own aspect |
 | `modules/aspects/profiles/` | Include-only aspects composed by hosts and users: `server`, `desktop`, `workstation` (hosts), `cli` (users) |
 | `modules/aspects/system/` | OS aspects: `base`, `server`, `disk`, `impermanence`, `users`, `workstation`, `darwin`, `hardware` |
@@ -57,24 +56,24 @@ flowchart LR
 | `modules/aspects/routeros/*.nix` | Shared RouterOS stack aspects |
 | `charts/<org>/<chart>/default.nix` | Helm chart pins `{ repo; chart; version; chartHash; }`. The charts themselves are not vendored |
 | `manifests/prd/` | **Generated** nixidy output, written as `<app>/<Kind>-<name>.yaml` |
-| `tf-stacks/prd/network/**/terragrunt.hcl`, `tf-stacks/cloudflare/` | **Generated** Terragrunt units. `tf-stacks/root.hcl` keeps state in R2 |
-| `tf-stacks/prd/k3s/main.tf.json` | **Generated** tofu root module of the cluster, from the aspects' `tofu` content (state in R2 at `home-ops/prd/k3s/tofu.tfstate`) |
-| `tf-catalog/modules/<name>/main.tofu` | Local OpenTofu modules for the fleet Cloudflare stack and the RouterOS WireGuard stack. Other RouterOS stacks use the private `kid/terragrunt-infra-catalog` |
+| `tf-stacks/<env>/k3s/main.tf.json` | **Generated** tofu root module of a cluster, from its aspects' `tofu` content |
+| `tf-stacks/routeros/<device>/main.tf.json` | **Generated** tofu root module of a RouterOS device. Phase 1 of its port: most aspects still call `kid/terragrunt-infra-catalog`'s `ros-*` modules |
+| `tf-stacks/fleet/main.tf.json` | **Generated** tofu root module of the fleet (account-wide Cloudflare records) |
 | `secrets/` | SOPS files: `hosts/<host>/ssh_host_ed25519_key.*`, `clusters/prd/*.sops`, `cloudflare.sops.yaml` |
 | `tests/integration/` | NixOS VM tests (`k3s.nix`, `impermanence.nix`) |
 | `esphome/` | ESPHome configs, built and flashed by hand. Get secrets with `op inject -i secrets.tpl.yaml -o secrets.yaml` |
 
 ## Development Commands
 
-Run `direnv allow` once; `.envrc` runs `use flake .`. The devshell then provides kubectl, helm, flux, colmena, terragrunt/opentofu, sops, age, secretspec, helmupdater, nixd/nil and other tools.
+Run `direnv allow` once; `.envrc` runs `use flake .`. The devshell then provides kubectl, helm, flux, colmena, opentofu, sops, age, secretspec, helmupdater, nixd/nil and other tools.
 
 ```sh
 nix flake check --print-build-logs           # everything CI gates on
-nix build -L .#checks.x86_64-linux.<name>    # manifests | sops-config | terragrunt | tofu | treefmt | nixos-<host>
+nix build -L .#checks.x86_64-linux.<name>    # manifests | sops-config | tofu | treefmt | nixos-<host>
 nix fmt                                      # treefmt; also runs as a pre-commit hook
 
 # Regenerate committed outputs (always after changing their Nix sources)
-nix run .#write-flake && nix flake lock      # flake.nix, manifests/, tf-stacks/** (terragrunt.hcl, main.tf.json), .sops.yaml (flake-file write hooks)
+nix run .#write-flake && nix flake lock      # flake.nix, manifests/, tf-stacks/**/main.tf.json, .sops.yaml (flake-file write hooks)
 
 # Charts
 helmupdater update "<org>/<chart>"           # or: init | update-all | rehash
@@ -83,8 +82,7 @@ nix run .#rehash-changed-pins                # refresh hashes next to Renovate-b
 
 # Deploy
 colmena apply --on <host> [switch|boot]      # tags: env-<env>, k3s, k3s-<cluster>, k3s-server|k3s-agent
-just plan tf-stacks/prd/network/<device>[/<stack>]  # also: plan-all, apply, apply-all, tf, tf-all (wraps `secretspec run terragrunt`)
-just tofu prd-k3s plan                       # tf-stacks/prd/k3s's tofu stack (wraps `secretspec run nix run .#tofu-prd-k3s`)
+just tofu prd-k3s plan                       # a tofu stack, named after its dir under tf-stacks/ (also routeros-rb5009, routeros-crs320, fleet); wraps `secretspec run nix run .#tofu-<stack>`
 
 # Local VM
 nix build .#nixosConfigurations.test-vm.config.system.build.vmWithDisko
@@ -94,7 +92,7 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 
 ## Code Conventions & Common Patterns
 
-- **Never hand-edit generated files.** These are `flake.nix`, `manifests/**`, `tf-stacks/**/terragrunt.hcl`, `tf-stacks/*/k3s/main.tf.json`, `.sops.yaml` and `.pre-commit-config.yaml`. Edit the Nix source, run `nix run .#write-flake` (flake-file write hooks regenerate every one of them), and commit the source change together with its regenerated output. A check fails if they drift.
+- **Never hand-edit generated files.** These are `flake.nix`, `manifests/**`, `tf-stacks/**/main.tf.json`, `.sops.yaml` and `.pre-commit-config.yaml`. Edit the Nix source, run `nix run .#write-flake` (flake-file write hooks regenerate every one of them), and commit the source change together with its regenerated output. A check fails if they drift.
 - **Flake inputs** are declared next to the module that uses them, as `flake-file.inputs.<name>` (e.g. `modules/aspects/system/disk/zfs.nix`). Core inputs are in `modules/flake/inputs.nix`.
 - **Module shape.** A module that takes no arguments is written `_: { ... }`. Start each file with a comment explaining why the module exists. Use `lib.`-qualified calls, and `let` bindings for local constants such as pinned tags.
 - **Pipe operator.** Write every data pipeline of two or more stages with `|>`: `x |> f |> g a`, never `g a (f x)`. Single applications, `lib.types.*`, and `mkIf`/`optionals`-style wrappers stay plain calls.
@@ -119,7 +117,7 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
     - Put `# renovate: datasource=<ds> depName=<name>` directly above the `key = "value";` line it pins. Images may be pinned as `"tag@sha256:..."`.
     - A flake input used for manifests is pinned as `github:owner/repo/<40-hex>` inside a module.
     - Renovate ignores `manifests/**`.
-- **Formatting.** treefmt runs nixfmt, deadnix, statix, hclfmt, yamlfmt (2-space indent, leading `---`), `terraform fmt` (for `*.tofu`, `*.tfvars` and `*.tftest.hcl`) and `just`. It skips `*.sops.*` and `manifests/**`. `.editorconfig` sets 2-space indent, except Markdown and justfiles (4).
+- **Formatting.** treefmt runs nixfmt, deadnix, statix, yamlfmt (2-space indent, leading `---`) and `just`. It skips `*.sops.*` and `manifests/**`. `.editorconfig` sets 2-space indent, except Markdown and justfiles (4).
 - **Commits** use conventional commits with a scope, e.g. `fix(k3s-prd-0): ...`, `feat(container): update image ...`, `chore(nix): lock file maintenance`, `chore(terraform): ...`.
 
 ## Important Files
@@ -127,8 +125,8 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 - `flake.nix` (generated) and `modules/flake/core.nix`, which imports den and flake-file and sets the systems: `x86_64-linux` for every NixOS host, `aarch64-darwin` for the work Mac.
 - `modules/flake/files.nix`: the `write-flake` hook syncing `manifests/`, and `checks.manifests`.
 - `modules/flake/formatter.nix`, `git-hooks.nix`, `devshell.nix`, `charts.nix`, `colmena.nix`, `images.nix`, `integration-tests.nix`, `nixos-checks.nix`, `sops-config.nix`.
-- `modules/den/batteries/terragrunt/{terragrunt-stacks,devshell}.nix`: renders the RouterOS and fleet Terragrunt stacks and defines `checks.terragrunt`. `write-flake` does **not** delete stale leaves, so remove orphaned stack directories by hand.
-- `modules/den/batteries/tofu/`: the `tofu` class, tofunix and its provider pins (`_providers.nix`, rehashed by `rehash-changed-pins`); defines the `tofu-<env>-k3s` apps, `checks.tofu` and the flake-file write hook that makes `write-flake` write each `main.tf.json` (x86_64-linux only: tofunix builds provider schemas at eval time). Inspect a cluster's evaluated stack at `tofuStacks.<cluster>.config.final` (the root module) or `.config.resource.<type>.<name>`.
+- `modules/den/batteries/tofu/`: the `tofu`/`fleet-tofu` classes, tofunix and its provider pins (`_providers.nix`, rehashed by `rehash-changed-pins`); defines the `tofu-<stack>` apps, `checks.tofu` and the flake-file write hook that makes `write-flake` write each `main.tf.json` (x86_64-linux only: tofunix builds provider schemas at eval time). Inspect an evaluated stack at `tofuStacks.{k3s.<cluster>,routeros.<device>,fleet}.config.final` (the root module) or `.config.resource.<type>.<name>`.
+- `modules/aspects/routeros/_lib.nix`: `catalogModule`, the `module` block calling a private `kid/terragrunt-infra-catalog` module (pinned by commit), passing only the inputs it declares.
 - `.renovaterc.json5` and `.renovate/org-inherited-config.json5`: automerge rules, groups, and `postUpgradeTasks`. Renovate runs in-cluster from `modules/aspects/kubernetes/renovate`.
 - `secretspec.toml`: credentials pulled from 1Password (`CLOUDFLARE_API_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`, MCP tokens).
 - `charts/README.md`: workflow for chart pins.
@@ -137,8 +135,8 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 
 - Nix flakes only, with `nixos-unstable`. There is no other package manager, and scripts are `pkgs.writeShellApplication` flake apps rather than files under a `scripts/` directory.
 - Use the devshell's tool versions; don't install tools globally.
-- Terragrunt and tofu always run through `just`, which wraps `secretspec run`. Never export credentials by hand.
-- **Never deploy without the user's explicit approval**, even when an issue or plan lists the deploy steps. Deploying covers `just apply`/`apply-all`, `just tofu <stack> apply`, `just switch`/`boot`/`test` and `colmena apply`. Stop at `just plan`/`just tofu <stack> plan` output or a built closure, show it, and wait.
+- tofu always runs through `just`, which wraps `secretspec run`. Never export credentials by hand.
+- **Never deploy without the user's explicit approval**, even when an issue or plan lists the deploy steps. Deploying covers `just tofu <stack> apply`, `just switch`/`boot`/`test` and `colmena apply`. Stop at `just tofu <stack> plan` output or a built closure, show it, and wait.
 - **Never merge a PR** (`gh pr merge`, in this repo, `kid/terragrunt-infra-catalog` or any other) unless the user tells you to in the conversation. An issue or plan saying "merge it" does not count. The user reviews every PR before it merges.
 - Don't apply anything to the cluster with `kubectl apply`, because Flux owns cluster state. Before committing, pass the full rendered manifests to the Flux MCP `diff_kubernetes_manifest` tool for a server-side dry run.
 - Custom images are Nix-built (`.#images.<name>`, `modules/flake/images.nix`). Manifests refer to them by Nix-hash tag (`.#imageRefs.<name>`), and CI pushes any missing ones with skopeo, so an image must be in the registry before its PR merges.
@@ -149,7 +147,7 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
     1. runs `nix flake check`
     2. pushes any missing images with skopeo
     3. posts a closure diff for `k3s-prd-0` as a sticky PR comment (informational only)
-- **Flake checks:** `treefmt`, `manifests`, `terragrunt`, `tofu`, `sops-config`, `check-flake-file`, `pre-commit`, and `nixos-<host>` (a toplevel build for each host).
+- **Flake checks:** `treefmt`, `manifests`, `tofu`, `sops-config`, `check-flake-file`, `pre-commit`, and `nixos-<host>` (a toplevel build for each host).
 - **There is no** kubeconform, `terraform validate` or `tofu test`. Manifests are validated only by diffing them against the nixidy build; the tofu stack's resources are type-checked by tofunix's options while it evaluates.
 - **Integration tests** boot real VMs, take minutes, and are **not** part of `flake check`. Run them by hand when you touch k3s, disk or impermanence:
 
