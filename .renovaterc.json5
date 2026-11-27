@@ -164,6 +164,15 @@
       enabled: false,
     },
     {
+      // Skips the lookup of FlakeHub tarball inputs: the nix manager looks
+      // them up as git-refs on the flakehub.com URL, which is no git repo, so
+      // each run reports a lookup failure. Updates are disabled above anyway.
+      // Matches packageName only, so lockFileMaintenance stays enabled.
+      matchManagers: ["nix"],
+      matchPackageNames: ["https://flakehub.com/**"],
+      enabled: false,
+    },
+    {
       // flake.nix and flake.lock are regenerated from the bumped module.
       matchManagers: ["custom.regex"],
       matchDatasources: ["git-refs"],
