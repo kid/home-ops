@@ -271,4 +271,48 @@ in
               s1.wait_until_succeeds("test \"$(k3s kubectl get node a1 -o jsonpath='{.status.addresses[?(@.type==\"InternalIP\")].address}')\" = 10.0.40.242", timeout=420)
         '';
     };
+
+  # den.aspects.k3s.cordon-on-shutdown: an agent's shutdown cordons it with
+  # its kubelet credentials, its boot uncordons it, and a manual cordon
+  # survives a reboot.
+  k3s-cordon-on-shutdown = pkgs.testers.runNixOSTest {
+    name = "k3s-cordon-on-shutdown";
+    nodes = hostModules {
+      servers = [ "s1" ];
+      agents = [ "a1" ];
+    };
+    testScript = helpers + ''
+      def node_a1(path):
+          return s1.succeed(f"k3s kubectl get node a1 -o jsonpath='{{{path}}}'").strip()
+
+      # The boot uncordon is done and the unit holds its delay lock.
+      def watching():
+          a1.wait_until_succeeds("journalctl -b -u k3s-cordon-on-shutdown | grep -q 'Watching for shutdowns'", timeout=420)
+          a1.succeed("systemd-inhibit --list --no-legend | grep -q k3s-cordon-on-shutdown")
+
+      start_all()
+      etcd_members(s1, 1)
+      s1.wait_until_succeeds("k3s kubectl get node a1", timeout=420)
+      watching()
+
+      with subtest("a shutdown cordons the node"):
+          a1.shutdown()
+          assert node_a1(".spec.unschedulable") == "true"
+          assert "home-ops.dev/cordoned-on-shutdown" in node_a1(".metadata.annotations")
+
+      with subtest("the boot uncordons it"):
+          a1.start()
+          watching()
+          assert node_a1(".spec.unschedulable") != "true"
+          assert "home-ops.dev/cordoned-on-shutdown" not in node_a1(".metadata.annotations")
+
+      with subtest("a manual cordon survives a reboot"):
+          s1.succeed("k3s kubectl cordon a1")
+          a1.shutdown()
+          a1.start()
+          watching()
+          assert node_a1(".spec.unschedulable") == "true"
+          assert "home-ops.dev/cordoned-on-shutdown" not in node_a1(".metadata.annotations")
+    '';
+  };
 }
