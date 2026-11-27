@@ -10,11 +10,14 @@
 # pkgs/by-name/<name>/package.nix is handed to nix-update, which runs the
 # package's updateScript when present (e.g. for multi-platform hashes), or
 # refreshes the hashes it knows (src, vendorHash, cargoHash, npmDepsHash...).
+# Other pkgs/<name>/package.nix are not flake outputs, so their `src` (already
+# at the bumped version) is prefetched and its old hash swapped for the new.
 # Anything else is a bare fetchFromGitHub pin: dep-name is "owner/repo" and
 # new-value the literal `rev`.
 {
   writeShellApplication,
   gnused,
+  jq,
   nix-update,
   path,
 }:
@@ -22,6 +25,7 @@ writeShellApplication {
   name = "refresh-nix-hash";
   runtimeInputs = [
     gnused
+    jq
     nix-update
   ];
   text = ''
@@ -40,6 +44,19 @@ writeShellApplication {
         # nix-update's updateScript runner imports <nixpkgs>, even for flakes.
         NIX_PATH="nixpkgs=${path}''${NIX_PATH:+:$NIX_PATH}" \
           nix-update --flake --use-update-script --version=skip --override-filename "$file" "$attr"
+        exit 0
+        ;;
+      pkgs/*/package.nix)
+        src="(import ${path} { }).callPackage $PWD/$file { }"
+        url=$(nix eval --impure --raw --expr "($src).src.url")
+        old_hash=$(nix eval --impure --raw --expr "($src).src.outputHash")
+        if ! grep -qF "$old_hash" "$file"; then
+          echo "$file: src hash $old_hash is not written literally in the file" >&2
+          exit 1
+        fi
+        new_hash=$(nix store prefetch-file --json --hash-type sha256 "$url" | jq -r .hash)
+        sed -i "s|$old_hash|$new_hash|" "$file"
+        echo "$file: $url -> $new_hash"
         exit 0
         ;;
     esac
