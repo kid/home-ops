@@ -1,9 +1,10 @@
 # Kernel and tooling every k3s node needs, server or agent, the k3s
-# release, graceful node shutdown, the journal upload and the disks' power
-# mode metric.
+# release, graceful node shutdown (with a cordon), the journal upload and the
+# disks' power mode metric.
 { den, ... }:
 {
   den.aspects.k3s.node-base.includes = [
+    den.aspects.k3s.cordon-on-shutdown
     den.aspects.k3s.journald-upload
     den.aspects.k3s.disk-power-mode
   ];
