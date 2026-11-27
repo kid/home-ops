@@ -10,7 +10,7 @@ _: {
     cluster.methods.mkMediaApp {
       name = "sonarr";
       # renovate: datasource=docker depName=ghcr.io/home-operations/sonarr
-      tag = "4.0.20.3012@sha256:1f19eb5e0f421418c1a956bbe01310a0141423afe28bd9a4b1dcb8629ff2bce2";
+      tag = "5.0.0.3041@sha256:ec7797f30e65cc411fba6768ed575337a5787de7d06c382173df610f2d23a317";
       port = 8989;
       # The CT's uid 351 behind the unprivileged-CT offset: what owns its
       # files on tank. 100330 is sabnzbd's, which owns the downloads.
