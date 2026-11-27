@@ -1,6 +1,6 @@
 {
   repo = "oci://ghcr.io/mogenius/helm-charts";
   chart = "renovate-operator";
-  version = "6.10.0";
-  chartHash = "sha256-9vviNDPdNE4lKvS+PC2E2Aa6LH3ApWW5d3Ch99BUWb8=";
+  version = "7.0.0";
+  chartHash = "sha256-vaT7zjgZtVx00J4mFQgjllx83h9PPLDkN2Aev1AGrm8=";
 }
