@@ -3,7 +3,7 @@
 # Modeled on nixopslab's modules/terranix/collect.nix host-to-terranix
 # policy: registers "terragrunt-stacks" as an aspect content class directly
 # on den.classes (no private namespace — see AGENTS.md), and collects it
-# across two entity kinds' aspect-includes chains:
+# across three entity kinds' aspect-includes chains:
 #   - a routerosDevice (den.aspects.<routerosDevice>.includes = [
 #     den.aspects.routeros.base den.aspects.routeros.capsman ... ]) into
 #     config.flake.terragruntStacks.network.<routerosDevice>.<stack>, git-ref
@@ -11,6 +11,12 @@
 #   - a cluster (den.aspects.<cluster>.includes = [ den.aspects.kubernetes.
 #     cert-manager ... ]) into config.flake.terragruntStacks.k3s.<cluster>.
 #     <stack>, path-sourced from this repo's own tf-catalog/modules/.
+#   - the fleet (den.aspects.fleet.includes = [ den.aspects.cloudflare.dns ])
+#     into config.flake.terragruntStacks.fleet.<stack>, for stacks no
+#     environment owns (account-wide Cloudflare records). These use their
+#     own "fleet-terragrunt-stacks" class: an instantiate collects its class
+#     from the whole subtree, so at fleet scope "terragrunt-stacks" would
+#     also pick up every routerosDevice's and cluster's stacks.
 # Nested under "network"/"k3s" (rather than a flat attrset keyed by entity
 # name) so a routerosDevice and a cluster can never collide on name.
 #
@@ -88,6 +94,7 @@ in
   den.reservedKeys = [ "terragruntInputs" ];
 
   den.classes."terragrunt-stacks" = { };
+  den.classes."fleet-terragrunt-stacks" = { };
 
   den.policies.routeros-device-to-terragrunt =
     {
@@ -149,6 +156,22 @@ in
       })
     ];
 
+  # The fleet has a single entity, so its stacks sit directly under
+  # terragruntStacks.fleet, without an entity-name segment. Needs the fleet
+  # bound to den.aspects.fleet (modules/den/policies/fleet.nix).
+  den.policies.fleet-to-terragrunt = _: [
+    (den.lib.policy.instantiate {
+      name = "fleet-terragrunt";
+      class = "fleet-terragrunt-stacks";
+      instantiate = { modules, ... }: instantiateStacks "the fleet" modules { };
+      intoAttr = [
+        "terragruntStacks"
+        "fleet"
+      ];
+    })
+  ];
+
   den.schema.routerosDevice.includes = [ den.policies.routeros-device-to-terragrunt ];
   den.schema.cluster.includes = [ den.policies.cluster-to-terragrunt ];
+  den.schema.fleet.includes = [ den.policies.fleet-to-terragrunt ];
 }

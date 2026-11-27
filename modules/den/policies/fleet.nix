@@ -17,11 +17,14 @@ let
   inherit (config.den) environments;
 in
 {
-  # flake -> fleet: single fleet entity (fires at flake scope).
+  # flake -> fleet: single fleet entity (fires at flake scope). It is a real
+  # entity bound to den.aspects.fleet (isEntity below) so fleet-level aspects
+  # contribute content, e.g. its terragrunt stacks (modules/fleet/fleet.nix).
   den.policies.to-fleet = _: [
     (resolve.to "fleet" {
       fleet = {
         name = "fleet";
+        aspect = den.aspects.fleet;
       };
     })
   ];
@@ -102,6 +105,7 @@ in
     );
 
   den.schema.flake.includes = [ den.policies.to-fleet ];
+  den.schema.fleet.isEntity = true;
   den.schema.fleet.includes = [ den.policies.fleet-to-envs ];
   den.schema.environment.includes = [
     den.policies.env-to-routeros-devices

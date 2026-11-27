@@ -1,5 +1,5 @@
-# Account-wide Cloudflare resources no environment owns, rendered to
-# tf-stacks/cloudflare (modules/den/batteries/terragrunt/devshell.nix).
+# Account-wide Cloudflare DNS records no environment owns. Included by the
+# fleet (modules/fleet/fleet.nix) and rendered to tf-stacks/cloudflare.
 { config, ... }:
 let
   # The kidibox.net zone (also den.clusters.prd.cloudflare.zoneId).
@@ -10,7 +10,8 @@ let
   homeDomain = config.den.environments.prd.domain;
 in
 {
-  terragrunt.globalStacks.cloudflare = {
+  den.aspects.cloudflare.dns."fleet-terragrunt-stacks" = {
+    stack = "cloudflare";
     localModule = "cloudflare-dns";
     inputs = {
       zone_id = zoneId;
