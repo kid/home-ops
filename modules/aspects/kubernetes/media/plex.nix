@@ -6,6 +6,26 @@ let
   dataDir = "/Library/Application Support/Plex Media Server";
 in
 {
+  # RouterOS access this app needs — see modules/den/quirks/firewall.nix.
+  # The CoreELEC box on IotInternet streams through the apps gateway.
+  den.aspects.kubernetes.media.plex.firewall =
+    { cluster, ... }:
+    [
+      {
+        network = "IotInternet";
+        forward = [
+          {
+            action = "accept";
+            src_address = config.den.devices.coreelec.address;
+            dst_address = cluster.networks.loadBalancer.assignments.apps-gateway;
+            dst_port = 443;
+            protocol = "tcp";
+            comment = "Allow coreelec on IotInternet to reach Plex through the apps gateway";
+          }
+        ];
+      }
+    ];
+
   den.aspects.kubernetes.media.plex.k8s-manifests =
     { cluster, ... }:
     cluster.methods.mkMediaApp {

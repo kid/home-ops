@@ -38,8 +38,7 @@ inputs = {
     IotInternet = {
       cidr = "10.0.51.0/24"
       dns_servers = [
-        "9.9.9.9",
-        "149.112.112.112",
+        "10.0.51.1",
       ]
       domain  = "iot-internet.home.kidibox.net"
       gateway = "10.0.51.1"
@@ -140,6 +139,11 @@ inputs = {
       },
     ]
     IotInternet = [
+      {
+        address = "10.0.51.20"
+        mac     = "40:fd:f3:6c:c0:ba"
+        name    = "coreelec"
+      },
       {
         address = "10.0.51.31"
         mac     = "70:c9:32:4e:21:7d"

@@ -84,6 +84,14 @@ inputs = {
         comment            = "Allow WAN"
         out_interface_list = "WAN"
       },
+      {
+        action      = "accept"
+        comment     = "Allow coreelec on IotInternet to reach Plex through the apps gateway"
+        dst_address = "10.0.42.2"
+        dst_port    = 443
+        protocol    = "tcp"
+        src_address = "10.0.51.20"
+      },
     ]
     IotLocal = [
       {
