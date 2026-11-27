@@ -12,11 +12,13 @@
     ":semanticCommits",
     ":timezone(Europe/Brussels)",
   ],
-  // Keeps each repo's existing dashboard issue; the presets rename it.
-  dependencyDashboardTitle: "Dependency Dashboard",
-  // Ticking this box makes the repo's GitHub webhook schedule a run on the
-  // operator.
-  dependencyDashboardFooter: "- [ ] <!-- manual job -->Check this box to trigger a request for Renovate to run again on this repository",
+  dependencyDashboard: {
+    // Keeps each repo's existing dashboard issue; the presets rename it.
+    title: "Dependency Dashboard",
+    // Ticking this box makes the repo's GitHub webhook schedule a run on the
+    // operator.
+    footer: "- [ ] <!-- manual job -->Check this box to trigger a request for Renovate to run again on this repository",
+  },
   suppressNotifications: [
     "prEditedNotification",
     "prIgnoreNotification",
