@@ -1,4 +1,4 @@
-# rb5009's Terragrunt stack inputs (base/capsman/dns/firewall/qos).
+# rb5009's Terragrunt stack inputs (base/capsman/dns/firewall/qos/wireguard).
 #
 # One intentional quirk, not a bug to fix: qos has no `dependencies` block,
 # unlike its capsman/dns/firewall siblings (all of which depend on this
@@ -35,6 +35,8 @@ let
 
   cidrHostPrefixed = net: hostnum: "${net.methods.host hostnum}/${toString net.prefix}";
 
+  wireguardPort = 51820;
+
   dnsServersFor =
     net: if net.dhcpDnsServers != null then net.dhcpDnsServers else [ (net.methods.host 1) ];
   ntpServersFor =
@@ -62,6 +64,7 @@ in
       den.aspects.routeros.dns
       den.aspects.routeros.firewall
       den.aspects.routeros.qos
+      den.aspects.routeros.wireguard
     ];
 
     terragruntInputs = {
@@ -249,6 +252,15 @@ in
               ];
             };
 
+            input_rules = [
+              {
+                action = "accept";
+                protocol = "udp";
+                dst_port = toString wireguardPort;
+                comment = "Allow WireGuard";
+              }
+            ];
+
             vlans_forward_rules = {
               "${networks.Trusted.name}" = [
                 {
@@ -277,6 +289,25 @@ in
             wan_interface = "ether8";
             limit_tx = "18M";
             limit_rx = "900M";
+          };
+      };
+
+      wireguard = {
+        dependsOn = [ "rb5009" ];
+        inputs =
+          sharedInputs
+          // commonInputs
+          // {
+            interface_name = "WireGuard";
+            listen_port = wireguardPort;
+            address = "10.0.90.1/24";
+            interface_list = "MANAGEMENT";
+            peers = {
+              fw13 = {
+                public_key = "VU9KFnxmX/hCVfILJOP/9tQ/fn8tsNybd4J+2D4YWSg=";
+                address = "10.0.90.2";
+              };
+            };
           };
       };
 

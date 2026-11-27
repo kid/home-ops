@@ -1,6 +1,7 @@
 # Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt/terragrunt-stacks.nix) to
-# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl and
-# tf-stacks/<env>/k3s/<stack>/terragrunt.hcl, exposed as
+# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl,
+# tf-stacks/<env>/k3s/<stack>/terragrunt.hcl and (fleet stacks, which no
+# environment owns) tf-stacks/<stack>/terragrunt.hcl, exposed as
 # `nix run .#write-terragrunt` (mirrors write-manifests/write-terraform
 # elsewhere in the dendritic ecosystem) + `checks.terragrunt`
 # (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
@@ -121,6 +122,15 @@ let
         content = renderLeaf stack leaf;
       }) stacks
     ) (config.flake.terragruntStacks.k3s or { }))
+    (lib.mapAttrsToList (stack: leaf: {
+      owner = "the fleet";
+      path = "tf-stacks/${stack}/terragrunt.hcl";
+      content =
+        if leaf ? dependsOn then
+          throw "fleet stack ${stack}: dependsOn only resolves RouterOS device stacks"
+        else
+          renderLeaf stack leaf;
+    }) (config.flake.terragruntStacks.fleet or { }))
   ];
 
   # Cluster stacks render to tf-stacks/<env>/k3s/<stack>, with no cluster

@@ -1,5 +1,6 @@
 # fw13: kid's Framework 13 (AMD AI 300) laptop, on btrfs with a wiped root and
-# Secure Boot through lanzaboote.
+# Secure Boot through lanzaboote. It reaches the homelab remotely through the
+# `wg-home` WireGuard profile.
 {
   inputs,
   lib,
@@ -84,6 +85,7 @@ in
         imports = [
           inputs.nixos-hardware.nixosModules.framework-amd-ai-300-series
           inputs.lanzaboote.nixosModules.lanzaboote
+          inputs.sops-nix.nixosModules.sops
         ];
 
         # nixfiles' default when fw13 was installed; base defaults to 26.05.
@@ -111,6 +113,43 @@ in
           networkmanager.enable = lib.mkForce true;
           networkmanager.wifi.backend = "iwd";
           wireless.iwd.enable = true;
+
+          networkmanager.ensureProfiles = {
+            environmentFiles = [ config.sops.templates."wg-home.env".path ];
+            # Endpoint, port and addresses mirror terragruntInputs.wireguard in modules/fleet/routeros/rb5009.nix.
+            profiles.wg-home = {
+              connection = {
+                id = "wg-home";
+                type = "wireguard";
+                interface-name = "wg-home";
+                autoconnect = "false";
+              };
+              wireguard.private-key = "$WG_HOME_PRIVATE_KEY";
+              "wireguard-peer.XTeAOsV/K63SfrU6obArOj2dIfItwPyr2i/2vrEQygo=" = {
+                endpoint = "vpn.home.kidibox.net:51820";
+                allowed-ips = "10.0.0.0/16;10.99.0.0/16;";
+                persistent-keepalive = "25";
+              };
+              ipv4 = {
+                method = "manual";
+                address1 = "10.0.90.2/32";
+                dns = "10.0.90.1;";
+                dns-search = "~kidibox.net;";
+                never-default = "true";
+              };
+              ipv6.method = "disabled";
+            };
+          };
+        };
+
+        sops = {
+          secrets.wg-home-private-key = {
+            sopsFile = ../../../secrets/hosts/fw13/wg-home-private-key.sops;
+            format = "binary";
+          };
+          templates."wg-home.env".content = ''
+            WG_HOME_PRIVATE_KEY=${config.sops.placeholder.wg-home-private-key}
+          '';
         };
 
         nix = {
