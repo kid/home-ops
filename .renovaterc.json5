@@ -5,7 +5,7 @@
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   ignorePaths: [
     '**/resources/**',
-    // nixidy-generated, regenerated from modules/aspects/kubernetes/**/*.nix via `nix run .#write-manifests`
+    // nixidy-generated, regenerated from modules/aspects/kubernetes/**/*.nix via `nix run .#write-flake`
     'manifests/**',
   ],
   // A jump over several majors becomes one PR per major, so each step's
@@ -106,7 +106,7 @@
       matchUpdateTypes: ["lockFileMaintenance"],
       semanticCommitScope: "nix",
       postUpgradeTasks: {
-        commands: ["nix run .#write-manifests -- --skip-secrets"],
+        commands: ["nix run .#write-flake"],
         fileFilters: ["manifests/**"],
         executionMode: "update",
       },
@@ -187,14 +187,13 @@
       // tofu stacks so the PR passes checks.manifests and checks.tofu.
       // rehash-changed-pins rehashes every bumped pin, not just this
       // update's: Renovate applies a group's bumps at once, so a sibling's
-      // stale hash would fail this update's write-manifests. Replaces the
+      // stale hash would fail this update's write-flake. Replaces the
       // inherited refresh-nix-hash, which only knows its own pin.
       matchManagers: ["custom.regex"],
       matchDatasources: ["docker", "helm", "github-releases", "custom.kaniop-kanidm", "terraform-provider"],
       postUpgradeTasks: {
         commands: [
           "nix run .#rehash-changed-pins",
-          "nix run .#write-manifests -- --skip-secrets",
           "nix run .#write-flake",
         ],
         fileFilters: ["**/*.nix", "manifests/**", "tf-stacks/*/k3s/main.tf.json"],

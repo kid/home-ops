@@ -57,7 +57,7 @@
             echo "==> Committed: $age_pub_file"
           fi
 
-          echo "==> Run 'nix run .#write-sops-config' to add $host as an sops recipient."
+          echo "==> Run 'nix run .#write-flake' to add $host as an sops recipient."
         '';
       };
     };

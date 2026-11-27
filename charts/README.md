@@ -17,10 +17,10 @@ helmupdater update-all                               # bump every pin
 helmupdater rehash "<org>/<chart-name>"               # recompute hash only
 ```
 
-After bumping, run `nix run .#write-manifests` and commit both the
+After bumping, run `nix run .#write-flake` and commit both the
 `charts/` change and the regenerated `manifests/prd/` output together —
 `checks.manifests` fails otherwise. Renovate does this on its own: the
 in-cluster renovate-operator (`modules/aspects/kubernetes/renovate`) bumps each pin's `version`, then
 `postUpgradeTasks` (`.renovaterc.json5`) runs `rehash-changed-pins` (which
-calls `rehash-chart`, i.e. `helmupdater rehash`, for every bumped chart) and `write-manifests`,
+calls `rehash-chart`, i.e. `helmupdater rehash`, for every bumped chart) and `write-flake`,
 and opens a PR with the changelog.
