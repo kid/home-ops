@@ -18,6 +18,7 @@
   den,
   inputs,
   self,
+  withSystem,
   ...
 }:
 let
@@ -43,39 +44,15 @@ let
       skip_s3_checksum = true;
     };
   };
-in
-{
-  flake-file.inputs.tofunix = {
-    # v3.0.2
-    url = "gitlab:TECHNOFAB/tofunix/95c8201f1605c0fadc51fbd03ff117d84ce30735";
-    flake = false;
-  };
 
-  den.classes.tofu = {
-    description = "OpenTofu resources collected into one root module per cluster";
-  };
-
-  den.policies.cluster-to-tofu =
-    { cluster, ... }:
-    lib.optionals cluster.tofu.enable [
-      (den.lib.policy.instantiate {
-        name = "${cluster.name}-tofu";
-        class = "tofu";
-        instantiate = { modules, ... }: modules;
-        intoAttr = [
-          "tofuModules"
-          cluster.name
-        ];
-      })
-    ];
-
-  den.schema.cluster.includes = [ den.policies.cluster-to-tofu ];
-
-  perSystem =
-    { pkgs, system, ... }:
+  # tofunix and the pinned providers, built for pkgs' platform.
+  tofunixFor =
+    pkgs:
     let
       tfx = import "${inputs.tofunix}/lib" { inherit pkgs; };
-
+    in
+    {
+      inherit tfx;
       plugins =
         pins
         |> lib.mapAttrsToList (
@@ -97,14 +74,36 @@ in
           else
             provider
         );
+    };
+in
+{
+  flake-file.inputs.tofunix = {
+    # v3.0.2
+    url = "gitlab:TECHNOFAB/tofunix/95c8201f1605c0fadc51fbd03ff117d84ce30735";
+    flake = false;
+  };
 
-      stacks =
-        config.flake.tofuModules or { }
-        |> lib.mapAttrs (
-          name: modules:
-          let
-            cluster = config.den.clusters.${name};
-            module = tfx.mkModule {
+  den.classes.tofu = {
+    description = "OpenTofu resources collected into one root module per cluster";
+  };
+
+  # Instantiates each cluster's collected tofu content into the evaluated
+  # tofunix module, at flake.tofuStacks.<cluster>: `.config.final` is the
+  # root module, `.config.resource.<type>.<name>` one resource's options.
+  den.policies.cluster-to-tofu =
+    { cluster, ... }:
+    lib.optionals cluster.tofu.enable [
+      (den.lib.policy.instantiate {
+        name = "${cluster.name}-tofu";
+        class = "tofu";
+        instantiate =
+          { modules, ... }:
+          withSystem "x86_64-linux" (
+            { pkgs, ... }:
+            let
+              inherit (tofunixFor pkgs) tfx plugins;
+            in
+            tfx.mkModule {
               sources = plugins;
               moduleConfig.imports = modules ++ [
                 (backend cluster)
@@ -116,10 +115,27 @@ in
                   };
                 }
               ];
-            };
-          in
-          {
-            dir = stackDir cluster;
+            }
+          );
+        intoAttr = [
+          "tofuStacks"
+          cluster.name
+        ];
+      })
+    ];
+
+  den.schema.cluster.includes = [ den.policies.cluster-to-tofu ];
+
+  perSystem =
+    { pkgs, system, ... }:
+    let
+      inherit (tofunixFor pkgs) tfx plugins;
+
+      stacks =
+        config.flake.tofuStacks or { }
+        |> lib.mapAttrs (
+          name: module: {
+            dir = stackDir config.den.clusters.${name};
             json = lib.foldr lib.warn (pkgs.runCommandLocal "${name}-main.tf.json"
               { nativeBuildInputs = [ pkgs.jq ]; }
               ''
