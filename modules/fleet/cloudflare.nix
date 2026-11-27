@@ -1,5 +1,5 @@
 # Account-wide Cloudflare resources no environment owns, rendered to
-# tf-stacks/global/cloudflare (modules/den/batteries/terragrunt/devshell.nix).
+# tf-stacks/cloudflare (modules/den/batteries/terragrunt/devshell.nix).
 { config, ... }:
 let
   # The kidibox.net zone (also den.clusters.prd.cloudflare.zoneId).

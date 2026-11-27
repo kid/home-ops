@@ -1,7 +1,7 @@
 # Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt/terragrunt-stacks.nix) to
 # tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl and
 # tf-stacks/<env>/k3s/<stack>/terragrunt.hcl, plus config.terragrunt.globalStacks
-# (stacks no environment entity owns) to tf-stacks/global/<stack>/terragrunt.hcl, exposed as
+# (stacks no environment entity owns) to tf-stacks/<stack>/terragrunt.hcl, exposed as
 # `nix run .#write-terragrunt` (mirrors write-manifests/write-terraform
 # elsewhere in the dendritic ecosystem) + `checks.terragrunt`
 # (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
@@ -124,7 +124,7 @@ let
     ) (config.flake.terragruntStacks.k3s or { }))
     (lib.mapAttrsToList (stack: leaf: {
       owner = "global stack ${stack}";
-      path = "tf-stacks/global/${stack}/terragrunt.hcl";
+      path = "tf-stacks/${stack}/terragrunt.hcl";
       content =
         if leaf ? dependsOn then
           throw "terragrunt.globalStacks.${stack}: dependsOn only resolves RouterOS device stacks"
@@ -154,7 +154,7 @@ in
   options.terragrunt.globalStacks = lib.mkOption {
     type = lib.types.attrsOf lib.types.raw;
     default = { };
-    description = "Terragrunt stacks no environment entity owns, as { localModule | moduleSource+moduleVersion; inputs; }, rendered to tf-stacks/global/<stack>/terragrunt.hcl";
+    description = "Terragrunt stacks no environment entity owns, as { localModule | moduleSource+moduleVersion; inputs; }, rendered to tf-stacks/<stack>/terragrunt.hcl";
   };
 
   config.perSystem =
