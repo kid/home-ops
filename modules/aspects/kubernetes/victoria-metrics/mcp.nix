@@ -17,7 +17,7 @@ _: {
         mcp-victoriametrics = {
           host = "metrics";
           # renovate: datasource=docker depName=ghcr.io/victoriametrics/mcp-victoriametrics
-          tag = "v1.120.1@sha256:16d9a30a6629319a8e84a73b9b54e1e9b9e5bf229bc40a7f1717c8602b0c1c09";
+          tag = "v1.22.0@sha256:d304060eaf2e104e6c90e6b68c71a0cac668b7c6aa9fedaa5b35023eaabbaa99";
           env = {
             VM_INSTANCE_ENTRYPOINT = "http://vmsingle-victoria-metrics.monitoring.svc:8428";
             VM_INSTANCE_TYPE = "single";
