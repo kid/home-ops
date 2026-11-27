@@ -6,9 +6,9 @@
 # references, so aspects only name each other's resources, never stacks.
 #
 # The root module is written to tf-stacks/<env>/k3s/main.tf.json by
-# `nix run .#write-tofu` (checks.tofu diffs it), and run with
-# `just tofu <cluster> <args>`. State is in the same R2 bucket as the
-# Terragrunt stacks, at home-ops/<env>/k3s/tofu.tfstate.
+# `nix run .#write-flake` (a flake-file write hook; checks.tofu diffs it),
+# and run with `just tofu <env>-k3s <args>`. State is in the same R2 bucket
+# as the Terragrunt stacks, at home-ops/<env>/k3s/tofu.tfstate.
 #
 # Linux only: tofunix builds each provider's schema while evaluating, by
 # running tofu on it, so an aarch64-darwin output would need a darwin builder.
@@ -28,7 +28,7 @@ let
 
   # Terragrunt's remote_state (tf-stacks/root.hcl), minus its own S3 client
   # settings. The endpoint and the credentials come from the environment,
-  # out of secrets/cloudflare.sops.yaml (see the tofu-<cluster> app).
+  # out of secrets/cloudflare.sops.yaml (see the tofu-<env>-k3s app).
   backend = cluster: {
     terraform.backend.s3 = {
       bucket = "terragrunt";
@@ -75,6 +75,46 @@ let
             provider
         );
     };
+
+  # Each cluster's stack: its directory, the flake app running it (named
+  # after the directory) and its formatted main.tf.json.
+  stacks =
+    let
+      all = withSystem "x86_64-linux" (
+        { pkgs, ... }:
+        config.flake.tofuStacks or { }
+        |> lib.mapAttrs (
+          name: module:
+          let
+            dir = stackDir config.den.clusters.${name};
+          in
+          {
+            inherit dir module;
+            app = "tofu-${dir |> lib.removePrefix "tf-stacks/" |> lib.replaceStrings [ "/" ] [ "-" ]}";
+            json = lib.foldr lib.warn (pkgs.runCommandLocal "${name}-main.tf.json"
+              { nativeBuildInputs = [ pkgs.jq ]; }
+              ''
+                jq --sort-keys . ${module.config.finalPackage} > $out
+              ''
+            ) module.config.warnings;
+          }
+        )
+      );
+
+      duplicates =
+        all
+        |> lib.mapAttrsToList (name: stack: lib.nameValuePair stack.dir name)
+        |> lib.groupBy (p: p.name)
+        |> lib.filterAttrs (_: ps: builtins.length ps > 1);
+    in
+    if duplicates == { } then
+      all
+    else
+      throw "tofu stacks rendered more than once: ${
+        duplicates
+        |> lib.mapAttrsToList (dir: ps: "${dir} (${ps |> map (p: p.value) |> lib.concatStringsSep ", "})")
+        |> lib.concatStringsSep "; "
+      }. Set den.clusters.<name>.tofu.enable = false on all but one of those clusters.";
 in
 {
   flake-file.inputs.tofunix = {
@@ -126,41 +166,36 @@ in
 
   den.schema.cluster.includes = [ den.policies.cluster-to-tofu ];
 
+  # `nix run .#write-flake` also writes every stack's main.tf.json. Elsewhere
+  # than on x86_64-linux it skips them, since they only evaluate there.
+  flake-file.write-hooks = [
+    {
+      index = 200;
+      program =
+        pkgs:
+        pkgs.writeShellApplication {
+          name = "write-tofu-stacks";
+          text =
+            if pkgs.stdenv.hostPlatform.system == "x86_64-linux" then
+              stacks
+              |> lib.mapAttrsToList (
+                _: stack: ''
+                  echo "==> Writing ${stack.dir}/main.tf.json..."
+                  mkdir -p "${stack.dir}"
+                  install -m 644 "${stack.json}" "${stack.dir}/main.tf.json"
+                ''
+              )
+              |> lib.concatStrings
+            else
+              ''echo "Skipping the tofu stacks: they only evaluate on x86_64-linux" >&2'';
+        };
+    }
+  ];
+
   perSystem =
     { pkgs, system, ... }:
     let
       inherit (tofunixFor pkgs) tfx plugins;
-
-      stacks =
-        config.flake.tofuStacks or { }
-        |> lib.mapAttrs (
-          name: module: {
-            dir = stackDir config.den.clusters.${name};
-            json = lib.foldr lib.warn (pkgs.runCommandLocal "${name}-main.tf.json"
-              { nativeBuildInputs = [ pkgs.jq ]; }
-              ''
-                jq --sort-keys . ${module.config.finalPackage} > $out
-              ''
-            ) module.config.warnings;
-            cli = tfx.mkCli { inherit plugins module; };
-          }
-        );
-
-      duplicates =
-        stacks
-        |> lib.mapAttrsToList (name: stack: lib.nameValuePair stack.dir name)
-        |> lib.groupBy (p: p.name)
-        |> lib.filterAttrs (_: ps: builtins.length ps > 1);
-
-      checkedStacks =
-        if duplicates == { } then
-          stacks
-        else
-          throw "tofu stacks rendered more than once: ${
-            duplicates
-            |> lib.mapAttrsToList (dir: ps: "${dir} (${ps |> map (p: p.value) |> lib.concatStringsSep ", "})")
-            |> lib.concatStringsSep "; "
-          }. Set den.clusters.<name>.tofu.enable = false on all but one of those clusters.";
     in
     {
       config = lib.mkMerge [
@@ -197,26 +232,11 @@ in
         }
 
         (lib.mkIf (system == "x86_64-linux") {
-          packages = {
-            write-tofu = pkgs.writeShellApplication {
-              name = "write-tofu";
-              text =
-                checkedStacks
-                |> lib.mapAttrsToList (
-                  _: stack: ''
-                    echo "==> Writing ${stack.dir}/main.tf.json..."
-                    mkdir -p "${stack.dir}"
-                    install -m 644 "${stack.json}" "${stack.dir}/main.tf.json"
-                  ''
-                )
-                |> lib.concatStrings;
-            };
-          }
-          // lib.mapAttrs' (
-            name: stack:
-            lib.nameValuePair "tofu-${name}" (
+          packages = lib.mapAttrs' (
+            _: stack:
+            lib.nameValuePair stack.app (
               pkgs.writeShellApplication {
-                name = "tofu-${name}";
+                name = stack.app;
                 runtimeInputs = [
                   pkgs.git
                   pkgs.sops
@@ -230,19 +250,26 @@ in
                   export AWS_ENDPOINT_URL_S3 AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
                   # tofunix runs tofu in a temporary copy, keeping .terraform here.
                   cd "$root/${stack.dir}"
-                  exec ${lib.getExe stack.cli} "$@"
+                  exec ${
+                    lib.getExe (
+                      tfx.mkCli {
+                        inherit plugins;
+                        inherit (stack) module;
+                      }
+                    )
+                  } "$@"
                 '';
               }
             )
-          ) checkedStacks;
+          ) stacks;
 
           checks.tofu = pkgs.runCommandLocal "tofu-check" { nativeBuildInputs = [ pkgs.diffutils ]; } (
             (
-              checkedStacks
+              stacks
               |> lib.mapAttrsToList (
                 _: stack: ''
                   if ! diff -q "${self}/${stack.dir}/main.tf.json" "${stack.json}"; then
-                    echo "${stack.dir}/main.tf.json is stale — run: nix run .#write-tofu" >&2
+                    echo "${stack.dir}/main.tf.json is stale — run: nix run .#write-flake" >&2
                     exit 1
                   fi
                 ''

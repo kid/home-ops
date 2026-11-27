@@ -14,10 +14,11 @@ apply path: (tf path "apply")
 
 apply-all path: (tf-all path "apply")
 
-# OpenTofu on a cluster's tofu stack (modules/den/batteries/tofu), e.g. `just tofu prd plan`.
+# OpenTofu on a tofu stack (modules/den/batteries/tofu), named after its
+# directory under tf-stacks/ with dashes, e.g. `just tofu prd-k3s plan`.
 [positional-arguments]
-tofu cluster *args:
-    shift; secretspec run nix run ".#tofu-{{ cluster }}" -- "$@"
+tofu stack *args:
+    shift; secretspec run nix run ".#tofu-{{ stack }}" -- "$@"
 
 hostname := `hostname -s`
 nh := if os() == "macos" { "nh darwin" } else { "nh os" }

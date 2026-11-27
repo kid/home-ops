@@ -195,7 +195,7 @@
         commands: [
           "nix run .#rehash-changed-pins",
           "nix run .#write-manifests -- --skip-secrets",
-          "nix run .#write-tofu",
+          "nix run .#write-flake",
         ],
         fileFilters: ["**/*.nix", "manifests/**", "tf-stacks/*/k3s/main.tf.json"],
         executionMode: "update",
