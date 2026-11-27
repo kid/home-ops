@@ -1,6 +1,6 @@
 # Host power-saving: CPU biased to efficiency, ASPM on every link that
-# tolerates it, but no NIC energy-efficient-ethernet (compatibility risk on
-# trunk NICs).
+# tolerates it, powertop's recommended tunables, but no NIC
+# energy-efficient-ethernet (compatibility risk on trunk NICs).
 { lib, ... }:
 {
   den.aspects.power-saving = {
@@ -20,7 +20,7 @@
     };
 
     nixos =
-      { host, pkgs, ... }:
+      { host, ... }:
       {
         boot.kernelParams = [
           # amd_pstate's "active" driver exposes AMD's CPPC/EPP power control,
@@ -47,14 +47,19 @@
           '';
         };
 
-        systemd.services.powertop-autotune = {
-          description = "Apply powertop's recommended power-saving tunables";
-          wantedBy = [ "multi-user.target" ];
-          serviceConfig = {
-            Type = "oneshot";
-            ExecStart = "${pkgs.powertop}/bin/powertop --auto-tune";
-          };
+        # What `powertop --auto-tune` applied on k3s-prd-0 (its "Optimal Tuned
+        # Software Settings"), declared so every change is reviewed here.
+        boot.kernel.sysctl = {
+          "kernel.nmi_watchdog" = 0;
+          "vm.dirty_writeback_centisecs" = 1500;
         };
+        # Runtime PM for every PCI device, USB device and SCSI disk. Applied
+        # when a device appears, so new ones get it too.
+        services.udev.extraRules = ''
+          ACTION=="add", SUBSYSTEM=="pci", ATTR{power/control}="auto"
+          ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{power/control}="auto"
+          ACTION=="add", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ATTR{type}=="0", ATTR{power/control}="auto"
+        '';
       };
   };
 }
