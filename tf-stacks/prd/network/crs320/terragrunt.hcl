@@ -72,7 +72,6 @@ inputs = {
         10,
         20,
         40,
-        41,
         50,
         51,
         99,
@@ -86,7 +85,6 @@ inputs = {
         10,
         20,
         40,
-        41,
         50,
         51,
         99,
@@ -100,7 +98,6 @@ inputs = {
         10,
         20,
         40,
-        41,
         50,
         51,
         99,
@@ -109,11 +106,8 @@ inputs = {
       ]
     }
     sfp-sfpplus3 = {
-      comment = "node1"
-      tagged = [
-        20,
-      ]
-      untagged = 41
+      comment  = "node1"
+      untagged = 10
     }
     sfp-sfpplus4 = {
       comment = "spare"
@@ -121,7 +115,6 @@ inputs = {
         10,
         20,
         40,
-        41,
         50,
         51,
         99,
