@@ -135,6 +135,7 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 - Nix flakes only, with `nixos-unstable`. There is no other package manager, and scripts are `pkgs.writeShellApplication` flake apps rather than files under a `scripts/` directory.
 - Use the devshell's tool versions; don't install tools globally.
 - Terragrunt always runs through `just`, which wraps `secretspec run`. Never export credentials by hand.
+- **Never deploy without the user's explicit approval**, even when an issue or plan lists the deploy steps. Deploying covers `just apply`/`apply-all`, `just switch`/`boot`/`test`, `colmena apply`, and merging a PR in this repo or in `kid/terragrunt-infra-catalog` (a catalog merge cuts a release tag). Stop at `just plan` output or a built closure, show it, and wait.
 - Don't apply anything to the cluster with `kubectl apply`, because Flux owns cluster state. Before committing, pass the full rendered manifests to the Flux MCP `diff_kubernetes_manifest` tool for a server-side dry run.
 - Custom images are Nix-built (`.#images.<name>`, `modules/flake/images.nix`). Manifests refer to them by Nix-hash tag (`.#imageRefs.<name>`), and CI pushes any missing ones with skopeo, so an image must be in the registry before its PR merges.
 
