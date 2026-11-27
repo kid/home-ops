@@ -85,8 +85,7 @@ in
             };
             "sfp-sfpplus3" = {
               comment = "node1";
-              untagged = networks.K3sDev.vlanId;
-              tagged = [ networks.Storage.vlanId ];
+              untagged = networks.Servers.vlanId;
             };
             "sfp-sfpplus4" = {
               comment = "spare";

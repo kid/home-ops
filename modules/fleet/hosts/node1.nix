@@ -13,22 +13,11 @@
 
   den.devices = {
     node1 = {
-      # One NIC: K3sDev native, Storage tagged for NFS to k3s-prd-0 (same L2,
-      # no router hop).
       interfaces = [
         {
-          network = "K3sDev";
+          network = "Servers";
           hostNum = 11;
           mac = "d0:50:99:fe:51:b5";
-          # The NIC's own MTU: a VLAN can't exceed its parent's, and the
-          # tagged Storage VLAN is jumbo.
-          inherit (den.networks.Storage) mtu;
-        }
-        {
-          network = "Storage";
-          hostNum = 11;
-          mac = "d0:50:99:fe:51:b5";
-          tagged = true;
         }
       ];
     };
