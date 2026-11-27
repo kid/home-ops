@@ -6,9 +6,8 @@
 # server is public through the Cloudflare tunnel, so the repositories' GitHub
 # webhooks start runs straight away: their dashboard and PR checkboxes, and a
 # push to a repository another one pins (`/webhook/v1/schedule`). The webhooks
-# and their token come from the renovate-webhook Terragrunt stack
-# (tf-catalog/modules/renovate-webhook).
-_:
+# and their token are this aspect's tofu resources.
+{ lib, ... }:
 let
   namespace = "renovate";
   jobName = "renovate";
@@ -17,7 +16,7 @@ let
   # 1Password item, in the cluster's vault (section `credentials`), holding
   # the GitHub App; the private key is base64, a PEM is multi-line.
   appItem = "github-renovate-app";
-  # Must match tf-catalog/modules/renovate-webhook's token_item.
+  # Its tofu onepassword_item's title.
   webhookItem = "renovate-webhook";
   # Repositories whose GitHub webhook schedules a run.
   repositories = [
@@ -296,19 +295,88 @@ in
         };
       };
 
-    "terragrunt-stacks" =
+    tofu =
       { cluster, ... }:
-      {
-        stack = "renovate-webhook";
-        localModule = "renovate-webhook";
-        inputs = {
-          github_owner = githubOwner cluster;
-          inherit repositories;
-          push_schedules = pushSchedules;
-          webhook_url = "https://${webhookHost cluster}/webhook/v1/github?namespace=${namespace}&job=${jobName}";
-          schedule_url = "https://${webhookHost cluster}/webhook/v1/schedule?namespace=${namespace}&job=${jobName}";
-          token_item = webhookItem;
+      let
+        # The operator checks X-Hub-Signature-256 against the same token.
+        # Managed here rather than by the operator's webhook sync, which
+        # would need the App to write repository webhooks.
+        webhook = repository: events: url: {
+          inherit repository events;
+          configuration = {
+            inherit url;
+            content_type = "json";
+            secret = "\${random_password.renovate_webhook_token.result}";
+            insecure_ssl = false;
+          };
+          active = true;
         };
+        webhookUrl = "https://${webhookHost cluster}/webhook/v1/github?namespace=${namespace}&job=${jobName}";
+        scheduleUrl = "https://${webhookHost cluster}/webhook/v1/schedule?namespace=${namespace}&job=${jobName}";
+      in
+      {
+        data.onepassword_vault.home_ops_prd.name = cluster.secrets.onepasswordVault;
+
+        # No token set: falls back to `gh auth token` on the machine running apply.
+        provider.github.default.owner = githubOwner cluster;
+
+        resource.random_password.renovate_webhook_token = {
+          length = 40;
+          special = false;
+        };
+
+        resource.onepassword_item.renovate_webhook_token = {
+          vault = "\${data.onepassword_vault.home_ops_prd.uuid}";
+          title = webhookItem;
+          category = "secure_note";
+          section = [
+            {
+              label = "credentials";
+              field = [
+                {
+                  label = "token";
+                  type = "CONCEALED";
+                  value = "\${random_password.renovate_webhook_token.result}";
+                }
+              ];
+            }
+          ];
+        };
+
+        # Issue and pull request events schedule the repository's own run.
+        # /webhook/v1/schedule takes the same HMAC signature as
+        # /webhook/v1/github, so a push to a pinned repository calls it
+        # directly, once per repository that pins it.
+        resource.github_repository_webhook =
+          (
+            repositories
+            |> map (
+              repo:
+              lib.nameValuePair "renovate_${repo}" (
+                webhook repo [
+                  "issues"
+                  "pull_request"
+                ] webhookUrl
+              )
+            )
+            |> lib.listToAttrs
+          )
+          // (
+            pushSchedules
+            |> lib.concatMapAttrs (
+              source: targets:
+              targets
+              |> map (
+                target:
+                lib.nameValuePair "renovate_push_${source}_${target}" (
+                  webhook source [
+                    "push"
+                  ] "${scheduleUrl}&project=\${urlencode(\"${githubOwner cluster}/${target}\")}"
+                )
+              )
+              |> lib.listToAttrs
+            )
+          );
       };
   };
 }

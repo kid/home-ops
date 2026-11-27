@@ -14,6 +14,11 @@ apply path: (tf path "apply")
 
 apply-all path: (tf-all path "apply")
 
+# OpenTofu on a cluster's tofu stack (modules/den/batteries/tofu), e.g. `just tofu prd plan`.
+[positional-arguments]
+tofu cluster *args:
+    shift; secretspec run nix run ".#tofu-{{ cluster }}" -- "$@"
+
 hostname := `hostname -s`
 nh := if os() == "macos" { "nh darwin" } else { "nh os" }
 # kid/nixfiles-work, swapped in for the stub at ./private when checked out.

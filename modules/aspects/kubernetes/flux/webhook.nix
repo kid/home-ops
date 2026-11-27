@@ -1,7 +1,6 @@
 # GitHub push webhook for Flux's root GitRepository: a notification-controller
 # Receiver behind the public Cloudflare Tunnel Gateway, and the GitHub webhook
-# plus its 1Password-held HMAC token from the flux-webhook Terragrunt stack
-# (tf-catalog/modules/flux-webhook). The Receiver serves
+# plus its 1Password-held HMAC token, this aspect's tofu resources. The Receiver serves
 # /hook/sha256(token + name + namespace), so tofu computes the URL from the
 # token it generates; nothing flows back from the cluster.
 _:
@@ -9,7 +8,7 @@ let
   receiverName = "github";
   namespace = "flux-system";
   tokenSecret = "github-webhook-token";
-  # Must match tf-catalog/modules/flux-webhook's onepassword_item title.
+  # Its tofu onepassword_item's title.
   tokenItem = "flux-github-webhook";
   hostname = cluster: cluster.methods.mkAppHostname "flux-webhook";
 in
@@ -117,21 +116,50 @@ in
         };
       };
 
-    "terragrunt-stacks" =
+    tofu =
       { cluster, ... }:
       let
         match = builtins.match "https://github\\.com/([^/]+)/([^.]+)\\.git" cluster.nixidy.repository;
       in
       {
-        stack = "flux-webhook";
-        localModule = "flux-webhook";
-        inputs = {
-          github_owner = builtins.elemAt match 0;
-          github_repo = builtins.elemAt match 1;
-          webhook_hostname = hostname cluster;
-          receiver_name = receiverName;
-          receiver_namespace = namespace;
-          token_item = tokenItem;
+        data.onepassword_vault.home_ops_prd.name = cluster.secrets.onepasswordVault;
+
+        # No token set: falls back to `gh auth token` on the machine running apply.
+        provider.github.default.owner = builtins.elemAt match 0;
+
+        resource.random_password.flux_webhook_token = {
+          length = 40;
+          special = false;
+        };
+
+        resource.onepassword_item.flux_webhook_token = {
+          vault = "\${data.onepassword_vault.home_ops_prd.uuid}";
+          title = tokenItem;
+          category = "secure_note";
+          section = [
+            {
+              label = "credentials";
+              field = [
+                {
+                  label = "token";
+                  type = "CONCEALED";
+                  value = "\${random_password.flux_webhook_token.result}";
+                }
+              ];
+            }
+          ];
+        };
+
+        resource.github_repository_webhook.flux = {
+          repository = builtins.elemAt match 1;
+          configuration = {
+            url = ''https://${hostname cluster}/hook/''${sha256("''${random_password.flux_webhook_token.result}${receiverName}${namespace}")}'';
+            content_type = "json";
+            secret = "\${random_password.flux_webhook_token.result}";
+            insecure_ssl = false;
+          };
+          active = true;
+          events = [ "push" ];
         };
       };
   };

@@ -1,10 +1,11 @@
 # Passwords a cluster's apps need generated once and kept across rebuilds,
 # contributed by the app aspects that read them. The external-secrets aspect
-# renders them all into one Terragrunt stack (modules/aspects/kubernetes/external-secrets/
-# terragrunt.nix, tf-catalog/modules/generated-secrets): a random_password per
-# item, stored in the cluster's 1Password vault as a single-field secure note,
-# which the app's ExternalSecret reads back (`cluster.methods.mkGeneratedSecret`).
-# Fragment shape, the module's `items` entry plus its key:
+# turns them into the cluster's tofu resources
+# (modules/aspects/kubernetes/external-secrets/generated-secrets.nix): a
+# random_password per item, stored in the cluster's 1Password vault as a
+# single-field secure note, which the app's ExternalSecret reads back
+# (`cluster.methods.mkGeneratedSecret`).
+# Fragment shape:
 # { item; field; length; upper ? true; lower ? true; numeric ? true;
 # special ? true; min_upper ? 0; min_lower ? 0; min_numeric ? 0;
 # min_special ? 0; override_special ? null; }: `item` the 1Password item

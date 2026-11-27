@@ -1846,6 +1846,7 @@
         "sops-nix": "sops-nix",
         "srvos": "srvos",
         "stylix": "stylix",
+        "tofunix": "tofunix",
         "treefmt-nix": "treefmt-nix_4",
         "ucodenix": "ucodenix",
         "umbriel": "umbriel",
@@ -2117,6 +2118,23 @@
         "owner": "tinted-theming",
         "repo": "base16-zed",
         "type": "github"
+      }
+    },
+    "tofunix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794427483,
+        "narHash": "sha256-jQSMOm8xAHEt7EVYLZQg6BHwZLa2wZa4o4dkMIWPTGM=",
+        "owner": "TECHNOFAB",
+        "repo": "tofunix",
+        "rev": "95c8201f1605c0fadc51fbd03ff117d84ce30735",
+        "type": "gitlab"
+      },
+      "original": {
+        "owner": "TECHNOFAB",
+        "repo": "tofunix",
+        "rev": "95c8201f1605c0fadc51fbd03ff117d84ce30735",
+        "type": "gitlab"
       }
     },
     "treefmt-nix": {
