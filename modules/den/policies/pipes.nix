@@ -24,33 +24,13 @@ in
     ])
   ];
 
-  # Collects the `k3s-nodes` quirk (emitted per-host by
-  # modules/aspects/services/k3s/{k3s,agent}.nix, {hostname; address; role;
-  # cluster;}) onto every RouterOS device, exposed as the `k3s-nodes` list
-  # arg to modules/aspects/routeros/bgp.nix, which groups it by `cluster` into one
-  # BGP stack per cluster. `host` is the entity kind — a bare `_: true`
-  # predicate would match nothing, see routeros-device-collect-firewall above.
-  den.policies.routeros-device-collect-k3s-nodes = _: [
-    (pipe.from "k3s-nodes" [ (pipe.collectAll ({ host, ... }: host != null)) ])
-  ];
-
-  # Collects the `bgp` quirk (den.quirks.bgp — cluster-level BGP instance
-  # parameters, see modules/den/quirks/bgp.nix) onto every RouterOS
-  # device, exposed as the `bgp` list arg to modules/aspects/routeros/
-  # ros-bgp.nix.
-  den.policies.routeros-device-collect-bgp = _: [
-    (pipe.from "bgp" [ (pipe.collectAll ({ cluster, ... }: cluster != null)) ])
-  ];
-
   den.schema.routerosDevice.includes = [
     den.policies.routeros-device-collect-firewall
-    den.policies.routeros-device-collect-k3s-nodes
-    den.policies.routeros-device-collect-bgp
   ];
 
   # Collects the `k3s-nodes` quirk onto the cluster the host belongs to,
-  # exposed as the `k3s-nodes` list arg to its k8s-manifests content
-  # (modules/aspects/kubernetes/cilium/host-firewall.nix,
+  # exposed as the `k3s-nodes` list arg to its k8s-manifests and tofu content
+  # (modules/aspects/kubernetes/cilium/{host-firewall,bgp}.nix,
   # modules/aspects/kubernetes/victoria-metrics/default.nix). `host` is the entity
   # kind — a bare `_: true` predicate would match nothing, see
   # routeros-device-collect-firewall above. The cluster match is a filter on

@@ -42,13 +42,13 @@
     version = "1.99.1";
     hash = "sha256-JH34oqdFSq1l7fdBlITOuILzCipFPrmae2Mk56aDG1Q=";
   };
-  # The catalog's ros-bgp module uses this one rather than
-  # terraform-routeros/routeros, whose BGP creates RouterOS rejects
+  # RouterOS BGP (modules/aspects/kubernetes/cilium/bgp.nix) goes through this one
+  # rather than terraform-routeros/routeros, whose BGP creates RouterOS rejects
   # (terraform-routeros/terraform-provider-routeros#959). Not on the OpenTofu
   # registry: `sha256` is its linux_amd64 release zip's, as
-  # registry.terraform.io publishes it. Untyped: its resource types share
-  # terraform-routeros's `routeros_` prefix, so the two can't both have
-  # tofunix options.
+  # registry.terraform.io publishes it. Untyped (the stack's `untyped.*`
+  # blocks): its resource types share terraform-routeros's `routeros_`
+  # prefix, so the two can't both have tofunix options.
   routeros-ebogdum = {
     owner = "ebogdum";
     repo = "routeros";
