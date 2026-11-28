@@ -1,8 +1,7 @@
 # WireGuard remote access on a RouterOS device, plus the IP Cloud DDNS name
 # clients use as its endpoint, from the device's routerosInputs.wireguard
-# (see modules/fleet/routeros/rb5009.nix). The stack's own resources, through
-# the routeros provider configured here: the catalog modules the other
-# aspects call each configure their own.
+# (see modules/fleet/routeros/rb5009.nix), through the stack's routeros
+# provider (modules/aspects/routeros/base.nix).
 { lib, ... }:
 {
   den.aspects.routeros.wireguard.tofu =
@@ -12,20 +11,6 @@
       interface = "\${routeros_interface_wireguard.wireguard.name}";
     in
     {
-      data.onepassword_item.routeros = {
-        vault = inputs.op_vault;
-        title = inputs.op_item_routeros;
-      };
-
-      provider.routeros.default = {
-        hosturl = "\${data.onepassword_item.routeros.url}";
-        username = "\${data.onepassword_item.routeros.username}";
-        password = "\${data.onepassword_item.routeros.password}";
-        insecure = true;
-        # System objects are only removed from the state, not the device.
-        suppress_syso_del_warn = true;
-      };
-
       resource.routeros_interface_wireguard.wireguard = {
         name = inputs.interface_name;
         inherit (inputs) listen_port;

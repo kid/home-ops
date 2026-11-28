@@ -1,4 +1,14 @@
 {
+  "data": {
+    "onepassword_item": [
+      {
+        "routeros": {
+          "title": "CRS320 - user - kid",
+          "vault": "home-ops"
+        }
+      }
+    ]
+  },
   "import": [
     {
       "id": "name=admin",
@@ -147,6 +157,17 @@
         }
       }
     }
+  },
+  "provider": {
+    "routeros": [
+      {
+        "hosturl": "${var.bootstrap ? \"http://10.99.0.2\" : data.onepassword_item.routeros.url}",
+        "insecure": true,
+        "password": "${var.bootstrap ? \"\" : data.onepassword_item.routeros.password}",
+        "suppress_syso_del_warn": true,
+        "username": "${var.bootstrap ? \"admin\" : data.onepassword_item.routeros.username}"
+      }
+    ]
   },
   "terraform": {
     "backend": {
