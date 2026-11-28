@@ -5,17 +5,17 @@
 # from each provider's schema. Tofu orders resources by their references, so
 # aspects only name each other's resources, never stacks.
 #
-# One stack per entity:
-#   - a cluster: class `tofu`, tf-stacks/<env>/k3s;
-#   - a RouterOS device: class `tofu`, tf-stacks/routeros/<device>;
-#   - the fleet: class `fleet-tofu`, tf-stacks/fleet. Its own class, since an
-#     instantiate collects its class from the whole subtree, and the fleet's
-#     is every cluster's and device's.
+# One stack per entity, each collecting its own subtree's `tofu` content:
+#   - a cluster: tf-stacks/<env>/k3s;
+#   - a RouterOS device: tf-stacks/routeros/<device>;
+#   - a named stack (den.tofuStacks.<name>, e.g. cloudflare), for resources
+#     no cluster or device owns: tf-stacks/<name>.
 # Each root module is written to <dir>/main.tf.json by `nix run .#write-flake`
 # (a flake-file write hook; checks.tofu diffs it) and run with
-# `just tofu <dir under tf-stacks, dashed> <args>`, e.g. `just tofu
-# routeros-rb5009 plan`. State is in R2, at home-ops/<dir under tf-stacks>/tofu.tfstate.
-# The evaluated stacks are at tofuStacks.{k3s.<cluster>,routeros.<device>,fleet}.
+# `just tofu <key> <args>`, its key being its dir under tf-stacks, dashed
+# (`just tofu routeros-rb5009 plan`). State is in R2, at
+# home-ops/<dir under tf-stacks>/tofu.tfstate. The evaluated stacks are at
+# tofuStacks.<key>.
 #
 # Linux only: tofunix builds each provider's schema while evaluating, by
 # running tofu on it, so an aarch64-darwin output would need a darwin builder.
@@ -147,16 +147,17 @@ let
         };
     };
 
-  # Evaluates an entity's collected content into its stack, rooted at `dir`.
+  # Evaluates an entity's collected content into its stack, rooted at `dir`,
+  # at flake.tofuStacks.<dir under tf-stacks, dashed>.
   instantiateStack =
-    {
-      name,
-      class,
-      dir,
-      intoAttr,
-    }:
+    { name, dir }:
     den.lib.policy.instantiate {
-      inherit name class intoAttr;
+      inherit name;
+      class = "tofu";
+      intoAttr = [
+        "tofuStacks"
+        (dir |> lib.removePrefix "tf-stacks/" |> lib.replaceStrings [ "/" ] [ "-" ])
+      ];
       instantiate =
         { modules, ... }:
         withSystem "x86_64-linux" (
@@ -177,31 +178,8 @@ let
         );
     };
 
-  # Every stack, keyed by its app name: tofu-<dir under tf-stacks, dashed>.
-  stacks =
-    let
-      all =
-        (lib.attrValues (config.flake.tofuStacks.k3s or { }))
-        ++ (lib.attrValues (config.flake.tofuStacks.routeros or { }))
-        ++ lib.optional (config.flake.tofuStacks ? fleet) config.flake.tofuStacks.fleet;
-
-      named =
-        all
-        |> map (
-          module:
-          lib.nameValuePair "tofu-${module.dir |> lib.removePrefix "tf-stacks/" |> lib.replaceStrings [ "/" ] [ "-" ]}" module
-        );
-
-      duplicates =
-        named
-        |> lib.groupBy (p: p.name)
-        |> lib.filterAttrs (_: ps: builtins.length ps > 1)
-        |> builtins.attrNames;
-    in
-    if duplicates != [ ] then
-      throw "tofu stacks rendered more than once: ${lib.concatStringsSep ", " duplicates}. Set den.clusters.<name>.tofu.enable = false on all but one of the clusters sharing an environment."
-    else
-      named |> lib.listToAttrs;
+  # Every stack, keyed by its app name: tofu-<key>.
+  stacks = config.flake.tofuStacks or { } |> lib.mapAttrs' (key: lib.nameValuePair "tofu-${key}");
 
   stackJson =
     pkgs: module:
@@ -217,59 +195,54 @@ in
   };
 
   den.classes.tofu = {
-    description = "OpenTofu resources collected into one root module per cluster or RouterOS device";
-  };
-  den.classes.fleet-tofu = {
-    description = "OpenTofu resources no environment owns, collected into the fleet's root module";
+    description = "OpenTofu resources collected into one root module per cluster, RouterOS device or named stack";
   };
 
+  # A cluster's stack has no cluster segment, so two clusters of one
+  # environment can't both have one.
   den.policies.cluster-to-tofu =
     { cluster, ... }:
-    lib.optionals cluster.tofu.enable [
-      (instantiateStack {
-        name = "${cluster.name}-tofu";
-        class = "tofu";
-        dir = "tf-stacks/${cluster.environment}/k3s";
-        intoAttr = [
-          "tofuStacks"
-          "k3s"
-          cluster.name
-        ];
-      })
-    ];
+    let
+      sharing =
+        config.den.clusters
+        |> lib.filterAttrs (
+          name: c: name != cluster.name && c.tofu.enable && c.environment == cluster.environment
+        )
+        |> builtins.attrNames;
+    in
+    lib.optionals cluster.tofu.enable (
+      if sharing != [ ] then
+        throw "den.clusters.${cluster.name}: shares tf-stacks/${cluster.environment}/k3s with ${lib.concatStringsSep ", " sharing}. Set tofu.enable = false on all but one of them."
+      else
+        [
+          (instantiateStack {
+            name = "${cluster.name}-tofu";
+            dir = "tf-stacks/${cluster.environment}/k3s";
+          })
+        ]
+    );
 
   den.policies.routeros-device-to-tofu =
     { routerosDevice, ... }:
     [
       (instantiateStack {
         name = "${routerosDevice.name}-tofu";
-        class = "tofu";
         dir = "tf-stacks/routeros/${routerosDevice.name}";
-        intoAttr = [
-          "tofuStacks"
-          "routeros"
-          routerosDevice.name
-        ];
       })
     ];
 
-  # The fleet has a single entity, so its stack has no entity-name segment.
-  # Needs the fleet bound to den.aspects.fleet (modules/den/policies/fleet.nix).
-  den.policies.fleet-to-tofu = _: [
-    (instantiateStack {
-      name = "fleet-tofu";
-      class = "fleet-tofu";
-      dir = "tf-stacks/fleet";
-      intoAttr = [
-        "tofuStacks"
-        "fleet"
-      ];
-    })
-  ];
+  den.policies.tofu-stack-to-tofu =
+    { tofuStack, ... }:
+    [
+      (instantiateStack {
+        name = "${tofuStack.name}-tofu";
+        dir = "tf-stacks/${tofuStack.name}";
+      })
+    ];
 
   den.schema.cluster.includes = [ den.policies.cluster-to-tofu ];
   den.schema.routerosDevice.includes = [ den.policies.routeros-device-to-tofu ];
-  den.schema.fleet.includes = [ den.policies.fleet-to-tofu ];
+  den.schema.tofuStack.includes = [ den.policies.tofu-stack-to-tofu ];
 
   # `nix run .#write-flake` also writes every stack's main.tf.json. Elsewhere
   # than on x86_64-linux it skips them, since they only evaluate there.

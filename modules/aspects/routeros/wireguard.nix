@@ -60,7 +60,7 @@
 
       output.wireguard_public_key.value = "\${routeros_interface_wireguard.wireguard.public_key}";
 
-      # The fleet stack's CNAME target (modules/aspects/cloudflare/dns.nix).
+      # The cloudflare stack's CNAME target (modules/aspects/cloudflare/dns.nix).
       output.ip_cloud_dns_name = {
         value = "\${routeros_ip_cloud.wireguard.dns_name}";
         precondition = [

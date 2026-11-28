@@ -1,4 +1,14 @@
 {
+  "moved": [
+    {
+      "from": "cloudflare_dns_record.this[\"home.kidibox.net\"]",
+      "to": "cloudflare_dns_record.home_kidibox_net"
+    },
+    {
+      "from": "cloudflare_dns_record.this[\"vpn.home.kidibox.net\"]",
+      "to": "cloudflare_dns_record.vpn_home_kidibox_net"
+    }
+  ],
   "resource": {
     "cloudflare_dns_record": [
       {
@@ -30,7 +40,7 @@
       "s3": {
         "bucket": "terragrunt",
         "encrypt": true,
-        "key": "home-ops/fleet/tofu.tfstate",
+        "key": "home-ops/cloudflare/tofu.tfstate",
         "region": "auto",
         "skip_credentials_validation": true,
         "skip_metadata_api_check": true,

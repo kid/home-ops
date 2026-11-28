@@ -24,9 +24,9 @@ flowchart LR
 ```
 
 - **Entry point.** `flake.nix` calls `flake-parts.lib.mkFlake` with `import-tree ./modules`, so every `.nix` file under `modules/` is a module. Files whose names start with `_` (e.g. `_ros-lib.nix`) are helpers that other files import; they are not loaded as modules.
-- **Den topology.** Scopes nest as flake → fleet → environment → {network, routerosDevice, cluster, host} (`modules/den/policies/fleet.nix`). The entity schemas are in `modules/den/schema/`.
+- **Den topology.** Scopes nest as flake → fleet → {environment → {network, routerosDevice, cluster, host}, tofuStack} (`modules/den/policies/fleet.nix`). The entity schemas are in `modules/den/schema/`.
 - **Quirks.** Cross-aspect channels collect values from many aspects into one place. They are registered in `modules/den/quirks/`; the main ones are `persist`, `cache`, `datasets`, `firewall`, `firewall-ports`, `generated-secrets`, `app-datasets`, `k3s-nodes` and `bgp`. For example, `modules/den/policies/pipes.nix` gathers firewall, k3s-node and BGP data onto the RouterOS devices.
-- **Aspect classes.** An aspect's content keys say what it produces: `nixos`, `k8s-manifests`, `tofu` (a cluster's or RouterOS device's tofu stack) or `fleet-tofu` (the fleet's).
+- **Aspect classes.** An aspect's content keys say what it produces: `nixos`, `k8s-manifests` or `tofu` (resources in the tofu stack of the cluster, RouterOS device or named stack it's part of).
 - **Shared data.** These files are the single source of truth, so reuse them instead of hardcoding values:
     - `modules/inventory/networks.nix`: VLANs, written as `den.networks.<PascalCase>`. The CIDR is derived from `cidrBase`.
     - `modules/inventory/devices.nix`: MAC/IP registry, which feeds DHCP leases, firewall rules and colmena targets.
@@ -58,7 +58,7 @@ flowchart LR
 | `manifests/prd/` | **Generated** nixidy output, written as `<app>/<Kind>-<name>.yaml` |
 | `tf-stacks/<env>/k3s/main.tf.json` | **Generated** tofu root module of a cluster, from its aspects' `tofu` content |
 | `tf-stacks/routeros/<device>/main.tf.json` | **Generated** tofu root module of a RouterOS device. Phase 1 of its port: most aspects still call `kid/terragrunt-infra-catalog`'s `ros-*` modules |
-| `tf-stacks/fleet/main.tf.json` | **Generated** tofu root module of the fleet (account-wide Cloudflare records) |
+| `tf-stacks/<name>/main.tf.json` | **Generated** tofu root module of a named stack (`den.tofuStacks.<name>`, e.g. `cloudflare`) |
 | `secrets/` | SOPS files: `hosts/<host>/ssh_host_ed25519_key.*`, `clusters/prd/*.sops`, `cloudflare.sops.yaml` |
 | `tests/integration/` | NixOS VM tests (`k3s.nix`, `impermanence.nix`) |
 | `esphome/` | ESPHome configs, built and flashed by hand. Get secrets with `op inject -i secrets.tpl.yaml -o secrets.yaml` |
@@ -82,7 +82,7 @@ nix run .#rehash-changed-pins                # refresh hashes next to Renovate-b
 
 # Deploy
 colmena apply --on <host> [switch|boot]      # tags: env-<env>, k3s, k3s-<cluster>, k3s-server|k3s-agent
-just tofu prd-k3s plan                       # a tofu stack, named after its dir under tf-stacks/ (also routeros-rb5009, routeros-crs320, fleet); wraps `secretspec run nix run .#tofu-<stack>`
+just tofu prd-k3s plan                       # a tofu stack, keyed by its dir under tf-stacks/, dashed (also routeros-rb5009, routeros-crs320, cloudflare); wraps `secretspec run nix run .#tofu-<key>`
 
 # Local VM
 nix build .#nixosConfigurations.test-vm.config.system.build.vmWithDisko
@@ -125,7 +125,8 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 - `flake.nix` (generated) and `modules/flake/core.nix`, which imports den and flake-file and sets the systems: `x86_64-linux` for every NixOS host, `aarch64-darwin` for the work Mac.
 - `modules/flake/files.nix`: the `write-flake` hook syncing `manifests/`, and `checks.manifests`.
 - `modules/flake/formatter.nix`, `git-hooks.nix`, `devshell.nix`, `charts.nix`, `colmena.nix`, `images.nix`, `integration-tests.nix`, `nixos-checks.nix`, `sops-config.nix`.
-- `modules/den/batteries/tofu/`: the `tofu`/`fleet-tofu` classes, tofunix and its provider pins (`_providers.nix`, rehashed by `rehash-changed-pins`); defines the `tofu-<stack>` apps, `checks.tofu` and the flake-file write hook that makes `write-flake` write each `main.tf.json` (x86_64-linux only: tofunix builds provider schemas at eval time). Inspect an evaluated stack at `tofuStacks.{k3s.<cluster>,routeros.<device>,fleet}.config.final` (the root module) or `.config.resource.<type>.<name>`.
+- `modules/den/batteries/tofu/`: the `tofu` class, tofunix and its provider pins (`_providers.nix`, rehashed by `rehash-changed-pins`); defines the `tofu-<key>` apps, `checks.tofu` and the flake-file write hook that makes `write-flake` write each `main.tf.json` (x86_64-linux only: tofunix builds provider schemas at eval time). Inspect an evaluated stack at `tofuStacks.<key>.config.final` (the root module) or `.config.resource.<type>.<name>`, `<key>` being its dir under `tf-stacks/`, dashed (`prd-k3s`, `routeros-rb5009`, `cloudflare`).
+- `modules/den/schema/tofuStacks.nix` and `modules/fleet/stacks/*.nix`: named stacks (`den.tofuStacks.<name>`), for resources no cluster or device owns. A stack's `tofu` content comes from `den.aspects.<name>` and its includes.
 - `modules/aspects/routeros/_lib.nix`: `catalogModule`, the `module` block calling a private `kid/terragrunt-infra-catalog` module (pinned by commit), passing only the inputs it declares.
 - `.renovaterc.json5` and `.renovate/org-inherited-config.json5`: automerge rules, groups, and `postUpgradeTasks`. Renovate runs in-cluster from `modules/aspects/kubernetes/renovate`.
 - `secretspec.toml`: credentials pulled from 1Password (`CLOUDFLARE_API_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`, MCP tokens).
