@@ -68,11 +68,28 @@ in
       in
       {
         # true for the first apply against a factory-reset device: the
-        # module then connects as admin with no password over plain HTTP
+        # providers then connect as admin with no password over plain HTTP
         # (`just tofu routeros-<device> apply -var bootstrap=true -target=module.base`).
         variable.bootstrap = {
           type = "bool";
           default = false;
+        };
+
+        # The device's login: whichever fleet user op_item_routeros names.
+        data.onepassword_item.routeros = {
+          vault = inputs.op_vault;
+          title = inputs.op_item_routeros;
+        };
+
+        # The stack's own routeros provider, for every resource outside the
+        # catalog modules (which still configure their own).
+        provider.routeros.default = {
+          hosturl = "\${var.bootstrap ? \"http://${routerosDevice.routerosEndpoint}\" : data.onepassword_item.routeros.url}";
+          username = "\${var.bootstrap ? \"admin\" : data.onepassword_item.routeros.username}";
+          password = "\${var.bootstrap ? \"\" : data.onepassword_item.routeros.password}";
+          insecure = true;
+          # System objects are only removed from the state, not the device.
+          suppress_syso_del_warn = true;
         };
 
         # The device's built-in admin user (routeros_users.admin above)

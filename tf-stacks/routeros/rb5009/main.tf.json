@@ -456,38 +456,6 @@
       },
       "source": "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/ros-capsman?ref=ros-capsman/v1.1.4"
     },
-    "dns": {
-      "dns_static_records": {
-        "doorbell.iot-local.home.kidibox.net": {
-          "address": "10.0.50.10"
-        },
-        "k3s-prd-0.k3s.home.kidibox.net": {
-          "address": "10.0.40.40"
-        },
-        "k3s-prd-0.storage.home.kidibox.net": {
-          "address": "10.0.20.40"
-        },
-        "node1.srv.home.kidibox.net": {
-          "address": "10.0.10.11"
-        },
-        "sma-inverter.iot-local.home.kidibox.net": {
-          "address": "10.0.50.41"
-        },
-        "vulkan.lan.home.kidibox.net": {
-          "address": "10.0.100.20"
-        },
-        "vulkan.mgmt.home.kidibox.net": {
-          "address": "10.99.0.20"
-        }
-      },
-      "dns_upstream_servers": [
-        "9.9.9.9",
-        "149.112.112.112"
-      ],
-      "op_item_routeros": "RB5009 - user - kid",
-      "op_vault": "home-ops",
-      "source": "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/ros-dns?ref=ros-dns/v2.0.1"
-    },
     "firewall": {
       "input_rules": [
         {
@@ -728,6 +696,40 @@
       "wan_interface": "ether8"
     }
   },
+  "moved": [
+    {
+      "from": "module.dns.routeros_ip_dns.server",
+      "to": "routeros_ip_dns.dns"
+    },
+    {
+      "from": "module.dns.routeros_ip_dns_record.static[\"doorbell.iot-local.home.kidibox.net\"]",
+      "to": "routeros_ip_dns_record.dns_doorbell_iot-local_home_kidibox_net"
+    },
+    {
+      "from": "module.dns.routeros_ip_dns_record.static[\"k3s-prd-0.k3s.home.kidibox.net\"]",
+      "to": "routeros_ip_dns_record.dns_k3s-prd-0_k3s_home_kidibox_net"
+    },
+    {
+      "from": "module.dns.routeros_ip_dns_record.static[\"k3s-prd-0.storage.home.kidibox.net\"]",
+      "to": "routeros_ip_dns_record.dns_k3s-prd-0_storage_home_kidibox_net"
+    },
+    {
+      "from": "module.dns.routeros_ip_dns_record.static[\"node1.srv.home.kidibox.net\"]",
+      "to": "routeros_ip_dns_record.dns_node1_srv_home_kidibox_net"
+    },
+    {
+      "from": "module.dns.routeros_ip_dns_record.static[\"sma-inverter.iot-local.home.kidibox.net\"]",
+      "to": "routeros_ip_dns_record.dns_sma-inverter_iot-local_home_kidibox_net"
+    },
+    {
+      "from": "module.dns.routeros_ip_dns_record.static[\"vulkan.lan.home.kidibox.net\"]",
+      "to": "routeros_ip_dns_record.dns_vulkan_lan_home_kidibox_net"
+    },
+    {
+      "from": "module.dns.routeros_ip_dns_record.static[\"vulkan.mgmt.home.kidibox.net\"]",
+      "to": "routeros_ip_dns_record.dns_vulkan_mgmt_home_kidibox_net"
+    }
+  ],
   "output": {
     "ip_cloud_dns_name": {
       "precondition": [
@@ -745,11 +747,11 @@
   "provider": {
     "routeros": [
       {
-        "hosturl": "${data.onepassword_item.routeros.url}",
+        "hosturl": "${var.bootstrap ? \"http://10.99.0.1\" : data.onepassword_item.routeros.url}",
         "insecure": true,
-        "password": "${data.onepassword_item.routeros.password}",
+        "password": "${var.bootstrap ? \"\" : data.onepassword_item.routeros.password}",
         "suppress_syso_del_warn": true,
-        "username": "${data.onepassword_item.routeros.username}"
+        "username": "${var.bootstrap ? \"admin\" : data.onepassword_item.routeros.username}"
       }
     ]
   },
@@ -797,6 +799,79 @@
         "wireguard": {
           "ddns_enabled": "yes",
           "update_time": "false"
+        }
+      }
+    ],
+    "routeros_ip_dns": [
+      {
+        "dns": {
+          "allow_remote_requests": true,
+          "cache_max_ttl": "1d",
+          "cache_size": 1048576,
+          "max_concurrent_queries": 200,
+          "max_concurrent_tcp_sessions": 40,
+          "servers": [
+            "9.9.9.9",
+            "149.112.112.112"
+          ]
+        }
+      }
+    ],
+    "routeros_ip_dns_record": [
+      {
+        "dns_doorbell_iot-local_home_kidibox_net": {
+          "address": "10.0.50.10",
+          "disabled": false,
+          "name": "doorbell.iot-local.home.kidibox.net",
+          "type": "A"
+        }
+      },
+      {
+        "dns_k3s-prd-0_k3s_home_kidibox_net": {
+          "address": "10.0.40.40",
+          "disabled": false,
+          "name": "k3s-prd-0.k3s.home.kidibox.net",
+          "type": "A"
+        }
+      },
+      {
+        "dns_k3s-prd-0_storage_home_kidibox_net": {
+          "address": "10.0.20.40",
+          "disabled": false,
+          "name": "k3s-prd-0.storage.home.kidibox.net",
+          "type": "A"
+        }
+      },
+      {
+        "dns_node1_srv_home_kidibox_net": {
+          "address": "10.0.10.11",
+          "disabled": false,
+          "name": "node1.srv.home.kidibox.net",
+          "type": "A"
+        }
+      },
+      {
+        "dns_sma-inverter_iot-local_home_kidibox_net": {
+          "address": "10.0.50.41",
+          "disabled": false,
+          "name": "sma-inverter.iot-local.home.kidibox.net",
+          "type": "A"
+        }
+      },
+      {
+        "dns_vulkan_lan_home_kidibox_net": {
+          "address": "10.0.100.20",
+          "disabled": false,
+          "name": "vulkan.lan.home.kidibox.net",
+          "type": "A"
+        }
+      },
+      {
+        "dns_vulkan_mgmt_home_kidibox_net": {
+          "address": "10.99.0.20",
+          "disabled": false,
+          "name": "vulkan.mgmt.home.kidibox.net",
+          "type": "A"
         }
       }
     ]
