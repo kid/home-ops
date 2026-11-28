@@ -56,7 +56,7 @@ let
   # `untyped.resource` for an untyped provider's configuration and resources
   # (see _providers.nix), added alongside the typed ones.
   extraBlocks =
-    { config, ... }:
+    { config, pkgs, ... }:
     let
       attrs = lib.types.attrsOf lib.types.anything;
     in
@@ -116,6 +116,14 @@ let
                 ) config.untyped.provider;
             }
           )
+        );
+        # Pretty-printed and key-sorted: what write-flake commits and what
+        # tofu runs on, so a diagnostic quotes its own line rather than the
+        # whole file.
+        finalPackage = lib.mkForce (
+          pkgs.runCommandLocal "main.tf.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
+            jq --sort-keys . ${pkgs.writeText "main.tf.raw.json" config.finalJson} > $out
+          ''
         );
       };
     };
@@ -221,11 +229,7 @@ let
   # Every stack, keyed by its app name: tofu-<key>.
   stacks = config.flake.tofuStacks or { } |> lib.mapAttrs' (key: lib.nameValuePair "tofu-${key}");
 
-  stackJson =
-    pkgs: module:
-    lib.foldr lib.warn (pkgs.runCommandLocal "main.tf.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
-      jq --sort-keys . ${module.config.finalPackage} > $out
-    '') module.config.warnings;
+  stackJson = module: lib.foldr lib.warn module.config.finalPackage module.config.warnings;
 in
 {
   flake-file.inputs.tofunix = {
@@ -300,7 +304,7 @@ in
                 _: module: ''
                   echo "==> Writing ${module.dir}/main.tf.json..."
                   mkdir -p "${module.dir}"
-                  install -m 644 "${stackJson pkgs module}" "${module.dir}/main.tf.json"
+                  install -m 644 "${stackJson module}" "${module.dir}/main.tf.json"
                 ''
               )
               |> lib.concatStrings
@@ -397,7 +401,7 @@ in
               stacks
               |> lib.mapAttrsToList (
                 _: module: ''
-                  if ! diff -q "${self}/${module.dir}/main.tf.json" "${stackJson pkgs module}"; then
+                  if ! diff -q "${self}/${module.dir}/main.tf.json" "${stackJson module}"; then
                     echo "${module.dir}/main.tf.json is stale — run: nix run .#write-flake" >&2
                     exit 1
                   fi
