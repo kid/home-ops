@@ -42,6 +42,7 @@ in
       {
         module.firewall = catalogModule {
           name = "ros-firewall";
+          version = "2.1.1";
           variables = [
             "input_rules"
             "mgmt_interface_list"

@@ -62,7 +62,6 @@
             10,
             20,
             40,
-            41,
             50,
             51,
             99,
@@ -76,7 +75,6 @@
             10,
             20,
             40,
-            41,
             50,
             51,
             99,
@@ -90,7 +88,6 @@
             10,
             20,
             40,
-            41,
             50,
             51,
             99,
@@ -100,10 +97,7 @@
         },
         "sfp-sfpplus3": {
           "comment": "node1",
-          "tagged": [
-            20
-          ],
-          "untagged": 41
+          "untagged": 10
         },
         "sfp-sfpplus4": {
           "comment": "spare",
@@ -111,7 +105,6 @@
             10,
             20,
             40,
-            41,
             50,
             51,
             99,
@@ -143,7 +136,7 @@
           ]
         }
       },
-      "source": "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/ros-base?ref=e90eda0241c748d5b0eb4d760fdebeda99539a32",
+      "source": "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/ros-base?ref=ros-base/v3.0.0",
       "vlans": {
         "Management": {
           "interface_lists": [

@@ -88,6 +88,7 @@ in
         module.base =
           catalogModule {
             name = "ros-base";
+            version = "3.0.0";
             variables = [
               "bridge_comment"
               "bridge_mtu"

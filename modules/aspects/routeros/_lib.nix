@@ -64,19 +64,19 @@
     op_vault = "home-ops";
   };
 
-  # A `module` block calling the private kid/terragrunt-infra-catalog module
-  # `name`, with the `inputs` among its declared `variables`: a module argument
-  # the module doesn't declare fails tofu, unlike a Terragrunt input. Pinned
-  # to the catalog commit that lets a root module call the modules
-  # (kid/terragrunt-infra-catalog#61).
+  # A `module` block calling release `version` of the private
+  # kid/terragrunt-infra-catalog module `name`, with the `inputs` among its
+  # declared `variables`: a module argument the module doesn't declare fails
+  # tofu, unlike a Terragrunt input.
   catalogModule =
     {
       name,
+      version,
       variables,
       inputs,
     }:
     {
-      source = "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/${name}?ref=e90eda0241c748d5b0eb4d760fdebeda99539a32";
+      source = "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/${name}?ref=${name}/v${version}";
     }
     // lib.getAttrs (lib.intersectLists variables (builtins.attrNames inputs)) inputs;
 }

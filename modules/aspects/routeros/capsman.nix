@@ -10,6 +10,7 @@ in
     {
       module.capsman = catalogModule {
         name = "ros-capsman";
+        version = "1.1.4";
         variables = [
           "bridge_name"
           "capsman_interfaces"

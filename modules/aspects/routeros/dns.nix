@@ -10,6 +10,7 @@ in
     {
       module.dns = catalogModule {
         name = "ros-dns";
+        version = "2.0.1";
         variables = [
           "dns_static_records"
           "dns_upstream_servers"

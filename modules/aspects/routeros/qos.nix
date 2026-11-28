@@ -10,6 +10,7 @@ in
     {
       module.qos = catalogModule {
         name = "ros-qos";
+        version = "2.0.1";
         variables = [
           "bridge_name"
           "limit_rx"

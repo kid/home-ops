@@ -68,6 +68,7 @@ in
           frag: peer:
           lib.nameValuePair "bgp-${frag.name}" (catalogModule {
             name = "ros-bgp";
+            version = "2.0.1";
             variables = [
               "bgp_hold_time"
               "bgp_keepalive_time"

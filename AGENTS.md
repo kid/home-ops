@@ -127,7 +127,7 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 - `modules/flake/formatter.nix`, `git-hooks.nix`, `devshell.nix`, `charts.nix`, `colmena.nix`, `images.nix`, `integration-tests.nix`, `nixos-checks.nix`, `sops-config.nix`.
 - `modules/den/batteries/tofu/`: the `tofu` class, tofunix and its provider pins (`_providers.nix`, rehashed by `rehash-changed-pins`); defines the `tofu-<key>` apps, `checks.tofu` and the flake-file write hook that makes `write-flake` write each `main.tf.json` (x86_64-linux only: tofunix builds provider schemas at eval time). Inspect an evaluated stack at `tofuStacks.<key>.config.final` (the root module) or `.config.resource.<type>.<name>`, `<key>` being its dir under `tf-stacks/`, dashed (`prd-k3s`, `routeros-rb5009`, `cloudflare`).
 - `modules/den/schema/tofuStacks.nix` and `modules/fleet/stacks/*.nix`: named stacks (`den.tofuStacks.<name>`), for resources no cluster or device owns. A stack's `tofu` content comes from `den.aspects.<name>` and its includes.
-- `modules/aspects/routeros/_lib.nix`: `catalogModule`, the `module` block calling a private `kid/terragrunt-infra-catalog` module (pinned by commit), passing only the inputs it declares.
+- `modules/aspects/routeros/_lib.nix`: `catalogModule`, the `module` block calling a release (`<name>/v<version>` tag) of a private `kid/terragrunt-infra-catalog` module, passing only the inputs it declares.
 - `.renovaterc.json5` and `.renovate/org-inherited-config.json5`: automerge rules, groups, and `postUpgradeTasks`. Renovate runs in-cluster from `modules/aspects/kubernetes/renovate`.
 - `secretspec.toml`: credentials pulled from 1Password (`CLOUDFLARE_API_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`, MCP tokens).
 - `charts/README.md`: workflow for chart pins.
