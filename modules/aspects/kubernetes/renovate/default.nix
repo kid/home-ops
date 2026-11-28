@@ -57,12 +57,11 @@ in
           inheritConfigStrict = true;
           # Adopts the hosted App's PRs (gitIgnoredAuthors is the inherited half).
           ignorePrAuthor = true;
-          # Minutes per postUpgradeTasks command: write-manifests starts from a cold store.
+          # Minutes per postUpgradeTasks command: write-flake builds manifests/ from a cold store.
           executionTimeout = 30;
           allowedCommands = [
             "^refresh-nix-hash [\\w./-]+ [\\w./-]+ [\\w.-]+$"
             "^nix run \\.#rehash-changed-pins$"
-            "^nix run \\.#write-manifests -- --skip-secrets$"
             "^nix run \\.#write-flake$"
             "^nix flake lock$"
           ];

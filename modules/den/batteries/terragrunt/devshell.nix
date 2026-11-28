@@ -1,10 +1,8 @@
 # Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt/terragrunt-stacks.nix) to
 # tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl and
 # (fleet stacks, which no environment owns) tf-stacks/<stack>/terragrunt.hcl,
-# exposed as
-# `nix run .#write-terragrunt` (mirrors write-manifests/write-terraform
-# elsewhere in the dendritic ecosystem) + `checks.terragrunt`
-# (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
+# written by a flake-file write hook (`nix run .#write-flake`) +
+# `checks.terragrunt` (diffs generated vs. committed).
 {
   config,
   lib,
@@ -114,40 +112,46 @@ let
           renderLeaf stack leaf;
     }) (config.flake.terragruntStacks.fleet or { }))
   ];
+
+  # treefmt's hclfmt formatter (modules/flake/devshell.nix) covers *.hcl
+  # repo-wide, so the committed leaves must already be hclfmt-clean —
+  # format at render time so the write hook's output and checks.terragrunt's
+  # comparison target agree with treefmt.
+  formattedLeaf =
+    pkgs: leaf:
+    pkgs.runCommandLocal "terragrunt-leaf" { nativeBuildInputs = [ pkgs.hclfmt ]; } ''
+      hclfmt ${pkgs.writeText "terragrunt-leaf-raw" leaf.content} > $out
+    '';
 in
 {
+  # `nix run .#write-flake` writes every leaf. Copies each leaf's formatted
+  # derivation into place (rather than a heredoc) so the written byte content
+  # matches checks.terragrunt's own comparison target exactly.
+  flake-file.write-hooks = [
+    {
+      index = 120;
+      program =
+        pkgs:
+        pkgs.writeShellApplication {
+          name = "write-terragrunt";
+          text = lib.concatMapStrings (leaf: ''
+            echo "==> Writing ${leaf.path}..."
+            mkdir -p "$(dirname "${leaf.path}")"
+            install -m 644 "${formattedLeaf pkgs leaf}" "${leaf.path}"
+          '') leaves;
+        };
+    }
+  ];
+
   perSystem =
     { pkgs, ... }:
-    let
-      # treefmt's hclfmt formatter (modules/flake/devshell.nix) covers *.hcl
-      # repo-wide, so the committed leaves must already be hclfmt-clean —
-      # format at render time so write-terragrunt's output and
-      # checks.terragrunt's comparison target agree with treefmt.
-      formattedLeaf =
-        leaf:
-        pkgs.runCommandLocal "terragrunt-leaf" { nativeBuildInputs = [ pkgs.hclfmt ]; } ''
-          hclfmt ${pkgs.writeText "terragrunt-leaf-raw" leaf.content} > $out
-        '';
-    in
     {
-      packages.write-terragrunt = pkgs.writeShellApplication {
-        name = "write-terragrunt";
-        # Copies each leaf's formatted derivation into place (rather than
-        # a heredoc) so the written byte content matches
-        # checks.terragrunt's own comparison target exactly.
-        text = lib.concatMapStrings (leaf: ''
-          echo "==> Writing ${leaf.path}..."
-          mkdir -p "$(dirname "${leaf.path}")"
-          install -m 644 "${formattedLeaf leaf}" "${leaf.path}"
-        '') leaves;
-      };
-
       checks.terragrunt =
         pkgs.runCommandLocal "terragrunt-check" { nativeBuildInputs = [ pkgs.diffutils ]; }
           (
             lib.concatMapStrings (leaf: ''
-              if ! diff -q "${self}/${leaf.path}" "${formattedLeaf leaf}"; then
-                echo "${leaf.path} is stale — run: nix run .#write-terragrunt" >&2
+              if ! diff -q "${self}/${leaf.path}" "${formattedLeaf pkgs leaf}"; then
+                echo "${leaf.path} is stale — run: nix run .#write-flake" >&2
                 exit 1
               fi
             '') leaves

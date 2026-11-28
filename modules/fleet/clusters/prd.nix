@@ -9,7 +9,7 @@
 # K3s reuses vlanId 40, previously named "Talos" and backing the legacy
 # Talos+Flux cluster (clusters/dev/, out of scope here) that this cluster
 # replaces. Renaming it is real, live RouterOS infrastructure — see
-# tf-stacks/prd/network/rb5009/**/terragrunt.hcl after `write-terragrunt`
+# tf-stacks/prd/network/rb5009/**/terragrunt.hcl after `write-flake`
 # regen; requires a human-reviewed terragrunt plan before apply.
 {
   den,

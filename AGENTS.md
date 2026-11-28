@@ -16,11 +16,12 @@ Merging to `main` is a production deploy. Direct pushes to `main` are rejected, 
 ```mermaid
 flowchart LR
   M[modules/**/*.nix<br/>den aspects] --> N[nixosConfigurations] --> C[colmena apply] --> H[hosts]
-  M --> X[nixidy env prd] --> W[nix run .#write-manifests] --> MP[manifests/prd/] --> F[Flux on main] --> K[k3s]
-  M --> T[nix run .#write-terragrunt] --> TS[tf-stacks/prd/network/**] --> J[just plan/apply] --> R[RouterOS / Cloudflare]
-  M --> TF[nix run .#write-flake] --> TJ[tf-stacks/prd/k3s/main.tf.json] --> JT[just tofu prd-k3s plan/apply] --> CR[Cloudflare / 1Password / GitHub]
-  M --> S[nix run .#write-sops-config] --> SY[.sops.yaml]
-  M --> FF[nix run .#write-flake] --> FN[flake.nix]
+  M --> X[nixidy env prd] --> W[nix run .#write-flake] --> MP[manifests/prd/] --> F[Flux on main] --> K[k3s]
+  M --> W
+  W --> TS[tf-stacks/prd/network/**] --> J[just plan/apply] --> R[RouterOS / Cloudflare]
+  W --> TJ[tf-stacks/prd/k3s/main.tf.json] --> JT[just tofu prd-k3s plan/apply] --> CR[Cloudflare / 1Password / GitHub]
+  W --> SY[.sops.yaml]
+  W --> FN[flake.nix]
 ```
 
 - **Entry point.** `flake.nix` calls `flake-parts.lib.mkFlake` with `import-tree ./modules`, so every `.nix` file under `modules/` is a module. Files whose names start with `_` (e.g. `_ros-lib.nix`) are helpers that other files import; they are not loaded as modules.
@@ -39,7 +40,7 @@ flowchart LR
 
 | Path | Purpose |
 |---|---|
-| `modules/flake/` | Flake outputs: devshell, formatter, checks, charts loader, `write-*` and `provision-*` apps, colmena, images, integration-test wiring |
+| `modules/flake/` | Flake outputs: devshell, formatter, checks, charts loader, flake-file write hooks, `provision-*` apps, colmena, images, integration-test wiring |
 | `modules/den/` | den schema, policies, quirks, and the `batteries/` for kubernetes (nixidy), terragrunt and tofu |
 | `modules/inventory/` | Plain data: `networks`, `devices`, `environments`, `accessGroups`, `routerosGroups` |
 | `modules/fleet/hosts/<host>.nix` | One file per host (a folder when it has helpers, e.g. `vulkan/`). `node1.nix` is the minimal server example; `test-vm.nix` is a local VM |
@@ -73,10 +74,7 @@ nix build -L .#checks.x86_64-linux.<name>    # manifests | sops-config | terragr
 nix fmt                                      # treefmt; also runs as a pre-commit hook
 
 # Regenerate committed outputs (always after changing their Nix sources)
-nix run .#write-manifests                    # add `-- --skip-secrets` to skip SOPS decryption
-nix run .#write-terragrunt
-nix run .#write-sops-config
-nix run .#write-flake && nix flake lock      # after changing flake-file.inputs.*; write-flake also writes tf-stacks/*/k3s/main.tf.json
+nix run .#write-flake && nix flake lock      # flake.nix, manifests/, tf-stacks/** (terragrunt.hcl, main.tf.json), .sops.yaml (flake-file write hooks)
 
 # Charts
 helmupdater update "<org>/<chart>"           # or: init | update-all | rehash
@@ -96,7 +94,7 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 
 ## Code Conventions & Common Patterns
 
-- **Never hand-edit generated files.** These are `flake.nix`, `manifests/**`, `tf-stacks/**/terragrunt.hcl`, `tf-stacks/*/k3s/main.tf.json`, `.sops.yaml` and `.pre-commit-config.yaml`. Edit the Nix source, run the matching `write-*`, and commit the source change together with its regenerated output. A check fails if they drift.
+- **Never hand-edit generated files.** These are `flake.nix`, `manifests/**`, `tf-stacks/**/terragrunt.hcl`, `tf-stacks/*/k3s/main.tf.json`, `.sops.yaml` and `.pre-commit-config.yaml`. Edit the Nix source, run `nix run .#write-flake` (flake-file write hooks regenerate every one of them), and commit the source change together with its regenerated output. A check fails if they drift.
 - **Flake inputs** are declared next to the module that uses them, as `flake-file.inputs.<name>` (e.g. `modules/aspects/system/disk/zfs.nix`). Core inputs are in `modules/flake/inputs.nix`.
 - **Module shape.** A module that takes no arguments is written `_: { ... }`. Start each file with a comment explaining why the module exists. Use `lib.`-qualified calls, and `let` bindings for local constants such as pinned tags.
 - **Pipe operator.** Write every data pipeline of two or more stages with `|>`: `x |> f |> g a`, never `g a (f x)`. Single applications, `lib.types.*`, and `mkIf`/`optionals`-style wrappers stay plain calls.
@@ -111,7 +109,7 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 - **New Kubernetes app.**
     1. Create `modules/aspects/kubernetes/<app>/default.nix` defining `den.aspects.kubernetes.<app>.k8s-manifests = { charts, cluster, images, ... }: { applications.<app> = { namespace; helm.releases.<r> = { chart = charts.<org>.<chart>; values; }; resources.*; }; }`. `modules/aspects/kubernetes/coredns/default.nix` is a good model.
     2. Add the app to `den.aspects.prd.includes` in `modules/fleet/clusters/prd.nix`.
-    3. Run `write-manifests`.
+    3. Run `write-flake`.
 - **Cluster helpers** are available as `cluster.methods.*`: `netpol` (`mkPolicy`, `tcpUdp`, `scrapeIngress`, `apiserverEgress`), `mkAppHostname`, `mkGeneratedSecret`, `mkKopiurBackup`, `mkOidcAuth` and `mkMediaApp`. Add new ones as `den.clusterMethods.<name> = cluster: ...`.
     - Every app ships its own `ciliumNetworkPolicies`.
 - **Persistence.** Root is rolled back to `zroot/local/root@empty` on every boot. To keep state, declare `den.aspects.<x>.persist.{files,directories}` (or `cache.*`); it is collected into `/persist` or `/cache`. Extra ZFS datasets go through the `datasets` quirk.
@@ -127,9 +125,9 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
 ## Important Files
 
 - `flake.nix` (generated) and `modules/flake/core.nix`, which imports den and flake-file and sets the systems: `x86_64-linux` for every NixOS host, `aarch64-darwin` for the work Mac.
-- `modules/flake/files.nix`: `write-manifests` and `checks.manifests`. It also merges `secrets/clusters/<cluster>/<ns>/<name>.sops.json` into `SopsSecret-*.yaml`.
+- `modules/flake/files.nix`: the `write-flake` hook syncing `manifests/`, and `checks.manifests`.
 - `modules/flake/formatter.nix`, `git-hooks.nix`, `devshell.nix`, `charts.nix`, `colmena.nix`, `images.nix`, `integration-tests.nix`, `nixos-checks.nix`, `sops-config.nix`.
-- `modules/den/batteries/terragrunt/{terragrunt-stacks,devshell}.nix`: renders the RouterOS and fleet Terragrunt stacks and defines `checks.terragrunt`. `write-terragrunt` does **not** delete stale leaves, so remove orphaned stack directories by hand.
+- `modules/den/batteries/terragrunt/{terragrunt-stacks,devshell}.nix`: renders the RouterOS and fleet Terragrunt stacks and defines `checks.terragrunt`. `write-flake` does **not** delete stale leaves, so remove orphaned stack directories by hand.
 - `modules/den/batteries/tofu/`: the `tofu` class, tofunix and its provider pins (`_providers.nix`, rehashed by `rehash-changed-pins`); defines the `tofu-<env>-k3s` apps, `checks.tofu` and the flake-file write hook that makes `write-flake` write each `main.tf.json` (x86_64-linux only: tofunix builds provider schemas at eval time). Inspect a cluster's evaluated stack at `tofuStacks.<cluster>.config.final` (the root module) or `.config.resource.<type>.<name>`.
 - `.renovaterc.json5` and `.renovate/org-inherited-config.json5`: automerge rules, groups, and `postUpgradeTasks`. Renovate runs in-cluster from `modules/aspects/kubernetes/renovate`.
 - `secretspec.toml`: credentials pulled from 1Password (`CLOUDFLARE_API_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`, MCP tokens).
@@ -165,4 +163,4 @@ To provision a new host, use `nix run .#provision-host-key` and the nixos-anywhe
     3. Take each node's module from `config.den.hosts.x86_64-linux.<name>.mainModule`.
     4. Generate any secrets with a throwaway age key at build time. Never commit keys.
     5. Register the file with `// import ../../tests/integration/<topic>.nix args` in `modules/flake/integration-tests.nix`.
-- **Minimum before a PR:** `nix flake check`. It fails on unformatted code and on every stale generated file; fix those with `nix fmt` or the `write-*` named in the error. Also run the relevant integration test when changing host or k3s modules.
+- **Minimum before a PR:** `nix flake check`. It fails on unformatted code and on every stale generated file; fix those with `nix fmt` or `nix run .#write-flake`. Also run the relevant integration test when changing host or k3s modules.

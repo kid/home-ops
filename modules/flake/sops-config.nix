@@ -96,27 +96,36 @@ let
       ];
     stores.yaml.indent = 2;
   };
+
+  renderedSopsYaml = pkgs: (pkgs.formats.yaml { }).generate "sops-config.yaml" sopsConfig;
 in
 {
+  # `nix run .#write-flake` writes .sops.yaml, ahead of every other generated
+  # file (index 101: user hooks start above 100), so a hook that encrypts with
+  # its recipients sees the current ones.
+  flake-file.write-hooks = [
+    {
+      index = 101;
+      program =
+        pkgs:
+        pkgs.writeShellApplication {
+          name = "write-sops-config";
+          text = ''
+            install -m 644 "${renderedSopsYaml pkgs}" .sops.yaml
+            echo "==> Wrote .sops.yaml"
+          '';
+        };
+    }
+  ];
+
   perSystem =
     { pkgs, ... }:
-    let
-      renderedSopsYaml = (pkgs.formats.yaml { }).generate "sops-config.yaml" sopsConfig;
-    in
     {
-      packages.write-sops-config = pkgs.writeShellApplication {
-        name = "write-sops-config";
-        text = ''
-          install -m 644 "${renderedSopsYaml}" .sops.yaml
-          echo "==> Wrote .sops.yaml"
-        '';
-      };
-
       checks.sops-config =
         pkgs.runCommandLocal "sops-config-check" { nativeBuildInputs = [ pkgs.diffutils ]; }
           ''
-            if ! diff -q "${self}/.sops.yaml" "${renderedSopsYaml}"; then
-              echo ".sops.yaml is stale — run: nix run .#write-sops-config" >&2
+            if ! diff -q "${self}/.sops.yaml" "${renderedSopsYaml pkgs}"; then
+              echo ".sops.yaml is stale — run: nix run .#write-flake" >&2
               exit 1
             fi
             touch $out

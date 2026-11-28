@@ -2,9 +2,9 @@
 # (rehash-chart), the `# renovate: datasource=github-releases` fetchFromGitHub
 # pins (refresh-nix-hash) and the `datasource=terraform-provider` tofu provider
 # pins (rehash-tofu-provider) of every changed .nix file. .renovaterc.json5 runs it
-# before each write-manifests: Renovate applies a grouped branch's bumps all at
+# before each write-flake: Renovate applies a grouped branch's bumps all at
 # once, then runs each one's postUpgradeTasks in turn, so a per-pin rehash left
-# the later pins' hashes stale when the first write-manifests evaluated them.
+# the later pins' hashes stale when the first write-flake evaluated them.
 #
 #   nix run .#rehash-changed-pins
 _: {

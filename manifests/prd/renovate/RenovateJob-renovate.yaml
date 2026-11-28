@@ -20,7 +20,7 @@ spec:
     name: github
   renovateConfig:
     fileName: config.json
-    inline: '{"allowedCommands":["^refresh-nix-hash [\\w./-]+ [\\w./-]+ [\\w.-]+$","^nix run \\.#rehash-changed-pins$","^nix run \\.#write-manifests -- --skip-secrets$","^nix run \\.#write-flake$","^nix flake lock$"],"binarySource":"global","customEnvVariables":{"GIT_SSL_CAINFO":"/etc/ssl/certs/ca-bundle.crt","NIX_SSL_CERT_FILE":"/etc/ssl/certs/ca-bundle.crt","SSL_CERT_FILE":"/etc/ssl/certs/ca-bundle.crt","USER":"renovate"},"executionTimeout":30,"ignorePrAuthor":true,"inheritConfig":true,"inheritConfigFileName":".renovate/org-inherited-config.json5","inheritConfigRepoName":"kid/home-ops","inheritConfigStrict":true}'
+    inline: '{"allowedCommands":["^refresh-nix-hash [\\w./-]+ [\\w./-]+ [\\w.-]+$","^nix run \\.#rehash-changed-pins$","^nix run \\.#write-flake$","^nix flake lock$"],"binarySource":"global","customEnvVariables":{"GIT_SSL_CAINFO":"/etc/ssl/certs/ca-bundle.crt","NIX_SSL_CERT_FILE":"/etc/ssl/certs/ca-bundle.crt","SSL_CERT_FILE":"/etc/ssl/certs/ca-bundle.crt","USER":"renovate"},"executionTimeout":30,"ignorePrAuthor":true,"inheritConfig":true,"inheritConfigFileName":".renovate/org-inherited-config.json5","inheritConfigRepoName":"kid/home-ops","inheritConfigStrict":true}'
   resources:
     limits:
       memory: 8Gi
