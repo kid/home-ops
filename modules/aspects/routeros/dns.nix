@@ -32,22 +32,5 @@ in
           // lib.optionalAttrs (record ? comment) { inherit (record) comment; }
         )
       ) inputs.dns_static_records;
-
-      # From the catalog's ros-dns module, which the stack called until
-      # these were ported. Drop once applied.
-      moved = [
-        {
-          from = "module.dns.routeros_ip_dns.server";
-          to = "routeros_ip_dns.dns";
-        }
-      ]
-      ++ (
-        inputs.dns_static_records
-        |> lib.attrNames
-        |> map (name: {
-          from = ''module.dns.routeros_ip_dns_record.static["${name}"]'';
-          to = "routeros_ip_dns_record.${recordName name}";
-        })
-      );
     };
 }

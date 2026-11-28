@@ -1,7 +1,7 @@
 # Queues on a RouterOS device: CAKE on the bridge (download) and the WAN
 # interface (upload), from the device's routerosInputs.qos (see
 # modules/fleet/routeros/rb5009.nix).
-{ lib, ... }:
+_:
 let
   # Shared by both directions' CAKE queue types.
   cake = {
@@ -47,21 +47,5 @@ in
           packet_mark = [ "no-mark" ];
         };
       };
-
-      # From the catalog's ros-qos module, which the stack called until
-      # these were ported. Drop once applied.
-      moved =
-        {
-          "routeros_queue_type.cake_rx" = "routeros_queue_type.qos_cake_rx";
-          "routeros_queue_type.cake_tx" = "routeros_queue_type.qos_cake_tx";
-          "routeros_queue_tree.rx" = "routeros_queue_tree.qos_rx";
-          "routeros_queue_tree.tx" = "routeros_queue_tree.qos_tx";
-        }
-        |> lib.mapAttrsToList (
-          from: to: {
-            from = "module.qos.${from}";
-            inherit to;
-          }
-        );
     };
 }
