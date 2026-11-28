@@ -382,6 +382,10 @@ in
                 AWS_ACCESS_KEY_ID=$(sops --decrypt --extract '["r2_access_key"]' "$secrets")
                 AWS_SECRET_ACCESS_KEY=$(sops --decrypt --extract '["r2_secret_key"]' "$secrets")
                 export AWS_ENDPOINT_URL_S3 AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+                # terraform-routeros warns once per field RouterOS returns that its
+                # schema lacks ("Field '…' not found in the schema"), on every
+                # resource read: one summary line each instead of a full block.
+                export TF_CLI_ARGS_plan="-compact-warnings" TF_CLI_ARGS_apply="-compact-warnings"
                 # tofunix runs tofu in a temporary copy, keeping .terraform here.
                 cd "$root/${module.dir}"
                 exec ${
