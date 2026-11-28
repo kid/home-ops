@@ -51,14 +51,19 @@ let
   };
 
   # Blocks tofunix has no options for, passed through to main.tf.json as
-  # written: `module` (e.g. a catalog module a stack still calls), and
-  # `moved`/`import` (state moves and adoptions).
+  # written: `module` (e.g. a catalog module a stack still calls),
+  # `moved`/`import` (state moves and adoptions), and `untyped.provider`/
+  # `untyped.resource` for an untyped provider's configuration and resources
+  # (see _providers.nix), added alongside the typed ones.
   extraBlocks =
     { config, ... }:
+    let
+      attrs = lib.types.attrsOf lib.types.anything;
+    in
     {
       options = {
         module = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
+          type = lib.types.attrsOf attrs;
           default = { };
         };
         moved = lib.mkOption {
@@ -66,8 +71,20 @@ let
           default = [ ];
         };
         import = lib.mkOption {
-          type = lib.types.listOf (lib.types.attrsOf lib.types.anything);
+          type = lib.types.listOf attrs;
           default = [ ];
+        };
+        untyped = {
+          provider = lib.mkOption {
+            type = lib.types.attrsOf (lib.types.attrsOf attrs);
+            default = { };
+            description = "Provider local name -> alias (`default` for none) -> its configuration, as tofunix's typed `provider`";
+          };
+          resource = lib.mkOption {
+            type = lib.types.attrsOf (lib.types.attrsOf attrs);
+            default = { };
+            description = "Resource type -> name -> arguments, `provider` included";
+          };
         };
         # den's collision validators report through `warnings`.
         warnings = lib.mkOption {
@@ -75,8 +92,31 @@ let
           default = [ ];
         };
       };
-      config.final = lib.filterAttrs (_: v: v != { } && v != [ ]) {
-        inherit (config) module moved import;
+      config = {
+        final = lib.filterAttrs (_: v: v != { } && v != [ ]) {
+          inherit (config) module moved import;
+        };
+        # tofunix renders `final` from the typed options alone, its
+        # `resource` and `provider` as lists of blocks per type/name.
+        finalJson = lib.mkForce (
+          builtins.toJSON (
+            config.final
+            // lib.optionalAttrs (config.untyped.resource != { }) {
+              resource = lib.zipAttrsWith (_: lib.concatLists) [
+                (config.final.resource or { })
+                (lib.mapAttrs (_: lib.mapAttrsToList (name: body: { ${name} = body; })) config.untyped.resource)
+              ];
+            }
+            // lib.optionalAttrs (config.untyped.provider != { }) {
+              provider =
+                (config.final.provider or { })
+                // lib.mapAttrs (
+                  _:
+                  lib.mapAttrsToList (alias: body: body // lib.optionalAttrs (alias != "default") { inherit alias; })
+                ) config.untyped.provider;
+            }
+          )
+        );
       };
     };
 

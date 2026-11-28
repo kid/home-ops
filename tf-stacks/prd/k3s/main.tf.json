@@ -29,6 +29,12 @@
     ],
     "onepassword_item": [
       {
+        "cilium_bgp_rb5009": {
+          "title": "RB5009 - user - kid",
+          "vault": "home-ops"
+        }
+      },
+      {
         "frigate_camera_doorbell": {
           "title": "reolink-doorbell",
           "vault": "${data.onepassword_vault.home_ops.uuid}"
@@ -77,6 +83,15 @@
         "insecure": true,
         "password": "${data.onepassword_item.routeros_admin.password}",
         "username": "${data.onepassword_item.routeros_admin.username}"
+      }
+    ],
+    "routeros-ebogdum": [
+      {
+        "alias": "rb5009",
+        "host": "${data.onepassword_item.cilium_bgp_rb5009.url}",
+        "insecure": true,
+        "password": "${data.onepassword_item.cilium_bgp_rb5009.password}",
+        "username": "${data.onepassword_item.cilium_bgp_rb5009.username}"
       }
     ]
   },
@@ -924,6 +939,47 @@
         }
       }
     ],
+    "routeros_routing_bgp_connection": [
+      {
+        "cilium_bgp_rb5009_k3s-prd-0": {
+          "afi": "ip",
+          "as": 64512,
+          "connect": "true",
+          "instance": "${routeros_routing_bgp_instance.cilium_bgp_rb5009.name}",
+          "listen": "true",
+          "local_role": "ebgp",
+          "name": "prd-k3s-prd-0",
+          "provider": "routeros-ebogdum.rb5009",
+          "remote_address": "10.0.40.40",
+          "remote_as": 64513,
+          "routing_table": "main",
+          "templates": "${routeros_routing_bgp_template.cilium_bgp_rb5009.name}"
+        }
+      }
+    ],
+    "routeros_routing_bgp_instance": [
+      {
+        "cilium_bgp_rb5009": {
+          "as": 64512,
+          "name": "prd-bgp",
+          "provider": "routeros-ebogdum.rb5009",
+          "router_id": "10.0.40.1",
+          "vrf": "main"
+        }
+      }
+    ],
+    "routeros_routing_bgp_template": [
+      {
+        "cilium_bgp_rb5009": {
+          "as": 64512,
+          "hold_time": "1m30s",
+          "keepalive_time": "30s",
+          "name": "prd-peers",
+          "provider": "routeros-ebogdum.rb5009",
+          "routing_table": "main"
+        }
+      }
+    ],
     "routeros_system_user": [
       {
         "external_dns": {
@@ -983,6 +1039,10 @@
       "routeros": {
         "source": "terraform-routeros/routeros",
         "version": "1.99.1"
+      },
+      "routeros-ebogdum": {
+        "source": "registry.terraform.io/ebogdum/routeros",
+        "version": "4.0.1"
       }
     }
   }

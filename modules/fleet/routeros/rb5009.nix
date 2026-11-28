@@ -1,4 +1,4 @@
-# rb5009's RouterOS stack inputs (base/bgp/capsman/dns/firewall/qos/wireguard),
+# rb5009's RouterOS stack inputs (base/capsman/dns/firewall/qos/wireguard),
 # read by the shared modules/aspects/routeros/* aspects that make up its tofu
 # stack (tf-stacks/routeros/rb5009).
 {
@@ -57,7 +57,6 @@ in
   den.aspects.rb5009 = {
     includes = [
       den.aspects.routeros.base
-      den.aspects.routeros.bgp
       den.aspects.routeros.capsman
       den.aspects.routeros.dns
       den.aspects.routeros.firewall
@@ -298,14 +297,6 @@ in
               };
             };
           };
-      };
-
-      # No cidr arithmetic needed — all real values (ASNs, router ID, node
-      # addresses) come from the `bgp`/`k3s-nodes` quirks collected in
-      # modules/aspects/routeros/bgp.nix, not from anything precomputed
-      # here.
-      bgp = {
-        inputs = sharedInputs // commonInputs;
       };
     };
   };
