@@ -685,18 +685,25 @@
         ]
       },
       "wan_interface_list": "WAN"
-    },
-    "qos": {
-      "bridge_name": "bridge1",
-      "limit_rx": "900M",
-      "limit_tx": "18M",
-      "op_item_routeros": "RB5009 - user - kid",
-      "op_vault": "home-ops",
-      "source": "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/ros-qos?ref=ros-qos/v2.0.1",
-      "wan_interface": "ether8"
     }
   },
   "moved": [
+    {
+      "from": "module.qos.routeros_queue_tree.rx",
+      "to": "routeros_queue_tree.qos_rx"
+    },
+    {
+      "from": "module.qos.routeros_queue_tree.tx",
+      "to": "routeros_queue_tree.qos_tx"
+    },
+    {
+      "from": "module.qos.routeros_queue_type.cake_rx",
+      "to": "routeros_queue_type.qos_cake_rx"
+    },
+    {
+      "from": "module.qos.routeros_queue_type.cake_tx",
+      "to": "routeros_queue_type.qos_cake_tx"
+    },
     {
       "from": "module.dns.routeros_ip_dns.server",
       "to": "routeros_ip_dns.dns"
@@ -872,6 +879,57 @@
           "disabled": false,
           "name": "vulkan.mgmt.home.kidibox.net",
           "type": "A"
+        }
+      }
+    ],
+    "routeros_queue_tree": [
+      {
+        "qos_rx": {
+          "max_limit": "900M",
+          "name": "default-rx",
+          "packet_mark": [
+            "no-mark"
+          ],
+          "parent": "bridge1",
+          "queue": "${routeros_queue_type.qos_cake_rx.name}"
+        }
+      },
+      {
+        "qos_tx": {
+          "max_limit": "18M",
+          "name": "default-tx",
+          "packet_mark": [
+            "no-mark"
+          ],
+          "parent": "ether8",
+          "queue": "${routeros_queue_type.qos_cake_tx.name}"
+        }
+      }
+    ],
+    "routeros_queue_type": [
+      {
+        "qos_cake_rx": {
+          "cake_diffserv": "diffserv4",
+          "cake_flowmode": "triple-isolate",
+          "cake_mpu": 88,
+          "cake_nat": true,
+          "cake_overhead": 18,
+          "cake_rtt_scheme": "regional",
+          "kind": "cake",
+          "name": "cake-rx"
+        }
+      },
+      {
+        "qos_cake_tx": {
+          "cake_ack_filter": "filter",
+          "cake_diffserv": "diffserv4",
+          "cake_flowmode": "triple-isolate",
+          "cake_mpu": 88,
+          "cake_nat": true,
+          "cake_overhead": 18,
+          "cake_rtt_scheme": "regional",
+          "kind": "cake",
+          "name": "cake-tx"
         }
       }
     ]
