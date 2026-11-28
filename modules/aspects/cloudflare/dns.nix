@@ -35,15 +35,5 @@ in
         ttl = 300;
       }
     ) records;
-
-    # The stack keeps the Terragrunt unit's state (home-ops/cloudflare), whose
-    # cloudflare-dns module keyed the records by name. Drop once applied.
-    moved =
-      records
-      |> lib.attrNames
-      |> map (name: {
-        from = ''cloudflare_dns_record.this["${name}"]'';
-        to = "cloudflare_dns_record.${resourceName name}";
-      });
   };
 }

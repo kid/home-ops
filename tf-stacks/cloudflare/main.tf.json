@@ -1,14 +1,4 @@
 {
-  "moved": [
-    {
-      "from": "cloudflare_dns_record.this[\"home.kidibox.net\"]",
-      "to": "cloudflare_dns_record.home_kidibox_net"
-    },
-    {
-      "from": "cloudflare_dns_record.this[\"vpn.home.kidibox.net\"]",
-      "to": "cloudflare_dns_record.vpn_home_kidibox_net"
-    }
-  ],
   "resource": {
     "cloudflare_dns_record": [
       {
