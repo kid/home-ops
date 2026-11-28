@@ -44,7 +44,7 @@
       # chart. A plain tag: the custom datasource has no digests, and a stale
       # digest next to a new tag would keep running the old image.
       # renovate: datasource=custom.kaniop-kanidm depName=docker.io/kanidm/server
-      serverTag = "1.12.1";
+      serverTag = "1.12.2";
       tlsSecretName = "${ref.name}-tls";
       serviceHostname = "${ref.name}.${namespace}.svc.cluster.local";
       # kaniop names the StatefulSet <Kanidm>-<replica group> and its
