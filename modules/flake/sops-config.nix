@@ -100,10 +100,12 @@ let
   renderedSopsYaml = pkgs: (pkgs.formats.yaml { }).generate "sops-config.yaml" sopsConfig;
 in
 {
-  # `nix run .#write-flake` writes .sops.yaml.
+  # `nix run .#write-flake` writes .sops.yaml, ahead of every other generated
+  # file (index 101: user hooks start above 100), so a hook that encrypts with
+  # its recipients sees the current ones.
   flake-file.write-hooks = [
     {
-      index = 130;
+      index = 101;
       program =
         pkgs:
         pkgs.writeShellApplication {
