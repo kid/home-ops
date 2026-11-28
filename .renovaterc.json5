@@ -183,19 +183,21 @@
       },
     },
     {
-      // Every other pin in Nix: rehash it, then regenerate manifests/ so the
-      // PR passes checks.manifests. rehash-changed-pins rehashes every bumped
-      // pin, not just this update's: Renovate applies a group's bumps at once,
-      // so a sibling's stale hash would fail this update's write-manifests.
-      // Replaces the inherited refresh-nix-hash, which only knows its own pin.
+      // Every other pin in Nix: rehash it, then regenerate manifests/ and the
+      // tofu stacks so the PR passes checks.manifests and checks.tofu.
+      // rehash-changed-pins rehashes every bumped pin, not just this
+      // update's: Renovate applies a group's bumps at once, so a sibling's
+      // stale hash would fail this update's write-manifests. Replaces the
+      // inherited refresh-nix-hash, which only knows its own pin.
       matchManagers: ["custom.regex"],
-      matchDatasources: ["docker", "helm", "github-releases", "custom.kaniop-kanidm"],
+      matchDatasources: ["docker", "helm", "github-releases", "custom.kaniop-kanidm", "terraform-provider"],
       postUpgradeTasks: {
         commands: [
           "nix run .#rehash-changed-pins",
           "nix run .#write-manifests -- --skip-secrets",
+          "nix run .#write-flake",
         ],
-        fileFilters: ["**/*.nix", "manifests/**"],
+        fileFilters: ["**/*.nix", "manifests/**", "tf-stacks/*/k3s/main.tf.json"],
         executionMode: "update",
       },
     },

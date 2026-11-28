@@ -141,10 +141,10 @@
               description = "k3s datastore. etcd: embedded etcd (clusterInit), so more servers can join. sqlite: k3s's default SQLite on its only server, with no etcd ports or etcd metrics; the cluster can never have a second server.";
             };
 
-            terragrunt.enable = lib.mkOption {
+            tofu.enable = lib.mkOption {
               type = lib.types.bool;
               default = true;
-              description = "Render this cluster's own terragrunt stacks (tf-stacks/<env>/k3s/<stack>, modules/den/batteries/terragrunt). Off for a cluster that reuses another one's cloud resources and 1Password items: the stack paths have no cluster segment, so two clusters of one environment can't both render the same stack.";
+              description = "Render this cluster's own tofu stack (tf-stacks/<env>/k3s/main.tf.json, modules/den/batteries/tofu). Off for a cluster that reuses another one's cloud resources and 1Password items: the stack path has no cluster segment, so two clusters of one environment can't both render it.";
             };
 
             egressGateways = lib.mkOption {
@@ -179,7 +179,7 @@
               };
               tunnelId = lib.mkOption {
                 type = lib.types.str;
-                description = "Cloudflare Tunnel ID for this cluster's public ingress (modules/aspects/kubernetes/cloudflared) — hand-copied once from the cloudflared terragrunt stack's `tunnel_id` output after its bootstrap apply. Not sensitive on its own: it ends up published in public DNS CNAMEs anyway.";
+                description = "Cloudflare Tunnel ID for this cluster's public ingress (modules/aspects/kubernetes/cloudflared) — hand-copied once from the tofu stack's `cloudflared_tunnel_id` output after its bootstrap apply. Not sensitive on its own: it ends up published in public DNS CNAMEs anyway.";
               };
             };
 

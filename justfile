@@ -14,6 +14,12 @@ apply path: (tf path "apply")
 
 apply-all path: (tf-all path "apply")
 
+# OpenTofu on a tofu stack (modules/den/batteries/tofu), named after its
+# directory under tf-stacks/ with dashes, e.g. `just tofu prd-k3s plan`.
+[positional-arguments]
+tofu stack *args:
+    shift; secretspec run nix run ".#tofu-{{ stack }}" -- "$@"
+
 hostname := `hostname -s`
 nh := if os() == "macos" { "nh darwin" } else { "nh os" }
 # kid/nixfiles-work, swapped in for the stub at ./private when checked out.

@@ -1,0 +1,989 @@
+{
+  "data": {
+    "cloudflare_account_api_token_permission_groups_list": [
+      {
+        "account_all": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42"
+        }
+      },
+      {
+        "dns_write": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "name": "DNS%20Write"
+        }
+      },
+      {
+        "r2_write": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "name": "Workers%20R2%20Storage%20Bucket%20Item%20Write"
+        }
+      }
+    ],
+    "cloudflare_zero_trust_tunnel_cloudflared_token": [
+      {
+        "cloudflared": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "tunnel_id": "${cloudflare_zero_trust_tunnel_cloudflared.cloudflared.id}"
+        }
+      }
+    ],
+    "onepassword_item": [
+      {
+        "frigate_camera_doorbell": {
+          "title": "reolink-doorbell",
+          "vault": "${data.onepassword_vault.home_ops.uuid}"
+        }
+      },
+      {
+        "frigate_camera_litters": {
+          "title": "reolink-litters",
+          "vault": "${data.onepassword_vault.home_ops.uuid}"
+        }
+      },
+      {
+        "routeros_admin": {
+          "title": "RB5009 - user - kid",
+          "vault": "${data.onepassword_vault.home_ops.uuid}"
+        }
+      }
+    ],
+    "onepassword_vault": [
+      {
+        "home_ops": {
+          "name": "home-ops"
+        }
+      },
+      {
+        "home_ops_prd": {
+          "name": "home-ops-prd"
+        }
+      }
+    ]
+  },
+  "output": {
+    "cloudflared_tunnel_id": {
+      "value": "${cloudflare_zero_trust_tunnel_cloudflared.cloudflared.id}"
+    }
+  },
+  "provider": {
+    "github": [
+      {
+        "owner": "kid"
+      }
+    ],
+    "routeros": [
+      {
+        "hosturl": "https://10.99.0.1",
+        "insecure": true,
+        "password": "${data.onepassword_item.routeros_admin.password}",
+        "username": "${data.onepassword_item.routeros_admin.username}"
+      }
+    ]
+  },
+  "resource": {
+    "cloudflare_account_token": [
+      {
+        "cert_manager_dns": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "name": "cert-manager-dns01-prd",
+          "policies": [
+            {
+              "effect": "allow",
+              "permission_groups": [
+                {
+                  "id": "${data.cloudflare_account_api_token_permission_groups_list.dns_write.result[0].id}"
+                }
+              ],
+              "resources": "{\"com.cloudflare.api.account.zone.dba2b63221015f1957d718defbf6b871\":\"*\"}"
+            }
+          ]
+        }
+      },
+      {
+        "cloudflared_tunnel_gateway": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "name": "cloudflare-tunnel-gateway-prd",
+          "policies": [
+            {
+              "effect": "allow",
+              "permission_groups": [
+                {
+                  "id": "${[for pg in data.cloudflare_account_api_token_permission_groups_list.account_all.result : pg.id if pg.name == \"Cloudflare Tunnel Write\"][0]}"
+                }
+              ],
+              "resources": "{\"com.cloudflare.api.account.fadfc390b1e5fb0ce019b9f7a8917d42\":\"*\"}"
+            }
+          ]
+        }
+      },
+      {
+        "external_dns_cloudflare": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "name": "external-dns-cloudflare-prd",
+          "policies": [
+            {
+              "effect": "allow",
+              "permission_groups": [
+                {
+                  "id": "${data.cloudflare_account_api_token_permission_groups_list.dns_write.result[0].id}"
+                }
+              ],
+              "resources": "{\"com.cloudflare.api.account.zone.dba2b63221015f1957d718defbf6b871\":\"*\"}"
+            }
+          ]
+        }
+      },
+      {
+        "kopiur_r2": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "name": "kopiur@home-ops/prd",
+          "policies": [
+            {
+              "effect": "allow",
+              "permission_groups": [
+                {
+                  "id": "${data.cloudflare_account_api_token_permission_groups_list.r2_write.result[0].id}"
+                }
+              ],
+              "resources": "{\"com.cloudflare.edge.r2.bucket.fadfc390b1e5fb0ce019b9f7a8917d42_default_home-ops-prd-kopiur\":\"*\"}"
+            }
+          ]
+        }
+      }
+    ],
+    "cloudflare_r2_bucket": [
+      {
+        "kopiur": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "name": "home-ops-prd-kopiur"
+        }
+      }
+    ],
+    "cloudflare_zero_trust_tunnel_cloudflared": [
+      {
+        "cloudflared": {
+          "account_id": "fadfc390b1e5fb0ce019b9f7a8917d42",
+          "config_src": "cloudflare",
+          "name": "k8s-prd"
+        }
+      }
+    ],
+    "github_repository_webhook": [
+      {
+        "flux": {
+          "active": true,
+          "configuration": {
+            "content_type": "json",
+            "insecure_ssl": false,
+            "secret": "${random_password.flux_webhook_token.result}",
+            "url": "https://flux-webhook.kidibox.net/hook/${sha256(\"${random_password.flux_webhook_token.result}githubflux-system\")}"
+          },
+          "events": [
+            "push"
+          ],
+          "repository": "home-ops"
+        }
+      },
+      {
+        "renovate_home-ops": {
+          "active": true,
+          "configuration": {
+            "content_type": "json",
+            "insecure_ssl": false,
+            "secret": "${random_password.renovate_webhook_token.result}",
+            "url": "https://renovate-webhook.kidibox.net/webhook/v1/github?namespace=renovate&job=renovate"
+          },
+          "events": [
+            "issues",
+            "pull_request"
+          ],
+          "repository": "home-ops"
+        }
+      },
+      {
+        "renovate_neovim": {
+          "active": true,
+          "configuration": {
+            "content_type": "json",
+            "insecure_ssl": false,
+            "secret": "${random_password.renovate_webhook_token.result}",
+            "url": "https://renovate-webhook.kidibox.net/webhook/v1/github?namespace=renovate&job=renovate"
+          },
+          "events": [
+            "issues",
+            "pull_request"
+          ],
+          "repository": "neovim"
+        }
+      },
+      {
+        "renovate_nixfiles-work": {
+          "active": true,
+          "configuration": {
+            "content_type": "json",
+            "insecure_ssl": false,
+            "secret": "${random_password.renovate_webhook_token.result}",
+            "url": "https://renovate-webhook.kidibox.net/webhook/v1/github?namespace=renovate&job=renovate"
+          },
+          "events": [
+            "issues",
+            "pull_request"
+          ],
+          "repository": "nixfiles-work"
+        }
+      },
+      {
+        "renovate_push_neovim_home-ops": {
+          "active": true,
+          "configuration": {
+            "content_type": "json",
+            "insecure_ssl": false,
+            "secret": "${random_password.renovate_webhook_token.result}",
+            "url": "https://renovate-webhook.kidibox.net/webhook/v1/schedule?namespace=renovate&job=renovate&project=${urlencode(\"kid/home-ops\")}"
+          },
+          "events": [
+            "push"
+          ],
+          "repository": "neovim"
+        }
+      }
+    ],
+    "onepassword_item": [
+      {
+        "cert_manager_dns_api_token": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "token",
+                  "type": "CONCEALED",
+                  "value": "${cloudflare_account_token.cert_manager_dns.value}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "cloudflare-dns-api-token",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "cloudflared_credentials": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "api-token",
+                  "type": "CONCEALED",
+                  "value": "${cloudflare_account_token.cloudflared_tunnel_gateway.value}"
+                },
+                {
+                  "label": "tunnel-token",
+                  "type": "CONCEALED",
+                  "value": "${data.cloudflare_zero_trust_tunnel_cloudflared_token.cloudflared.token}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "cloudflared-tunnel-credentials",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "external_dns_cloudflare_token": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "token",
+                  "type": "CONCEALED",
+                  "value": "${cloudflare_account_token.external_dns_cloudflare.value}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "cloudflare-external-dns-token",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "external_dns_mikrotik_credentials": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "username",
+                  "type": "STRING",
+                  "value": "${routeros_system_user.external_dns.name}"
+                },
+                {
+                  "label": "password",
+                  "type": "CONCEALED",
+                  "value": "${random_password.external_dns.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "mikrotik-credentials",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "flux_webhook_token": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "token",
+                  "type": "CONCEALED",
+                  "value": "${random_password.flux_webhook_token.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "flux-github-webhook",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "frigate_camera_doorbell": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "username",
+                  "type": "STRING",
+                  "value": "${data.onepassword_item.frigate_camera_doorbell.username}"
+                },
+                {
+                  "label": "password",
+                  "type": "CONCEALED",
+                  "value": "${data.onepassword_item.frigate_camera_doorbell.password}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "reolink-doorbell",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "frigate_camera_litters": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "username",
+                  "type": "STRING",
+                  "value": "${data.onepassword_item.frigate_camera_litters.username}"
+                },
+                {
+                  "label": "password",
+                  "type": "CONCEALED",
+                  "value": "${data.onepassword_item.frigate_camera_litters.password}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "reolink-litters",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_alertmanager-ha-alerts-webhook": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "webhook-id",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_alertmanager-ha-alerts-webhook.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "alertmanager-ha-alerts-webhook",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_alertmanager-ha-watchdog-webhook": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "webhook-id",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_alertmanager-ha-watchdog-webhook.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "alertmanager-ha-watchdog-webhook",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_animarr-api-key": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "api-key",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_animarr-api-key.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "animarr-api-key",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_envoy-oidc-hmac": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "hmac-secret",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_envoy-oidc-hmac.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "envoy-oidc-hmac",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_mosquitto-frigate": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "password",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_mosquitto-frigate.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "mosquitto-frigate",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_mosquitto-home-assistant": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "password",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_mosquitto-home-assistant.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "mosquitto-home-assistant",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_mosquitto-zigbee2mqtt": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "password",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_mosquitto-zigbee2mqtt.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "mosquitto-zigbee2mqtt",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_prowlarr-api-key": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "api-key",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_prowlarr-api-key.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "prowlarr-api-key",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_radarr-api-key": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "api-key",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_radarr-api-key.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "radarr-api-key",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_sabnzbd-api-key": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "api-key",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_sabnzbd-api-key.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "sabnzbd-api-key",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "generated_sonarr-api-key": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "api-key",
+                  "type": "CONCEALED",
+                  "value": "${random_password.generated_sonarr-api-key.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "sonarr-api-key",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "kopiur_r2": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "access-key-id",
+                  "type": "STRING",
+                  "value": "${cloudflare_account_token.kopiur_r2.id}"
+                },
+                {
+                  "label": "secret-access-key",
+                  "type": "CONCEALED",
+                  "value": "${sha256(cloudflare_account_token.kopiur_r2.value)}"
+                },
+                {
+                  "label": "repository-password",
+                  "type": "CONCEALED",
+                  "value": "${random_password.kopiur_repository_password.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "kopiur-r2-credentials",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      },
+      {
+        "renovate_webhook_token": {
+          "category": "secure_note",
+          "section": [
+            {
+              "field": [
+                {
+                  "label": "token",
+                  "type": "CONCEALED",
+                  "value": "${random_password.renovate_webhook_token.result}"
+                }
+              ],
+              "label": "credentials"
+            }
+          ],
+          "title": "renovate-webhook",
+          "vault": "${data.onepassword_vault.home_ops_prd.uuid}"
+        }
+      }
+    ],
+    "random_password": [
+      {
+        "external_dns": {
+          "length": 32,
+          "special": false
+        }
+      },
+      {
+        "flux_webhook_token": {
+          "length": 40,
+          "special": false
+        }
+      },
+      {
+        "generated_alertmanager-ha-alerts-webhook": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "special": false
+        }
+      },
+      {
+        "generated_alertmanager-ha-watchdog-webhook": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "special": false
+        }
+      },
+      {
+        "generated_animarr-api-key": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 10,
+          "special": false,
+          "upper": false
+        }
+      },
+      {
+        "generated_envoy-oidc-hmac": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 8,
+          "min_special": 8,
+          "override_special": "~!@#$%^&*()_+`-={}|[]\\:\"<>?,./"
+        }
+      },
+      {
+        "generated_mosquitto-frigate": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 10,
+          "special": false,
+          "upper": false
+        }
+      },
+      {
+        "generated_mosquitto-home-assistant": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 10,
+          "special": false,
+          "upper": false
+        }
+      },
+      {
+        "generated_mosquitto-zigbee2mqtt": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 10,
+          "special": false,
+          "upper": false
+        }
+      },
+      {
+        "generated_prowlarr-api-key": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 10,
+          "special": false,
+          "upper": false
+        }
+      },
+      {
+        "generated_radarr-api-key": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 10,
+          "special": false,
+          "upper": false
+        }
+      },
+      {
+        "generated_sabnzbd-api-key": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 10,
+          "special": false,
+          "upper": false
+        }
+      },
+      {
+        "generated_sonarr-api-key": {
+          "length": 32,
+          "lifecycle": {
+            "ignore_changes": [
+              "length",
+              "upper",
+              "lower",
+              "numeric",
+              "special",
+              "min_upper",
+              "min_lower",
+              "min_numeric",
+              "min_special",
+              "override_special"
+            ]
+          },
+          "min_numeric": 10,
+          "special": false,
+          "upper": false
+        }
+      },
+      {
+        "kopiur_repository_password": {
+          "length": 48,
+          "special": false
+        }
+      },
+      {
+        "renovate_webhook_token": {
+          "length": 40,
+          "special": false
+        }
+      }
+    ],
+    "routeros_system_user": [
+      {
+        "external_dns": {
+          "group": "${routeros_system_user_group.external_dns.name}",
+          "name": "external-dns-prd",
+          "password": "${random_password.external_dns.result}"
+        }
+      }
+    ],
+    "routeros_system_user_group": [
+      {
+        "external_dns": {
+          "name": "external-dns-prd",
+          "policy": [
+            "api",
+            "read",
+            "rest-api",
+            "write"
+          ]
+        }
+      }
+    ]
+  },
+  "terraform": {
+    "backend": {
+      "s3": {
+        "bucket": "terragrunt",
+        "encrypt": true,
+        "key": "home-ops/prd/k3s/tofu.tfstate",
+        "region": "auto",
+        "skip_credentials_validation": true,
+        "skip_metadata_api_check": true,
+        "skip_region_validation": true,
+        "skip_requesting_account_id": true,
+        "skip_s3_checksum": true,
+        "use_lockfile": true,
+        "use_path_style": true
+      }
+    },
+    "required_providers": {
+      "cloudflare": {
+        "source": "cloudflare/cloudflare",
+        "version": "5.29.0"
+      },
+      "github": {
+        "source": "integrations/github",
+        "version": "6.13.0"
+      },
+      "onepassword": {
+        "source": "1password/onepassword",
+        "version": "3.4.1"
+      },
+      "random": {
+        "source": "hashicorp/random",
+        "version": "3.9.1"
+      },
+      "routeros": {
+        "source": "terraform-routeros/routeros",
+        "version": "1.99.1"
+      }
+    }
+  }
+}

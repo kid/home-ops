@@ -3,22 +3,19 @@
 # Modeled on nixopslab's modules/terranix/collect.nix host-to-terranix
 # policy: registers "terragrunt-stacks" as an aspect content class directly
 # on den.classes (no private namespace — see AGENTS.md), and collects it
-# across three entity kinds' aspect-includes chains:
+# across two entity kinds' aspect-includes chains:
 #   - a routerosDevice (den.aspects.<routerosDevice>.includes = [
 #     den.aspects.routeros.base den.aspects.routeros.capsman ... ]) into
 #     config.flake.terragruntStacks.network.<routerosDevice>.<stack>, git-ref
 #     sourced from the private terragrunt-infra-catalog repo.
-#   - a cluster (den.aspects.<cluster>.includes = [ den.aspects.kubernetes.
-#     cert-manager ... ]) into config.flake.terragruntStacks.k3s.<cluster>.
-#     <stack>, path-sourced from this repo's own tf-catalog/modules/.
 #   - the fleet (den.aspects.fleet.includes = [ den.aspects.cloudflare.dns ])
 #     into config.flake.terragruntStacks.fleet.<stack>, for stacks no
 #     environment owns (account-wide Cloudflare records). These use their
 #     own "fleet-terragrunt-stacks" class: an instantiate collects its class
 #     from the whole subtree, so at fleet scope "terragrunt-stacks" would
-#     also pick up every routerosDevice's and cluster's stacks.
-# Nested under "network"/"k3s" (rather than a flat attrset keyed by entity
-# name) so a routerosDevice and a cluster can never collide on name.
+#     also pick up every routerosDevice's stacks.
+# A cluster's own resources are a tofu stack instead
+# (modules/den/batteries/tofu).
 #
 # `terragruntInputs` is a reserved (non-class) aspect key: each routerosDevice's
 # own self-aspect (modules/fleet/routeros/*.nix) precomputes its per-stack
@@ -26,16 +23,13 @@
 # lib.nix's cidrLib, an ordinary module arg den's aspect-content functions
 # can't see — see modules/fleet/routeros/rb5009.nix), and the thin, shared
 # ros-<stack> aspects (modules/aspects/routeros/*.nix) just look it up by
-# stack name. Cluster-owned stacks need no arithmetic, so their content
-# functions read cluster.* directly instead — no reserved-key indirection.
+# stack name.
 {
   lib,
   den,
   ...
 }:
 let
-  hcl = import ./_render-lib.nix { inherit lib; };
-
   # One real evalModules pass per stack-module (not one shared call across
   # the whole includes chain — every aspect sets the same `stack` key to a
   # different value, which a single shared evalModules call rejects as
@@ -129,33 +123,6 @@ in
       })
     ];
 
-  # A cluster with terragrunt.enable = false renders no stacks of its own.
-  # `generated-secrets` is the quirk its own app aspects emit
-  # (modules/den/quirks/generated-secrets.nix), threaded into `specialArgs`
-  # for the same reason as `firewall` above.
-  den.policies.cluster-to-terragrunt =
-    {
-      cluster,
-      generated-secrets ? [ ],
-      ...
-    }:
-    lib.optionals cluster.terragrunt.enable [
-      (den.lib.policy.instantiate {
-        name = "${cluster.name}-terragrunt";
-        class = "terragrunt-stacks";
-        instantiate =
-          { modules, ... }:
-          instantiateStacks "cluster ${cluster.name}" modules {
-            inherit cluster hcl generated-secrets;
-          };
-        intoAttr = [
-          "terragruntStacks"
-          "k3s"
-          cluster.name
-        ];
-      })
-    ];
-
   # The fleet has a single entity, so its stacks sit directly under
   # terragruntStacks.fleet, without an entity-name segment. Needs the fleet
   # bound to den.aspects.fleet (modules/den/policies/fleet.nix).
@@ -172,6 +139,5 @@ in
   ];
 
   den.schema.routerosDevice.includes = [ den.policies.routeros-device-to-terragrunt ];
-  den.schema.cluster.includes = [ den.policies.cluster-to-terragrunt ];
   den.schema.fleet.includes = [ den.policies.fleet-to-terragrunt ];
 }

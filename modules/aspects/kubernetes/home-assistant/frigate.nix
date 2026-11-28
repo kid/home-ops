@@ -18,7 +18,7 @@ let
   tag = "0.18.3@sha256:d1a3e0008557bb3f3314d442ecd4ba68e9b16ab7872d64612649f7a6e5156635";
 
   # Frigate camera name → address. Each camera's stream login is the
-  # reolink-<name> 1Password item in home-ops (the frigate stack below copies it).
+  # reolink-<name> 1Password item in home-ops (its tofu resources below copy it).
   cameras = {
     doorbell = config.den.devices.doorbell.address;
     litters = config.den.devices."litters camera".address;
@@ -221,13 +221,49 @@ in
     )
   ];
 
-  # Copies each camera's stream login from home-ops into home-ops-prd, where
-  # the frigate-cameras ExternalSecret reads it.
-  den.aspects.kubernetes.home-assistant.frigate."terragrunt-stacks" = _: {
-    stack = "frigate";
-    localModule = "frigate";
-    inputs.cameras = lib.attrNames cameras;
-  };
+  # Copies each camera's stream login (only the one go2rtc uses, not the
+  # camera's admin console login) from home-ops into the cluster's vault,
+  # where the frigate-cameras ExternalSecret reads it.
+  den.aspects.kubernetes.home-assistant.frigate.tofu =
+    { cluster, ... }:
+    {
+      data.onepassword_vault.home_ops.name = "home-ops";
+      data.onepassword_vault.home_ops_prd.name = cluster.secrets.onepasswordVault;
+
+      data.onepassword_item = lib.mapAttrs' (
+        cam: _:
+        lib.nameValuePair "frigate_camera_${cam}" {
+          vault = "\${data.onepassword_vault.home_ops.uuid}";
+          title = "reolink-${cam}";
+        }
+      ) cameras;
+
+      resource.onepassword_item = lib.mapAttrs' (
+        cam: _:
+        lib.nameValuePair "frigate_camera_${cam}" {
+          vault = "\${data.onepassword_vault.home_ops_prd.uuid}";
+          title = "reolink-${cam}";
+          category = "secure_note";
+          section = [
+            {
+              label = "credentials";
+              field = [
+                {
+                  label = "username";
+                  type = "STRING";
+                  value = "\${data.onepassword_item.frigate_camera_${cam}.username}";
+                }
+                {
+                  label = "password";
+                  type = "CONCEALED";
+                  value = "\${data.onepassword_item.frigate_camera_${cam}.password}";
+                }
+              ];
+            }
+          ];
+        }
+      ) cameras;
+    };
 
   den.aspects.kubernetes.home-assistant.frigate.k8s-manifests =
     { cluster, pkgs, ... }:

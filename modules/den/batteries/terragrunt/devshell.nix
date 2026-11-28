@@ -1,7 +1,7 @@
 # Renders config.flake.terragruntStacks (modules/den/batteries/terragrunt/terragrunt-stacks.nix) to
-# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl,
-# tf-stacks/<env>/k3s/<stack>/terragrunt.hcl and (fleet stacks, which no
-# environment owns) tf-stacks/<stack>/terragrunt.hcl, exposed as
+# tf-stacks/<env>/network/<routerosDevice>/[<stack>/]terragrunt.hcl and
+# (fleet stacks, which no environment owns) tf-stacks/<stack>/terragrunt.hcl,
+# exposed as
 # `nix run .#write-terragrunt` (mirrors write-manifests/write-terraform
 # elsewhere in the dendritic ecosystem) + `checks.terragrunt`
 # (diffs generated vs. committed, like checks.terraform/checks.cluster-inventory).
@@ -15,26 +15,18 @@ let
   inherit (import ./_render-lib.nix { inherit lib; }) toValue;
 
   routerosDevicesByName = config.den.routerosDevices;
-  clustersByName = config.den.clusters;
 
-  # RouterOS: base sits directly under network/<routerosDevice>/, every other
-  # stack nests one level deeper. Cluster (k3s) stacks have no such split —
-  # every one nests directly under k3s/<stack>/.
+  # base sits directly under network/<routerosDevice>/, every other stack
+  # nests one level deeper.
   leafRelPath =
-    kind: entityName: stack:
-    if kind == "network" then
-      let
-        envName = routerosDevicesByName.${entityName}.environment;
-      in
-      if stack == "base" then
-        "tf-stacks/${envName}/network/${entityName}/terragrunt.hcl"
-      else
-        "tf-stacks/${envName}/network/${entityName}/${stack}/terragrunt.hcl"
+    routerosDeviceName: stack:
+    let
+      envName = routerosDevicesByName.${routerosDeviceName}.environment;
+    in
+    if stack == "base" then
+      "tf-stacks/${envName}/network/${routerosDeviceName}/terragrunt.hcl"
     else
-      let
-        envName = clustersByName.${entityName}.environment;
-      in
-      "tf-stacks/${envName}/k3s/${stack}/terragrunt.hcl";
+      "tf-stacks/${envName}/network/${routerosDeviceName}/${stack}/terragrunt.hcl";
 
   # Every RouterOS stack's directory sits one level (base: network/<routerosDevice>/)
   # or two levels (non-base: network/<routerosDevice>/<stack>/) below
@@ -109,21 +101,11 @@ let
     (lib.mapAttrsToList (
       routerosDeviceName: stacks:
       lib.mapAttrsToList (stack: leaf: {
-        owner = "RouterOS device ${routerosDeviceName}";
-        path = leafRelPath "network" routerosDeviceName stack;
+        path = leafRelPath routerosDeviceName stack;
         content = renderLeaf stack leaf;
       }) stacks
     ) (config.flake.terragruntStacks.network or { }))
-    (lib.mapAttrsToList (
-      clusterName: stacks:
-      lib.mapAttrsToList (stack: leaf: {
-        owner = "cluster ${clusterName}";
-        path = leafRelPath "k3s" clusterName stack;
-        content = renderLeaf stack leaf;
-      }) stacks
-    ) (config.flake.terragruntStacks.k3s or { }))
     (lib.mapAttrsToList (stack: leaf: {
-      owner = "the fleet";
       path = "tf-stacks/${stack}/terragrunt.hcl";
       content =
         if leaf ? dependsOn then
@@ -132,23 +114,6 @@ let
           renderLeaf stack leaf;
     }) (config.flake.terragruntStacks.fleet or { }))
   ];
-
-  # Cluster stacks render to tf-stacks/<env>/k3s/<stack>, with no cluster
-  # segment: two clusters of one environment rendering the same stack would
-  # overwrite each other's file and share its remote state.
-  collisions =
-    leaves
-    |> lib.groupBy (leaf: leaf.path)
-    |> lib.filterAttrs (_: group: builtins.length group > 1)
-    |> lib.mapAttrsToList (
-      path: group: "${path} (${group |> map (leaf: leaf.owner) |> lib.concatStringsSep ", "})"
-    );
-
-  allLeaves =
-    if collisions == [ ] then
-      leaves
-    else
-      throw "terragrunt stacks rendered more than once: ${lib.concatStringsSep "; " collisions}. Set den.clusters.<name>.terragrunt.enable = false on all but one of those clusters.";
 in
 {
   perSystem =
@@ -174,7 +139,7 @@ in
           echo "==> Writing ${leaf.path}..."
           mkdir -p "$(dirname "${leaf.path}")"
           install -m 644 "${formattedLeaf leaf}" "${leaf.path}"
-        '') allLeaves;
+        '') leaves;
       };
 
       checks.terragrunt =
@@ -185,7 +150,7 @@ in
                 echo "${leaf.path} is stale — run: nix run .#write-terragrunt" >&2
                 exit 1
               fi
-            '') allLeaves
+            '') leaves
             + "\ntouch $out"
           );
     };

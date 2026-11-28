@@ -129,6 +129,10 @@
         nur.follows = "nur";
       };
     };
+    tofunix = {
+      url = "gitlab:TECHNOFAB/tofunix/95c8201f1605c0fadc51fbd03ff117d84ce30735";
+      flake = false;
+    };
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
