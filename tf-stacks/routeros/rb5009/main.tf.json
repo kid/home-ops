@@ -2,6 +2,12 @@
   "data": {
     "onepassword_item": [
       {
+        "capsman_wifi": {
+          "title": "RB5009 - wifi",
+          "vault": "home-ops"
+        }
+      },
+      {
         "routeros": {
           "title": "RB5009 - user - kid",
           "vault": "home-ops"
@@ -15,6 +21,10 @@
       "to": "module.base.routeros_system_user.users[\"admin\"]"
     }
   ],
+  "locals": {
+    "capsman_wifi_fields": "${{ for field in flatten([for section in data.onepassword_item.capsman_wifi.section : section.field]) : field.label => field.value }}",
+    "capsman_wifi_ssid": "${local.capsman_wifi_fields[\"ssid\"]}"
+  },
   "module": {
     "base": {
       "bootstrap": "${var.bootstrap}",
@@ -413,33 +423,6 @@
         }
       }
     },
-    "capsman": {
-      "bridge_name": "bridge1",
-      "capsman_interfaces": [
-        "Management"
-      ],
-      "op_item_routeros": "RB5009 - user - kid",
-      "op_item_wifi": "RB5009 - wifi",
-      "op_vault": "home-ops",
-      "passphrase_groups": {
-        "Guest": {
-          "isolated": true,
-          "vlan_id": 101
-        },
-        "IotInternet": {
-          "isolated": true,
-          "vlan_id": 51
-        },
-        "IotLocal": {
-          "isolated": true,
-          "vlan_id": 50
-        },
-        "Trusted": {
-          "vlan_id": 100
-        }
-      },
-      "source": "git::git@github.com:kid/terragrunt-infra-catalog.git//modules/ros-capsman?ref=ros-capsman/v1.1.4"
-    },
     "firewall": {
       "input_rules": [
         {
@@ -671,6 +654,108 @@
       "wan_interface_list": "WAN"
     }
   },
+  "moved": [
+    {
+      "from": "module.capsman.routeros_wifi_capsman.settings",
+      "to": "routeros_wifi_capsman.capsman"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_channel.U-NII-1",
+      "to": "routeros_wifi_channel.capsman_U-NII-1"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_channel.U-NII-2C",
+      "to": "routeros_wifi_channel.capsman_U-NII-2C"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_channel.capxr0",
+      "to": "routeros_wifi_channel.capsman_capxr0"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_channel.capxr1",
+      "to": "routeros_wifi_channel.capsman_capxr1"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_channel.channel_11",
+      "to": "routeros_wifi_channel.capsman_channel_11"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_channel.channel_6",
+      "to": "routeros_wifi_channel.capsman_channel_6"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_configuration.capxr0-2g",
+      "to": "routeros_wifi_configuration.capsman_capxr0-2g"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_configuration.capxr0-5g",
+      "to": "routeros_wifi_configuration.capsman_capxr0-5g"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_configuration.capxr0-5g-only",
+      "to": "routeros_wifi_configuration.capsman_capxr0-5g-only"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_configuration.capxr1-2g",
+      "to": "routeros_wifi_configuration.capsman_capxr1-2g"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_configuration.capxr1-5g",
+      "to": "routeros_wifi_configuration.capsman_capxr1-5g"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_configuration.capxr1-5g-only",
+      "to": "routeros_wifi_configuration.capsman_capxr1-5g-only"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_datapath.default",
+      "to": "routeros_wifi_datapath.capsman_default"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_datapath.lan",
+      "to": "routeros_wifi_datapath.capsman_lan"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_provisioning.capxr0-2g",
+      "to": "routeros_wifi_provisioning.capsman_capxr0-2g"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_provisioning.capxr0-5g",
+      "to": "routeros_wifi_provisioning.capsman_capxr0-5g"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_provisioning.capxr1-2g",
+      "to": "routeros_wifi_provisioning.capsman_capxr1-2g"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_provisioning.capxr1-5g",
+      "to": "routeros_wifi_provisioning.capsman_capxr1-5g"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_security.wpa2",
+      "to": "routeros_wifi_security.capsman_wpa2"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_security_multi_passphrase.groups[\"Guest\"]",
+      "to": "routeros_wifi_security_multi_passphrase.capsman_Guest"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_security_multi_passphrase.groups[\"IotInternet\"]",
+      "to": "routeros_wifi_security_multi_passphrase.capsman_IotInternet"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_security_multi_passphrase.groups[\"IotLocal\"]",
+      "to": "routeros_wifi_security_multi_passphrase.capsman_IotLocal"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_security_multi_passphrase.groups[\"Trusted\"]",
+      "to": "routeros_wifi_security_multi_passphrase.capsman_Trusted"
+    },
+    {
+      "from": "module.capsman.routeros_wifi_steering.default",
+      "to": "routeros_wifi_steering.capsman"
+    }
+  ],
   "output": {
     "ip_cloud_dns_name": {
       "precondition": [
@@ -864,6 +949,347 @@
           "cake_rtt_scheme": "regional",
           "kind": "cake",
           "name": "cake-tx"
+        }
+      }
+    ],
+    "routeros_wifi_capsman": [
+      {
+        "capsman": {
+          "enabled": true,
+          "interfaces": [
+            "Management"
+          ],
+          "upgrade_policy": "suggest-same-version"
+        }
+      }
+    ],
+    "routeros_wifi_channel": [
+      {
+        "capsman_U-NII-1": {
+          "frequency": [
+            "5180-5240"
+          ],
+          "name": "U-NII-1",
+          "skip_dfs_channels": "10min-cac",
+          "width": "20/40/80mhz"
+        }
+      },
+      {
+        "capsman_U-NII-2C": {
+          "frequency": [
+            "5480-5720"
+          ],
+          "name": "U-NII-2C",
+          "skip_dfs_channels": "10min-cac",
+          "width": "20/40/80mhz"
+        }
+      },
+      {
+        "capsman_capxr0": {
+          "frequency": [
+            "5500-5720"
+          ],
+          "name": "capxr0",
+          "skip_dfs_channels": "10min-cac",
+          "width": "20/40/80mhz"
+        }
+      },
+      {
+        "capsman_capxr1": {
+          "frequency": [
+            "5180-5340"
+          ],
+          "name": "capxr1",
+          "skip_dfs_channels": "10min-cac",
+          "width": "20/40/80mhz"
+        }
+      },
+      {
+        "capsman_channel_11": {
+          "frequency": [
+            "2462"
+          ],
+          "name": "channel-11",
+          "width": "20mhz"
+        }
+      },
+      {
+        "capsman_channel_6": {
+          "frequency": [
+            "2437"
+          ],
+          "name": "channel-6",
+          "width": "20mhz"
+        }
+      }
+    ],
+    "routeros_wifi_configuration": [
+      {
+        "capsman_capxr0-2g": {
+          "channel": {
+            "config": "${routeros_wifi_channel.capsman_channel_6.name}"
+          },
+          "country": "Belgium",
+          "datapath": {
+            "config": "${routeros_wifi_datapath.capsman_default.name}"
+          },
+          "dtim_period": 4,
+          "multicast_enhance": "enabled",
+          "name": "capxr0-2g",
+          "security": {
+            "config": "${routeros_wifi_security.capsman_wpa2.name}"
+          },
+          "ssid": "${local.capsman_wifi_ssid}",
+          "steering": {
+            "config": "${routeros_wifi_steering.capsman.name}"
+          },
+          "tx_power": 10
+        }
+      },
+      {
+        "capsman_capxr0-5g": {
+          "channel": {
+            "config": "${routeros_wifi_channel.capsman_U-NII-2C.name}"
+          },
+          "country": "Belgium",
+          "datapath": {
+            "config": "${routeros_wifi_datapath.capsman_default.name}"
+          },
+          "dtim_period": 4,
+          "multicast_enhance": "enabled",
+          "name": "capxr0-5g",
+          "security": {
+            "config": "${routeros_wifi_security.capsman_wpa2.name}"
+          },
+          "ssid": "${local.capsman_wifi_ssid}",
+          "steering": {
+            "config": "${routeros_wifi_steering.capsman.name}"
+          },
+          "tx_power": 23
+        }
+      },
+      {
+        "capsman_capxr0-5g-only": {
+          "channel": {
+            "config": "${routeros_wifi_channel.capsman_U-NII-2C.name}"
+          },
+          "country": "Belgium",
+          "datapath": {
+            "config": "${routeros_wifi_datapath.capsman_default.name}"
+          },
+          "dtim_period": 4,
+          "multicast_enhance": "enabled",
+          "name": "capxr0-5g-only",
+          "security": {
+            "config": "${routeros_wifi_security.capsman_wpa2.name}"
+          },
+          "ssid": "${local.capsman_wifi_ssid}-5Ghz",
+          "steering": {
+            "config": "${routeros_wifi_steering.capsman.name}"
+          },
+          "tx_power": 23
+        }
+      },
+      {
+        "capsman_capxr1-2g": {
+          "channel": {
+            "config": "${routeros_wifi_channel.capsman_channel_11.name}"
+          },
+          "country": "Belgium",
+          "datapath": {
+            "config": "${routeros_wifi_datapath.capsman_default.name}"
+          },
+          "dtim_period": 4,
+          "multicast_enhance": "enabled",
+          "name": "capxr1-2g",
+          "security": {
+            "config": "${routeros_wifi_security.capsman_wpa2.name}"
+          },
+          "ssid": "${local.capsman_wifi_ssid}",
+          "steering": {
+            "config": "${routeros_wifi_steering.capsman.name}"
+          },
+          "tx_power": 10
+        }
+      },
+      {
+        "capsman_capxr1-5g": {
+          "channel": {
+            "config": "${routeros_wifi_channel.capsman_U-NII-1.name}"
+          },
+          "country": "Belgium",
+          "datapath": {
+            "config": "${routeros_wifi_datapath.capsman_default.name}"
+          },
+          "dtim_period": 4,
+          "multicast_enhance": "enabled",
+          "name": "capxr1-5g",
+          "security": {
+            "config": "${routeros_wifi_security.capsman_wpa2.name}"
+          },
+          "ssid": "${local.capsman_wifi_ssid}",
+          "steering": {
+            "config": "${routeros_wifi_steering.capsman.name}"
+          },
+          "tx_power": 23
+        }
+      },
+      {
+        "capsman_capxr1-5g-only": {
+          "channel": {
+            "config": "${routeros_wifi_channel.capsman_U-NII-1.name}"
+          },
+          "country": "Belgium",
+          "datapath": {
+            "config": "${routeros_wifi_datapath.capsman_default.name}"
+          },
+          "dtim_period": 4,
+          "multicast_enhance": "enabled",
+          "name": "capxr1-5g-only",
+          "security": {
+            "config": "${routeros_wifi_security.capsman_wpa2.name}"
+          },
+          "ssid": "${local.capsman_wifi_ssid}-5Ghz",
+          "steering": {
+            "config": "${routeros_wifi_steering.capsman.name}"
+          },
+          "tx_power": 23
+        }
+      }
+    ],
+    "routeros_wifi_datapath": [
+      {
+        "capsman_default": {
+          "bridge": "bridge1",
+          "name": "default"
+        }
+      },
+      {
+        "capsman_lan": {
+          "bridge": "bridge1",
+          "name": "lan",
+          "vlan_id": 100
+        }
+      }
+    ],
+    "routeros_wifi_provisioning": [
+      {
+        "capsman_capxr0-2g": {
+          "action": "create-dynamic-enabled",
+          "identity_regexp": "capxr0",
+          "master_configuration": "${routeros_wifi_configuration.capsman_capxr0-2g.name}",
+          "name_format": "wifi2g-%I",
+          "supported_bands": [
+            "2ghz-ax"
+          ]
+        }
+      },
+      {
+        "capsman_capxr0-5g": {
+          "action": "create-dynamic-enabled",
+          "identity_regexp": "capxr0",
+          "master_configuration": "${routeros_wifi_configuration.capsman_capxr0-5g.name}",
+          "name_format": "wifi5g-%I",
+          "slave_configurations": [
+            "${routeros_wifi_configuration.capsman_capxr0-5g-only.name}"
+          ],
+          "supported_bands": [
+            "5ghz-ax"
+          ]
+        }
+      },
+      {
+        "capsman_capxr1-2g": {
+          "action": "create-dynamic-enabled",
+          "identity_regexp": "capxr1",
+          "master_configuration": "${routeros_wifi_configuration.capsman_capxr1-2g.name}",
+          "name_format": "wifi2g-%I",
+          "supported_bands": [
+            "2ghz-ax"
+          ]
+        }
+      },
+      {
+        "capsman_capxr1-5g": {
+          "action": "create-dynamic-enabled",
+          "identity_regexp": "capxr1",
+          "master_configuration": "${routeros_wifi_configuration.capsman_capxr1-5g.name}",
+          "name_format": "wifi5g-%I",
+          "slave_configurations": [
+            "${routeros_wifi_configuration.capsman_capxr1-5g-only.name}"
+          ],
+          "supported_bands": [
+            "5ghz-ax"
+          ]
+        }
+      }
+    ],
+    "routeros_wifi_security": [
+      {
+        "capsman_wpa2": {
+          "authentication_types": [
+            "wpa2-psk"
+          ],
+          "connect_priority": "0/1",
+          "depends_on": [
+            "routeros_wifi_security_multi_passphrase.capsman_Guest",
+            "routeros_wifi_security_multi_passphrase.capsman_IotInternet",
+            "routeros_wifi_security_multi_passphrase.capsman_IotLocal",
+            "routeros_wifi_security_multi_passphrase.capsman_Trusted"
+          ],
+          "disable_pmkid": true,
+          "encryption": [
+            "ccmp"
+          ],
+          "ft": true,
+          "ft_over_ds": true,
+          "ft_preserve_vlanid": true,
+          "management_protection": "allowed",
+          "multi_passphrase_group": "${local.capsman_wifi_ssid}",
+          "name": "wpa2"
+        }
+      }
+    ],
+    "routeros_wifi_security_multi_passphrase": [
+      {
+        "capsman_Guest": {
+          "group": "${local.capsman_wifi_ssid}",
+          "isolation": true,
+          "passphrase": "${local.capsman_wifi_fields[\"Guest\"]}",
+          "vlan_id": 101
+        }
+      },
+      {
+        "capsman_IotInternet": {
+          "group": "${local.capsman_wifi_ssid}",
+          "isolation": true,
+          "passphrase": "${local.capsman_wifi_fields[\"IotInternet\"]}",
+          "vlan_id": 51
+        }
+      },
+      {
+        "capsman_IotLocal": {
+          "group": "${local.capsman_wifi_ssid}",
+          "isolation": true,
+          "passphrase": "${local.capsman_wifi_fields[\"IotLocal\"]}",
+          "vlan_id": 50
+        }
+      },
+      {
+        "capsman_Trusted": {
+          "group": "${local.capsman_wifi_ssid}",
+          "isolation": false,
+          "passphrase": "${local.capsman_wifi_fields[\"Trusted\"]}",
+          "vlan_id": 100
+        }
+      }
+    ],
+    "routeros_wifi_steering": [
+      {
+        "capsman": {
+          "name": "default",
+          "rrm": true,
+          "wnm": true
         }
       }
     ]
