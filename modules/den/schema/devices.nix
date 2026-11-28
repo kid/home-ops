@@ -1,7 +1,7 @@
 # Network client-device registry — a Proxmox host, a camera, a vacuum robot,
 # ... anything with one or more known MAC/host-number/VLAN interfaces,
 # used to derive
-# `dhcp_static_leases` dynamically (modules/den/batteries/terragrunt/_ros-lib.nix's
+# `dhcp_static_leases` dynamically (modules/aspects/routeros/_lib.nix's
 # `staticLeasesByNetwork`, wired in modules/fleet/routeros/rb5009.nix).
 #
 # Deliberately flat/non-entity — no isEntity, no resolve.to/scope-tree walk
@@ -11,7 +11,7 @@
 #
 # Not to be confused with `den.routerosDevices` (modules/den/schema/
 # routerosDevices.nix) — the RouterOS boxes (rb5009, crs320) themselves,
-# a real scope-tree entity kind with its own Terraform/Terragrunt stacks.
+# a real scope-tree entity kind with its own tofu stack.
 {
   lib,
   config,

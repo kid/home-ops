@@ -1,8 +1,6 @@
-# rb5009's Terragrunt stack inputs (base/capsman/dns/firewall/qos/wireguard).
-#
-# One intentional quirk, not a bug to fix: qos has no `dependencies` block,
-# unlike its capsman/dns/firewall siblings (all of which depend on this
-# device's own base stack).
+# rb5009's RouterOS stack inputs (base/bgp/capsman/dns/firewall/qos/wireguard),
+# read by the shared modules/aspects/routeros/* aspects that make up its tofu
+# stack (tf-stacks/routeros/rb5009).
 {
   lib,
   den,
@@ -10,7 +8,7 @@
   ...
 }:
 let
-  rosLib = import ../../den/batteries/terragrunt/_ros-lib.nix { inherit lib; };
+  rosLib = import ../../aspects/routeros/_lib.nix { inherit lib; };
   inherit (rosLib)
     toVlanInput
     toFirewallVlanInput
@@ -67,10 +65,8 @@ in
       den.aspects.routeros.wireguard
     ];
 
-    terragruntInputs = {
+    routerosInputs = {
       base = {
-        dependsOn = [ ];
-
         inputs =
           sharedInputs
           // commonInputs
@@ -169,7 +165,6 @@ in
       };
 
       capsman = {
-        dependsOn = [ "rb5009" ];
         inputs =
           sharedInputs
           // commonInputs
@@ -200,7 +195,6 @@ in
       };
 
       dns = {
-        dependsOn = [ "rb5009" ];
         inputs =
           sharedInputs
           // commonInputs
@@ -230,7 +224,6 @@ in
       };
 
       firewall = {
-        dependsOn = [ "rb5009" ];
         inputs =
           sharedInputs
           // commonInputs
@@ -278,10 +271,7 @@ in
           };
       };
 
-      # NB: no `dependsOn`, matching the file header's note on this
-      # intentional quirk.
       qos = {
-        dependsOn = [ ];
         inputs =
           sharedInputs
           // commonInputs
@@ -293,7 +283,6 @@ in
       };
 
       wireguard = {
-        dependsOn = [ "rb5009" ];
         inputs =
           sharedInputs
           // commonInputs
@@ -316,7 +305,6 @@ in
       # modules/aspects/routeros/bgp.nix, not from anything precomputed
       # here.
       bgp = {
-        dependsOn = [ "rb5009" ];
         inputs = sharedInputs // commonInputs;
       };
     };

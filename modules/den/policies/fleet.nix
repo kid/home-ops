@@ -1,7 +1,7 @@
 # Fleet topology policies.
 #
-# Wires the scope tree: flake -> fleet -> environment -> {network,
-# routerosDevice, cluster, host}. Adapted from nix-config's modules/den/policies/
+# Wires the scope tree: flake -> fleet -> {environment -> {network,
+# routerosDevice, cluster, host}, tofuStack}. Adapted from nix-config's modules/den/policies/
 # fleet.nix (itself the model nixopslab's environment.nix points at); hosts
 # follow den's "Access Control & Environments" guide, resolved under their
 # environment instead of den's default flake-system walk.
@@ -19,7 +19,7 @@ in
 {
   # flake -> fleet: single fleet entity (fires at flake scope). It is a real
   # entity bound to den.aspects.fleet (isEntity below) so fleet-level aspects
-  # contribute content, e.g. its terragrunt stacks (modules/fleet/fleet.nix).
+  # contribute content.
   den.policies.to-fleet = _: [
     (resolve.to "fleet" {
       fleet = {
@@ -38,6 +38,13 @@ in
         environment = env;
       }
     ) environments;
+
+  # fleet -> named tofu stacks (modules/den/schema/tofuStacks.nix).
+  den.policies.fleet-to-tofu-stacks =
+    _:
+    den.tofuStacks
+    |> builtins.attrValues
+    |> map (tofuStack: resolve.to "tofuStack" { inherit tofuStack; });
 
   # environment -> routerosDevices: walk den.routerosDevices whose environment matches.
   den.policies.env-to-routeros-devices =
@@ -106,7 +113,10 @@ in
 
   den.schema.flake.includes = [ den.policies.to-fleet ];
   den.schema.fleet.isEntity = true;
-  den.schema.fleet.includes = [ den.policies.fleet-to-envs ];
+  den.schema.fleet.includes = [
+    den.policies.fleet-to-envs
+    den.policies.fleet-to-tofu-stacks
+  ];
   den.schema.environment.includes = [
     den.policies.env-to-routeros-devices
     den.policies.env-to-networks

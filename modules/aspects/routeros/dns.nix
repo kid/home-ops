@@ -1,16 +1,24 @@
-# Shared "dns" RouterOS stack aspect — see ros-base.nix for why this is thin.
-_: {
-  den.aspects.routeros.dns = {
-    "terragrunt-stacks" =
-      { routerosDevice, ... }:
-      let
-        stack = routerosDevice.aspect.terragruntInputs.dns;
-      in
-      {
-        stack = "dns";
-        moduleSource = "ros-dns";
-        moduleVersion = "2.0.0";
-        inherit (stack) dependsOn inputs;
+# DNS on a RouterOS device: the catalog's ros-dns module, called with the
+# device's routerosInputs.dns (see modules/fleet/routeros/rb5009.nix).
+{ lib, ... }:
+let
+  inherit (import ./_lib.nix { inherit lib; }) catalogModule;
+in
+{
+  den.aspects.routeros.dns.tofu =
+    { routerosDevice, ... }:
+    {
+      module.dns = catalogModule {
+        name = "ros-dns";
+        version = "2.0.1";
+        variables = [
+          "dns_static_records"
+          "dns_upstream_servers"
+          "op_item_routeros"
+          "op_vault"
+          "routeros_insecure"
+        ];
+        inherit (routerosDevice.aspect.routerosInputs.dns) inputs;
       };
-  };
+    };
 }

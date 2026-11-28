@@ -92,14 +92,6 @@
       enabled: true,
     },
     {
-      // Provider lock refreshes get their own PR, apart from flake.lock. The
-      // scopes tell the two "lock file maintenance" PR titles apart.
-      matchManagers: ["terraform", "terragrunt"],
-      matchUpdateTypes: ["lockFileMaintenance"],
-      groupName: "terraform providers",
-      semanticCommitScope: "terraform",
-    },
-    {
       // A nixpkgs bump changes the Renovate image, and with it the
       // RenovateJob's image tag (modules/aspects/kubernetes/renovate).
       matchManagers: ["nix"],
@@ -196,7 +188,7 @@
           "nix run .#rehash-changed-pins",
           "nix run .#write-flake",
         ],
-        fileFilters: ["**/*.nix", "manifests/**", "tf-stacks/*/k3s/main.tf.json"],
+        fileFilters: ["**/*.nix", "manifests/**", "tf-stacks/**/main.tf.json"],
         executionMode: "update",
       },
     },

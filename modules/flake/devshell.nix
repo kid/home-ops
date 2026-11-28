@@ -24,7 +24,6 @@ _: {
             openssh
             opentofu
             tofu-ls
-            terragrunt
             secretspec
 
             go

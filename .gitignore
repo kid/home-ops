@@ -9,14 +9,10 @@
 # Nix
 result
 
-# Terragrunt
-.terragrunt-cache
-.terragrunt-stack
-
 # OpenTofu/Terraform
 .terraform
 # tofunix's CLI copies it next to a tofu stack; its providers are pinned in Nix.
-/tf-stacks/*/k3s/.terraform.lock.hcl
+/tf-stacks/**/.terraform.lock.hcl
 *.tfstate
 *.tfstate.backup
 *.tfstate.lock.info

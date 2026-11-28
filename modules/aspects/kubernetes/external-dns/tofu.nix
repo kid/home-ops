@@ -9,7 +9,7 @@ _: {
 
       # The routeros provider connects as whichever fleet user op_item_routeros
       # names for rb5009 (see modules/fleet/routeros/rb5009.nix), as the ros-*
-      # Terragrunt stacks do.
+      # RouterOS stacks do.
       data.onepassword_item.routeros_admin = {
         vault = "\${data.onepassword_vault.home_ops.uuid}";
         title = "RB5009 - user - kid";

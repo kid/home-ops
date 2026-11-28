@@ -1,4 +1,4 @@
-# Shared "ros-bgp" RouterOS stack aspect — configures a RouterOS BGP instance
+# BGP on a RouterOS device: the catalog's ros-bgp module — configures a RouterOS BGP instance
 # on rb5009 so it peers directly with Cilium's BGP Control Plane over each
 # cluster's VLAN (see modules/aspects/kubernetes/cilium/bgp.nix for the Cilium side).
 # Two decoupled producers feed this, same "many producers, one consumer"
@@ -17,7 +17,7 @@
 # ASN) / bgp_router_id (this router's own IP) pair and ONE shared
 # bgp_remote_asn (Cilium's ASN) applied to every node connection, and names
 # every resource after cluster_name. So each cluster peering with this
-# device gets its own stack, bgp-<cluster>, with only its own nodes.
+# device gets its own module call, module.bgp-<cluster>, with only its own nodes.
 { lib, ... }:
 let
   # RouterOS echoes duration values back in its own canonical form (e.g.
@@ -45,10 +45,12 @@ let
     lib.concatStrings (
       segmentsWithoutSeconds ++ lib.optional (s > 0 || segmentsWithoutSeconds == [ ]) "${toString s}s"
     );
+
+  inherit (import ./_lib.nix { inherit lib; }) catalogModule;
 in
 {
   den.aspects.routeros.bgp = {
-    "terragrunt-stacks" =
+    tofu =
       {
         routerosDevice,
         bgp ? [ ],
@@ -56,39 +58,52 @@ in
         ...
       }:
       let
-        device = routerosDevice.aspect.terragruntInputs.bgp;
+        device = routerosDevice.aspect.routerosInputs.bgp;
 
         # Drop hosts with no real address (e.g. test-vm, a throwaway QEMU
         # smoke-test host — see k3s.nix's k3s-nodes quirk).
         nodesByCluster = k3s-nodes |> lib.filter (n: n.address != null) |> lib.groupBy (n: n.cluster);
 
-        mkStack = frag: peer: {
-          stack = "bgp-${frag.name}";
-          moduleSource = "ros-bgp";
-          moduleVersion = "2.0.0";
-          inherit (device) dependsOn;
-          inputs = device.inputs // {
-            cluster_name = frag.name;
-            bgp_local_asn = peer.asn;
-            bgp_remote_asn = frag.localAsn;
-            bgp_router_id = peer.ip;
-            bgp_hold_time = formatRouterosDuration frag.holdTimeSeconds;
-            bgp_keepalive_time = formatRouterosDuration frag.keepAliveTimeSeconds;
-            nodes =
-              nodesByCluster.${frag.name} or [ ]
-              |> map (n: lib.nameValuePair n.hostname { ip_address = n.address; })
-              |> lib.listToAttrs;
-          };
-        };
+        mkModule =
+          frag: peer:
+          lib.nameValuePair "bgp-${frag.name}" (catalogModule {
+            name = "ros-bgp";
+            version = "2.0.1";
+            variables = [
+              "bgp_hold_time"
+              "bgp_keepalive_time"
+              "bgp_local_asn"
+              "bgp_remote_asn"
+              "bgp_router_id"
+              "cluster_name"
+              "nodes"
+              "op_item_routeros"
+              "op_vault"
+              "routeros_insecure"
+            ];
+            inputs = device.inputs // {
+              cluster_name = frag.name;
+              bgp_local_asn = peer.asn;
+              bgp_remote_asn = frag.localAsn;
+              bgp_router_id = peer.ip;
+              bgp_hold_time = formatRouterosDuration frag.holdTimeSeconds;
+              bgp_keepalive_time = formatRouterosDuration frag.keepAliveTimeSeconds;
+              nodes =
+                nodesByCluster.${frag.name} or [ ]
+                |> map (n: lib.nameValuePair n.hostname { ip_address = n.address; })
+                |> lib.listToAttrs;
+            };
+          });
       in
       {
-        # One stack per `bgp` fragment peer targeting this device — mirrors
-        # ros-firewall.nix's per-network scoping.
-        stacks =
+        # One module call per `bgp` fragment peer targeting this device —
+        # mirrors ros-firewall.nix's per-network scoping.
+        module =
           bgp
           |> lib.concatMap (
-            frag: frag.peers |> lib.filter (p: p.name == routerosDevice.name) |> map (mkStack frag)
-          );
+            frag: frag.peers |> lib.filter (p: p.name == routerosDevice.name) |> map (mkModule frag)
+          )
+          |> lib.listToAttrs;
       };
   };
 }

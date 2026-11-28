@@ -116,7 +116,7 @@ in
 
           networkmanager.ensureProfiles = {
             environmentFiles = [ config.sops.templates."wg-home.env".path ];
-            # Endpoint, port and addresses mirror terragruntInputs.wireguard in modules/fleet/routeros/rb5009.nix.
+            # Endpoint, port and addresses mirror routerosInputs.wireguard in modules/fleet/routeros/rb5009.nix.
             profiles.wg-home = {
               connection = {
                 id = "wg-home";
