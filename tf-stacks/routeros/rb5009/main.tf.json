@@ -671,56 +671,6 @@
       "wan_interface_list": "WAN"
     }
   },
-  "moved": [
-    {
-      "from": "module.qos.routeros_queue_tree.rx",
-      "to": "routeros_queue_tree.qos_rx"
-    },
-    {
-      "from": "module.qos.routeros_queue_tree.tx",
-      "to": "routeros_queue_tree.qos_tx"
-    },
-    {
-      "from": "module.qos.routeros_queue_type.cake_rx",
-      "to": "routeros_queue_type.qos_cake_rx"
-    },
-    {
-      "from": "module.qos.routeros_queue_type.cake_tx",
-      "to": "routeros_queue_type.qos_cake_tx"
-    },
-    {
-      "from": "module.dns.routeros_ip_dns.server",
-      "to": "routeros_ip_dns.dns"
-    },
-    {
-      "from": "module.dns.routeros_ip_dns_record.static[\"doorbell.iot-local.home.kidibox.net\"]",
-      "to": "routeros_ip_dns_record.dns_doorbell_iot-local_home_kidibox_net"
-    },
-    {
-      "from": "module.dns.routeros_ip_dns_record.static[\"k3s-prd-0.k3s.home.kidibox.net\"]",
-      "to": "routeros_ip_dns_record.dns_k3s-prd-0_k3s_home_kidibox_net"
-    },
-    {
-      "from": "module.dns.routeros_ip_dns_record.static[\"k3s-prd-0.storage.home.kidibox.net\"]",
-      "to": "routeros_ip_dns_record.dns_k3s-prd-0_storage_home_kidibox_net"
-    },
-    {
-      "from": "module.dns.routeros_ip_dns_record.static[\"node1.srv.home.kidibox.net\"]",
-      "to": "routeros_ip_dns_record.dns_node1_srv_home_kidibox_net"
-    },
-    {
-      "from": "module.dns.routeros_ip_dns_record.static[\"sma-inverter.iot-local.home.kidibox.net\"]",
-      "to": "routeros_ip_dns_record.dns_sma-inverter_iot-local_home_kidibox_net"
-    },
-    {
-      "from": "module.dns.routeros_ip_dns_record.static[\"vulkan.lan.home.kidibox.net\"]",
-      "to": "routeros_ip_dns_record.dns_vulkan_lan_home_kidibox_net"
-    },
-    {
-      "from": "module.dns.routeros_ip_dns_record.static[\"vulkan.mgmt.home.kidibox.net\"]",
-      "to": "routeros_ip_dns_record.dns_vulkan_mgmt_home_kidibox_net"
-    }
-  ],
   "output": {
     "ip_cloud_dns_name": {
       "precondition": [
